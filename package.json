@@ -86,6 +86,7 @@
     "socicon": "^3.0.5"
   },
   "devDependencies": {
+    "@testing-library/react": "^9.4.0",
     "copyfiles": "^2.1.1",
     "node-sass": "^4.13.0",
     "prettier": "^1.19.1",
