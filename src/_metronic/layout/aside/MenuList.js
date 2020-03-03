@@ -6,6 +6,7 @@ import MenuItem from "./MenuItem";
 export default class MenuList extends React.Component {
   render() {
     const { currentUrl, menuConfig, layoutConfig } = this.props;
+    console.log('menuConfig', menuConfig);
 
     return menuConfig.aside.items.map((child, index) => {
       return (

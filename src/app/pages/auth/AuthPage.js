@@ -35,7 +35,7 @@ export default function AuthPage() {
                   <h3 className="kt-login__title">Welcome to AApp 2020!</h3>
                   <h4 className="kt-login__subtitle">
                     Having total control of your assets had never been so easy and fun.
-                    Log in to start this journey!
+                    Log in to start organizing your assets!
                   </h4>
                 </div>
               </div>

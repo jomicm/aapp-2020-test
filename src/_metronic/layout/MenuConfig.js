@@ -499,6 +499,7 @@ export default {
       }
     ]
   },
+  //assets, processes, users, employees, locations, reports, settings
   aside: {
     self: {},
     items: [
@@ -510,6 +511,63 @@ export default {
         translate: "MENU.DASHBOARD",
         bullet: "dot"
       },
+      {
+        title: "Assets",
+        root: true,
+        icon: "flaticon2-start-up",
+        page: "assets",
+        translate: "MENU.ASSETS",
+        bullet: "dot"
+      },
+      {
+        title: "Processes",
+        root: true,
+        icon: "flaticon-share",
+        page: "processes",
+        translate: "MENU.PROCESSES",
+        bullet: "dot"
+      },
+      {
+        title: "Users",
+        root: true,
+        icon: "flaticon-user",
+        page: "users",
+        translate: "MENU.USERS",
+        bullet: "dot"
+      },
+      {
+        title: "Employees",
+        root: true,
+        icon: "flaticon-map",
+        page: "employees",
+        translate: "MENU.EMPLOYEES",
+        bullet: "dot"
+      },
+      {
+        title: "Locations",
+        root: true,
+        icon: "flaticon-map-location",
+        page: "locations",
+        translate: "MENU.LOCATIONS",
+        bullet: "dot"
+      },
+      {
+        title: "Reports",
+        root: true,
+        icon: "flaticon-folder-1",
+        page: "reports",
+        translate: "MENU.REPORTS",
+        bullet: "dot"
+      },
+      {
+        title: "Settings",
+        root: true,
+        icon: "flaticon-settings",
+        page: "settings",
+        translate: "MENU.SETTINGS",
+        bullet: "dot"
+      },
+      //
       {
         title: "Layout Builder",
         root: true,
@@ -865,20 +923,20 @@ export default {
         ]
       },
       { section: "Custom" },
-      // {
-      //   root: true,
-      //   title: "Documentation",
-      //   bullet: "dot",
-      //   icon: "flaticon2-file-1",
-      //   submenu: [
-      //     { title: "Quick Start", page: "docs/quick-start" },
-      //     { title: "Overview", page: "docs/overview" },
-      //     { title: "Deployment", page: "docs/deployment" },
-      //     { title: "Internationalization", page: "docs/i18n" },
-      //     { title: "Mock Backend", page: "docs/mock-backend" },
-      //     { title: "Create a Page", page: "docs/create-a-page" }
-      //   ]
-      // },
+      {
+        root: true,
+        title: "Documentation",
+        bullet: "dot",
+        icon: "flaticon2-file-1",
+        submenu: [
+          { title: "Quick Start", page: "docs/quick-start" },
+          { title: "Overview", page: "docs/overview" },
+          { title: "Deployment", page: "docs/deployment" },
+          { title: "Internationalization", page: "docs/i18n" },
+          { title: "Mock Backend", page: "docs/mock-backend" },
+          { title: "Create a Page", page: "docs/create-a-page" }
+        ]
+      },
       {
         title: "Error Pages",
         root: true,
