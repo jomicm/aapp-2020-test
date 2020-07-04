@@ -1,0 +1,32 @@
+.locations-list {
+  // background-color: red;
+  display: flex;
+  height: 500px;
+
+  &__top {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 15px;
+  }
+
+  &__top-add {
+  }
+
+  &__left-content {
+    min-width: 20%;
+    // background-color: yellow;
+  }
+
+  &__right-content {
+    min-width: 80%;
+    // background-color: #FAFAFA;
+  }
+
+  &__map-view {
+    width: 30%;
+    height: 500px;
+    margin-top: -25px;
+    margin-left: -25px;
+  }
+}

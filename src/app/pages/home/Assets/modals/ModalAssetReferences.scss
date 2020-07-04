@@ -1,0 +1,11 @@
+.modal-asset-reference {
+  display: flex;
+  text-align: center;
+
+  &__list-field {
+    margin-top: 10px;
+    padding: 8px;
+    width: 100%;
+    height: 100%;
+  }
+}

@@ -20,7 +20,7 @@ class Footer extends React.Component {
               rel="noopener noreferrer"
               className="kt-link"
             >
-              Keenthemes
+              AApp2020
             </a>
           </div>
           <div className="kt-footer__menu">

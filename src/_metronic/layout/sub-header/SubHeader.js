@@ -7,7 +7,7 @@ import { QuickActions } from "./components/QuickActions";
 import { LayoutContextConsumer } from "../LayoutContext";
 import { ReactComponent as SortNum1Icon } from "../../../_metronic/layout/assets/layout-svg-icons/SortNum1.svg";
 import * as builder from "../../ducks/builder";
-// import BreadCrumbs from "./components/BreadCrumbs";
+import BreadCrumbs from "./components/BreadCrumbs";
 
 class SubHeader extends React.Component {
   render() {
@@ -33,12 +33,11 @@ class SubHeader extends React.Component {
             )}
 
             <LayoutContextConsumer>
-              {/*{({ subheader: { title, breadcrumb } }) => (*/}
-
-              {({ subheader: { title } }) => (
+              {/* {({ subheader: { title } }) => ( */}
+              {({ subheader: { title, breadcrumb } }) => (
                 <>
                   <h3 className="kt-subheader__title">{title}</h3>
-                  {/*<BreadCrumbs items={breadcrumb} />*/}
+                  <BreadCrumbs items={breadcrumb} />
                 </>
               )}
             </LayoutContextConsumer>
@@ -49,7 +48,7 @@ class SubHeader extends React.Component {
               href="#"
               className="btn btn-label-warning btn-bold btn-sm btn-icon-h kt-margin-l-10"
             >
-              Add New
+              Add New Modify
             </a>
           </div>
 

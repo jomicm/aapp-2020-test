@@ -523,7 +523,9 @@ export default function TabsExamplesPage() {
                     textColor="primary"
                     centered
                   >
-                    <Tab label="Item One" />
+                    <Tab label="Item One">
+                      <h1>Hi</h1>
+                    </Tab>
                     <Tab label="Item Two" />
                     <Tab label="Item Three" />
                   </Tabs>

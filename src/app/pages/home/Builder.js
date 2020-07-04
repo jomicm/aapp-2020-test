@@ -45,7 +45,7 @@ export default function Builder() {
     dispatch(metronic.builder.actions.setLayoutConfigs(_config));
     setTimeout(() => {
       window.location.reload();
-    }, 1000);
+    }, 100);
   };
 
   const initialValues = useMemo(

@@ -1,0 +1,143 @@
+.custom-field-preview-wrapper {
+  // margin: 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 10px 10px 10px 20px;
+  background-color: #FCF8E7;
+  border: 1px dashed #E8BD0D;
+  border-radius: 10px;
+
+  
+  &__delete-icon {
+    font-size: 2rem !important;
+    margin-top: 15px;
+    margin-left: 25px
+  }
+  
+  &__delete-icon:hover {
+    // font-size: 2.3rem !important;
+    color: #E82B0D;
+    // cursor: pointer;
+  }
+
+  &__single-line {
+    max-width: 90%;
+  }
+
+  &__date {
+    margin-top: 20px;
+    width: 100%;
+  }
+
+  &__date-time {
+    width: 100%;
+  }
+  
+  &__drop-down {
+    width: 100%;
+  }
+}
+
+.custom-field-real-wrapper {
+  // margin: 10px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 10px 10px 10px 20px;
+
+  &__single-line {
+    max-width: 90%;
+  }
+
+  &__date {
+    margin-top: 20px;
+    width: 100%;
+  }
+
+  &__date-time {
+    width: 100%;
+  }
+  
+  &__drop-down {
+    width: 100%;
+  }
+}
+
+.custom-field-settings-wrapper {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-around;
+  align-items: flex-start;
+  
+  &__left-content {
+    // width: 50%;
+    width: 45%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__right-content {
+    // width: 50%;
+    width: 45%;
+    display: flex;
+    flex-direction: column;
+    padding-left: 50px;
+    margin-top: 50px !important;
+  }
+
+  &__options-content {
+    padding-top: 25px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__add-option-wrapper {
+    margin-top: -15px;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    align-items: flex-end;
+  }
+
+  &__add-option {
+    max-width: 85%;
+  }
+
+  &__add-icon {
+    max-width: 20%
+  }
+
+  &__options-area {
+    display: flex;
+    flex-direction: column;
+    padding-top: 25px;
+    
+    &__single {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      background-color: #f6f6f6;
+      border-bottom: slategray .5px solid;
+
+      &__field {
+        text-align: center;
+        width: 70%;
+        padding: 10px 0;
+      }
+  
+      &__icon {
+        padding: 7px 7px !important;
+      }
+    }
+
+    &__single:nth-child(even) {
+      background-color: #fcfcfc;
+    }
+  }
+}

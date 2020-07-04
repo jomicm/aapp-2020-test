@@ -1,0 +1,13 @@
+.profile-tab-wrapper {
+  display: flex;
+
+  &__content-left {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__content-right {
+    display: flex;
+    flex-direction: column;
+  }
+}

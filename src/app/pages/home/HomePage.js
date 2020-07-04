@@ -5,6 +5,12 @@ import Dashboard from "./Dashboard";
 import DocsPage from "./docs/DocsPage";
 import { LayoutSplashScreen } from "../../../_metronic";
 
+// AApp 2020 Modules
+import Locations from './Locations/Locations';
+import Assets from './Assets/Assets';
+import Reports from './Reports/Reports';
+import Users from './Users/Users';
+
 const GoogleMaterialPage = lazy(() =>
   import("./google-material/GoogleMaterialPage")
 );
@@ -25,6 +31,10 @@ export default function HomePage() {
           /* Redirect from root URL to /dashboard. */
           <Redirect exact from="/" to="/dashboard" />
         }
+        <Route path="/locations" component={Locations} />
+        <Route path="/assets" component={Assets} />
+        <Route path="/reports" component={Reports} />
+        <Route path="/users" component={Users} />
         <Route path="/builder" component={Builder} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/google-material" component={GoogleMaterialPage} />

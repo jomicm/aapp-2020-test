@@ -1,0 +1,83 @@
+.custom-fields-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  &__tab-area {
+    padding:15px;
+    // background-color: red;
+    height: 500px;
+    &__header {
+
+    }
+    &__content {
+
+    }
+  }
+}
+
+.custom-controls-wrapper {
+  width: 100%;
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-evenly;
+  
+  &__element {
+    background-color: #241041;
+    color: white;
+    padding: 10px;
+    font-weight: bold;
+    cursor: grab;
+  }
+
+  &__element:active {
+    cursor: grabbing;
+  }
+}
+
+.tab-properties-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+
+  &__tab-name {
+    max-width: 350px;
+  }
+
+  &__tab-layout {
+    display: flex;
+    flex-direction: row !important;
+    flex-wrap: unset !important;
+  }
+
+  &__update-tab-name {
+    width: 10px;
+  }
+}
+
+.MuiDialog-paperWidthSm {
+  max-width: unset !important; 
+}
+
+.drag-drop-custom-fields-wrapper {
+  display: flex;
+  text-align: center;
+
+  &__column {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 400px;
+    margin: 10px;
+    border: 2px dashed #707B7C;
+  }
+
+  &__legend {
+    padding-top: 10px;
+    color: #424949;
+  }
+}
+
+.field-properties-wrapper {
+  width: 100%;
+}
