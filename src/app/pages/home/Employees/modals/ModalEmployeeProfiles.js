@@ -151,7 +151,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
       updateDB('employeeProfiles/', body, id[0])
         .then(data => data.json())
         .then(response => {
-          saveAndReload('employeeProfiles', id);
+          saveAndReload('employeeProfiles', id[0]);
         })
         .catch(error => console.log(error));
     }
