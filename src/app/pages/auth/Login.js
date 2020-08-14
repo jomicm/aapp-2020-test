@@ -6,7 +6,7 @@ import { FormattedMessage, injectIntl } from "react-intl";
 import { TextField } from "@material-ui/core";
 import clsx from "clsx";
 import * as auth from "../../store/ducks/auth.duck";
-import { login } from "../../crud/auth.crud";
+import { login, loginReal } from "../../crud/auth.crud";
 
 function Login(props) {
   const { intl } = props;
@@ -48,8 +48,12 @@ function Login(props) {
 
           <Formik
             initialValues={{
-              email: "admin@demo.com",
-              password: "demo"
+              // email: "admin@demo.com",
+              // password: "demo"
+              // email: "one@one.com",
+              // password: "one"
+              email: '',
+              password: ''
             }}
             validate={values => {
               const errors = {};
@@ -76,14 +80,25 @@ function Login(props) {
               return errors;
             }}
             onSubmit={(values, { setStatus, setSubmitting }) => {
+              // debugger;
               enableLoading();
               setTimeout(() => {
-                login(values.email, values.password)
-                  .then(({ data: { accessToken } }) => {
+                // loginReal(values.email, values.password)
+                loginReal('user', { user: values.email, password: values.password })
+                  // .then(({ data: { accessToken } }) => {
+                  .then(response => response.json())
+                  // .then(({response: { accessToken }}) => {
+                  .then(({ response }) => {
+                    // console.log('data:', data)
+                    console.log('accessToken:', response)
                     disableLoading();
-                    props.login(accessToken);
+                    const { email, accessToken } = response;
+                    const pic = 'https://i2.wp.com/float8ion.com/wp-content/uploads/2015/12/random-user-31.jpg';
+                    const user = { fullname: `${response.name} ${response.lastName}`, email, accessToken, pic };
+                    props.fulfillUser(user);
                   })
-                  .catch(() => {
+                  .catch((err) => {
+                    console.log('err:', err)
                     disableLoading();
                     setSubmitting(false);
                     setStatus(
@@ -181,29 +196,6 @@ function Login(props) {
               </form>
             )}
           </Formik>
-
-          <div className="kt-login__divider">
-            <div className="kt-divider">
-              <span />
-              <span>OR</span>
-              <span />
-            </div>
-          </div>
-
-          <div className="kt-login__options">
-            <Link to="http://facebook.com" className="btn btn-primary kt-btn">
-              <i className="fab fa-facebook-f" />
-              Facebook
-            </Link>
-            <Link to="http://twitter.com" className="btn btn-info kt-btn">
-              <i className="fab fa-twitter" />
-              Twitter
-            </Link>
-            <Link to="google.com" className="btn btn-danger kt-btn">
-              <i className="fab fa-google" />
-              Google
-            </Link>
-          </div>
         </div>
       </div>
     </>

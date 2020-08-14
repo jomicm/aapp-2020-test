@@ -28,7 +28,7 @@ import CustomFields from '../../Components/CustomFields/CustomFields';
 
 // import './ModalAssetCategories.scss';
 import ImageUpload from '../../Components/ImageUpload';
-import { postDBEncryptPassword, getOneDB, updateDB } from '../../../../crud/api';
+import { postDBEncryptPassword, getOneDB, updateDB, postDB } from '../../../../crud/api';
 import ModalYesNo from '../../Components/ModalYesNo';
 import Permission from '../components/Permission';
 
@@ -137,7 +137,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows }) => {
+const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProfileRows }) => {
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -155,30 +155,30 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
     name: "",
     lastName: '',
     email: '',
-    password: '',
     isDisableUserProfile: false,
     selectedUserProfile: null,
     categoryPic: '/media/misc/placeholder-image.jpg',
     categoryPicDefault: '/media/misc/placeholder-image.jpg'
   });
   const [profileSelected, setProfileSelected] = useState(0);
+  const [layoutSelected, setLayoutSelected] = useState(0);
 
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value });
   };
 
   const handleSave = () => {
-    const body = { ...values, customFieldsTab, profilePermissions, locationsTable };
+    const body = { ...values, customFieldsTab, profilePermissions, locationsTable, layoutSelected };
     if (!id) {
       body.idUserProfile = idUserProfile;
-      postDBEncryptPassword('user', body)
+      postDB('employees', body)
         .then(response => {
           console.log('response:', response)
           reloadTable();
         })
         .catch(error => console.log(error));
     } else {
-      updateDB('user/', body, id[0])
+      updateDB('employees/', body, id[0])
         .then(response => {
           reloadTable();
         })
@@ -206,22 +206,23 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
     setValue4(0);
   };
 
-  const [userProfilesFiltered, setUserProfilesFiltered] = useState([]);
+  const [employeeProfilesFiltered, setEmployeeProfilesFiltered] = useState([]);
 
   useEffect(() => {
-    const userProfiles = userProfileRows.map((profile, ix) => ({ value: profile.id, label: profile.name }));
-    setUserProfilesFiltered(userProfiles);
+    const userProfiles = employeeProfileRows.map((profile, ix) => ({ value: profile.id, label: profile.name }));
+    setEmployeeProfilesFiltered(userProfiles);
     if(!id || !Array.isArray(id)) {
       return;
     }
 
-    getOneDB('user/', id[0])
+    getOneDB('employees/', id[0])
       .then(response => response.json())
       .then(data => { 
-        const { name, lastName, email, customFieldsTab, profilePermissions, idUserProfile, locationsTable } = data.response;
+        const { name, lastName, email, customFieldsTab, profilePermissions, idUserProfile, locationsTable, layoutSelected } = data.response;
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
-        setProfileSelected(userProfilesFiltered.filter(profile => profile.value === idUserProfile));
+        setLayoutSelected(layoutSelected)
+        setProfileSelected(employeeProfilesFiltered.filter(profile => profile.value === idUserProfile));
         setLocationsTable(locationsTable || []);
         setValues({ 
           ...values,
@@ -237,7 +238,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
         setTabs(tabs);
       })
       .catch(error => console.log(error));
-  }, [id, userProfileRows]);
+  }, [id, employeeProfileRows]);
 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
   const [profilePermissions, setProfilePermissions] = useState({});
@@ -260,23 +261,23 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
     setProfilePermissions(prev => ({ ...prev, [key]: checked }));
   }
 
-  const colourOptions = [
-    { value: 'red', label: 'Red' },
-    { value: 'black', label: 'Black' },
-    { value: 'white', label: 'White' },
+  const layoutOpts = [
+    { value: 'lay1', label: 'Layout 1' },
+    { value: 'lay2', label: 'Layout 2' },
+    { value: 'lay3', label: 'Layout 3' },
   ];
 
   const [idUserProfile, setIdUserProfile] = useState('');
-  const onChangeUserProfile = e => {
+  const onChangeEmployeeProfile = e => {
     if (!e) {
       setCustomFieldsTab({});
       setProfilePermissions({});
       setTabs([]);
       return;
     }
-    console.log('onChangeUserProfile>>>', e);
+    console.log('onChangeEmployeeProfile>>>', e);
     setProfileSelected(e);
-    getOneDB('userProfiles/', e.value)
+    getOneDB('employeeProfiles/', e.value)
     .then(response => response.json())
     .then(data => { 
       console.log(data.response);
@@ -313,7 +314,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
           id="customized-dialog-title"
           onClose={handleCloseModal}
         >
-          {`${id ? 'Edit' : 'Add' } Users`}
+          {`${id ? 'Edit' : 'Add' } Employees`}
         </DialogTitle5>
         <DialogContent5 dividers>
           <div className="kt-section__content" style={{margin:'-16px'}}>
@@ -326,9 +327,9 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
                   textColor="primary"
                   variant="fullWidth"
                 >
-                  <Tab label="User" />
-                  <Tab label="Permissions" />
-                  <Tab label="Locations" />
+                  <Tab label="Employee" />
+                  {/* <Tab label="Permissions" />
+                  <Tab label="Locations" /> */}
                   {tabs.map((tab, index) => <Tab key={`tab-reference-${index}`} label={tab.info.name} />)}
                 </Tabs>
               </Paper>
@@ -340,11 +341,11 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
                 <TabContainer4 dir={theme4.direction}>
                   <div className="profile-tab-wrapper">
                     <ImageUpload>
-                      User Profile Photo
+                      Employee Profile Photo
                     </ImageUpload>
                     <div className="profile-tab-wrapper__content">
                       <FormControl component="fieldset" className={classes.textField}>
-                        <FormLabel component="legend">User Profile</FormLabel>
+                        <FormLabel component="legend">Employee Profile</FormLabel>
                         <FormGroup>
                           <Select
                             // defaultValue={!id ? null : profileSelected }
@@ -352,8 +353,8 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
                             classNamePrefix="select"
                             isClearable={true}
                             name="color"
-                            onChange={onChangeUserProfile}
-                            options={userProfilesFiltered}
+                            onChange={onChangeEmployeeProfile}
+                            options={employeeProfilesFiltered}
                             isDisabled={values.isDisableUserProfile}
                           />
                         </FormGroup>
@@ -382,33 +383,16 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
                         onChange={handleChange("email")}
                         margin="normal"
                       />
-                      <TextField
-                        id="standard-name"
-                        label="Password"
-                        className={classes.textField}
-                        value={values.password}
-                        onChange={handleChange("password")}
-                        type="password"
-                        margin="normal"
-                      />
                       <div className={classes.textField}>
-                        <FormLabel style={{marginTop: '25px'}} component="legend">Boss</FormLabel>
+                        <FormLabel style={{marginTop: '25px'}} component="legend">Responsibility Layout</FormLabel>
                         <FormGroup>
                           <Select
+                            onChange={e => setLayoutSelected(e)}
+                            value={layoutSelected}
                             classNamePrefix="select"
                             isClearable={true}
                             name="color"
-                            options={colourOptions}
-                          />
-                        </FormGroup>
-                        <FormLabel style={{marginTop: '25px'}} component="legend">Groups</FormLabel>
-                        <FormGroup>
-                          <Select
-                            isMulti
-                            classNamePrefix="select"
-                            isClearable={true}
-                            name="color"
-                            options={colourOptions}
+                            options={layoutOpts}
                           />
                         </FormGroup>
                       </div>
@@ -416,7 +400,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
                   </div>
                 </TabContainer4>
                 {/* TAB PERMISSIONS */}
-                <TabContainer4 dir={theme4.direction}>
+                {/* <TabContainer4 dir={theme4.direction}>
                   <div style={{ display:'flex', flexWrap:'wrap', justifyContent: 'space-around', padding: '0 20px' }}>
                     {modules.map((module, index) => {
                       return <Permission
@@ -428,11 +412,11 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
                               />
                     })}
                   </div>
-                </TabContainer4>
+                </TabContainer4> */}
                 {/* TAB LOCATIONS */}
-                <TabContainer4 dir={theme4.direction}>
+                {/* <TabContainer4 dir={theme4.direction}>
                   <LocationAssignment locationsTable={locationsTable} setLocationsTable={setLocationsTable} />
-                </TabContainer4>
+                </TabContainer4> */}
                 {/* TABS CUSTOM FIELDS */}
                 {tabs.map(tab => (
                   <TabContainer4 dir={theme4.direction}>
@@ -473,4 +457,4 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
   )
 };
 
-export default ModalUsers;
+export default ModalEmployees;

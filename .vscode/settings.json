@@ -1,0 +1,6 @@
+{
+  "favorites.resources": [
+    "src/_metronic/__mocks__/userTableMock.js",
+    "src/_metronic/layout/MenuConfig.js"
+  ]
+}

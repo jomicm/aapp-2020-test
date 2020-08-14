@@ -38,7 +38,6 @@ const { PUBLIC_URL } = process.env;
  * @see https://github.com/axios/axios#interceptors
  */
 setupAxios(axios, store);
-
 ReactDOM.render(
   <App
     store={store}

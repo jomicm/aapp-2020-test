@@ -1,0 +1,17 @@
+.location-assignment {
+  display: flex;
+  justify-content: space-around;
+  &__tree-section {
+    width: 40%;
+    display: flex;
+    flex-direction: column;
+  }
+  &__data-section {
+    width: 40%;
+  }
+  &__select-button {
+    width: 100px;
+    align-self: flex-end;
+    height: 40px;
+  }
+}

@@ -7,7 +7,6 @@ import Registration from "./Registration";
 import ForgotPassword from "./ForgotPassword";
 
 export default function AuthPage() {
-  console.log("authPage");
   return (
     <>
       <div className="kt-grid kt-grid--ver kt-grid--root">
@@ -63,10 +62,7 @@ export default function AuthPage() {
               <Switch>
                 <Route path="/auth/login" component={Login} />
                 <Route path="/auth/registration" component={Registration} />
-                <Route
-                  path="/auth/forgot-password"
-                  component={ForgotPassword}
-                />
+                <Route path="/auth/forgot-password" component={ForgotPassword} />
                 <Redirect from="/auth" exact={true} to="/auth/login" />
                 <Redirect to="/auth/login" />
               </Switch>

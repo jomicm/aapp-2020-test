@@ -133,6 +133,7 @@ export default function Users() {
   ];
 
   const loadUsersData = (collectionNames = ['user', 'userProfiles']) => {
+    console.log('lets reload')
     collectionNames =  !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
       getDB(collectionName)
@@ -185,7 +186,7 @@ export default function Users() {
     users: {
       id: 'idUser',
       modal: 'openUsersModal',
-      name: 'users'
+      name: 'user'
     },
   };
 
@@ -276,7 +277,7 @@ export default function Users() {
                           <ModalUsers
                             showModal={control.openUsersModal}
                             setShowModal={(onOff) => setControl({ ...control, openUsersModal: onOff })}
-                            reloadTable={() => loadUsersData('users')}
+                            reloadTable={() => loadUsersData('user')}
                             id={control.idUser}
                             userProfileRows={control.userProfilesRows}
                             // categoryRows={control.usersRows}
