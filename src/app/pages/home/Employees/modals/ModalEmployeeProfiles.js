@@ -126,7 +126,9 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   const [values, setValues] = useState({
     name: "",
     categoryPic: '/media/misc/placeholder-image.jpg',
-    categoryPicDefault: '/media/misc/placeholder-image.jpg'
+    categoryPicDefault: '/media/misc/placeholder-image.jpg',
+    // imageURL: 'http://159.203.41.87:3001/uploads/employeeProfiles/5f36151ddd0b7e53fb62df66.png',
+    imageURL: '',
   });
   // const [categoryPic, setCategoryPic] 
 
@@ -205,7 +207,8 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
     setValues({ 
       name: "",
       categoryPic: '/media/misc/placeholder-image.jpg',
-      categoryPicDefault: '/media/misc/placeholder-image.jpg'
+      categoryPicDefault: '/media/misc/placeholder-image.jpg',
+      imageURL: '',
     });
     setShowModal(false);
     setValue4(0);
@@ -220,8 +223,10 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
     getOneDB('employeeProfiles/', id[0])
       .then(response => response.json())
       .then(data => { 
-        const { name, depreciation, customFieldsTab, profilePermissions, isAssetRepository } = data.response;
-        const obj = { name, depreciation };
+        debugger;
+        const { _id, name, depreciation, customFieldsTab, profilePermissions, isAssetRepository, fileExt } = data.response;
+        const imageURL = fileExt ? `http://159.203.41.87:3001/uploads/employeeProfiles/${id}.${fileExt}` : '';
+        const obj = { name, depreciation, imageURL };
         setValues(obj);
         setCustomFieldsTab(customFieldsTab);
         setIsAssetRepository(isAssetRepository);
@@ -289,7 +294,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
               >
                 <TabContainer4 dir={theme4.direction}>
                   <div className="profile-tab-wrapper">
-                    <ImageUpload setImage={setImage}>
+                    <ImageUpload setImage={setImage} image={values.imageURL}>
                       Employee Profile Photo
                     </ImageUpload>
                     <div className="profile-tab-wrapper__content">

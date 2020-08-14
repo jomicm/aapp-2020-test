@@ -1,10 +1,10 @@
 /* eslint-disable no-restricted-imports */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@material-ui/core";
 import DeleteIcon from '@material-ui/icons/Delete';
 import './ImageUpload.scss';
 
-const ImageUpload = ({ children, setImage }) => {
+const ImageUpload = ({ children, setImage, image = null }) => {
   const [values, setValues] = useState({
     categoryPic: '/media/misc/placeholder-image.jpg',
     categoryPicDefault: '/media/misc/placeholder-image.jpg'
@@ -17,6 +17,14 @@ const ImageUpload = ({ children, setImage }) => {
       categoryPic: URL.createObjectURL(file)
     });
   };
+
+  useEffect(() => {
+    setValues({
+      ...values,
+      categoryPic: image || values.categoryPicDefault
+    });
+  }, [image]);
+
   return (
     <div className="image-upload-wrapper__picture">
       <h4 className="image-upload-wrapper__picture-title">{children}</h4>
@@ -37,7 +45,7 @@ const ImageUpload = ({ children, setImage }) => {
       </div>
       <input type="file" onChange={updateValues} />
     </div>
-  )
+  );
 }
 
 export default ImageUpload;
