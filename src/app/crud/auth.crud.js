@@ -1,15 +1,18 @@
 import axios from "axios";
 
-const host = 'http://localhost:3001/';
+const host = 'http://159.203.41.87:3001/';
+// const host = 'http://localhost:3001/';
 const version  = 'api/v1/';
 const db = 'notes-db-app/';
 const collection = 'locations/';
 
 const getAPIPath = (_collection = collection, _id = '', isEncrypt = false, isUserValidation = false) =>
   `${host}${version}${db}${_collection}${_id}${isEncrypt ? '/encrypt' : ''}${isUserValidation ? '/validuser' : ''}`;
-const getUserTokenPath = 'http://localhost:3001/users/getuserbytoken';
+const getUserTokenPath = 'http://159.203.41.87:3001/users/getuserbytoken';
+// const getUserTokenPath = 'http://localhost:3001/users/getuserbytoken';
 const getHeaders = () => {
-  const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVlYTdiNjg0M2U0ZWRhODVjNDhmZjVkOSIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImRldkBkZXYuY29tIiwiaWF0IjoxNTg4MDUwMzg5LCJleHAiOjE1OTY2OTAzODl9.eLwnv1UlCgAop0JyEXam-BxhHJFhdlnhVLF134j-pBM';
+  // const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVlYTdiNjg0M2U0ZWRhODVjNDhmZjVkOSIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImRldkBkZXYuY29tIiwiaWF0IjoxNTg4MDUwMzg5LCJleHAiOjE1OTY2OTAzODl9.eLwnv1UlCgAop0JyEXam-BxhHJFhdlnhVLF134j-pBM';
+  const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVlYTdiNjg0M2U0ZWRhODVjNDhmZjVkOSIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImRldkBkZXYuY29tIiwiaWF0IjoxNTk3Mzc3MzM0LCJleHAiOjE2MDYwMTczMzR9.BFy6AjKCH83rdIZmKakpElMqYXr-E6L24fUzokJnl9U';
   const headers = new Headers();
   headers.set('Authorization', `Bearer ${token}`);
   headers.set('Accept', "application/json");

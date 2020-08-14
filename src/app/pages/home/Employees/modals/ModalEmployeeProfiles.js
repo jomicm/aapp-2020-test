@@ -179,25 +179,25 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
     }
   };
 
-  const test = () => {
-    var myHeaders = new Headers();
-    myHeaders.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVkYWIzZTg3NjAzOGRjNTZkMDg4NzdjMyIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImFAYS5teCIsImlhdCI6MTU5NzIwNTE3NywiZXhwIjoxNjA1ODQ1MTc3fQ.w29W5N9a9jTilzIJp-5xyD_h7ndq5Mqm937h0ipgCkY");
+  // const test = () => {
+  //   var myHeaders = new Headers();
+  //   myHeaders.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVkYWIzZTg3NjAzOGRjNTZkMDg4NzdjMyIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImFAYS5teCIsImlhdCI6MTU5NzIwNTE3NywiZXhwIjoxNjA1ODQ1MTc3fQ.w29W5N9a9jTilzIJp-5xyD_h7ndq5Mqm937h0ipgCkY");
 
-    var formdata = new FormData();
-    formdata.append("file", image, "User.png");
+  //   var formdata = new FormData();
+  //   formdata.append("file", image, "User.png");
 
-    var requestOptions = {
-      method: 'POST',
-      headers: myHeaders,
-      body: formdata,
-      redirect: 'follow'
-    };
+  //   var requestOptions = {
+  //     method: 'POST',
+  //     headers: myHeaders,
+  //     body: formdata,
+  //     redirect: 'follow'
+  //   };
 
-    fetch("http://localhost:3001/api/v1/upload/aapp2021", requestOptions)
-      .then(response => response.text())
-      .then(result => console.log('File succs>>>>>>>', result))
-      .catch(error => console.log('File error>>>>>>>', error));
-  };
+  //   fetch("http://localhost:3001/api/v1/upload/aapp2021", requestOptions)
+  //     .then(response => response.text())
+  //     .then(result => console.log('File succs>>>>>>>', result))
+  //     .catch(error => console.log('File error>>>>>>>', error));
+  // };
 
   const handleCloseModal = () => {
     setCustomFieldsTab({});
