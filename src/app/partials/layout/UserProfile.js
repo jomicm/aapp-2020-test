@@ -29,7 +29,7 @@ class UserProfile extends React.Component {
               </span>
             )}
 
-            {showAvatar && <img alt="Pic" src={user.pic} />}
+            {showAvatar && <img alt="Pic" key={Date.now()} src={user.pic} />}
 
             {showBadge && (
               <span className="kt-badge kt-badge--username kt-badge--unified-success kt-badge--lg kt-badge--rounded kt-badge--bold">
@@ -48,7 +48,7 @@ class UserProfile extends React.Component {
             }}
           >
             <div className="kt-user-card__avatar">
-              <img alt="Pic" className="kt-hidden" src={user.pic} />
+              <img alt="Pic" key={Date.now()} className="kt-hidden" src={user.pic} />
               <span className="kt-badge kt-badge--lg kt-badge--rounded kt-badge--bold kt-font-success">
                 S
               </span>

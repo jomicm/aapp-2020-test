@@ -28,9 +28,11 @@ import CustomFields from '../../Components/CustomFields/CustomFields';
 
 // import './ModalAssetCategories.scss';
 import ImageUpload from '../../Components/ImageUpload';
-import { postDBEncryptPassword, getOneDB, updateDB, postDB } from '../../../../crud/api';
+import { postDBEncryptPassword, getOneDB, updateDB, postDB, getDB } from '../../../../crud/api';
 import ModalYesNo from '../../Components/ModalYesNo';
 import Permission from '../components/Permission';
+import AssetTable from '../components/AssetTable';
+import { getFileExtension, saveImage, getImageURL } from '../../utils';
 
 import {
   SingleLine,
@@ -42,8 +44,6 @@ import {
   Checkboxes,
   FileUpload
 } from '../../Components/CustomFields/CustomFieldsPreview';
-
-import LocationAssignment from '../components/LocationAssignment';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -168,23 +168,57 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
   };
 
   const handleSave = () => {
-    const body = { ...values, customFieldsTab, profilePermissions, locationsTable, layoutSelected };
+    const fileExt = getFileExtension(image);
+    const body = {
+      ...values,
+      customFieldsTab,
+      profilePermissions,
+      locationsTable,
+      layoutSelected,
+      fileExt,
+      assetsAssigned: assetRows
+    };
+    
     if (!id) {
       body.idUserProfile = idUserProfile;
       postDB('employees', body)
+        .then(data => data.json())
         .then(response => {
-          console.log('response:', response)
-          reloadTable();
+          const { _id } = response.response[0];
+          saveAndReload('employees', _id);
+          updateAssignedEmpToAssets(_id);
         })
-        .catch(error => console.log(error));
+        .catch(error => console.log('ERROR', error));
     } else {
       updateDB('employees/', body, id[0])
         .then(response => {
-          reloadTable();
+          saveAndReload('employees', id[0]);
+          updateAssignedEmpToAssets(id[0]);
         })
         .catch(error => console.log(error));
     }
     handleCloseModal();
+  };
+  
+  const [image, setImage] = useState(null);
+  const saveAndReload = (folderName, id) => {
+    saveImage(image, folderName, id);
+    reloadTable();
+  };
+
+  const updateAssignedEmpToAssets = (_id) => {
+    assetRows.forEach(asset => {
+      getOneDB('assets/', asset.id)
+      .then(response => response.json())
+      .then(data => { 
+        const body = { ...data.response, assigned: _id };
+        updateDB('assets/', { assigned: _id }, asset.id)
+        .then(response => {
+        })
+        .catch(error => console.log(error));
+      })
+      .catch(error => console.log(error));
+    });
   };
 
   const handleCloseModal = () => {
@@ -204,6 +238,9 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
     });
     setShowModal(false);
     setValue4(0);
+    setLayoutOptions([]);
+    setLayoutSelected(null);
+    setAssetRows([]);
   };
 
   const [employeeProfilesFiltered, setEmployeeProfilesFiltered] = useState([]);
@@ -211,6 +248,15 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
   useEffect(() => {
     const userProfiles = employeeProfileRows.map((profile, ix) => ({ value: profile.id, label: profile.name }));
     setEmployeeProfilesFiltered(userProfiles);
+
+    getDB('settingsLayoutsEmployees')
+      .then(response => response.json())
+      .then(data => {
+          const layoutOptions = data.response.map(({ _id: value, name: label }) => ({ value, label }));
+          setLayoutOptions(layoutOptions);
+      })
+      .catch(error => console.log('error>', error));
+
     if(!id || !Array.isArray(id)) {
       return;
     }
@@ -218,7 +264,7 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
     getOneDB('employees/', id[0])
       .then(response => response.json())
       .then(data => { 
-        const { name, lastName, email, customFieldsTab, profilePermissions, idUserProfile, locationsTable, layoutSelected } = data.response;
+        const { name, lastName, email, customFieldsTab, profilePermissions, idUserProfile, locationsTable, layoutSelected, fileExt, assetsAssigned = [] } = data.response;
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
         setLayoutSelected(layoutSelected)
@@ -230,7 +276,9 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
           lastName,
           email,
           isDisableUserProfile: true,
+          imageURL: getImageURL(id, 'employees', fileExt)
         });
+        setAssetRows(assetsAssigned);
         //
         const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
         tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
@@ -244,28 +292,7 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
   const [profilePermissions, setProfilePermissions] = useState({});
   const [tabs, setTabs] = useState([]);
   const [locationsTable, setLocationsTable] = useState([]);
-
-
-  const modules = [
-    { key:'dashboard', name: 'Dashboard' },
-    { key:'assets', name: 'Assets' },
-    { key:'processes', name: 'Processes' },
-    { key:'users', name: 'Users' },
-    { key:'employees', name: 'Employees' },
-    { key:'locations', name: 'Locations' },
-    { key:'reports', name: 'Reports' },
-    { key:'settings', name: 'Settings' },
-  ];
-
-  const handleSetPermissions = (key, checked) => {
-    setProfilePermissions(prev => ({ ...prev, [key]: checked }));
-  }
-
-  const layoutOpts = [
-    { value: 'lay1', label: 'Layout 1' },
-    { value: 'lay2', label: 'Layout 2' },
-    { value: 'lay3', label: 'Layout 3' },
-  ];
+  const [layoutOptions, setLayoutOptions] = useState([]);
 
   const [idUserProfile, setIdUserProfile] = useState('');
   const onChangeEmployeeProfile = e => {
@@ -302,6 +329,24 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
       .find(cf => cf.id === id);
     field.values = CFValues;
   };
+  const [assetRows, setAssetRows] = useState([]);
+  const handleOnAssetFinderSubmit = (filteredRows) => {
+    let validRows = filteredRows.rows.filter(row => !row.assigned);
+    validRows = validRows.map(rowTR => {
+      if (!assetRows.find(row => row.id === rowTR.id)) {
+        return rowTR;
+      }
+    }).filter(row => row);
+    setAssetRows([...assetRows, ...validRows])
+  };
+  const handleOnDeleteAssetAssigned = (id) => {
+    const restRows = assetRows.filter(row => row.id !== id);
+    setAssetRows(restRows);
+    updateDB('assets/', { assigned: null }, id)
+      .then(response => {
+      })
+      .catch(error => console.log(error));
+  };
 
   return (
     <div style={{width:'1000px'}}>
@@ -328,8 +373,7 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
                   variant="fullWidth"
                 >
                   <Tab label="Employee" />
-                  {/* <Tab label="Permissions" />
-                  <Tab label="Locations" /> */}
+                  <Tab label="Assignments" />
                   {tabs.map((tab, index) => <Tab key={`tab-reference-${index}`} label={tab.info.name} />)}
                 </Tabs>
               </Paper>
@@ -340,7 +384,7 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
               >
                 <TabContainer4 dir={theme4.direction}>
                   <div className="profile-tab-wrapper">
-                    <ImageUpload>
+                    <ImageUpload setImage={setImage} image={values.imageURL}>
                       Employee Profile Photo
                     </ImageUpload>
                     <div className="profile-tab-wrapper__content">
@@ -392,31 +436,22 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
                             classNamePrefix="select"
                             isClearable={true}
                             name="color"
-                            options={layoutOpts}
+                            options={layoutOptions}
                           />
                         </FormGroup>
                       </div>
                     </div>
                   </div>
                 </TabContainer4>
-                {/* TAB PERMISSIONS */}
-                {/* <TabContainer4 dir={theme4.direction}>
-                  <div style={{ display:'flex', flexWrap:'wrap', justifyContent: 'space-around', padding: '0 20px' }}>
-                    {modules.map((module, index) => {
-                      return <Permission
-                                originalChecked={profilePermissions}
-                                key={module.key}
-                                id={module.key}
-                                title={module.name}
-                                setPermissions={handleSetPermissions}
-                              />
-                    })}
+                <TabContainer4 dir={theme4.direction}>
+                  <div className="profile-tab-wrapper">
+                    <AssetTable
+                      assetRows={assetRows}
+                      onAssetFinderSubmit={handleOnAssetFinderSubmit}
+                      onDeleteAssetAssigned={handleOnDeleteAssetAssigned}
+                    />
                   </div>
-                </TabContainer4> */}
-                {/* TAB LOCATIONS */}
-                {/* <TabContainer4 dir={theme4.direction}>
-                  <LocationAssignment locationsTable={locationsTable} setLocationsTable={setLocationsTable} />
-                </TabContainer4> */}
+                </TabContainer4>
                 {/* TABS CUSTOM FIELDS */}
                 {tabs.map(tab => (
                   <TabContainer4 dir={theme4.direction}>

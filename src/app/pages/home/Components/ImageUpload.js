@@ -4,7 +4,7 @@ import { Button } from "@material-ui/core";
 import DeleteIcon from '@material-ui/icons/Delete';
 import './ImageUpload.scss';
 
-const ImageUpload = ({ children, setImage, image = null }) => {
+const ImageUpload = ({ children, setImage = () => {}, image = null }) => {
   const [values, setValues] = useState({
     categoryPic: '/media/misc/placeholder-image.jpg',
     categoryPicDefault: '/media/misc/placeholder-image.jpg'
@@ -25,6 +25,11 @@ const ImageUpload = ({ children, setImage, image = null }) => {
     });
   }, [image]);
 
+  const handleOnDeleteClick = () => {
+    setValues({ ...values, categoryPic: values.categoryPicDefault });
+    setImage(null);
+  };
+
   return (
     <div className="image-upload-wrapper__picture">
       <h4 className="image-upload-wrapper__picture-title">{children}</h4>
@@ -33,11 +38,12 @@ const ImageUpload = ({ children, setImage, image = null }) => {
           variant="contained"
           color="secondary"
           className="image-upload-wrapper__picture-delete"
-          onClick={() => setValues({ ...values, categoryPic: values.categoryPicDefault })}
+          onClick={handleOnDeleteClick}
         >
           <DeleteIcon />
         </Button>
         <img
+          key={Date.now()}
           alt="categoryPic"
           className="image-upload-wrapper__picture-placeholder"
           src={values.categoryPic}

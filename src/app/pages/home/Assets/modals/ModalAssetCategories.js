@@ -29,6 +29,7 @@ import CustomFields from '../../Components/CustomFields/CustomFields';
 import './ModalAssetCategories.scss';
 import ImageUpload from '../../Components/ImageUpload';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
+import { getFileExtension, saveImage, getImageURL } from '../../utils';
 
 
 // Example 5 - Modal
@@ -151,22 +152,31 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
   };
 
   const handleSave = () => {
-    const body = { ...values, customFieldsTab };
+    const fileExt = getFileExtension(image);
+    const body = { ...values, customFieldsTab, fileExt };
     console.log('isNew:', isNew)
     if (isNew) {
       postDB('categories', body)
+        .then(data => data.json())
         .then(response => {
-          reloadTable();
+          const { _id } = response.response[0];
+          saveAndReload('categories', _id);
         })
         .catch(error => console.log(error));
     } else {
       updateDB('categories/', body, id[0])
         .then(response => {
-          reloadTable();
+          saveAndReload('categories', id[0]);
         })
         .catch(error => console.log(error));
     }
     handleCloseModal();
+  };
+
+  const [image, setImage] = useState(null);
+  const saveAndReload = (folderName, id) => {
+    saveImage(image, folderName, id);
+    reloadTable();
   };
 
   const handleCloseModal = () => {
@@ -191,8 +201,9 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
       .then(response => response.json())
       .then(data => { 
         console.log(data.response);
-        const { name, depreciation, customFieldsTab } = data.response;
-        const obj = { name, depreciation };
+        const { name, depreciation, customFieldsTab, fileExt } = data.response;
+        const imageURL = getImageURL(id, 'categories', fileExt);
+        const obj = { name, depreciation, imageURL };
         console.log('obj:', obj)
         setValues(obj);
         setCustomFieldsTab(customFieldsTab);
@@ -241,7 +252,7 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
               >
                 <TabContainer4 dir={theme4.direction}>
                   <div className="profile-tab-wrapper">
-                    <ImageUpload>
+                    <ImageUpload setImage={setImage} image={values.imageURL}>
                       Asset Category Photo
                     </ImageUpload>
                     <div className="profile-tab-wrapper__content">

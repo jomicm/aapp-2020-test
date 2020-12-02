@@ -46,7 +46,7 @@ import {
   FileUpload
 } from '../../Components/CustomFields/CustomFieldsPreview';
 import './ModalAssetReferences.scss';
-
+import { getFileExtension, saveImage, getImageURL } from '../../utils';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -218,23 +218,32 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
   };
 
   const handleSave = () => {
-    const body = { ...values, customFieldsTab };
+    const fileExt = getFileExtension(image);
+    const body = { ...values, customFieldsTab, fileExt };
     console.log('body:', body)
     // console.log('isNew:', isNew)
     if (!id) {
       postDB('references', body)
+        .then(data => data.json())
         .then(response => {
-          reloadTable();
+          const { _id } = response.response[0];
+          saveAndReload('references', _id);
         })
         .catch(error => console.log(error));
     } else {
       updateDB('references/', body, id[0])
         .then(response => {
-          reloadTable();
+          saveAndReload('references', id[0]);
         })
         .catch(error => console.log(error));
     }
     handleCloseModal();
+  };
+
+  const [image, setImage] = useState(null);
+  const saveAndReload = (folderName, id) => {
+    saveImage(image, folderName, id);
+    reloadTable();
   };
 
   const handleCloseModal = () => {
@@ -269,8 +278,16 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
       .then(response => response.json())
       .then(data => { 
         console.log(data.response);
-        const { name, brand, model, price, depreciation, customFieldsTab } = data.response;
-        setValues({ ...values, name, brand, model, price, depreciation });
+        const { name, brand, model, price, depreciation, customFieldsTab, fileExt } = data.response;
+        setValues({
+          ...values,
+          name,
+          brand,
+          model,
+          price,
+          depreciation,
+          imageURL: getImageURL(id, 'references', fileExt)
+        });
         const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
         tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
         setCustomFieldsTab(customFieldsTab);
@@ -330,7 +347,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
               >
                 <TabContainer4 dir={theme4.direction}>
                   <div className="profile-tab-wrapper">
-                    <ImageUpload>
+                    <ImageUpload setImage={setImage} image={values.imageURL}>
                       Asset Reference Photo
                     </ImageUpload>
                     <div className="profile-tab-wrapper__content">

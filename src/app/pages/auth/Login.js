@@ -27,16 +27,6 @@ function Login(props) {
 
   return (
     <>
-      <div className="kt-login__head">
-        <span className="kt-login__signup-label">
-          Don't have an account yet?
-        </span>
-        &nbsp;&nbsp;
-        <Link to="/auth/registration" className="kt-link kt-login__signup-link">
-          Sign Up!
-        </Link>
-      </div>
-
       <div className="kt-login__body">
         <div className="kt-login__form">
           <div className="kt-login__title">
@@ -83,6 +73,7 @@ function Login(props) {
               // debugger;
               enableLoading();
               setTimeout(() => {
+                debugger;
                 // loginReal(values.email, values.password)
                 loginReal('user', { user: values.email, password: values.password })
                   // .then(({ data: { accessToken } }) => {
@@ -90,11 +81,16 @@ function Login(props) {
                   // .then(({response: { accessToken }}) => {
                   .then(({ response }) => {
                     // console.log('data:', data)
+                    debugger;
                     console.log('accessToken:', response)
                     disableLoading();
-                    const { email, accessToken } = response;
-                    const pic = 'https://i2.wp.com/float8ion.com/wp-content/uploads/2015/12/random-user-31.jpg';
-                    const user = { fullname: `${response.name} ${response.lastName}`, email, accessToken, pic };
+                    const { email, accessToken, id, fileExt } = response;
+                    // global.token = accessToken;
+                    const pic = fileExt ?
+                      `http://159.203.41.87:3001/uploads/user/${id}.${fileExt}` :
+                      'http://localhost:3000/media/misc/placeholder-image.jpg';
+                    // const pic = 'https://i2.wp.com/float8ion.com/wp-content/uploads/2015/12/random-user-31.jpg';
+                    const user = {id, fullname: `${response.name} ${response.lastName}`, email, accessToken, pic };
                     props.fulfillUser(user);
                   })
                   .catch((err) => {
@@ -107,7 +103,7 @@ function Login(props) {
                       })
                     );
                   });
-              }, 1000);
+              }, 0);
             }}
           >
             {({

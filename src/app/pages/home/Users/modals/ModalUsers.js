@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { connect } from "react-redux";
 import {
   Button,
   Dialog,
@@ -31,6 +32,8 @@ import ImageUpload from '../../Components/ImageUpload';
 import { postDBEncryptPassword, getOneDB, updateDB } from '../../../../crud/api';
 import ModalYesNo from '../../Components/ModalYesNo';
 import Permission from '../components/Permission';
+import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import * as auth from "../../../../store/ducks/auth.duck";
 
 import {
   SingleLine,
@@ -137,7 +140,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows }) => {
+const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows, user, updateUserPic }) => {
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -168,24 +171,51 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
   };
 
   const handleSave = () => {
-    const body = { ...values, customFieldsTab, profilePermissions, locationsTable };
+    const fileExt = getFileExtension(image);
+    const body = { ...values, customFieldsTab, profilePermissions, locationsTable, fileExt };
     if (!id) {
       body.idUserProfile = idUserProfile;
       postDBEncryptPassword('user', body)
+        .then(data => data.json())
         .then(response => {
-          console.log('response:', response)
-          reloadTable();
+          const { _id } = response.response[0];
+          saveAndReload('user', _id);
         })
         .catch(error => console.log(error));
     } else {
       updateDB('user/', body, id[0])
         .then(response => {
-          reloadTable();
+          saveAndReload('user', id[0]);
+          updateCurrentUserPic(id[0], fileExt);
         })
-        .catch(error => console.log(error));
+        .catch(error => {
+          console.log(error)
+        });
     }
     handleCloseModal();
   };
+
+  const [image, setImage] = useState(null);
+  const saveAndReload = (folderName, id) => {
+    saveImage(image, folderName, id);
+    reloadTable();
+  };
+  const updateCurrentUserPic = (editId, fileExt) => {
+    debugger;
+    if (user.id === editId) {
+      let _v = getRandomArbitrary(1, 999);
+      const defaultPic = `http://localhost:3000/media/misc/placeholder-image.jpg?v=${_v}`;
+      const pic = fileExt ?
+        `http://159.203.41.87:3001/uploads/user/${editId}.${fileExt}?v=${_v}` :
+        defaultPic;
+      setTimeout(() => updateUserPic(defaultPic), 250);
+      setTimeout(() => updateUserPic(pic), 1000);
+    }
+  }
+
+  function getRandomArbitrary(min, max) {
+    return Math.ceil(Math.random() * (max - min) + min);
+  }
 
   const handleCloseModal = () => {
     setCustomFieldsTab({});
@@ -204,6 +234,9 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
     });
     setShowModal(false);
     setValue4(0);
+    //
+    debugger;
+    const a = user;
   };
 
   const [userProfilesFiltered, setUserProfilesFiltered] = useState([]);
@@ -218,7 +251,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
     getOneDB('user/', id[0])
       .then(response => response.json())
       .then(data => { 
-        const { name, lastName, email, customFieldsTab, profilePermissions, idUserProfile, locationsTable } = data.response;
+        const { name, lastName, email, customFieldsTab, profilePermissions, idUserProfile, locationsTable, fileExt } = data.response;
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
         setProfileSelected(userProfilesFiltered.filter(profile => profile.value === idUserProfile));
@@ -229,6 +262,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
           lastName,
           email,
           isDisableUserProfile: true,
+          imageURL: getImageURL(id, 'user', fileExt)
         });
         //
         const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
@@ -339,7 +373,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
               >
                 <TabContainer4 dir={theme4.direction}>
                   <div className="profile-tab-wrapper">
-                    <ImageUpload>
+                    <ImageUpload setImage={setImage} image={values.imageURL}>
                       User Profile Photo
                     </ImageUpload>
                     <div className="profile-tab-wrapper__content">
@@ -473,4 +507,8 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows 
   )
 };
 
-export default ModalUsers;
+// export default ModalUsers;
+const mapStateToProps = ({ auth: { user } }) => ({
+  user
+});
+export default connect(mapStateToProps, auth.actions)(ModalUsers);

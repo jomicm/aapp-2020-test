@@ -27,7 +27,7 @@ import ImageUpload from '../../Components/ImageUpload';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import ModalYesNo from '../../Components/ModalYesNo';
 import Permission from '../components/Permission';
-
+import { getFileExtension, saveImage, getImageURL } from '../../utils';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -133,21 +133,30 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
   };
 
   const handleSave = () => {
-    const body = { ...values, customFieldsTab, profilePermissions };
+    const fileExt = getFileExtension(image);
+    const body = { ...values, customFieldsTab, profilePermissions, fileExt };
     if (!id) {
       postDB('userProfiles', body)
+        .then(data => data.json())
         .then(response => {
-          reloadTable();
+          const { _id } = response.response[0];
+          saveAndReload('userProfiles', _id);
         })
         .catch(error => console.log(error));
     } else {
       updateDB('userProfiles/', body, id[0])
         .then(response => {
-          reloadTable();
+          saveAndReload('userProfiles', id[0]);
         })
         .catch(error => console.log(error));
     }
     handleCloseModal();
+  };
+
+  const [image, setImage] = useState(null);
+  const saveAndReload = (folderName, id) => {
+    saveImage(image, folderName, id);
+    reloadTable();
   };
 
   const handleCloseModal = () => {
@@ -170,8 +179,12 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
     getOneDB('userProfiles/', id[0])
       .then(response => response.json())
       .then(data => { 
-        const { name, depreciation, customFieldsTab, profilePermissions } = data.response;
-        const obj = { name, depreciation };
+        const { name, depreciation, customFieldsTab, profilePermissions, fileExt } = data.response;
+        const obj = {
+          name,
+          depreciation,
+          imageURL: getImageURL(id, 'userProfiles', fileExt)
+        };
         setValues(obj);
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
@@ -235,7 +248,7 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
               >
                 <TabContainer4 dir={theme4.direction}>
                   <div className="profile-tab-wrapper">
-                    <ImageUpload>
+                    <ImageUpload setImage={setImage} image={values.imageURL}>
                       User Profile Photo
                     </ImageUpload>
                     <div className="profile-tab-wrapper__content">

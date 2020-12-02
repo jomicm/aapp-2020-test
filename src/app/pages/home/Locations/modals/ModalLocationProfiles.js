@@ -30,6 +30,7 @@ import ImageUpload from '../../Components/ImageUpload';
 
 import './ModalLocationProfiles.scss';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
+import { getFileExtension, saveImage, getImageURL } from '../../utils';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -153,22 +154,31 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   };
   
   const handleSave = () => {
-    const body = { ...values, customFieldsTab };
+    const fileExt = getFileExtension(image);
+    const body = { ...values, customFieldsTab, fileExt };
     console.log('isNew:', isNew)
     if (isNew) {
       postDB('locations', body)
+        .then(data => data.json())
         .then(response => {
-          reloadTable();
+          const { _id } = response.response[0];
+          saveAndReload('locations', _id);
         })
         .catch(error => console.log(error));
     } else {
       updateDB('locations/', body, id[0])
         .then(response => {
-          reloadTable();
+          saveAndReload('locations', id[0]);
         })
         .catch(error => console.log(error));
     }
     handleCloseModal();
+  };
+
+  const [image, setImage] = useState(null);
+  const saveAndReload = (folderName, id) => {
+    saveImage(image, folderName, id);
+    reloadTable();
   };
 
   const handleCloseModal = () => {
@@ -191,8 +201,14 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
       .then(response => response.json())
       .then(data => { 
         console.log(data.response);
-        const { name, level, isAssetRepository, isLocationControl, customFieldsTab } = data.response;
-        const obj = { name, level, isAssetRepository: isAssetRepository || false, isLocationControl: isLocationControl || false };
+        const { name, level, isAssetRepository, isLocationControl, customFieldsTab, fileExt } = data.response;
+        const obj = {
+          name,
+          level,
+          isAssetRepository: isAssetRepository || false,
+          isLocationControl: isLocationControl || false,
+          imageURL: getImageURL(id, 'locations', fileExt)
+        };
         console.log('obj:', obj)
         setValues(obj);
         setCustomFieldsTab(customFieldsTab);
@@ -240,7 +256,7 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
                 <TabContainer4 dir={theme4.direction}>
                   <div className="profile-tab-wrapper">
                     <div className="profile-tab-wrapper__picture">
-                      <ImageUpload>
+                      <ImageUpload setImage={setImage} image={values.imageURL}>
                         Location Profile Photo
                       </ImageUpload>
                     </div>

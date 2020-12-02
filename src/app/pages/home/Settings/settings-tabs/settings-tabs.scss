@@ -1,0 +1,12 @@
+.settings-design {
+
+  &__content {
+    display: 'flex';
+    flex-direction: 'row';
+
+    &__col {
+      min-width: 33%;
+      min-height: '200px';
+    }
+  }
+}

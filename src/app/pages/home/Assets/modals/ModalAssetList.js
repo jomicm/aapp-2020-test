@@ -30,6 +30,7 @@ import CustomFields from '../../Components/CustomFields/CustomFields';
 import './ModalAssetList.scss';
 import ImageUpload from '../../Components/ImageUpload';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
+import { getFileExtension, saveImage, getImageURL } from '../../utils';
 
 import {
   SingleLine,
@@ -235,24 +236,33 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   };
 
   const handleSave = () => {
-    const body = { ...values, customFieldsTab };
+    const fileExt = getFileExtension(image);
+    const body = { ...values, customFieldsTab, fileExt };
     console.log('body:', body)
     // console.log('isNew:', isNew)
     if (!id) {
       body.referenceId = referencesSelectedId;
       postDB('assets', body)
+        .then(data => data.json())
         .then(response => {
-          reloadTable();
+          const { _id } = response.response[0];
+          saveAndReload('assets', _id);
         })
         .catch(error => console.log(error));
     } else {
       updateDB('assets/', body, id[0])
         .then(response => {
-          reloadTable();
+          saveAndReload('assets', id[0]);
         })
         .catch(error => console.log(error));
     }
     handleCloseModal();
+  };
+
+  const [image, setImage] = useState(null);
+  const saveAndReload = (folderName, id) => {
+    saveImage(image, folderName, id);
+    reloadTable();
   };
 
   const handleCloseModal = () => {
@@ -293,7 +303,12 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
         .then(response => response.json())
         .then(data => { 
           const { name, brand, model, customFieldsTab } = data.response;
-          setValues({ ...values, name, brand, model });
+          setValues({
+            ...values,
+            name,
+            brand,
+            model
+          });
           const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
           tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
           setCustomFieldsTab(customFieldsTab);
@@ -311,8 +326,31 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       .then(response => response.json())
       .then(data => { 
         console.log(data.response);
-        const { name, brand, model, category, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab } = data.response;
-        setValues({ ...values, name, brand, model, category, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date });
+        debugger;
+        const { name, brand, model, category, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt } = data.response;
+        setValues({
+          ...values,
+          name,
+          brand,
+          model,
+          category,
+          status,
+          serial,
+          responsible,
+          notes,
+          quantity,
+          purchase_date,
+          purchase_price,
+          price,
+          total_price,
+          EPC,
+          location,
+          creator,
+          creation_date,
+          labeling_user,
+          labeling_date,
+          imageURL: getImageURL(id, 'assets', fileExt)
+        });
         const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
         tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
         setCustomFieldsTab(customFieldsTab);
@@ -370,7 +408,9 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                 <TabContainer4 dir={theme4.direction}>
                   <div className="profile-tab-wrapper">
                     <div className="profile-tab-wrapper__content-left">
-                      <ImageUpload>Asset Photo</ImageUpload>
+                      <ImageUpload setImage={setImage} image={values.imageURL}>
+                        Asset Photo
+                      </ImageUpload>
                     </div>
                     <div className="profile-tab-wrapper__content-left">
                       

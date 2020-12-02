@@ -82,7 +82,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const TableComponent = props => {
-  const { headRows, rows, onAdd, onSelect } = props;
+  const { headRows, rows = [], onAdd, onSelect, style = {}, noEdit = false } = props;
   const [selected, setSelected] = useState([]);
   const [selectedId, setSelectedId] = useState([]);
   const [dense, setDense] = useState(false);
@@ -113,7 +113,7 @@ const TableComponent = props => {
   
   const EnhancedTableToolbar = props => {
     const classes = useToolbarStyles();
-    const { selected, onAdd } = props;
+    const { selected, onAdd, noEdit } = props;
     const numSelected = selected.length;
 
     const onDelete = () => {
@@ -122,7 +122,6 @@ const TableComponent = props => {
 
     useEffect(() => {
       if(!props.onSelect) return;
-      console.log('Use Effect >> LEN >>', numSelected);
       const selectedIdToSend = numSelected === 1 ? selectedId[0] : null;
       props.onSelect(selectedIdToSend);
     }, [numSelected]);
@@ -131,7 +130,7 @@ const TableComponent = props => {
       if (numSelected > 0) {
         return (
           <div style={{display:'flex'}}>
-            { numSelected === 1 &&
+            { numSelected === 1 && !noEdit &&
               <Tooltip title="Edit">
                 <IconButton aria-label="Edit" onClick={props.onEdit}>
                   <EditIcon />
@@ -147,7 +146,7 @@ const TableComponent = props => {
         )
       }
       return (
-        <Tooltip title="Add Profile">
+        <Tooltip title="Add">
           <IconButton onClick={onAdd} aria-label="Filter list">
             <AddIcon />
           </IconButton>
@@ -323,13 +322,13 @@ const TableComponent = props => {
 
 
   return (
-    <div className={classes.root}>
+    <div className={classes.root} style={{ padding: '0px' }}>
       <ModalYesNo
         showModal={openYesNoModal}
         onOK={onDelete}
         onCancel={() => setOpenYesNoModal(false)}
-        title={'Remove Location Profile'}
-        message={'Are you sure you want to remove this location profile?'}
+        title={'Remove Element'}
+        message={'Are you sure you want to remove this element?'}
       />
       <Paper className={classes.paper}>
         <EnhancedTableToolbar
@@ -339,6 +338,7 @@ const TableComponent = props => {
           onEdit={onEdit}
           onDelete={() => setOpenYesNoModal(true)}
           onSelect={onSelect}
+          noEdit={noEdit}
         />
         <div className={classes.tableWrapper}>
           <Table
@@ -353,6 +353,7 @@ const TableComponent = props => {
               onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
               rowCount={rows.length}
+              noEdit={noEdit}
             />
             <TableBody>
               {stableSort(rows, getSorting(order, orderBy))
@@ -425,12 +426,12 @@ const TableComponent = props => {
           onChangeRowsPerPage={handleChangeRowsPerPage}
         />
       </Paper>
-      <FormControlLabel
+      {/* <FormControlLabel
         control={
           <Switch checked={dense} onChange={handleChangeDense} />
         }
         label="Dense padding"
-      />
+      /> */}
     </div>
   );
 };

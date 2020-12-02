@@ -9,7 +9,8 @@ export const actionTypes = {
   Logout: "[Logout] Action",
   Register: "[Register] Action",
   UserRequested: "[Request User] Action",
-  UserLoaded: "[Load User] Auth API"
+  UserLoaded: "[Load User] Auth API",
+  UserPicUpdated: "[Update User] Action"
 };
 
 const initialAuthState = {
@@ -46,6 +47,13 @@ export const reducer = persistReducer(
           return { ...state, user };
         }
 
+        case actionTypes.UserPicUpdated: {
+          const { pic } = action.payload;
+          const { user = {} } = state;
+
+          return { ...state, user: { ...user, pic } };
+        }
+
         default:
           return state;
       }
@@ -60,7 +68,8 @@ export const actions = {
   }),
   logout: () => ({ type: actionTypes.Logout }),
   requestUser: user => ({ type: actionTypes.UserRequested, payload: { user } }),
-  fulfillUser: user => ({ type: actionTypes.UserLoaded, payload: { user } })
+  fulfillUser: user => ({ type: actionTypes.UserLoaded, payload: { user } }),
+  updateUserPic: pic => ({ type: actionTypes.UserPicUpdated, payload: { pic } })
 };
 
 export function* saga() {

@@ -29,7 +29,7 @@ import ImageUpload from '../../Components/ImageUpload';
 import { postDB, getOneDB, updateDB, postFILE } from '../../../../crud/api';
 import ModalYesNo from '../../Components/ModalYesNo';
 import Permission from '../components/Permission';
-
+import { getFileExtension, saveImage, getImageURL } from '../../utils';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -137,6 +137,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   };
 
   const handleSave = () => {
+    debugger;
     const fileExt = getFileExtension(image);
     const body = { ...values, customFieldsTab, isAssetRepository, fileExt };
     if (!id) {
@@ -159,47 +160,11 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
     handleCloseModal();
   };
 
-  const getFileExtension = file => {
-    if (!file) return '';
-    const { type } = file;
-    return type.split('/')[1];
-  };
-
+  const [image, setImage] = useState(null);
   const saveAndReload = (folderName, id) => {
-    debugger;
-    saveImage(folderName, id);
+    saveImage(image, folderName, id);
     reloadTable();
   };
-
-  const saveImage = (folderName, id) => {
-    if (image) {
-      postFILE(folderName, id, image)
-        .then(response => {
-          console.log('FIlE uploaded!', response);
-        })
-        .catch(error => console.log(error));
-    }
-  };
-
-  // const test = () => {
-  //   var myHeaders = new Headers();
-  //   myHeaders.append("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVkYWIzZTg3NjAzOGRjNTZkMDg4NzdjMyIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImFAYS5teCIsImlhdCI6MTU5NzIwNTE3NywiZXhwIjoxNjA1ODQ1MTc3fQ.w29W5N9a9jTilzIJp-5xyD_h7ndq5Mqm937h0ipgCkY");
-
-  //   var formdata = new FormData();
-  //   formdata.append("file", image, "User.png");
-
-  //   var requestOptions = {
-  //     method: 'POST',
-  //     headers: myHeaders,
-  //     body: formdata,
-  //     redirect: 'follow'
-  //   };
-
-  //   fetch("http://localhost:3001/api/v1/upload/aapp2021", requestOptions)
-  //     .then(response => response.text())
-  //     .then(result => console.log('File succs>>>>>>>', result))
-  //     .catch(error => console.log('File error>>>>>>>', error));
-  // };
 
   const handleCloseModal = () => {
     setCustomFieldsTab({});
@@ -223,9 +188,8 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
     getOneDB('employeeProfiles/', id[0])
       .then(response => response.json())
       .then(data => { 
-        debugger;
         const { _id, name, depreciation, customFieldsTab, profilePermissions, isAssetRepository, fileExt } = data.response;
-        const imageURL = fileExt ? `http://159.203.41.87:3001/uploads/employeeProfiles/${id}.${fileExt}` : '';
+        const imageURL = getImageURL(id, 'employeeProfiles', fileExt);
         const obj = { name, depreciation, imageURL };
         setValues(obj);
         setCustomFieldsTab(customFieldsTab);
@@ -254,8 +218,6 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   const handleSetPermissions = (key, checked) => {
     setProfilePermissions(prev => ({ ...prev, [key]: checked }));
   }
-
-  const [image, setImage] = useState(null);
 
   return (
     <div style={{width:'1000px'}}>
