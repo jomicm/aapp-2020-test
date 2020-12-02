@@ -75,7 +75,8 @@ function Login(props) {
               setTimeout(() => {
                 debugger;
                 // loginReal(values.email, values.password)
-                loginReal('user', { user: values.email, password: values.password })
+                const { email: user, password } = values;
+                loginReal('user', { user, password })
                   // .then(({ data: { accessToken } }) => {
                   .then(response => response.json())
                   // .then(({response: { accessToken }}) => {
