@@ -1,0 +1,68 @@
+.__container-s {
+  border: 1px solid gray;
+  min-height: 70px;
+  display: flex;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.__container-s:hover {
+  cursor: pointer;
+  background-color: rgba($color: #302c2c8c, $alpha: 0.1);
+}
+
+.__container-img {
+  width: 15%;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+}
+
+.__container-img > img {
+  width: 70%;
+  border-radius: 50%;
+}
+
+.__container-mail {
+  width: 85%;
+  display: flex;
+  flex-direction: column;
+}
+
+.__container-subject-delete {
+  width: 100%;
+  height: 21px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.__container-subject,
+.__container-delete {
+  display: inline-block;
+}
+
+.__container-subject {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.__container-delete:hover {
+  cursor: pointer;
+  color: red;
+}
+
+.__container-message {
+  width: 100%;
+  height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.__container-sender-time {
+  width: 100%;
+  height: 21px;
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+}

@@ -99,7 +99,7 @@
   "devDependencies": {
     "@testing-library/react": "^9.4.0",
     "copyfiles": "^2.1.1",
-    "node-sass": "^4.13.0",
+    "node-sass": "^4.14.1",
     "prettier": "^1.19.1",
     "react-beautiful-dnd": "^13.0.0",
     "serve": "^11.2.0",
