@@ -567,6 +567,14 @@ export default {
         translate: "MENU.SETTINGS",
         bullet: "dot"
       },
+      {
+        title: "Messages",
+        root: true,
+        icon: "flaticon-email",
+        page: "messages",
+        translate: "MENU.MESSAGES",
+        bullet: "dot"
+      },
       //
       // {
       //   title: "Layout Builder",
