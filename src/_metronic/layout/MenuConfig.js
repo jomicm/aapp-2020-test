@@ -575,6 +575,14 @@ export default {
         translate: "MENU.MESSAGES",
         bullet: "dot"
       },
+      {
+        title: "Help",
+        root: true,
+        icon: "flaticon2-help",
+        page: "help",
+        translate: "MENU.HELP",
+        bullet: "dot"
+      },
       //
       // {
       //   title: "Layout Builder",

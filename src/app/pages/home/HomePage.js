@@ -14,6 +14,7 @@ import Employees from './Employees/Employees';
 import Processes from './Processes/Processes';
 import Settings from './Settings/Settings';
 import Messages from './Messages/Messages';
+import Help from './Help/Help';
 
 const GoogleMaterialPage = lazy(() =>
   import("./google-material/GoogleMaterialPage")
@@ -43,6 +44,7 @@ export default function HomePage() {
         <Route path="/processes" component={Processes} />
         <Route path="/settings" component={Settings} />
         <Route path="/messages" component={Messages} />
+        <Route path="/help" component={Help} />
         <Route path="/reports" component={Reports} />
         <Route path="/users" component={Users} />
         <Route path="/google-material" component={GoogleMaterialPage} />
