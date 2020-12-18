@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import TableComponent from "../../Components/TableComponent";
-import ModalMyTickets from "./modals/ModalMyTickets";
 import {
   Portlet,
   PortletBody,
@@ -14,6 +12,8 @@ import {
   updateDB,
   deleteDB,
 } from "../../../../crud/api";
+import ModalMyTickets from "./modals/ModalMyTickets";
+import TableComponent from "../../Components/TableComponent";
 
 const ticketsHeadRows = [
   {
@@ -143,32 +143,30 @@ const MyTickets = () => {
   }, []);
   return (
     <PortletBody>
-      {/* <div className="kt-section kt-margin-t-0"> */}
-        <div className="kt-section__body">
-          <div className="kt-section">
-            <ModalMyTickets
-              showModal={control.openTicketsModal}
-              setShowModal={(onOff) =>
-                setControl({ ...control, openTicketsModal: onOff })
-              }
-              reloadTable={() => loadInitData("tickets")}
-              id={control.idTickets}
-              employeeProfileRows={[]}
+      <div className="kt-section__body">
+        <div className="kt-section">
+          <ModalMyTickets
+            showModal={control.openTicketsModal}
+            setShowModal={(onOff) =>
+              setControl({ ...control, openTicketsModal: onOff })
+            }
+            reloadTable={() => loadInitData("tickets")}
+            id={control.idTickets}
+            employeeProfileRows={[]}
+          />
+          <div className="kt-section__content">
+            <TableComponent
+              title={"My Tickets"}
+              headRows={ticketsHeadRows}
+              rows={control.ticketsRows}
+              onEdit={tableActions("tickets").onEdit}
+              onAdd={tableActions("tickets").onAdd}
+              onDelete={tableActions("tickets").onDelete}
+              onSelect={tableActions("tickets").onSelect}
             />
-            <div className="kt-section__content">
-              <TableComponent
-                title={"My Tickets"}
-                headRows={ticketsHeadRows}
-                rows={control.ticketsRows}
-                onEdit={tableActions("tickets").onEdit}
-                onAdd={tableActions("tickets").onAdd}
-                onDelete={tableActions("tickets").onDelete}
-                onSelect={tableActions("tickets").onSelect}
-              />
-            </div>
           </div>
         </div>
-      {/* </div> */}
+      </div>
     </PortletBody>
   );
 };

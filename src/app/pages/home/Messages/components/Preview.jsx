@@ -2,13 +2,10 @@ import React, { Component, useState } from "react";
 import { EditorState, ContentState } from "draft-js";
 import { Editor } from "react-draft-wysiwyg";
 import htmlToDraft from "html-to-draftjs";
-
 import './Preview.scss'
 
 const Preview = (props) => {
   const html = props.preview;
-  console.log("html contiene: " + html);
-
   const blocksFromHtml = htmlToDraft(html);
   const { contentBlocks, entityMap } = blocksFromHtml;
   const contentState = ContentState.createFromBlockArray(

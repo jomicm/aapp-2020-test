@@ -1,74 +1,68 @@
 .__container-s {
-    // width: 90%;
-    border: 1px solid gray;
-    min-height: 70px;
-    display: flex;
-    margin: 10px;
-    padding: 10px;
-    border-radius: 10px;
-    // background-color: orange;
+  border: 1px solid gray;
+  min-height: 70px;
+  display: flex;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 10px;
 }
 
-.__container-s:hover{
-    cursor: pointer;
-    background-color: rgba($color: #302c2c8c, $alpha: 0.1);
+.__container-s:hover {
+  cursor: pointer;
+  background-color: rgba($color: #302c2c8c, $alpha: 0.1);
 }
 
 .__container-img {
-    width: 15%;
-    // background-color: blue;
-    display: flex;
-    align-items: center;
-    justify-content: start;
+  width: 15%;
+  display: flex;
+  align-items: center;
+  justify-content: start;
 }
 
-.__container-img>img {
-    width: 70%;
-    border-radius: 50%;
+.__container-img > img {
+  width: 70%;
+  border-radius: 50%;
 }
 
 .__container-mail {
-    width: 85%;
-    // background-color: pink;
-    display: flex;
-    flex-direction: column;
+  width: 85%;
+  display: flex;
+  flex-direction: column;
 }
 
 .__container-subject-delete {
-    // border: 1px solid red;
-    width: 100%;
-    height: 21px;
-    display: flex;
-    justify-content: space-between;
+  width: 100%;
+  height: 21px;
+  display: flex;
+  justify-content: space-between;
 }
 
-.__container-subject, .__container-delete {
-    display: inline-block;
+.__container-subject,
+.__container-delete {
+  display: inline-block;
 }
 
 .__container-subject {
-    font-size: 1rem;
-    font-weight: bold;
+  font-size: 1rem;
+  font-weight: bold;
 }
 
 .__container-delete:hover {
-    cursor: pointer;
-    color: red;
+  cursor: pointer;
+  color: red;
 }
 
 .__container-message {
-    // border: 1px solid brown;
-    width: 100%;
-    height: 28px;
-    display: flex;
-    align-items: center;
+  width: 100%;
+  height: 28px;
+  display: flex;
+  align-items: center;
 }
 
 .__container-sender-time {
-    // border: 1px solid aqua;
-    width: 100%;
-    height: 21px;
-    display: flex;
-    justify-content: space-between;
-    font-weight: bold;
+  width: 100%;
+  height: 21px;
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
 }

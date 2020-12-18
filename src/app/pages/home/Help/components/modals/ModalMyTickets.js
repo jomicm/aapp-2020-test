@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import TicketRequest from "../TicketRequest";
 import {
   Button,
   Dialog,
@@ -12,10 +11,10 @@ import {
   FormGroup,
   TextField,
 } from "@material-ui/core";
-import Select from "react-select";
 import { withStyles, useTheme, makeStyles } from "@material-ui/core/styles";
-import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
+import Select from "react-select";
+import SwipeableViews from "react-swipeable-views";
 import CustomFields from "../../../Components/CustomFields/CustomFields";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import TreeView from "../../../Components/TreeViewComponent";
@@ -40,6 +39,7 @@ import {
   FileUpload,
 } from "../../../Components/CustomFields/CustomFieldsPreview";
 import { EditorState } from "draft-js";
+import TicketRequest from "../TicketRequest";
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {

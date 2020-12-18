@@ -1,5 +1,4 @@
 import React from "react";
-
 import "./MessageInformation.scss";
 
 const MessageInformation = (props) => {

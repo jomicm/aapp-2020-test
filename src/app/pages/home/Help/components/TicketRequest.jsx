@@ -1,11 +1,9 @@
 import React from "react";
-import "./TicketRequest.scss";
 import TextField from "@material-ui/core/TextField";
 import MenuItem from "@material-ui/core/MenuItem";
-import Button from "@material-ui/core/Button";
-import Icon from "@material-ui/core/Icon";
 import Slider from "@material-ui/core/Slider";
 import Typography from "@material-ui/core/Typography";
+import "./TicketRequest.scss";
 
 function valuetext(value) {
   return `${value}%`;
@@ -88,7 +86,6 @@ const TicketRequest = ({ values, setValues }) => {
           select
           value={selectedType}
         >
-          {console.log(type)}
           {types.map((option) => (
             <MenuItem key={option.value} value={option.value}>
               {option.label}
@@ -104,7 +101,6 @@ const TicketRequest = ({ values, setValues }) => {
           rows={6}
           style={{ width: "80%" }}
         />
-        {console.log(message)}
       </div>
       <div className="__container-tr-right">
         <Typography

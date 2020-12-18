@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import MyTickets from "./components/MyTickets";
 import {
   Portlet,
   PortletBody,
@@ -7,11 +6,12 @@ import {
   PortletHeader,
   PortletHeaderToolbar,
 } from "../../../../app/partials/content/Portlet";
+import MyTickets from "./components/MyTickets";
 
 export default function Help() {
   return (
     <Portlet>
-      <PortletBody className="portlet-body" style={{padding: '0'}}>
+      <PortletBody className="portlet-body" style={{ padding: "0" }}>
         <MyTickets />
       </PortletBody>
     </Portlet>

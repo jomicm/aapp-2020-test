@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-
-import "./GeneralMessageContainer.scss";
 import Snapshot from "./Snapshot";
 import Preview from "./Preview";
 import MessageInformation from "./MessageInformation";
+import "./GeneralMessageContainer.scss";
 
 const GeneralMessageContainer = () => {
   const [data, setData] = useState([
