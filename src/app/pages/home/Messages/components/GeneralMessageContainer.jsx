@@ -80,41 +80,47 @@ const GeneralMessageContainer = () => {
   const [headerInfo, setHeaderInfo] = useState({
     subject: "",
     senderName: "",
-    time: "",
+    dateTime: "",
   });
 
   return (
-    <>
-      <div className="__container-gmc">
-        <div className="__container-general-snapshot">
-          {data.map((msg, index) => (
-            <div key={msg.id} onClick={() => setPreview(msg.content)}>
-              <div onClick={() => setHeaderInfo({subject : msg.subject, senderName : msg.senderName, time: msg.time})}>
-                <Snapshot
-                  id={msg.id}
-                  img={msg.img}
-                  subject={msg.subject}
-                  description={msg.description}
-                  sender={msg.senderName}
-                  time={msg.time}
-                />
-              </div>
+    <div className="__container-gmc">
+      <div className="__container-general-snapshot">
+        {data.map((msg, index) => (
+          <div key={msg.id} onClick={() => setPreview(msg.content)}>
+            <div
+              onClick={() =>
+                setHeaderInfo({
+                  subject: msg.subject,
+                  senderName: msg.senderName,
+                  dateTime: msg.time,
+                })
+              }
+            >
+              <Snapshot
+                description={msg.description}
+                id={msg.id}
+                img={msg.img}
+                senderName={msg.senderName}
+                subject={msg.subject}
+                dateTime={msg.dateTime}
+              />
             </div>
-          ))}
-        </div>
-        <div className="__container-preview">
-          <div className="__container-information">
-            <MessageInformation
-             subject = {headerInfo.subject}
-             senderName = {headerInfo.senderName}
-             time = {headerInfo.time}
-             />
-            {console.log(headerInfo)}
           </div>
-          <Preview preview={preview} />
-        </div>
+        ))}
       </div>
-    </>
+      <div className="__container-preview">
+        <div className="__container-information">
+          <MessageInformation
+            senderName={headerInfo.senderName}
+            subject={headerInfo.subject}
+            dateTime={headerInfo.dateTime}
+          />
+          {console.log(headerInfo)}
+        </div>
+        <Preview preview={preview} />
+      </div>
+    </div>
   );
 };
 
