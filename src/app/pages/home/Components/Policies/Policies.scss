@@ -1,0 +1,25 @@
+.__container-policies {
+    // background-color: red;
+    width: 100%;
+    min-height: 600px;
+    display: flex;
+  }
+  
+  .__container-policies-accordion {
+      // background-color: blue;
+      width: 25%;
+      margin: 40px;
+  }
+  
+  .__container-policies-table {
+      // background-color: green;
+      width: 100%;
+      // margin: 40px;
+  }
+  
+  .__container-policies-tabs {
+    // background-color: yellow;
+    display: flex;
+    justify-content: start;
+  }
+  
