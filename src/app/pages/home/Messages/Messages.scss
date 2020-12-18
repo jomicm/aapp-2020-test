@@ -1,0 +1,49 @@
+.portlet-body {
+  margin: 0;
+  padding: 10px !important;
+}
+
+.container-inbox {
+  width: 100%;
+  max-height: 40rem;
+  min-height: 40rem;
+  margin: 0 !important;
+  display: flex;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.messages-today {
+  flex: 25%;
+}
+
+.messages-editor {
+  flex: 75%;
+}
+
+@media (min-width: 1399px) {
+  .container-inbox {
+    max-width: 100% !important;
+  }
+}
+@media (min-width: 380px) {
+  .container-inbox {
+    max-width: 100% !important;
+    flex-wrap: wrap;
+  }
+  .messages-today {
+    width: 100%;
+    flex: 100%;
+    flex-wrap: wrap;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-inbox {
+    max-width: 100% !important;
+  }
+  .messages-today {
+    width: 100%;
+    flex: 25%;
+  }
+}
