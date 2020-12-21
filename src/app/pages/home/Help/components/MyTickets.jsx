@@ -12,8 +12,8 @@ import {
   updateDB,
   deleteDB,
 } from "../../../../crud/api";
-import ModalMyTickets from "./modals/ModalMyTickets";
 import TableComponent from "../../Components/TableComponent";
+import ModalMyTickets from "./modals/ModalMyTickets";
 
 const ticketsHeadRows = [
   {

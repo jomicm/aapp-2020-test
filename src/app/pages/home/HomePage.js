@@ -4,6 +4,7 @@ import Builder from "./Builder";
 import Dashboard from "./Dashboard";
 import DocsPage from "./docs/DocsPage";
 import { LayoutSplashScreen } from "../../../_metronic";
+// AApp 2020 Modules
 import Locations from "./Locations/Locations";
 import Assets from "./Assets/Assets";
 import Reports from "./Reports/Reports";
@@ -25,6 +26,7 @@ export default function HomePage() {
   return (
     <Suspense fallback={<LayoutSplashScreen />}>
       <Switch>
+      /* Redirect from root URL to /dashboard. */
         {<Redirect exact from="/" to="/dashboard" />}
         <Route path="/assets" component={Assets} />
         <Route path="/builder" component={Builder} />

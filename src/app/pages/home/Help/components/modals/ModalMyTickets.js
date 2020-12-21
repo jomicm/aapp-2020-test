@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { EditorState } from "draft-js";
+import Select from "react-select";
+import SwipeableViews from "react-swipeable-views";
 import {
   Button,
   Dialog,
@@ -13,12 +16,7 @@ import {
 } from "@material-ui/core";
 import { withStyles, useTheme, makeStyles } from "@material-ui/core/styles";
 import CloseIcon from "@material-ui/icons/Close";
-import Select from "react-select";
-import SwipeableViews from "react-swipeable-views";
-import CustomFields from "../../../Components/CustomFields/CustomFields";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import TreeView from "../../../Components/TreeViewComponent";
-import ImageUpload from "../../../Components/ImageUpload";
 import {
   postDBEncryptPassword,
   getDB,
@@ -26,6 +24,9 @@ import {
   updateDB,
   postDB,
 } from "../../../../../crud/api";
+import CustomFields from "../../../Components/CustomFields/CustomFields";
+import TreeView from "../../../Components/TreeViewComponent";
+import ImageUpload from "../../../Components/ImageUpload";
 import ModalYesNo from "../../../Components/ModalYesNo";
 import { getFileExtension, saveImage, getImageURL } from "../../../utils";
 import {
@@ -38,7 +39,6 @@ import {
   Checkboxes,
   FileUpload,
 } from "../../../Components/CustomFields/CustomFieldsPreview";
-import { EditorState } from "draft-js";
 import TicketRequest from "../TicketRequest";
 
 const CustomFieldsPreview = (props) => {

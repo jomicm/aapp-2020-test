@@ -4,11 +4,11 @@ import {
   PortletBody,
   PortletFooter,
   PortletHeader,
-  PortletHeaderToolbar,
+  PortletHeaderToolbar
 } from "../../../../app/partials/content/Portlet";
 import MyTickets from "./components/MyTickets";
 
-export default function Help() {
+const Help = () => {
   return (
     <Portlet>
       <PortletBody className="portlet-body" style={{ padding: "0" }}>
@@ -17,3 +17,5 @@ export default function Help() {
     </Portlet>
   );
 }
+
+export default Help;

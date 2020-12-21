@@ -5,7 +5,7 @@ import Slider from "@material-ui/core/Slider";
 import Typography from "@material-ui/core/Typography";
 import "./TicketRequest.scss";
 
-function valuetext(value) {
+const valuetext = (value) => {
   return `${value}%`;
 }
 

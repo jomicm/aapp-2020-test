@@ -15,7 +15,7 @@ import {
   PortletBody,
   PortletFooter,
   PortletHeader,
-  PortletHeaderToolbar,
+  PortletHeaderToolbar
 } from "../../../partials/content/Portlet";
 import { CodeBlock } from "../../../partials/content/CodeExample";
 import Notice from "../../../partials/content/Notice";
