@@ -16,7 +16,8 @@ import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import TreeItem from "@material-ui/lab/TreeItem";
 
-const BaseFieldsAccordion = () => {
+
+const BaseFieldsAccordion = (props) => {
   const [open, setOpen] = React.useState(true);
 
   function handleClick() {
@@ -36,15 +37,13 @@ const BaseFieldsAccordion = () => {
           </ExpansionPanelSummary>
           <Divider />
           <List style={{ fontSize: "3rem" }}>
-          <TreeItem  className="baseform-tree-item" nodeId="1" label="BF1">
-                <TreeItem nodeId="2" label="Calendar" />
-                <TreeItem nodeId="3" label="Chrome" />
-                <TreeItem nodeId="4" label="Webstorm" />
+          <TreeItem  className="baseform-tree-item" style={{ margin: "0 0 20px 5px"}} nodeId="1" label={props.baseReferences}>
+                <TreeItem nodeId="2" label={props.nameReferences} />
               </TreeItem>
-              <TreeItem className="baseform-tree-item" nodeId="5" label="BF2">
-                <TreeItem nodeId="6" label="OSS" />
-                <TreeItem nodeId="7" label="OSS2" />
-                <TreeItem nodeId="8" label="OSS3" />
+              <TreeItem className="baseform-tree-item" style={{ margin: "0 0 20px 5px"}} nodeId="5" label={props.baseList}>
+                <TreeItem nodeId="6" label={props.nameList} />
+                <TreeItem nodeId="7" label={props.lastNameList} />
+                <TreeItem nodeId="8" label={props.emailList} />
               </TreeItem>
           </List>
         </ExpansionPanel>

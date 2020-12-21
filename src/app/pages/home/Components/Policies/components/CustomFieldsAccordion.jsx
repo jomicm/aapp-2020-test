@@ -16,7 +16,7 @@ import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import TreeItem from "@material-ui/lab/TreeItem";
 
-const CustomFieldsAccordion = () => {
+const CustomFieldsAccordion = (props) => {
   const [open, setOpen] = React.useState(true);
 
   function handleClick() {
@@ -36,16 +36,34 @@ const CustomFieldsAccordion = () => {
           </ExpansionPanelSummary>
           <Divider />
           <List style={{ fontSize: "3rem" }}>
-          <TreeItem  className="baseform-tree-item" nodeId="1" label="CF1">
-                <TreeItem nodeId="2" label="Calendar" />
-                <TreeItem nodeId="3" label="Chrome" />
-                <TreeItem nodeId="4" label="Webstorm" />
+            <TreeItem
+              style={{ margin: "0 0 20px 5px" }}
+              className="baseform-tree-item"
+              nodeId="1"
+              label={props.customReferences}
+            >
+              <TreeItem
+                className="baseform-tree-item"
+                nodeId="2"
+                label={props.nameCustomReceptionist}
+              >
+                <TreeItem nodeId="3" label={props.customFieldOoto} />
+                <TreeItem nodeId="4" label={props.customFieldOffice} />
               </TreeItem>
-              <TreeItem className="baseform-tree-item" nodeId="5" label="CF2">
-                <TreeItem nodeId="6" label="OSS" />
-                <TreeItem nodeId="7" label="OSS2" />
-                <TreeItem nodeId="8" label="OSS3" />
+              <TreeItem
+                className="baseform-tree-item"
+                nodeId="5"
+                label={props.nameCustomEmp}
+              >
+                <TreeItem nodeId="6" label={props.customFieldBirthday} />
               </TreeItem>
+            </TreeItem>
+            <TreeItem
+              style={{ margin: "0 0 20px 5px" }}
+              className="baseform-tree-item"
+              nodeId="7"
+              label={props.customList}
+            ></TreeItem>
           </List>
         </ExpansionPanel>
       </TreeView>

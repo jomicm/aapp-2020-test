@@ -17,6 +17,18 @@ import TableComponent from "../../TableComponent";
 
 const policiesHeadRows = [
   {
+    id: "name",
+    numeric: false,
+    disablePadding: false,
+    label: "Name",
+  },
+  {
+    id: "target",
+    numeric: false,
+    disablePadding: false,
+    label: "Target",
+  },
+  {
     id: "action",
     numeric: false,
     disablePadding: false,
@@ -27,18 +39,6 @@ const policiesHeadRows = [
     numeric: false,
     disablePadding: false,
     label: "Type",
-  },
-  {
-    id: "name",
-    numeric: false,
-    disablePadding: false,
-    label: "Name",
-  },
-  {
-    id: "dateTime",
-    numeric: false,
-    disablePadding: false,
-    label: "Date Time",
   },
   {
     id: "creator",
@@ -64,19 +64,19 @@ const collections = {
 
 const createPoliciesRow = (
   id,
+  name,
+  target,
   action,
   type,
-  name,
-  dateTime,
   creator,
   creationDate
 ) => {
   return {
     id,
+    name,
+    target,
     action,
     type,
-    name,
-    dateTime,
     creator,
     creationDate,
   };
@@ -135,10 +135,10 @@ const PoliciesTable = () => {
               // const { _id, action, type, name } = row;
               return createPoliciesRow(
                 row._id,
+                row.name,
+                row.target,
                 row.action,
                 row.type,
-                row.name,
-                "11/03/2020",
                 "Admin",
                 "12/2/2020"
               );
