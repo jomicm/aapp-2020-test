@@ -62,7 +62,6 @@ import StarBorder from "@material-ui/icons/StarBorder";
 //DB API methods
 import { getDB, deleteDB } from "../../../crud/api";
 import ModalYesNo from "../Components/ModalYesNo";
-import Policies from "./components/Policies";
 
 const localStorageActiveTabKey = "builderActiveTab";
 export default function Employees() {
@@ -409,19 +408,6 @@ export default function Employees() {
                             onSelect={tableActions("employeeProfiles").onSelect}
                           />
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                </PortletBody>
-              )}
-
-              {tab === 2 && (
-                <PortletBody>
-                  <div className="kt-section kt-margin-t-0">
-                    <div className="kt-section__body">
-                      <div className="kt-section">
-                        <Policies />
-                        <div className="kt-separator kt-separator--dashed" />
                       </div>
                     </div>
                   </div>
