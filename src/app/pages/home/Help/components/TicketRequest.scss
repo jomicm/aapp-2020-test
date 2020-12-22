@@ -1,0 +1,27 @@
+.__container-tr {
+  display: flex;
+  justify-content: space-between;
+  min-height: 350px;
+  width: 100%;
+}
+
+.__container-tr-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 70%;
+}
+
+.__container-tr-right {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  min-height: 350px;
+  width: 30%;
+}
+
+.__container-tr-btn {
+  display: flex;
+  justify-content: space-around;
+}

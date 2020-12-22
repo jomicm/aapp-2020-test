@@ -1,40 +1,40 @@
 .__container-s {
   border: 1px solid gray;
-  min-height: 70px;
+  border-radius: 10px;
   display: flex;
   margin: 10px;
+  min-height: 70px;
   padding: 10px;
-  border-radius: 10px;
 }
 
 .__container-s:hover {
-  cursor: pointer;
   background-color: rgba($color: #302c2c8c, $alpha: 0.1);
+  cursor: pointer;
 }
 
 .__container-img {
-  width: 15%;
-  display: flex;
   align-items: center;
+  display: flex;
   justify-content: start;
+  width: 15%;
 }
 
 .__container-img > img {
-  width: 70%;
   border-radius: 50%;
+  width: 70%;
 }
 
 .__container-mail {
-  width: 85%;
   display: flex;
   flex-direction: column;
+  width: 85%;
 }
 
 .__container-subject-delete {
-  width: 100%;
-  height: 21px;
   display: flex;
+  height: 21px;
   justify-content: space-between;
+  width: 100%;
 }
 
 .__container-subject,
@@ -48,21 +48,21 @@
 }
 
 .__container-delete:hover {
-  cursor: pointer;
   color: red;
+  cursor: pointer;
 }
 
 .__container-message {
-  width: 100%;
-  height: 28px;
-  display: flex;
   align-items: center;
+  display: flex;
+  height: 28px;
+  width: 100%;
 }
 
 .__container-sender-time {
-  width: 100%;
-  height: 21px;
   display: flex;
-  justify-content: space-between;
   font-weight: bold;
+  height: 21px;
+  justify-content: space-between;
+  width: 100%;
 }

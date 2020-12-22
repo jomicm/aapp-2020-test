@@ -4,13 +4,13 @@
 }
 
 .container-inbox {
-  width: 100%;
+  display: flex;
+  margin: 0 !important;
   max-height: 40rem;
   min-height: 40rem;
-  margin: 0 !important;
-  display: flex;
-  padding: 0 !important;
   overflow: hidden;
+  padding: 0 !important;
+  width: 100%;
 }
 
 .messages-today {
@@ -28,13 +28,13 @@
 }
 @media (min-width: 380px) {
   .container-inbox {
-    max-width: 100% !important;
     flex-wrap: wrap;
+    max-width: 100% !important;
   }
   .messages-today {
-    width: 100%;
     flex: 100%;
     flex-wrap: wrap;
+    width: 100%;
   }
 }
 
@@ -43,7 +43,7 @@
     max-width: 100% !important;
   }
   .messages-today {
-    width: 100%;
     flex: 25%;
+    width: 100%;
   }
 }
