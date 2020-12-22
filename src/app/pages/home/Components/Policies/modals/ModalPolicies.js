@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 // import TicketRequest from "../TicketRequest";
 import Autocomplete from "@material-ui/lab/Autocomplete";
+import NotificationImportantIcon from "@material-ui/icons/NotificationImportant";
 import {
   Button,
+  Checkbox,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -10,6 +12,7 @@ import {
   Typography,
   IconButton,
   FormLabel,
+  FormControlLabel,
   FormGroup,
   TextField,
 } from "@material-ui/core";
@@ -240,6 +243,21 @@ const ModalPolicies = ({
     setValues({ ...values, [name]: event.target.value });
   };
 
+  const [check, setCheck] = React.useState({
+    checkedA: false,
+    checkedB: false,
+    checkedC: false,
+    checkedD: false,
+    checkedE: false,
+    checkedF: false,
+    checkedG: false,
+    checkedH: false,
+  });
+
+  const handleCheckbox = (event) => {
+    setCheck({ ...check, [event.target.name]: event.target.checked });
+  };
+
   return (
     <div>
       <Dialog
@@ -250,6 +268,7 @@ const ModalPolicies = ({
         <DialogTitle5 id="customized-dialog-title" onClose={handleCloseModal}>
           {`${id ? "Edit" : "Add"} Action`}
         </DialogTitle5>
+
         <DialogContent dividers>
           <Paper>
             <Tabs
@@ -265,75 +284,252 @@ const ModalPolicies = ({
             </Tabs>
           </Paper>
           <div
-              style={{
-                width: "750px",
-                minHeight: "500px",
-              }}
-              className="profile-tab-wrapper"
-            >
-          <div className="kt-section__content">
-            {value === 0 && (
-              <div className="profile-tab-wrapper">
-                <div className="profile-tab-wrapper__content">
-                  <Autocomplete
-                    className={classes.textField}
-                    multiple
-                    id="tags-standard"
-                    options={users}
-                    getOptionLabel={(option) => option.name}
-                    // defaultValue={[users[13]]}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        variant="standard"
-                        label="From"
-                        // placeholder="Notifications"
+            style={{
+              width: "750px",
+              minHeight: "500px",
+            }}
+            className="profile-tab-wrapper"
+          >
+            <div className="kt-section__content">
+              {value === 0 && (
+                <div className="profile-tab-wrapper">
+                  <div className="profile-tab-wrapper__content">
+                    <FormGroup row>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={check.checkedA}
+                            onChange={handleCheckbox}
+                            name="checkedA"
+                            color="primary"
+                          />
+                        }
+                        label="List"
                       />
-                    )}
-                  />
-                  <Autocomplete
-                    className={classes.textField}
-                    multiple
-                    id="tags-standard"
-                    options={users}
-                    getOptionLabel={(option) => option.name}
-                    // defaultValue={[users[13]]}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        variant="standard"
-                        label="To"
-                        // placeholder="Notifications"
+
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={check.checkedB}
+                            onChange={handleCheckbox}
+                            name="checkedB"
+                            color="primary"
+                          />
+                        }
+                        label="References"
                       />
-                    )}
-                  />
-                  <TextField
-                    id="standard-name"
-                    label="Subject"
-                    className={classes.textField}
-                    value={values.name}
-                    onChange={handleChangeName('name')}
-                    margin="normal"
-                  />
-                  <div className="field-properties-wrapper">
-                    <div style={{ width: "400px", marginTop: "20px", marginBottom: "40px" }}>
-                      <Editor
-                        onClick={(e) => console.log(">>>>>>>click", e)}
-                        editorState={editor}
-                        toolbarClassName="toolbarClassName"
-                        wrapperClassName="wrapperClassName"
-                        editorClassName="editorClassName"
-                        onEditorStateChange={(ed) => setEditor(ed)}
-                      />
+                    </FormGroup>
+
+                    <Autocomplete
+                      className={classes.textField}
+                      multiple
+                      id="tags-standard"
+                      options={users}
+                      getOptionLabel={(option) => option.name}
+                      // defaultValue={[users[13]]}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          variant="standard"
+                          label="From"
+                          // placeholder="Notifications"
+                        />
+                      )}
+                    />
+                    <Autocomplete
+                      className={classes.textField}
+                      multiple
+                      id="tags-standard"
+                      options={users}
+                      getOptionLabel={(option) => option.name}
+                      // defaultValue={[users[13]]}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          variant="standard"
+                          label="To"
+                          // placeholder="Notifications"
+                        />
+                      )}
+                    />
+
+                    {/* <NotificationImportantIcon /> */}
+
+                    <TextField
+                      id="standard-name"
+                      label="title"
+                      className={classes.textField}
+                      value={values.name}
+                      onChange={handleChangeName("name")}
+                      margin="normal"
+                    />
+                    <div className="field-properties-wrapper">
+                      <div
+                        style={{
+                          width: "400px",
+                          marginTop: "20px",
+                          marginBottom: "40px",
+                        }}
+                      >
+                        <div className="profile-tab-wrapper__content">
+                          Message:{" "}
+                        </div>
+                        <Editor
+                          onClick={(e) => console.log(">>>>>>>click", e)}
+                          editorState={editor}
+                          toolbarHidden={true}
+                          toolbarClassName="toolbarClassName"
+                          wrapperClassName="wrapperClassName"
+                          editorClassName="editorClassName"
+                          onEditorStateChange={(ed) => setEditor(ed)}
+                        />
+                      </div>
                     </div>
+                    <FormGroup row>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={check.checkedC}
+                            onChange={handleCheckbox}
+                            name="checkedC"
+                            color="primary"
+                          />
+                        }
+                        label="Mail"
+                      />
+
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={check.checkedD}
+                            onChange={handleCheckbox}
+                            name="checkedD"
+                            color="primary"
+                          />
+                        }
+                        label="Internal"
+                      />
+                    </FormGroup>
                   </div>
                 </div>
-              </div>
-            )}
-            {value === 1 && <h1>Villa</h1>}
-            {value === 2 && <h1>Jimeénez</h1>}
+              )}
 
-           </div>
+              {value === 1 && (
+                <div className="profile-tab-wrapper">
+                  <div className="profile-tab-wrapper__content">
+                    <FormGroup row>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={check.checkedE}
+                            onChange={handleCheckbox}
+                            name="checkedE"
+                            color="primary"
+                          />
+                        }
+                        label="List"
+                      />
+
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={check.checkedF}
+                            onChange={handleCheckbox}
+                            name="checkedF"
+                            color="primary"
+                          />
+                        }
+                        label="References"
+                      />
+                    </FormGroup>
+                    <Autocomplete
+                      className={classes.textField}
+                      multiple
+                      id="tags-standard"
+                      options={users}
+                      getOptionLabel={(option) => option.name}
+                      // defaultValue={[users[13]]}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          variant="standard"
+                          label="From"
+                          // placeholder="Notifications"
+                        />
+                      )}
+                    />
+                    <Autocomplete
+                      className={classes.textField}
+                      multiple
+                      id="tags-standard"
+                      options={users}
+                      getOptionLabel={(option) => option.name}
+                      // defaultValue={[users[13]]}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          variant="standard"
+                          label="To"
+                          // placeholder="Notifications"
+                        />
+                      )}
+                    />
+                    <TextField
+                      id="standard-name"
+                      label="Subject"
+                      className={classes.textField}
+                      value={values.name}
+                      onChange={handleChangeName("name")}
+                      margin="normal"
+                    />
+                    <div className="field-properties-wrapper">
+                      <div
+                        style={{
+                          width: "400px",
+                          marginTop: "20px",
+                          marginBottom: "40px",
+                        }}
+                      >
+                        <Editor
+                          onClick={(e) => console.log(">>>>>>>click", e)}
+                          editorState={editor}
+                          toolbarClassName="toolbarClassName"
+                          wrapperClassName="wrapperClassName"
+                          editorClassName="editorClassName"
+                          onEditorStateChange={(ed) => setEditor(ed)}
+                        />
+                      </div>
+                    </div>
+                    <FormGroup row>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={check.checkedG}
+                            onChange={handleCheckbox}
+                            name="checkedG"
+                            color="primary"
+                          />
+                        }
+                        label="Mail"
+                      />
+
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={check.checkedH}
+                            onChange={handleCheckbox}
+                            name="checkedH"
+                            color="primary"
+                          />
+                        }
+                        label="Internal"
+                      />
+                    </FormGroup>
+                  </div>
+                </div>
+              )}
+              {value === 2 && <h1>Jimeénez</h1>}
+            </div>
           </div>
         </DialogContent>
         <DialogActions5>
