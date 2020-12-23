@@ -11,36 +11,7 @@ const Policies = () => {
 
   return (
     <div className="__container-policies">
-      {/* <div className="__container-policies-accordion">
-        <BaseFieldsAccordion
-          baseList={employeesFields.list.nameListBF}
-          baseReferences={employeesFields.references.nameReferencesBF}
-          emailList={employeesFields.list.baseFields.email.label}
-          lastNameList={employeesFields.list.baseFields.lastName.label}
-          nameList={employeesFields.list.baseFields.name.label}
-          nameReferences={employeesFields.references.baseFields.name.label}
-        />
-        <Divider />
-        <CustomFieldsAccordion
-          customFieldBirthday={
-            employeesFields.references.customFields.emp02.birthday.label
-          }
-          customFieldOffice={
-            employeesFields.references.customFields.receptionist.favoriteOffice
-              .label
-          }
-          customFieldOoto={
-            employeesFields.references.customFields.receptionist.ootoDay.label
-          }
-          customList={employeesFields.list.nameListCF}
-          customReferences={employeesFields.references.nameReferencesCF}
-          nameCustomReceptionist={employeesFields.references.customFields.name}
-          nameCustomEmp={employeesFields.references.customFields.name2}
-        />
-      </div> */}
-      {/* <div className="__container-policies-table"> */}
         <PoliciesTable />
-      {/* </div> */}
     </div>
   );
 };
