@@ -15,7 +15,7 @@ import {
   PortletBody,
   PortletFooter,
   PortletHeader,
-  PortletHeaderToolbar
+  PortletHeaderToolbar,
 } from "../../../partials/content/Portlet";
 import { CodeBlock } from "../../../partials/content/CodeExample";
 import Notice from "../../../partials/content/Notice";
@@ -44,11 +44,9 @@ import TableComponent from "../Components/TableComponent";
 import ModalEmployeeProfiles from "./modals/ModalEmployeeProfiles";
 import Autocomplete from "../Components/Inputs/Autocomplete";
 import ModalEmployees from "./modals/ModalEmployees";
-
 import TreeView from "../Components/TreeViewComponent";
 // import GoogleMaps from '../Components/GoogleMaps';
 // import './Assets.scss';
-
 //Icons
 import CloseIcon from "@material-ui/icons/Close";
 import DeleteIcon from "@material-ui/icons/Delete";
@@ -62,6 +60,7 @@ import StarBorder from "@material-ui/icons/StarBorder";
 //DB API methods
 import { getDB, deleteDB } from "../../../crud/api";
 import ModalYesNo from "../Components/ModalYesNo";
+import Policies from "../Components/Policies/Policies";
 
 const localStorageActiveTabKey = "builderActiveTab";
 export default function Employees() {
@@ -413,6 +412,8 @@ export default function Employees() {
                   </div>
                 </PortletBody>
               )}
+
+              {tab === 2 && <Policies />}
             </Portlet>
           </div>
         )}
