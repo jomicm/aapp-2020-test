@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-// import TicketRequest from "../TicketRequest";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import NotificationImportantIcon from "@material-ui/icons/NotificationImportant";
 import {
@@ -9,21 +8,27 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Typography,
   IconButton,
-  FormLabel,
+  FormControl,
   FormControlLabel,
   FormGroup,
+  FormLabel,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Tab,
+  Tabs,
+  TextareaAutosize,
   TextField,
+  Typography,
 } from "@material-ui/core";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import Select from "react-select";
-import { withStyles, useTheme, makeStyles } from "@material-ui/core/styles";
-import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
-import CustomFields from "../../../Components/CustomFields/CustomFields";
-import TreeView from "../../../Components/TreeViewComponent";
-import ImageUpload from "../../../Components/ImageUpload";
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
+import { withStyles, useTheme, makeStyles } from "@material-ui/core/styles";
+import { EditorState } from "draft-js";
+import { Editor } from "react-draft-wysiwyg";
+import SwipeableViews from "react-swipeable-views";
 import {
   postDBEncryptPassword,
   getDB,
@@ -31,6 +36,9 @@ import {
   updateDB,
   postDB,
 } from "../../../../../crud/api";
+import CustomFields from "../../../Components/CustomFields/CustomFields";
+import TreeView from "../../../Components/TreeViewComponent";
+import ImageUpload from "../../../Components/ImageUpload";
 import ModalYesNo from "../../../Components/ModalYesNo";
 import { getFileExtension, saveImage, getImageURL } from "../../../utils";
 import {
@@ -43,11 +51,6 @@ import {
   FileUpload,
   Checkboxes,
 } from "../../../Components/CustomFields/CustomFieldsPreview";
-import { EditorState } from "draft-js";
-import { Editor } from "react-draft-wysiwyg";
-import Paper from "@material-ui/core/Paper";
-import Tabs from "@material-ui/core/Tabs";
-import Tab from "@material-ui/core/Tab";
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -135,6 +138,14 @@ const useStyles = makeStyles((theme) => ({
   },
   menu: {
     width: 200,
+  },
+  button: {
+    display: "block",
+    marginTop: theme.spacing(2),
+  },
+  formControl: {
+    margin: theme.spacing(1),
+    minWidth: 120,
   },
 }));
 
@@ -243,6 +254,20 @@ const ModalPolicies = ({
     setValues({ ...values, [name]: event.target.value });
   };
 
+  const [checkDisable, setCheckDisable] = useState({
+    label: "Disable",
+    checkedDisableA: false,
+    checkedDisableB: false,
+    checkedDisableC: false,
+  });
+
+  const handleCheckDisable = (event) => {
+    setCheckDisable({
+      ...checkDisable,
+      [event.target.name]: event.target.checked,
+    });
+  };
+
   const [check, setCheck] = React.useState({
     checkedA: false,
     checkedB: false,
@@ -258,9 +283,40 @@ const ModalPolicies = ({
     setCheck({ ...check, [event.target.name]: event.target.checked });
   };
 
+  const [action, setAction] = React.useState("");
+  const [openAction, setOpenAction] = React.useState(false);
+
+  function handleChangeAction(event) {
+    setAction(event.target.value);
+  }
+
+  function handleCloseAction() {
+    setOpenAction(false);
+  }
+
+  function handleOpenAction() {
+    setOpenAction(true);
+  }
+
+  const [listRef, setListRef] = React.useState("");
+  const [openListRef, setOpenListRef] = React.useState(false);
+
+  function handleChangeListRef(event) {
+    setListRef(event.target.value);
+  }
+
+  function handleCloseListRef() {
+    setOpenListRef(false);
+  }
+
+  function handleOpenListRef() {
+    setOpenListRef(true);
+  }
+
   return (
     <div>
       <Dialog
+        style={{ height: "900px" }}
         onClose={handleCloseModal}
         aria-labelledby="customized-dialog-title"
         open={showModal}
@@ -268,6 +324,52 @@ const ModalPolicies = ({
         <DialogTitle5 id="customized-dialog-title" onClose={handleCloseModal}>
           {`${id ? "Edit" : "Add"} Action`}
         </DialogTitle5>
+
+        <div style={{ display: "flex", justifyContent: "space-around" }}>
+          <form autoComplete="off">
+            <Button className={classes.button} onClick={handleOpenAction}>
+              Action Select
+            </Button>
+            <FormControl className={classes.formControl}>
+              <InputLabel htmlFor="demo-controlled-open-select">
+                Action
+              </InputLabel>
+              <Select
+                open={openAction}
+                onClose={handleCloseAction}
+                onOpen={handleOpenAction}
+                value={action}
+                onChange={handleChangeAction}
+              >
+                <MenuItem value={10}>On Add</MenuItem>
+                <MenuItem value={20}>On Edit</MenuItem>
+                <MenuItem value={30}>On Delete</MenuItem>
+                <MenuItem value={40}>On Load</MenuItem>
+              </Select>
+            </FormControl>
+          </form>
+
+          <form autoComplete="off">
+            <Button className={classes.button} onClick={handleOpenListRef}>
+              Catalogue
+            </Button>
+            <FormControl className={classes.formControl}>
+              <InputLabel htmlFor="demo-controlled-open-select">
+                Catalogue
+              </InputLabel>
+              <Select
+                open={openListRef}
+                onClose={handleCloseListRef}
+                onOpen={handleOpenListRef}
+                value={listRef}
+                onChange={handleChangeListRef}
+              >
+                <MenuItem value={50}>List</MenuItem>
+                <MenuItem value={60}>References</MenuItem>
+              </Select>
+            </FormControl>
+          </form>
+        </div>
 
         <DialogContent dividers>
           <Paper>
@@ -285,8 +387,8 @@ const ModalPolicies = ({
           </Paper>
           <div
             style={{
-              width: "750px",
-              minHeight: "500px",
+              width: "1000px",
+              minHeight: "200px",
             }}
             className="profile-tab-wrapper"
           >
@@ -294,6 +396,17 @@ const ModalPolicies = ({
               {value === 0 && (
                 <div className="profile-tab-wrapper">
                   <div className="profile-tab-wrapper__content">
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={checkDisable.checkedDisable}
+                          onChange={handleCheckDisable}
+                          name="checkedDisableA"
+                          color="primary"
+                        />
+                      }
+                      label={checkDisable.label}
+                    />
                     <FormGroup row>
                       <FormControlLabel
                         control={
@@ -306,7 +419,6 @@ const ModalPolicies = ({
                         }
                         label="List"
                       />
-
                       <FormControlLabel
                         control={
                           <Checkbox
@@ -319,20 +431,17 @@ const ModalPolicies = ({
                         label="References"
                       />
                     </FormGroup>
-
                     <Autocomplete
                       className={classes.textField}
                       multiple
                       id="tags-standard"
                       options={users}
                       getOptionLabel={(option) => option.name}
-                      // defaultValue={[users[13]]}
                       renderInput={(params) => (
                         <TextField
                           {...params}
                           variant="standard"
                           label="From"
-                          // placeholder="Notifications"
                         />
                       )}
                     />
@@ -342,19 +451,10 @@ const ModalPolicies = ({
                       id="tags-standard"
                       options={users}
                       getOptionLabel={(option) => option.name}
-                      // defaultValue={[users[13]]}
                       renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          variant="standard"
-                          label="To"
-                          // placeholder="Notifications"
-                        />
+                        <TextField {...params} variant="standard" label="To" />
                       )}
                     />
-
-                    {/* <NotificationImportantIcon /> */}
-
                     <TextField
                       id="standard-name"
                       label="title"
@@ -366,22 +466,21 @@ const ModalPolicies = ({
                     <div className="field-properties-wrapper">
                       <div
                         style={{
-                          width: "400px",
+                          width: "600px",
                           marginTop: "20px",
                           marginBottom: "40px",
                         }}
                       >
-                        <div className="profile-tab-wrapper__content">
-                          Message:{" "}
-                        </div>
-                        <Editor
-                          onClick={(e) => console.log(">>>>>>>click", e)}
-                          editorState={editor}
-                          toolbarHidden={true}
-                          toolbarClassName="toolbarClassName"
-                          wrapperClassName="wrapperClassName"
-                          editorClassName="editorClassName"
-                          onEditorStateChange={(ed) => setEditor(ed)}
+                        <TextField
+                          id="standard-full-width"
+                          label="Message"
+                          style={{ width: "100%" }}
+                          placeholder="Message"
+                          fullWidth
+                          margin="normal"
+                          InputLabelProps={{
+                            shrink: true,
+                          }}
                         />
                       </div>
                     </div>
@@ -397,7 +496,6 @@ const ModalPolicies = ({
                         }
                         label="Mail"
                       />
-
                       <FormControlLabel
                         control={
                           <Checkbox
@@ -413,10 +511,20 @@ const ModalPolicies = ({
                   </div>
                 </div>
               )}
-
               {value === 1 && (
                 <div className="profile-tab-wrapper">
                   <div className="profile-tab-wrapper__content">
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={check.checkedDisable}
+                          onChange={handleCheckDisable}
+                          name="checkedDisableB"
+                          color="primary"
+                        />
+                      }
+                      label={checkDisable.label}
+                    />
                     <FormGroup row>
                       <FormControlLabel
                         control={
@@ -429,7 +537,6 @@ const ModalPolicies = ({
                         }
                         label="List"
                       />
-
                       <FormControlLabel
                         control={
                           <Checkbox
@@ -448,13 +555,11 @@ const ModalPolicies = ({
                       id="tags-standard"
                       options={users}
                       getOptionLabel={(option) => option.name}
-                      // defaultValue={[users[13]]}
                       renderInput={(params) => (
                         <TextField
                           {...params}
                           variant="standard"
                           label="From"
-                          // placeholder="Notifications"
                         />
                       )}
                     />
@@ -464,14 +569,8 @@ const ModalPolicies = ({
                       id="tags-standard"
                       options={users}
                       getOptionLabel={(option) => option.name}
-                      // defaultValue={[users[13]]}
                       renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          variant="standard"
-                          label="To"
-                          // placeholder="Notifications"
-                        />
+                        <TextField {...params} variant="standard" label="To" />
                       )}
                     />
                     <TextField
@@ -485,12 +584,13 @@ const ModalPolicies = ({
                     <div className="field-properties-wrapper">
                       <div
                         style={{
-                          width: "400px",
+                          width: "100%",
                           marginTop: "20px",
                           marginBottom: "40px",
                         }}
                       >
                         <Editor
+                          style={{ width: "800px" }}
                           onClick={(e) => console.log(">>>>>>>click", e)}
                           editorState={editor}
                           toolbarClassName="toolbarClassName"
@@ -528,7 +628,42 @@ const ModalPolicies = ({
                   </div>
                 </div>
               )}
-              {value === 2 && <h1>Jimeénez</h1>}
+              {value === 2 && (
+                <div className="profile-tab-wrapper">
+                  <div className="profile-tab-wrapper__content">
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={check.checkedDisable}
+                          onChange={handleCheckDisable}
+                          name="checkedDisableB"
+                          color="primary"
+                        />
+                      }
+                      label={checkDisable.label}
+                    />
+                    <TextField
+                      style={{ width: "700px" }}
+                      id="standard-name"
+                      label="URL"
+                      className={classes.textField}
+                      value={values.name}
+                      onChange={handleChangeName("name")}
+                      margin="normal"
+                    />
+                    <TextareaAutosize
+                      style={{
+                        width: "700px",
+                        height: "300px",
+                        marginTop: "20px",
+                      }}
+                      rowsMax={8}
+                      aria-label="maximum height"
+                      placeholder="POST"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </DialogContent>

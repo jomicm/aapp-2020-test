@@ -2,72 +2,74 @@ import React from "react";
 import Divider from "@material-ui/core/Divider";
 import Tab from "@material-ui/core/Tab";
 import Tabs from "@material-ui/core/Tabs";
-import FormAccordion from "./components/FormAccordion";
 import BaseFieldsAccordion from "./components/BaseFieldsAccordion";
 import CustomFieldsAccordion from "./components/CustomFieldsAccordion";
-import PoliciesTable from './components/PoliciesTable';
+import PoliciesTable from "./components/PoliciesTable";
 import "./Policies.scss";
 
 const Policies = () => {
-
   const employeesFields = {
-    references: { // BF References
+    references: {
       baseFields: {
-        name: { id: 'name', label: 'Name' }
+        name: { id: "name", label: "Name" },
       },
       customFields: {
         name: "Receptionist",
         receptionist: {
-          ootoDay: { id: 'ootoDay', label: 'Ooto Day' },
-          favoriteOffice: { id: 'favoriteOffice', label: 'Favorite Office' }
+          ootoDay: { id: "ootoDay", label: "Ooto Day" },
+          favoriteOffice: { id: "favoriteOffice", label: "Favorite Office" },
         },
         name2: "emp02",
         emp02: {
-          birthday: { id: 'birthday', label: 'Birthday' }
+          birthday: { id: "birthday", label: "Birthday" },
         },
       },
-      nameReferencesBF: 'BF - References',
-      nameReferencesCF: 'CF - References'
+      nameReferencesBF: "BF - References",
+      nameReferencesCF: "CF - References",
     },
     list: {
       baseFields: {
-        name: { id: 'name', label: 'Name' },
-        lastName: { id: 'lastNname', label: 'Last Name' },
-        email: { id: 'email', label: 'Email' }
+        name: { id: "name", label: "Name" },
+        lastName: { id: "lastNname", label: "Last Name" },
+        email: { id: "email", label: "Email" },
       },
-      nameListBF: 'BF - List',
-      nameListCF: 'CF - List'
-    }
-  }
+      nameListBF: "BF - List",
+      nameListCF: "CF - List",
+    },
+  };
 
   return (
     <div className="__container-policies">
       <div className="__container-policies-accordion">
-        <FormAccordion />
-        <Divider />
         <BaseFieldsAccordion
-          baseReferences = {employeesFields.references.nameReferencesBF}
-          baseList = {employeesFields.list.nameListBF}
-          nameReferences = {employeesFields.references.baseFields.name.label}
-          nameList = {employeesFields.list.baseFields.name.label}
-          lastNameList = {employeesFields.list.baseFields.lastName.label}
-          emailList = {employeesFields.list.baseFields.email.label}
+          baseList={employeesFields.list.nameListBF}
+          baseReferences={employeesFields.references.nameReferencesBF}
+          emailList={employeesFields.list.baseFields.email.label}
+          lastNameList={employeesFields.list.baseFields.lastName.label}
+          nameList={employeesFields.list.baseFields.name.label}
+          nameReferences={employeesFields.references.baseFields.name.label}
         />
         <Divider />
         <CustomFieldsAccordion
-        customReferences = {employeesFields.references.nameReferencesCF}
-        customList = {employeesFields.list.nameListCF}
-        nameCustomReceptionist = {employeesFields.references.customFields.name}
-        nameCustomEmp = {employeesFields.references.customFields.name2}
-        customFieldOoto = {employeesFields.references.customFields.receptionist.ootoDay.label}
-        customFieldOffice = {employeesFields.references.customFields.receptionist.favoriteOffice.label}
-        customFieldBirthday = {employeesFields.references.customFields.emp02.birthday.label}
+          customFieldBirthday={
+            employeesFields.references.customFields.emp02.birthday.label
+          }
+          customFieldOffice={
+            employeesFields.references.customFields.receptionist.favoriteOffice
+              .label
+          }
+          customFieldOoto={
+            employeesFields.references.customFields.receptionist.ootoDay.label
+          }
+          customList={employeesFields.list.nameListCF}
+          customReferences={employeesFields.references.nameReferencesCF}
+          nameCustomReceptionist={employeesFields.references.customFields.name}
+          nameCustomEmp={employeesFields.references.customFields.name2}
         />
       </div>
-
-        <div className="__container-policies-table">
-          <PoliciesTable />
-        </div>
+      <div className="__container-policies-table">
+        <PoliciesTable />
+      </div>
     </div>
   );
 };

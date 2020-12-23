@@ -12,8 +12,8 @@ import {
   updateDB,
   deleteDB,
 } from "../../../../../crud/api";
-import ModalPolicies from "../modals/ModalPolicies";
 import TableComponent from "../../TableComponent";
+import ModalPolicies from "../modals/ModalPolicies";
 
 const policiesHeadRows = [
   {
@@ -132,7 +132,6 @@ const PoliciesTable = () => {
         .then((data) => {
           if (collectionName === "policies") {
             const rows = data.response.map((row) => {
-              // const { _id, action, type, name } = row;
               return createPoliciesRow(
                 row._id,
                 row.name,
