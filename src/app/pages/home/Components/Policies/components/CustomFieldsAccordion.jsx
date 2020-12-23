@@ -29,42 +29,36 @@ const CustomFieldsAccordion = (props) => {
         defaultCollapseIcon={<ExpandMoreIcon />}
         defaultExpandIcon={<ChevronRightIcon />}
       >
-        <ExpansionPanel>
-          <ExpansionPanelSummary>
-            <Typography>Custom fields</Typography>
-          </ExpansionPanelSummary>
-          <Divider />
-          <List style={{ fontSize: "3rem" }}>
+        <List style={{ fontSize: "3rem" }}>
+          <TreeItem
+            style={{ margin: "0 0 20px 5px" }}
+            className="baseform-tree-item"
+            nodeId="1"
+            label={props.customReferences}
+          >
             <TreeItem
-              style={{ margin: "0 0 20px 5px" }}
               className="baseform-tree-item"
-              nodeId="1"
-              label={props.customReferences}
+              nodeId="2"
+              label={props.nameCustomReceptionist}
             >
-              <TreeItem
-                className="baseform-tree-item"
-                nodeId="2"
-                label={props.nameCustomReceptionist}
-              >
-                <TreeItem nodeId="3" label={props.customFieldOoto} />
-                <TreeItem nodeId="4" label={props.customFieldOffice} />
-              </TreeItem>
-              <TreeItem
-                className="baseform-tree-item"
-                nodeId="5"
-                label={props.nameCustomEmp}
-              >
-                <TreeItem nodeId="6" label={props.customFieldBirthday} />
-              </TreeItem>
+              <TreeItem nodeId="3" label={props.customFieldOoto} />
+              <TreeItem nodeId="4" label={props.customFieldOffice} />
             </TreeItem>
             <TreeItem
-              style={{ margin: "0 0 20px 5px" }}
               className="baseform-tree-item"
-              nodeId="7"
-              label={props.customList}
-            ></TreeItem>
-          </List>
-        </ExpansionPanel>
+              nodeId="5"
+              label={props.nameCustomEmp}
+            >
+              <TreeItem nodeId="6" label={props.customFieldBirthday} />
+            </TreeItem>
+          </TreeItem>
+          {/* <TreeItem
+            style={{ margin: "0 0 20px 5px" }}
+            className="baseform-tree-item"
+            nodeId="7"
+            label={props.customList}
+          ></TreeItem> */}
+        </List>
       </TreeView>
     </div>
   );

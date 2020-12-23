@@ -8,39 +8,10 @@ import PoliciesTable from "./components/PoliciesTable";
 import "./Policies.scss";
 
 const Policies = () => {
-  const employeesFields = {
-    references: {
-      baseFields: {
-        name: { id: "name", label: "Name" },
-      },
-      customFields: {
-        name: "Receptionist",
-        receptionist: {
-          ootoDay: { id: "ootoDay", label: "Ooto Day" },
-          favoriteOffice: { id: "favoriteOffice", label: "Favorite Office" },
-        },
-        name2: "emp02",
-        emp02: {
-          birthday: { id: "birthday", label: "Birthday" },
-        },
-      },
-      nameReferencesBF: "BF - References",
-      nameReferencesCF: "CF - References",
-    },
-    list: {
-      baseFields: {
-        name: { id: "name", label: "Name" },
-        lastName: { id: "lastNname", label: "Last Name" },
-        email: { id: "email", label: "Email" },
-      },
-      nameListBF: "BF - List",
-      nameListCF: "CF - List",
-    },
-  };
 
   return (
     <div className="__container-policies">
-      <div className="__container-policies-accordion">
+      {/* <div className="__container-policies-accordion">
         <BaseFieldsAccordion
           baseList={employeesFields.list.nameListBF}
           baseReferences={employeesFields.references.nameReferencesBF}
@@ -66,10 +37,10 @@ const Policies = () => {
           nameCustomReceptionist={employeesFields.references.customFields.name}
           nameCustomEmp={employeesFields.references.customFields.name2}
         />
-      </div>
-      <div className="__container-policies-table">
+      </div> */}
+      {/* <div className="__container-policies-table"> */}
         <PoliciesTable />
-      </div>
+      {/* </div> */}
     </div>
   );
 };

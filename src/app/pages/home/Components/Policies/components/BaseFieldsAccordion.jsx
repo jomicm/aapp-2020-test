@@ -29,11 +29,6 @@ const BaseFieldsAccordion = (props) => {
         defaultCollapseIcon={<ExpandMoreIcon />}
         defaultExpandIcon={<ChevronRightIcon />}
       >
-        <ExpansionPanel>
-          <ExpansionPanelSummary>
-            <Typography>Base fields</Typography>
-          </ExpansionPanelSummary>
-          <Divider />
           <List style={{ fontSize: "3rem" }}>
             <TreeItem
               className="baseform-tree-item"
@@ -54,7 +49,6 @@ const BaseFieldsAccordion = (props) => {
               <TreeItem nodeId="8" label={props.emailList} />
             </TreeItem>
           </List>
-        </ExpansionPanel>
       </TreeView>
     </div>
   );

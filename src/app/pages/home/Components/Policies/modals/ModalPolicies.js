@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import Autocomplete from "@material-ui/lab/Autocomplete";
-import NotificationImportantIcon from "@material-ui/icons/NotificationImportant";
+import NotificationImportantIcon from '@material-ui/icons/NotificationImportant';
+import NotificationsIcon from '@material-ui/icons/Notifications';
+import NotificationsActiveIcon from '@material-ui/icons/NotificationsActive';
+import NotificationsNoneIcon from '@material-ui/icons/NotificationsNone';
+import NotificationsOffIcon from '@material-ui/icons/NotificationsOff';
+import NotificationsPausedIcon from '@material-ui/icons/NotificationsPaused';
 import {
   Button,
   Checkbox,
@@ -9,6 +14,9 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
+  ExpansionPanel,
+  ExpansionPanelSummary,
+  ExpansionPanelDetails,
   FormControl,
   FormControlLabel,
   FormGroup,
@@ -17,8 +25,13 @@ import {
   MenuItem,
   Paper,
   Select,
+  Switch,
   Tab,
   Tabs,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
   TextareaAutosize,
   TextField,
   Typography,
@@ -51,6 +64,39 @@ import {
   FileUpload,
   Checkboxes,
 } from "../../../Components/CustomFields/CustomFieldsPreview";
+import BaseFieldAccordion from "../components/BaseFieldsAccordion";
+import CustomFieldAccordion from "../components/CustomFieldsAccordion";
+import "./ModalPolicies.scss";
+
+const employeesFields = {
+  references: {
+    baseFields: {
+      name: { id: "name", label: "Name" },
+    },
+    customFields: {
+      name: "Receptionist",
+      receptionist: {
+        ootoDay: { id: "ootoDay", label: "Ooto Day" },
+        favoriteOffice: { id: "favoriteOffice", label: "Favorite Office" },
+      },
+      name2: "emp02",
+      emp02: {
+        birthday: { id: "birthday", label: "Birthday" },
+      },
+    },
+    nameReferencesBF: "BF - References",
+    nameReferencesCF: "CF - References",
+  },
+  list: {
+    baseFields: {
+      name: { id: "name", label: "Name" },
+      lastName: { id: "lastNname", label: "Last Name" },
+      email: { id: "email", label: "Email" },
+    },
+    nameListBF: "BF - List",
+    nameListCF: "CF - List",
+  },
+};
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -227,7 +273,12 @@ const ModalPolicies = ({
       .catch((error) => console.log(error));
   }, [id, employeeProfileRows]);
 
-  const [values, setValues] = useState({});
+  const [values, setValues] = useState({
+    subject: "",
+    title: "",
+    url: "",
+    isAssetEdition: false,
+  });
 
   const [value, setValue] = React.useState(0);
 
@@ -238,20 +289,11 @@ const ModalPolicies = ({
   const [types, setTypes] = useState([]);
 
   const handleChangeName = (name) => (event) => {
-    if (name === "selectedFunction") {
-      if (event.target.value === 0) {
-        setTypes([
-          "Creation",
-          "Movement",
-          "Short Movement",
-          "Decommission",
-          "Maintenance",
-        ]);
-      } else if (event.target.value === 1) {
-        setTypes(["Approval"]);
-      }
-    }
     setValues({ ...values, [name]: event.target.value });
+  };
+
+  const handleChangeCheck = (name) => (event) => {
+    setValues({ ...values, [name]: event.target.checked });
   };
 
   const [checkDisable, setCheckDisable] = useState({
@@ -266,21 +308,6 @@ const ModalPolicies = ({
       ...checkDisable,
       [event.target.name]: event.target.checked,
     });
-  };
-
-  const [check, setCheck] = React.useState({
-    checkedA: false,
-    checkedB: false,
-    checkedC: false,
-    checkedD: false,
-    checkedE: false,
-    checkedF: false,
-    checkedG: false,
-    checkedH: false,
-  });
-
-  const handleCheckbox = (event) => {
-    setCheck({ ...check, [event.target.name]: event.target.checked });
   };
 
   const [action, setAction] = React.useState("");
@@ -312,361 +339,390 @@ const ModalPolicies = ({
   function handleOpenListRef() {
     setOpenListRef(true);
   }
-
+ 
   return (
-    <div>
+    <div style={{ width: "1000px" }}>
       <Dialog
-        style={{ height: "900px" }}
         onClose={handleCloseModal}
         aria-labelledby="customized-dialog-title"
         open={showModal}
       >
         <DialogTitle5 id="customized-dialog-title" onClose={handleCloseModal}>
-          {`${id ? "Edit" : "Add"} Action`}
+          {`${id ? "Edit" : "Add"} Policies`}
         </DialogTitle5>
-
-        <div style={{ display: "flex", justifyContent: "space-around" }}>
-          <form autoComplete="off">
-            <Button className={classes.button} onClick={handleOpenAction}>
-              Action Select
-            </Button>
-            <FormControl className={classes.formControl}>
-              <InputLabel htmlFor="demo-controlled-open-select">
-                Action
-              </InputLabel>
-              <Select
-                open={openAction}
-                onClose={handleCloseAction}
-                onOpen={handleOpenAction}
-                value={action}
-                onChange={handleChangeAction}
-              >
-                <MenuItem value={10}>On Add</MenuItem>
-                <MenuItem value={20}>On Edit</MenuItem>
-                <MenuItem value={30}>On Delete</MenuItem>
-                <MenuItem value={40}>On Load</MenuItem>
-              </Select>
-            </FormControl>
-          </form>
-
-          <form autoComplete="off">
-            <Button className={classes.button} onClick={handleOpenListRef}>
-              Catalogue
-            </Button>
-            <FormControl className={classes.formControl}>
-              <InputLabel htmlFor="demo-controlled-open-select">
-                Catalogue
-              </InputLabel>
-              <Select
-                open={openListRef}
-                onClose={handleCloseListRef}
-                onOpen={handleOpenListRef}
-                value={listRef}
-                onChange={handleChangeListRef}
-              >
-                <MenuItem value={50}>List</MenuItem>
-                <MenuItem value={60}>References</MenuItem>
-              </Select>
-            </FormControl>
-          </form>
-        </div>
-
-        <DialogContent dividers>
-          <Paper>
-            <Tabs
-              value={value}
-              onChange={handleChange}
-              indicatorColor="primary"
-              textColor="primary"
-              centered
-            >
-              <Tab label="Send Notification" />
-              <Tab label="Send Message" />
-              <Tab label="Send API" />
-            </Tabs>
-          </Paper>
-          <div
-            style={{
-              width: "1000px",
-              minHeight: "200px",
-            }}
-            className="profile-tab-wrapper"
-          >
-            <div className="kt-section__content">
-              {value === 0 && (
-                <div className="profile-tab-wrapper">
-                  <div className="profile-tab-wrapper__content">
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={checkDisable.checkedDisable}
-                          onChange={handleCheckDisable}
-                          name="checkedDisableA"
-                          color="primary"
-                        />
-                      }
-                      label={checkDisable.label}
-                    />
-                    <FormGroup row>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={check.checkedA}
-                            onChange={handleCheckbox}
-                            name="checkedA"
-                            color="primary"
-                          />
-                        }
-                        label="List"
-                      />
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={check.checkedB}
-                            onChange={handleCheckbox}
-                            name="checkedB"
-                            color="primary"
-                          />
-                        }
-                        label="References"
-                      />
-                    </FormGroup>
-                    <Autocomplete
-                      className={classes.textField}
-                      multiple
-                      id="tags-standard"
-                      options={users}
-                      getOptionLabel={(option) => option.name}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          variant="standard"
-                          label="From"
-                        />
-                      )}
-                    />
-                    <Autocomplete
-                      className={classes.textField}
-                      multiple
-                      id="tags-standard"
-                      options={users}
-                      getOptionLabel={(option) => option.name}
-                      renderInput={(params) => (
-                        <TextField {...params} variant="standard" label="To" />
-                      )}
-                    />
-                    <TextField
-                      id="standard-name"
-                      label="title"
-                      className={classes.textField}
-                      value={values.name}
-                      onChange={handleChangeName("name")}
-                      margin="normal"
-                    />
-                    <div className="field-properties-wrapper">
-                      <div
-                        style={{
-                          width: "600px",
-                          marginTop: "20px",
-                          marginBottom: "40px",
-                        }}
-                      >
-                        <TextField
-                          id="standard-full-width"
-                          label="Message"
-                          style={{ width: "100%" }}
-                          placeholder="Message"
-                          fullWidth
-                          margin="normal"
-                          InputLabelProps={{
-                            shrink: true,
-                          }}
-                        />
+        <DialogContent5 dividers>
+          <div className="kt-section__content" style={{ margin: "-16px" }}>
+            <div className={classes4.root}>
+              <div className="profile-tab-wrapper">
+                <div
+                  name="Expansion Panel"
+                  style={{ width: "95%", margin: "15px" }}
+                >
+                  <ExpansionPanel>
+                    <ExpansionPanelSummary
+                      expandIcon={<ExpandMoreIcon />}
+                      aria-controls="panel1a-content"
+                      id="panel1a-header"
+                    >
+                      <Typography className={classes.heading}>
+                        General
+                      </Typography>
+                    </ExpansionPanelSummary>
+                    <ExpansionPanelDetails>
+                      <div className="__container-general-panel">
+                        <FormControl className={classes.textField}>
+                          <InputLabel htmlFor="age-simple">Action</InputLabel>
+                          <Select
+                            open={openAction}
+                            onClose={handleCloseAction}
+                            onOpen={handleOpenAction}
+                            value={action}
+                            onChange={handleChangeAction}
+                          >
+                            <MenuItem value={10}>On Add</MenuItem>
+                            <MenuItem value={20}>On Edit</MenuItem>
+                            <MenuItem value={30}>On Delete</MenuItem>
+                            <MenuItem value={40}>On Load</MenuItem>
+                          </Select>
+                        </FormControl>
+                        <FormControl className={classes.textField}>
+                          <InputLabel htmlFor="age-simple">
+                            Catalogue
+                          </InputLabel>
+                          <Select
+                            open={openListRef}
+                            onClose={handleCloseListRef}
+                            onOpen={handleOpenListRef}
+                            value={listRef}
+                            onChange={handleChangeListRef}
+                          >
+                            <MenuItem value={50}>List</MenuItem>
+                            <MenuItem value={60}>References</MenuItem>
+                          </Select>
+                        </FormControl>
                       </div>
-                    </div>
-                    <FormGroup row>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={check.checkedC}
-                            onChange={handleCheckbox}
-                            name="checkedC"
-                            color="primary"
+                    </ExpansionPanelDetails>
+                  </ExpansionPanel>
+                  <ExpansionPanel>
+                    <ExpansionPanelSummary
+                      expandIcon={<ExpandMoreIcon />}
+                      aria-controls="panel1a-content"
+                      id="panel1a-header"
+                    >
+                      <Typography className={classes.heading}>
+                        Base and Custom Fields
+                      </Typography>
+                    </ExpansionPanelSummary>
+                    <ExpansionPanelDetails>
+                      <div className="__container-baseandcustom-panel">
+                        <div className="__container-basefield">
+                          <h4>Base Fields</h4>
+                          <BaseFieldAccordion
+                            baseList={employeesFields.list.nameListBF}
+                            baseReferences={
+                              employeesFields.references.nameReferencesBF
+                            }
+                            emailList={
+                              employeesFields.list.baseFields.email.label
+                            }
+                            lastNameList={
+                              employeesFields.list.baseFields.lastName.label
+                            }
+                            nameList={
+                              employeesFields.list.baseFields.name.label
+                            }
+                            nameReferences={
+                              employeesFields.references.baseFields.name.label
+                            }
                           />
-                        }
-                        label="Mail"
-                      />
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={check.checkedD}
-                            onChange={handleCheckbox}
-                            name="checkedD"
-                            color="primary"
+                        </div>
+                        <div className="__container-customfield">
+                          <h4>Custom Fields</h4>
+                          <CustomFieldAccordion
+                            customFieldBirthday={
+                              employeesFields.references.customFields.emp02
+                                .birthday.label
+                            }
+                            customFieldOffice={
+                              employeesFields.references.customFields
+                                .receptionist.favoriteOffice.label
+                            }
+                            customFieldOoto={
+                              employeesFields.references.customFields
+                                .receptionist.ootoDay.label
+                            }
+                            customReferences={
+                              employeesFields.references.nameReferencesCF
+                            }
+                            nameCustomReceptionist={
+                              employeesFields.references.customFields.name
+                            }
+                            nameCustomEmp={
+                              employeesFields.references.customFields.name2
+                            }
                           />
-                        }
-                        label="Internal"
-                      />
-                    </FormGroup>
-                  </div>
-                </div>
-              )}
-              {value === 1 && (
-                <div className="profile-tab-wrapper">
-                  <div className="profile-tab-wrapper__content">
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={check.checkedDisable}
-                          onChange={handleCheckDisable}
-                          name="checkedDisableB"
-                          color="primary"
-                        />
-                      }
-                      label={checkDisable.label}
-                    />
-                    <FormGroup row>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={check.checkedE}
-                            onChange={handleCheckbox}
-                            name="checkedE"
-                            color="primary"
-                          />
-                        }
-                        label="List"
-                      />
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={check.checkedF}
-                            onChange={handleCheckbox}
-                            name="checkedF"
-                            color="primary"
-                          />
-                        }
-                        label="References"
-                      />
-                    </FormGroup>
-                    <Autocomplete
-                      className={classes.textField}
-                      multiple
-                      id="tags-standard"
-                      options={users}
-                      getOptionLabel={(option) => option.name}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          variant="standard"
-                          label="From"
-                        />
-                      )}
-                    />
-                    <Autocomplete
-                      className={classes.textField}
-                      multiple
-                      id="tags-standard"
-                      options={users}
-                      getOptionLabel={(option) => option.name}
-                      renderInput={(params) => (
-                        <TextField {...params} variant="standard" label="To" />
-                      )}
-                    />
-                    <TextField
-                      id="standard-name"
-                      label="Subject"
-                      className={classes.textField}
-                      value={values.name}
-                      onChange={handleChangeName("name")}
-                      margin="normal"
-                    />
-                    <div className="field-properties-wrapper">
-                      <div
-                        style={{
-                          width: "100%",
-                          marginTop: "20px",
-                          marginBottom: "40px",
-                        }}
-                      >
-                        <Editor
-                          style={{ width: "800px" }}
-                          onClick={(e) => console.log(">>>>>>>click", e)}
-                          editorState={editor}
-                          toolbarClassName="toolbarClassName"
-                          wrapperClassName="wrapperClassName"
-                          editorClassName="editorClassName"
-                          onEditorStateChange={(ed) => setEditor(ed)}
-                        />
+                        </div>
                       </div>
-                    </div>
-                    <FormGroup row>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={check.checkedG}
-                            onChange={handleCheckbox}
-                            name="checkedG"
-                            color="primary"
+                    </ExpansionPanelDetails>
+                  </ExpansionPanel>
+                  <ExpansionPanel>
+                    <ExpansionPanelSummary
+                      expandIcon={<ExpandMoreIcon />}
+                      aria-controls="panel1a-content"
+                      id="panel1a-header"
+                    >
+                      <Typography className={classes.heading}>
+                        Send Message
+                      </Typography>
+                    </ExpansionPanelSummary>
+                    <ExpansionPanelDetails>
+                      <div className="__container-sendmessage-panel">
+                        <div className="__container-form-checkbox">
+                          <div className="__container-form">
+                            <Autocomplete
+                              className={classes.textField}
+                              multiple
+                              id="tags-standard"
+                              options={users}
+                              getOptionLabel={(option) => option.name}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  variant="standard"
+                                  label="From"
+                                />
+                              )}
+                            />
+                            <Autocomplete
+                              className={classes.textField}
+                              multiple
+                              id="tags-standard"
+                              options={users}
+                              getOptionLabel={(option) => option.name}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  variant="standard"
+                                  label="To"
+                                />
+                              )}
+                            />
+                            <TextField
+                              id="standard-name"
+                              label="Subject"
+                              className={classes.textField}
+                              value={values.subject}
+                              margin="normal"
+                            />
+                          </div>
+                          <div className="__container-checkbox">
+                            <FormControlLabel
+                              value="start"
+                              control={
+                                <Switch
+                                  color="primary"
+                                  checked={values.isAssetEdition}
+                                  onChange={handleChangeCheck("isAssetEdition")}
+                                />
+                              }
+                              label="Disabled"
+                              labelPlacement="start"
+                            />
+                            <FormControlLabel
+                              value="start"
+                              control={
+                                <Switch
+                                  color="primary"
+                                  checked={values.isAssetEdition}
+                                  onChange={handleChangeCheck("isAssetEdition")}
+                                />
+                              }
+                              label="Mail"
+                              labelPlacement="start"
+                            />
+                            <FormControlLabel
+                              value="start"
+                              control={
+                                <Switch
+                                  color="primary"
+                                  checked={values.isUserFilter}
+                                  onChange={handleChangeCheck("isUserFilter")}
+                                />
+                              }
+                              label="Internal"
+                              labelPlacement="start"
+                            />
+                          </div>
+                        </div>
+                        <div className="__container-message">
+                          <Editor
+                            // onFocus={e => EditorState.moveFocusToEnd(editor)}
+                            // onFocus={e => console.log('>>>>>>>focus', EditorState.moveFocusToEnd(editor))}
+                            // onBlur={e => console.log('>>>>>>>blur')}
+                            // onBlur={addStar}
+                            onClick={(e) => console.log(">>>>>>>click", e)}
+                            editorState={editor}
+                            toolbarClassName="toolbarClassName"
+                            wrapperClassName="wrapperClassName"
+                            editorClassName="editorClassName"
+                            onEditorStateChange={(ed) => setEditor(ed)}
                           />
-                        }
-                        label="Mail"
-                      />
-
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={check.checkedH}
-                            onChange={handleCheckbox}
-                            name="checkedH"
-                            color="primary"
+                        </div>
+                      </div>
+                    </ExpansionPanelDetails>
+                  </ExpansionPanel>
+                  <ExpansionPanel>
+                    <ExpansionPanelSummary
+                      expandIcon={<ExpandMoreIcon />}
+                      aria-controls="panel1a-content"
+                      id="panel1a-header"
+                    >
+                      <Typography className={classes.heading}>
+                        Send Notification
+                      </Typography>
+                    </ExpansionPanelSummary>
+                    <ExpansionPanelDetails>
+                      <div className="__container-sendmessage-panel">
+                        <div className="__container-form-checkbox">
+                          <div className="__container-form">
+                            <Autocomplete
+                              className={classes.textField}
+                              multiple
+                              id="tags-standard"
+                              options={users}
+                              getOptionLabel={(option) => option.name}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  variant="standard"
+                                  label="From"
+                                />
+                              )}
+                            />
+                            <Autocomplete
+                              className={classes.textField}
+                              multiple
+                              id="tags-standard"
+                              options={users}
+                              getOptionLabel={(option) => option.name}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  variant="standard"
+                                  label="To"
+                                />
+                              )}
+                            />
+                            <TextField
+                              id="standard-name"
+                              label="Title"
+                              className={classes.textField}
+                              value={values.title}
+                              margin="normal"
+                            />
+                          </div>
+                          <div className="__container-checkbox-notification">
+                            <FormControlLabel
+                              value="start"
+                              control={
+                                <Switch
+                                  color="primary"
+                                  checked={values.isAssetEdition}
+                                  onChange={handleChangeCheck("isAssetEdition")}
+                                />
+                              }
+                              label="Disabled"
+                              labelPlacement="start"
+                            />
+                            <div className="__container-icons">
+                              <Table>
+                                <TableBody>
+                                  <TableRow>
+                                    <TableCell> <NotificationImportantIcon className="icon"/> </TableCell>
+                                    <TableCell> <NotificationsIcon className="icon"/> </TableCell>
+                                    <TableCell> <NotificationsActiveIcon className="icon"/> </TableCell>
+                                  </TableRow>
+                                  <TableRow>
+                                    <TableCell> <NotificationsNoneIcon className="icon"/> </TableCell>
+                                    <TableCell> <NotificationsOffIcon className="icon"/> </TableCell>
+                                    <TableCell> <NotificationsPausedIcon className="icon"/> </TableCell>
+                                  </TableRow>
+                                </TableBody> 
+                              </Table>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="__container-message-multiline">
+                          <TextField
+                            id="outlined-multiline-static"
+                            label="Message"
+                            multiline
+                            rows="4"
+                            className={classes.textField}
+                            margin="normal"
+                            style={{ width: "100%" }}
                           />
-                        }
-                        label="Internal"
-                      />
-                    </FormGroup>
-                  </div>
+                        </div>
+                      </div>
+                    </ExpansionPanelDetails>
+                  </ExpansionPanel>
+                  <ExpansionPanel>
+                    <ExpansionPanelSummary
+                      expandIcon={<ExpandMoreIcon />}
+                      aria-controls="panel1a-content"
+                      id="panel1a-header"
+                    >
+                      <Typography className={classes.heading}>
+                        Send API
+                      </Typography>
+                    </ExpansionPanelSummary>
+                    <ExpansionPanelDetails>
+                      <div className="__container-send-api">
+                        <div className="__container-url-disabled">
+                          <div className="__container-url">
+                            <TextField
+                              id="standard-name"
+                              label="URL"
+                              className={classes.textField}
+                              value={values.url}
+                              margin="normal"
+                              style={{ width: "600px" }}
+                            />
+                          </div>
+                          <div className="__container-disabled">
+                            <FormControlLabel
+                              value="start"
+                              control={
+                                <Switch
+                                  color="primary"
+                                  checked={values.isAssetEdition}
+                                  onChange={handleChangeCheck("isAssetEdition")}
+                                />
+                              }
+                              label="Disabled"
+                              labelPlacement="start"
+                            />
+                          </div>
+                        </div>
+                        <div className="__container-post">
+                          <TextField
+                            id="outlined-multiline-static"
+                            label="Body"
+                            multiline
+                            rows="4"
+                            className={classes.textField}
+                            margin="normal"
+                            style={{ width: "100%" }}
+                          />
+                        </div>
+                      </div>
+                    </ExpansionPanelDetails>
+                  </ExpansionPanel>
                 </div>
-              )}
-              {value === 2 && (
-                <div className="profile-tab-wrapper">
-                  <div className="profile-tab-wrapper__content">
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={check.checkedDisable}
-                          onChange={handleCheckDisable}
-                          name="checkedDisableB"
-                          color="primary"
-                        />
-                      }
-                      label={checkDisable.label}
-                    />
-                    <TextField
-                      style={{ width: "700px" }}
-                      id="standard-name"
-                      label="URL"
-                      className={classes.textField}
-                      value={values.name}
-                      onChange={handleChangeName("name")}
-                      margin="normal"
-                    />
-                    <TextareaAutosize
-                      style={{
-                        width: "700px",
-                        height: "300px",
-                        marginTop: "20px",
-                      }}
-                      rowsMax={8}
-                      aria-label="maximum height"
-                      placeholder="POST"
-                    />
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           </div>
-        </DialogContent>
+        </DialogContent5>
         <DialogActions5>
           <Button onClick={handleSave} color="primary">
             Save changes

@@ -159,27 +159,33 @@ const PoliciesTable = () => {
 
   return (
     <PortletBody>
-      <div className="kt-section__body">
-        <div className="kt-section">
-          <ModalPolicies
-            showModal={control.openPoliciesModal}
-            setShowModal={(onOff) =>
-              setControl({ ...control, openPoliciesModal: onOff })
-            }
-            reloadTable={() => loadInitData("policies")}
-            id={control.idPolicies}
-            employeeProfileRows={[]}
-          />
-          <div className="kt-section__content">
-            <TableComponent
-              title={"Policies"}
-              headRows={policiesHeadRows}
-              rows={control.policiesRows}
-              onEdit={tableActions("policies").onEdit}
-              onAdd={tableActions("policies").onAdd}
-              onDelete={tableActions("policies").onDelete}
-              onSelect={tableActions("policies").onSelect}
+      <div className="kt-section kt-margin-t-0">
+        <div className="kt-section__body">
+          <div className="kt-section">
+            <span className="kt-section__sub">
+              This section will integrate <code>Policies</code>
+            </span>
+            <ModalPolicies
+              showModal={control.openPoliciesModal}
+              setShowModal={(onOff) =>
+                setControl({ ...control, openPoliciesModal: onOff })
+              }
+              reloadTable={() => loadInitData("policies")}
+              id={control.idPolicies}
+              employeeProfileRows={[]}
             />
+            <div className="kt-separator kt-separator--dashed" />
+            <div className="kt-section__content">
+              <TableComponent
+                title={"Policies"}
+                headRows={policiesHeadRows}
+                rows={control.policiesRows}
+                onEdit={tableActions("policies").onEdit}
+                onAdd={tableActions("policies").onAdd}
+                onDelete={tableActions("policies").onDelete}
+                onSelect={tableActions("policies").onSelect}
+              />
+            </div>
           </div>
         </div>
       </div>

@@ -413,17 +413,7 @@ export default function Employees() {
                 </PortletBody>
               )}
 
-              {tab === 2 && (
-                <PortletBody>
-                  <div className="kt-section kt-margin-t-0">
-                    <div className="kt-section__body">
-                      <div className="kt-section">
-                        <Policies />
-                      </div>
-                    </div>
-                  </div>
-                </PortletBody>
-              )} 
+              {tab === 2 && <Policies />}
             </Portlet>
           </div>
         )}
