@@ -52,12 +52,6 @@ const CustomFieldsAccordion = (props) => {
               <TreeItem nodeId="6" label={props.customFieldBirthday} />
             </TreeItem>
           </TreeItem>
-          {/* <TreeItem
-            style={{ margin: "0 0 20px 5px" }}
-            className="baseform-tree-item"
-            nodeId="7"
-            label={props.customList}
-          ></TreeItem> */}
         </List>
       </TreeView>
     </div>
