@@ -17,9 +17,11 @@ import {
   FormGroup,
   ExpansionPanel,
   ExpansionPanelSummary,
-  ExpansionPanelDetails
+  ExpansionPanelDetails,
+  InputLabel,
+  MenuItem,
+  Select
 } from "@material-ui/core";
-import Select from 'react-select';
 import {
   withStyles,
   useTheme,
@@ -32,7 +34,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 // import './ModalAssetCategories.scss';
 import ImageUpload from '../../../Components/ImageUpload';
-import { postDBEncryptPassword, getOneDB, updateDB, postDB } from '../../../../../crud/api';
+import { postDBEncryptPassword, getDB, getOneDB, updateDB, postDB } from '../../../../../crud/api';
 import ModalYesNo from '../../../Components/ModalYesNo';
 import Permission from '../../components/Permission';
 import { getFileExtension, saveImage, getImageURL } from '../../../utils';
@@ -131,7 +133,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProfileRows }) => {
+const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeProfileRows }) => {
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -151,6 +153,7 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
   const [editor, setEditor] = useState(EditorState.createEmpty());
   const [profileSelected, setProfileSelected] = useState(0);
   const [layoutSelected, setLayoutSelected] = useState(0);
+  const [stages, setStages] = useState([]);
 
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value });
@@ -161,17 +164,17 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
     const body = { ...values, layout };
 
     if (!id) {
-      postDB('settingsLayoutsEmployees', body)
+      postDB('settingsLayoutsStages', body)
         .then(data => data.json())
         .then(response => {
           const { _id } = response.response[0];
-          saveAndReload('settingsLayoutsEmployees', _id);
+          saveAndReload('settingsLayoutsStages', _id);
         })
         .catch(error => console.log('ERROR', error));
     } else {
-      updateDB('settingsLayoutsEmployees/', body, id[0])
+      updateDB('settingsLayoutsStages/', body, id[0])
         .then(response => {
-          saveAndReload('settingsLayoutsEmployees', id[0]);
+          saveAndReload('settingsLayoutsStages', id[0]);
         })
         .catch(error => console.log(error));
     }
@@ -190,6 +193,7 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
     setShowModal(false);
     setValue4(0);
     setEditor(EditorState.createEmpty());
+    setStages([]);
   };
 
   useEffect(() => {
@@ -197,11 +201,11 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
       return;
     }
 
-    getOneDB('settingsLayoutsEmployees/', id[0])
+    getOneDB('settingsLayoutsStages/', id[0])
       .then(response => response.json())
       .then(data => { 
-        const { name, layout = '<p></p>' } = data.response;
-        setValues({ ...values, name });
+        const { name, selectedType, selectedStage, layout = '<p></p>' } = data.response;
+        setValues({ ...values, name, selectedType, selectedStage });
         // htmlToDraft
         // setEditor(EditorState.createWithContent(htmlToDraft(layout)));
         const contentBlock = htmlToDraft(layout);
@@ -211,12 +215,22 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
       .catch(error => console.log(error));
   }, [id, employeeProfileRows]);
 
+  useEffect(() => {
+    getDB('processStages')
+    .then(response => response.json())
+    .then(data => {
+      const stages = data.response.map(({ _id, name }) => ({ id: _id, name }));
+      setStages(stages);
+    })
+    .catch(error => console.log(error));
+  }, [showModal])
 
-  const layoutEmployeeVariables = [
-    {id: 'employeeName', name: 'Employee Name'}, 
-    {id: 'employeeAssets', name: 'Employee Assets'}, 
-    {id: 'currentDate', name: 'Current Date'}, 
-    {id: 'currentTime', name: 'Current Time'}
+  const stageVariables = [
+    {id: 'stageName', name: 'Stage Name'}, 
+    {id: 'creationDate', name: 'Creation Date'}, 
+    {id: 'creator', name: 'Creator'}, 
+    {id: 'approvals', name: 'Approvals'},
+    {id: 'notifications', name: 'Notifications'}
   ];
 
   const insertVariable = (varId) => {
@@ -240,7 +254,7 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
           id="customized-dialog-title"
           onClose={handleCloseModal}
         >
-          {`${id ? 'Edit' : 'Add' } Layout for Employees`}
+          {`${id ? 'Edit' : 'Add' } Layout for Process Stages`}
         </DialogTitle5>
         <DialogContent5 dividers>
           <div className="kt-section__content" style={{margin:'-16px'}}>
@@ -254,17 +268,48 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
                       aria-controls="panel1a-content"
                       id="panel1a-header"
                     >
-                      <Typography className={classes.heading}>Layout Name</Typography>
+                      <Typography className={classes.heading}>Layout Info</Typography>
                     </ExpansionPanelSummary>
                     <ExpansionPanelDetails>
-                      <TextField
-                        id="standard-name"
-                        label="Name"
-                        // className='tab-properties-wrapper__tab-name'
-                        value={values.name}
-                        onChange={handleChange('name')}
-                        margin="normal"
-                      />
+                      <div style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
+                        <TextField
+                          id="standard-name"
+                          label="Name"
+                          // className='tab-properties-wrapper__tab-name'
+                          value={values.name}
+                          onChange={handleChange('name')}
+                          margin="normal"
+                          style={{ marginTop: 'unset', width: '33%', margin: '0 20px' }}
+                        />
+                        <FormControl
+                          className={classes.textField}
+                          style={{ width: '33%', margin: '0 20px' }}
+                        >
+                          <InputLabel>Type:</InputLabel>
+                          <Select
+                            value={values.selectedType || ''}
+                            onChange={handleChange('selectedType')}
+                          >
+                            <MenuItem value={'message'}>Message</MenuItem>
+                            <MenuItem value={'notification'}>Notification</MenuItem>
+                            <MenuItem value={'document'}>Document</MenuItem>
+                          </Select>
+                        </FormControl>
+                        <FormControl
+                          className={classes.textField}
+                          style={{ width: '33%', margin: '0 20px' }}
+                        >
+                          <InputLabel>Stage:</InputLabel>
+                          <Select
+                            value={values.selectedStage || ''}
+                            onChange={handleChange('selectedStage')}
+                          >
+                            {(stages || []).map(({ id, name }) => (
+                              <MenuItem value={id}>{name}</MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </div>
                     </ExpansionPanelDetails>
                   </ExpansionPanel>
                   {/* Tab Properties */}
@@ -278,7 +323,7 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
                     </ExpansionPanelSummary>
                     <ExpansionPanelDetails>
                       <div className='custom-controls-wrapper'>
-                        {layoutEmployeeVariables.map((variable, ix) => {
+                        {stageVariables.map((variable, ix) => {
                           return (
                             <div
                               key={`custom-control-${ix}`}
@@ -305,10 +350,6 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
                       <div className="field-properties-wrapper">
                         <div style={{ marginTop: '0px', marginBottom: '20px' }}>
                           <Editor
-                            // onFocus={e => EditorState.moveFocusToEnd(editor)}
-                            // onFocus={e => console.log('>>>>>>>focus', EditorState.moveFocusToEnd(editor))}
-                            // onBlur={e => console.log('>>>>>>>blur')}
-                            // onBlur={addStar}
                             onClick={e => console.log('>>>>>>>click', e)}
                             editorState={editor}
                             toolbarClassName="toolbarClassName"
@@ -336,4 +377,4 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
   )
 };
 
-export default ModalLayoutEmployees;
+export default ModalLayoutStages;

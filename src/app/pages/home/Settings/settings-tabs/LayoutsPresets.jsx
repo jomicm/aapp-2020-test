@@ -19,7 +19,19 @@ import {
 // App Components
 import TableComponent from '../../Components/TableComponent';
 import ModalLayoutEmployees from './modals/ModalLayoutEmployees';
+import ModalLayoutStages from './modals/ModalLayoutStages';
 
+const stagesLayoutsHeadRows = [
+  { id: "name", numeric: false, disablePadding: false, label: "Name" },
+  { id: "stage", numeric: false, disablePadding: false, label: "Stage" },
+  { id: "type", numeric: false, disablePadding: false, label: "Type" },
+  { id: "used", numeric: true, disablePadding: false, label: "Used" },
+  { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
+  { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
+];
+const createLayoutsStageRow = (id, name, stage, type, used, creator, creation_date) => {
+  return { id, name, stage, type, used, creator, creation_date };
+};
 const layoutsHeadRows = [
   { id: "name", numeric: false, disablePadding: false, label: "Name" },
   { id: "used", numeric: true, disablePadding: false, label: "Used" },
@@ -34,6 +46,11 @@ const collections = {
     id: 'idLayoutEmployee',
     modal: 'openLayoutEmployeesModal',
     name: 'settingsLayoutsEmployees'
+  },
+  layoutsStages: {
+    id: 'idLayoutStage',
+    modal: 'openLayoutStagesModal',
+    name: 'settingsLayoutsStages'
   }
 };
 
@@ -44,6 +61,10 @@ const LayoutsPresets = props => {
     layoutEmployeesRows: [],
     layoutEmployeesRowsSelected: [],
     //
+    idLayoutStage: null,
+    openLayoutStagesModal: false,
+    layoutStagesRows: [],
+    layoutStagesRowsSelected: [],
   });
   const [tab, setTab] = useState(0);
   const tableActions = (collectionName) => {
@@ -72,8 +93,7 @@ const LayoutsPresets = props => {
       }
     }
   };
-  const loadLayoutsData = (collectionNames = ['settingsLayoutsEmployees']) => {
-    // console.log('lets reload')
+  const loadLayoutsData = (collectionNames = ['settingsLayoutsEmployees', 'settingsLayoutsStages']) => {
     collectionNames =  !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
       getDB(collectionName)
@@ -84,7 +104,12 @@ const LayoutsPresets = props => {
             return createLayoutsEmployeeRow(row._id, row.name, 99, 'Admin', '11/03/2020');
           });
           setControl(prev => ({ ...prev, layoutEmployeesRows: rows, layoutEmployeesRowsSelected: [] }));
-          // console.log('inside User Profiles', rows)
+        }
+        if (collectionName === 'settingsLayoutsStages') {
+          const rows = data.response.map(row => {
+            return createLayoutsStageRow(row._id, row.name, row.stageName, 99, 'Admin', '11/03/2020');
+          });
+          setControl(prev => ({ ...prev, layoutStagesRows: rows, layoutStagesRowsSelected: [] }));
         }
         // if (collectionName === 'employees') {
         //   const rows = data.response.map(row => {
@@ -116,6 +141,7 @@ const LayoutsPresets = props => {
                 }}
               >
                 <Tab label="Employees" />
+                <Tab label="Stage Layouts" />
                 {/* <Tab label="Assets in Locations" /> */}
               </Tabs>
             </PortletHeaderToolbar>
@@ -150,8 +176,39 @@ const LayoutsPresets = props => {
             </div>
           </PortletBody>
         )}
-        {/* Locations templates regarding assets */}
+        {/* Process Stages Layouts */}
         {tab === 1 && (
+          <PortletBody>
+            <div className="kt-section kt-margin-t-0">
+              <div className="kt-section__body">
+                <div className="kt-section">
+                  <div className="kt-section">
+                    <ModalLayoutStages
+                      showModal={control.openLayoutStagesModal}
+                      setShowModal={(onOff) => setControl({ ...control, openLayoutStagesModal: onOff })}
+                      reloadTable={() => loadLayoutsData('settingsLayoutsStages')}
+                      id={control.idLayoutStage}
+                      // employeeProfileRows={[]}
+                    />
+                    <div className="kt-section__content">
+                      <TableComponent
+                        title={'Stage Layouts List'}
+                        headRows={stagesLayoutsHeadRows}
+                        rows={control.layoutStagesRows}
+                        onEdit={tableActions('layoutsStages').onEdit}
+                        onAdd={tableActions('layoutsStages').onAdd}
+                        onDelete={tableActions('layoutsStages').onDelete}
+                        onSelect={tableActions('layoutsStages').onSelect}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </PortletBody>
+        )}
+        {/* Locations templates regarding assets */}
+        {tab === 2 && (
           <PortletBody>
             <div className="kt-section kt-margin-t-0">
               <div className="kt-section__body">

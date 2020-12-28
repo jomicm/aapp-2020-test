@@ -31,7 +31,7 @@ const portal = document.createElement('div');
 document.body.appendChild(portal);
 
 const PortalAwareItem = (props) => {
-  const { provided, snapshot, item, handleRemoveProcessStage } = props;
+  const { provided, snapshot, item, handleRemoveProcessStage, onClick } = props;
 
   const usePortal = snapshot.isDragging;
 
@@ -43,7 +43,9 @@ const PortalAwareItem = (props) => {
       {...provided.dragHandleProps}
       inPortal={usePortal}
     >
-      <ListItem key='value' role={undefined} dense button >
+      <ListItem key='value' role={undefined} dense button
+        onClick={() => onClick(item.id)}
+      >
         <ListItemText id={'labelId'} primary={item.name} />
         <ListItemSecondaryAction>
           <IconButton
@@ -69,7 +71,7 @@ const PortalAwareItem = (props) => {
   return ReactDOM.createPortal(PortalChild, portal);
 };
 
-const ProcessFlow = ({ processStages = [], setProcessStages, handleRemoveProcessStage }) => {
+const ProcessFlow = ({ processStages = [], setProcessStages, handleRemoveProcessStage, onClick }) => {
   const getItems = count =>
   Array.from({ length: count }, (v, k) => k).map(k => ({
     id: `item-${k}`,
@@ -134,6 +136,7 @@ const ProcessFlow = ({ processStages = [], setProcessStages, handleRemoveProcess
                       <PortalAwareItem
                         provided={provided}
                         snapshot={snapshot}
+                        onClick={onClick}
                         style={getItemStyle(snapshot.isDraggingOver)}
                         item={item}
                         handleRemoveProcessStage={handleRemoveProcessStage}

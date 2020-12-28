@@ -174,7 +174,7 @@ export default function Processes() {
         }
         if (collectionName === 'processes') {
           const rows = data.response.map(row => {
-            return createProcessRow(row._id, row.name, 0, 'Admin', '11/03/2020');
+            return createProcessRow(row._id, row.name, row.processStages.length || 'N/A', 'Admin', '11/03/2020');
           });
           setControl(prev => ({ ...prev, processRows: rows, processRowsSelected: [] }));
          }

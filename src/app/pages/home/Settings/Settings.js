@@ -75,6 +75,8 @@ import {
 import ProcessFlow from "../Processes/components/ProcessFlow";
 import SaveButton from './settings-tabs/components/SaveButton';
 
+import Example from './Example';
+
 
 const localStorageActiveTabKey = "builderActiveTab";
 export default function Settings() {
