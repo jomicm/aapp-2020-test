@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import Autocomplete from "@material-ui/lab/Autocomplete";
-import NotificationImportantIcon from '@material-ui/icons/NotificationImportant';
-import NotificationsIcon from '@material-ui/icons/Notifications';
-import NotificationsActiveIcon from '@material-ui/icons/NotificationsActive';
-import NotificationsNoneIcon from '@material-ui/icons/NotificationsNone';
-import NotificationsOffIcon from '@material-ui/icons/NotificationsOff';
-import NotificationsPausedIcon from '@material-ui/icons/NotificationsPaused';
+import NotificationImportantIcon from "@material-ui/icons/NotificationImportant";
+import NotificationsIcon from "@material-ui/icons/Notifications";
+import NotificationsActiveIcon from "@material-ui/icons/NotificationsActive";
+import NotificationsNoneIcon from "@material-ui/icons/NotificationsNone";
+import NotificationsOffIcon from "@material-ui/icons/NotificationsOff";
+import NotificationsPausedIcon from "@material-ui/icons/NotificationsPaused";
 import {
   Button,
   Checkbox,
@@ -39,7 +39,7 @@ import {
 import CloseIcon from "@material-ui/icons/Close";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import { withStyles, useTheme, makeStyles } from "@material-ui/core/styles";
-import { EditorState } from "draft-js";
+import { EditorState, Modifier } from "draft-js";
 import { Editor } from "react-draft-wysiwyg";
 import SwipeableViews from "react-swipeable-views";
 import {
@@ -201,6 +201,7 @@ const ModalPolicies = ({
   reloadTable,
   id,
   employeeProfileRows,
+  props
 }) => {
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -258,9 +259,18 @@ const ModalPolicies = ({
     });
   };
 
+  const [users, setUsers] = useState([]);
+
   useEffect(() => {
+    getDB("user")
+      .then((response) => response.json())
+      .then((data) => {
+        const users = data.response.map(({ _id, email }) => ({ _id, email }));
+        setUsers(users);
+      })
+      .catch((error) => console.log(error));
+
     if (!id || !Array.isArray(id)) {
-      reset();
       return;
     }
 
@@ -339,7 +349,34 @@ const ModalPolicies = ({
   function handleOpenListRef() {
     setOpenListRef(true);
   }
- 
+
+  const [messageFrom, setMessageFrom] = useState([]);
+  const [messageTo, setMessageTo] = useState([]);
+  const onChangeMessageFromTo = (name) => (event, values) => {
+    if (name === "From") {
+      setMessageFrom(values);
+    } else if (name === "To") setMessageTo(values);
+  };
+
+  const [notificationFrom, setNotificationFrom] = useState([]);
+  const [notificationTo, setNotificationTo] = useState([]);
+  const onChangeNotificationFromTo = (name) => (event, values) => {
+    if (name === "From") {
+      setNotificationFrom(values);
+    } else if (name === "To") setNotificationTo(values);
+  };
+
+  const insertVariable = (varId) => {
+    const contentState = Modifier.replaceText(
+      editor.getCurrentContent(),
+      editor.getSelection(),
+      `%{${varId}}`,
+      editor.getCurrentInlineStyle(),
+    );
+    setEditor(EditorState.push(editor, contentState, 'insert-characters'))
+  };
+  
+
   return (
     <div style={{ width: "1000px" }}>
       <Dialog
@@ -484,7 +521,10 @@ const ModalPolicies = ({
                               multiple
                               id="tags-standard"
                               options={users}
-                              getOptionLabel={(option) => option.name}
+                              getOptionLabel={(option) => option.email}
+                              onChange={onChangeMessageFromTo("From")}
+                              defaultValue={messageFrom}
+                              value={messageFrom}
                               renderInput={(params) => (
                                 <TextField
                                   {...params}
@@ -498,7 +538,10 @@ const ModalPolicies = ({
                               multiple
                               id="tags-standard"
                               options={users}
-                              getOptionLabel={(option) => option.name}
+                              getOptionLabel={(option) => option.email}
+                              onChange={onChangeMessageFromTo("To")}
+                              defaultValue={messageTo}
+                              value={messageTo}
                               renderInput={(params) => (
                                 <TextField
                                   {...params}
@@ -556,10 +599,6 @@ const ModalPolicies = ({
                         </div>
                         <div className="__container-message">
                           <Editor
-                            // onFocus={e => EditorState.moveFocusToEnd(editor)}
-                            // onFocus={e => console.log('>>>>>>>focus', EditorState.moveFocusToEnd(editor))}
-                            // onBlur={e => console.log('>>>>>>>blur')}
-                            // onBlur={addStar}
                             onClick={(e) => console.log(">>>>>>>click", e)}
                             editorState={editor}
                             toolbarClassName="toolbarClassName"
@@ -590,7 +629,12 @@ const ModalPolicies = ({
                               multiple
                               id="tags-standard"
                               options={users}
-                              getOptionLabel={(option) => option.name}
+                              getOptionLabel={(option) => option.email}
+                              onChange={onChangeNotificationFromTo(
+                                "From"
+                              )}
+                              defaultValue={notificationFrom}
+                              value={notificationFrom}
                               renderInput={(params) => (
                                 <TextField
                                   {...params}
@@ -604,7 +648,12 @@ const ModalPolicies = ({
                               multiple
                               id="tags-standard"
                               options={users}
-                              getOptionLabel={(option) => option.name}
+                              getOptionLabel={(option) => option.email}
+                              onChange={onChangeNotificationFromTo(
+                                "To"
+                              )}
+                              defaultValue={notificationTo}
+                              value={notificationTo}
                               renderInput={(params) => (
                                 <TextField
                                   {...params}
@@ -638,16 +687,34 @@ const ModalPolicies = ({
                               <Table>
                                 <TableBody>
                                   <TableRow>
-                                    <TableCell> <NotificationImportantIcon className="icon"/> </TableCell>
-                                    <TableCell> <NotificationsIcon className="icon"/> </TableCell>
-                                    <TableCell> <NotificationsActiveIcon className="icon"/> </TableCell>
+                                    <TableCell>
+                                      {" "}
+                                      <NotificationImportantIcon className="icon" />{" "}
+                                    </TableCell>
+                                    <TableCell>
+                                      {" "}
+                                      <NotificationsIcon className="icon" />{" "}
+                                    </TableCell>
+                                    <TableCell>
+                                      {" "}
+                                      <NotificationsActiveIcon className="icon" />{" "}
+                                    </TableCell>
                                   </TableRow>
                                   <TableRow>
-                                    <TableCell> <NotificationsNoneIcon className="icon"/> </TableCell>
-                                    <TableCell> <NotificationsOffIcon className="icon"/> </TableCell>
-                                    <TableCell> <NotificationsPausedIcon className="icon"/> </TableCell>
+                                    <TableCell>
+                                      {" "}
+                                      <NotificationsNoneIcon className="icon" />{" "}
+                                    </TableCell>
+                                    <TableCell>
+                                      {" "}
+                                      <NotificationsOffIcon className="icon" />{" "}
+                                    </TableCell>
+                                    <TableCell>
+                                      {" "}
+                                      <NotificationsPausedIcon className="icon" />{" "}
+                                    </TableCell>
                                   </TableRow>
-                                </TableBody> 
+                                </TableBody>
                               </Table>
                             </div>
                           </div>
@@ -733,110 +800,4 @@ const ModalPolicies = ({
   );
 };
 
-const users = [
-  { name: "The Shawshank Redemption", year: 1994 },
-  { name: "The Godfather", year: 1972 },
-  { name: "The Godfather: Part II", year: 1974 },
-  { name: "The Dark Knight", year: 2008 },
-  { name: "12 Angry Men", year: 1957 },
-  { name: "Schindler's List", year: 1993 },
-  { name: "Pulp Fiction", year: 1994 },
-  { name: "The Lord of the Rings: The Return of the King", year: 2003 },
-  { name: "The Good, the Bad and the Ugly", year: 1966 },
-  { name: "Fight Club", year: 1999 },
-  { name: "The Lord of the Rings: The Fellowship of the Ring", year: 2001 },
-  { name: "Star Wars: Episode V - The Empire Strikes Back", year: 1980 },
-  { name: "Forrest Gump", year: 1994 },
-  { name: "Inception", year: 2010 },
-  { name: "The Lord of the Rings: The Two Towers", year: 2002 },
-  { name: "One Flew Over the Cuckoo's Nest", year: 1975 },
-  { name: "Goodfellas", year: 1990 },
-  { name: "The Matrix", year: 1999 },
-  { name: "Seven Samurai", year: 1954 },
-  { name: "Star Wars: Episode IV - A New Hope", year: 1977 },
-  { name: "City of God", year: 2002 },
-  { name: "Se7en", year: 1995 },
-  { name: "The Silence of the Lambs", year: 1991 },
-  { name: "It's a Wonderful Life", year: 1946 },
-  { name: "Life Is Beautiful", year: 1997 },
-  { name: "The Usual Suspects", year: 1995 },
-  { name: "Léon: The Professional", year: 1994 },
-  { name: "Spirited Away", year: 2001 },
-  { name: "Saving Private Ryan", year: 1998 },
-  { name: "Once Upon a Time in the West", year: 1968 },
-  { name: "American History X", year: 1998 },
-  { name: "Interstellar", year: 2014 },
-  { name: "Casablanca", year: 1942 },
-  { name: "City Lights", year: 1931 },
-  { name: "Psycho", year: 1960 },
-  { name: "The Green Mile", year: 1999 },
-  { name: "The Intouchables", year: 2011 },
-  { name: "Modern Times", year: 1936 },
-  { name: "Raiders of the Lost Ark", year: 1981 },
-  { name: "Rear Window", year: 1954 },
-  { name: "The Pianist", year: 2002 },
-  { name: "The Departed", year: 2006 },
-  { name: "Terminator 2: Judgment Day", year: 1991 },
-  { name: "Back to the Future", year: 1985 },
-  { name: "Whiplash", year: 2014 },
-  { name: "Gladiator", year: 2000 },
-  { name: "Memento", year: 2000 },
-  { name: "The Prestige", year: 2006 },
-  { name: "The Lion King", year: 1994 },
-  { name: "Apocalypse Now", year: 1979 },
-  { name: "Alien", year: 1979 },
-  { name: "Sunset Boulevard", year: 1950 },
-  {
-    name:
-      "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb",
-    year: 1964,
-  },
-  { name: "The Great Dictator", year: 1940 },
-  { name: "Cinema Paradiso", year: 1988 },
-  { name: "The Lives of Others", year: 2006 },
-  { name: "Grave of the Fireflies", year: 1988 },
-  { name: "Paths of Glory", year: 1957 },
-  { name: "Django Unchained", year: 2012 },
-  { name: "The Shining", year: 1980 },
-  { name: "WALL·E", year: 2008 },
-  { name: "American Beauty", year: 1999 },
-  { name: "The Dark Knight Rises", year: 2012 },
-  { name: "Princess Mononoke", year: 1997 },
-  { name: "Aliens", year: 1986 },
-  { name: "Oldboy", year: 2003 },
-  { name: "Once Upon a Time in America", year: 1984 },
-  { name: "Witness for the Prosecution", year: 1957 },
-  { name: "Das Boot", year: 1981 },
-  { name: "Citizen Kane", year: 1941 },
-  { name: "North by Northwest", year: 1959 },
-  { name: "Vertigo", year: 1958 },
-  { name: "Star Wars: Episode VI - Return of the Jedi", year: 1983 },
-  { name: "Reservoir Dogs", year: 1992 },
-  { name: "Braveheart", year: 1995 },
-  { name: "M", year: 1931 },
-  { name: "Requiem for a Dream", year: 2000 },
-  { name: "Amélie", year: 2001 },
-  { name: "A Clockwork Orange", year: 1971 },
-  { name: "Like Stars on Earth", year: 2007 },
-  { name: "Taxi Driver", year: 1976 },
-  { name: "Lawrence of Arabia", year: 1962 },
-  { name: "Double Indemnity", year: 1944 },
-  { name: "Eternal Sunshine of the Spotless Mind", year: 2004 },
-  { name: "Amadeus", year: 1984 },
-  { name: "To Kill a Mockingbird", year: 1962 },
-  { name: "Toy Story 3", year: 2010 },
-  { name: "Logan", year: 2017 },
-  { name: "Full Metal Jacket", year: 1987 },
-  { name: "Dangal", year: 2016 },
-  { name: "The Sting", year: 1973 },
-  { name: "2001: A Space Odyssey", year: 1968 },
-  { name: "Singin' in the Rain", year: 1952 },
-  { name: "Toy Story", year: 1995 },
-  { name: "Bicycle Thieves", year: 1948 },
-  { name: "The Kid", year: 1921 },
-  { name: "Inglourious Basterds", year: 2009 },
-  { name: "Snatch", year: 2000 },
-  { name: "3 Idiots", year: 2009 },
-  { name: "Monty Python and the Holy Grail", year: 1975 },
-];
 export default ModalPolicies;

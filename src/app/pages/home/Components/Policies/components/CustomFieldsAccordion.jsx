@@ -1,25 +1,26 @@
 import React from "react";
-import ChevronRightIcon from "@material-ui/icons/ChevronRight";
-import Collapse from "@material-ui/core/Collapse";
-import Divider from "@material-ui/core/Divider";
 import ExpandLess from "@material-ui/icons/ExpandLess";
 import ExpandMore from "@material-ui/icons/ExpandMore";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import ExpansionPanel from "@material-ui/core/ExpansionPanel";
-import ExpansionPanelDetails from "@material-ui/core/ExpansionPanelDetails";
-import ExpansionPanelSummary from "@material-ui/core/ExpansionPanelSummary";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
-import StarBorder from "@material-ui/icons/StarBorder";
-import TreeItem from "@material-ui/lab/TreeItem";
-import TreeView from "@material-ui/lab/TreeView";
-import Typography from "@material-ui/core/Typography";
+import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import {
+  Collapse,
+  Divider,
+  ExpansionPanel,
+  ExpansionPanelSummary,
+  ExpansionPanelDetails,
+  List,
+  ListItem,
+  ListItemText,
+  StarBorder,
+  Typography,
+} from "@material-ui/core";
+import { TreeItem, TreeView } from "@material-ui/lab";
 
 const CustomFieldsAccordion = (props) => {
   const [open, setOpen] = React.useState(true);
 
-  function handleClick() {
+  const handleClick = () => {
     setOpen(!open);
   }
 
@@ -29,27 +30,27 @@ const CustomFieldsAccordion = (props) => {
         defaultCollapseIcon={<ExpandMoreIcon />}
         defaultExpandIcon={<ChevronRightIcon />}
       >
-        <List style={{ fontSize: "3rem" }}>
+        <List style={{ fontSize: '3rem' }}>
           <TreeItem
-            style={{ margin: "0 0 20px 5px" }}
-            className="baseform-tree-item"
-            nodeId="1"
+            className='baseform-tree-item'
             label={props.customReferences}
+            nodeId='1'
+            style={{ margin: '0 0 20px 5px' }}
           >
             <TreeItem
-              className="baseform-tree-item"
-              nodeId="2"
+              className='baseform-tree-item'
               label={props.nameCustomReceptionist}
+              nodeId='2'
             >
-              <TreeItem nodeId="3" label={props.customFieldOoto} />
-              <TreeItem nodeId="4" label={props.customFieldOffice} />
+              <TreeItem label={props.customFieldOoto} nodeId='3' />
+              <TreeItem label={props.customFieldOffice} nodeId='4' />
             </TreeItem>
             <TreeItem
-              className="baseform-tree-item"
-              nodeId="5"
+              className='baseform-tree-item'
               label={props.nameCustomEmp}
+              nodeId='5'
             >
-              <TreeItem nodeId="6" label={props.customFieldBirthday} />
+              <TreeItem label={props.customFieldBirthday} nodeId="6" />
             </TreeItem>
           </TreeItem>
         </List>

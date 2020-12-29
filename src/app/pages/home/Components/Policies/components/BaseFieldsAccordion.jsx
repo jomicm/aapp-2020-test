@@ -1,27 +1,34 @@
 import React from "react";
-import ChevronRightIcon from "@material-ui/icons/ChevronRight";
-import Collapse from "@material-ui/core/Collapse";
-import Divider from "@material-ui/core/Divider";
 import ExpandLess from "@material-ui/icons/ExpandLess";
 import ExpandMore from "@material-ui/icons/ExpandMore";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
-import ExpansionPanel from "@material-ui/core/ExpansionPanel";
-import ExpansionPanelSummary from "@material-ui/core/ExpansionPanelSummary";
-import ExpansionPanelDetails from "@material-ui/core/ExpansionPanelDetails";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemText from "@material-ui/core/ListItemText";
-import StarBorder from "@material-ui/icons/StarBorder";
-import TreeItem from "@material-ui/lab/TreeItem";
-import TreeView from "@material-ui/lab/TreeView";
-import Typography from "@material-ui/core/Typography";
+import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import {
+  Collapse,
+  Divider,
+  ExpansionPanel,
+  ExpansionPanelSummary,
+  ExpansionPanelDetails,
+  List,
+  ListItem,
+  ListItemText,
+  StarBorder,
+  Typography,
+} from "@material-ui/core";
+import { TreeItem, TreeView } from "@material-ui/lab";
 
 const BaseFieldsAccordion = (props) => {
   const [open, setOpen] = React.useState(true);
 
-  function handleClick() {
+  const handleClick = () => {
     setOpen(!open);
   }
+
+  const variables = [
+    {name: props.nameReferences, id: 'bfName'},
+    {name: 'Dos', id: 'bfNameDos'},
+    {name: 'Tres', id: 'bfNameTres'}
+  ];
 
   return (
     <div>
@@ -29,26 +36,32 @@ const BaseFieldsAccordion = (props) => {
         defaultCollapseIcon={<ExpandMoreIcon />}
         defaultExpandIcon={<ChevronRightIcon />}
       >
-          <List style={{ fontSize: "3rem" }}>
-            <TreeItem
-              className="baseform-tree-item"
-              style={{ margin: "0 0 20px 5px" }}
-              nodeId="1"
-              label={props.baseReferences}
-            >
-              <TreeItem nodeId="2" label={props.nameReferences} />
-            </TreeItem>
-            <TreeItem
-              className="baseform-tree-item"
-              style={{ margin: "0 0 20px 5px" }}
-              nodeId="5"
-              label={props.baseList}
-            >
-              <TreeItem nodeId="6" label={props.nameList} />
-              <TreeItem nodeId="7" label={props.lastNameList} />
-              <TreeItem nodeId="8" label={props.emailList} />
-            </TreeItem>
-          </List>
+        <List style={{ fontSize: '3rem' }}>
+          <TreeItem
+            className='baseform-tree-item'
+            label={props.baseReferences}
+            nodeId='1'
+            style={{ margin: '0 0 20px 5px' }}
+          >
+            {variables.map((vari, ix) => {
+              return (
+                <div key={ix}>
+                  <TreeItem nodeId={vari.id} label={vari.name} />
+                </div>
+              )
+            })}
+          </TreeItem>
+          <TreeItem
+            className='baseform-tree-item'
+            label={props.baseList}
+            nodeId='5'
+            style={{ margin: '0 0 20px 5px' }}
+          >
+            <TreeItem label={props.nameList} nodeId='6' />
+            <TreeItem label={props.lastNameList} nodeId='7' />
+            <TreeItem label={props.emailList} nodeId='8' />
+          </TreeItem>
+        </List>
       </TreeView>
     </div>
   );

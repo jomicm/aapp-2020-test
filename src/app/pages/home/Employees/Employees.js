@@ -8,14 +8,14 @@ import clsx from "clsx";
 import {
   metronic,
   initLayoutConfig,
-  LayoutConfig,
+  LayoutConfig
 } from "../../../../_metronic";
 import {
   Portlet,
   PortletBody,
   PortletFooter,
   PortletHeader,
-  PortletHeaderToolbar,
+  PortletHeaderToolbar
 } from "../../../partials/content/Portlet";
 import { CodeBlock } from "../../../partials/content/CodeExample";
 import Notice from "../../../partials/content/Notice";
@@ -24,7 +24,7 @@ import {
   makeStyles,
   lighten,
   withStyles,
-  useTheme,
+  useTheme
 } from "@material-ui/core/styles";
 import {
   Checkbox,
@@ -36,7 +36,7 @@ import {
   ListItemText,
   ListItemIcon,
   Button,
-  Divider,
+  Divider
 } from "@material-ui/core";
 
 // AApp Components
