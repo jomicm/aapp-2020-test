@@ -1,8 +1,10 @@
 import React from "react";
-import TextField from "@material-ui/core/TextField";
-import MenuItem from "@material-ui/core/MenuItem";
-import Slider from "@material-ui/core/Slider";
-import Typography from "@material-ui/core/Typography";
+import{
+  TextField,
+  MenuItem,
+  Slider,
+  Typography
+}from "@material-ui/core";
 import "./TicketRequest.scss";
 
 const valuetext = (value) => {
@@ -11,35 +13,35 @@ const valuetext = (value) => {
 
 const marks = [
   {
-    value: 0,
     label: "0%",
+    value: 0,
   },
   {
-    value: 25,
     label: "25%",
+    value: 25,
   },
   {
-    value: 50,
     label: "50%",
+    value: 50,
   },
   {
-    value: 75,
     label: "75%",
+    value: 75,
   },
   {
-    value: 100,
     label: "100%",
+    value: 100,
   },
 ];
 
 const types = [
   {
-    value: "bug",
     label: "Bug",
+    value: "bug",
   },
   {
-    value: "question",
     label: "Question",
+    value: "question",
   },
 ];
 
@@ -87,7 +89,7 @@ const TicketRequest = ({ values, setValues }) => {
           value={selectedType}
         >
           {types.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
+            <MenuItem key={option.value} value={option.label}>
               {option.label}
             </MenuItem>
           ))}
@@ -100,6 +102,7 @@ const TicketRequest = ({ values, setValues }) => {
           onChange={handleOnChange}
           rows={6}
           style={{ width: "80%" }}
+          value={message}
         />
       </div>
       <div className="__container-tr-right">

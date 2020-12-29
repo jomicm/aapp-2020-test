@@ -188,7 +188,7 @@ const ModalMyTickets = ({
   const reset = () => {
     setValues({
       message: "",
-      peaceOfMind: 0,
+      peaceOfMind: 100,
       selectedType: 0,
       subject: "",
     });
@@ -211,9 +211,9 @@ const ModalMyTickets = ({
 
   const [values, setValues] = useState({
     message: "",
-    peaceOfMind: 0,
+    peaceOfMind: 100,
     selectedType: 0,
-    subject: "Hola",
+    subject: "",
   });
 
   return (
