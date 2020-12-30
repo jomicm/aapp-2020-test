@@ -597,7 +597,7 @@ const ModalPolicies = ({
                             />
                           </div>
                         </div>
-                        <div className="__container-message">
+                        <div className="__container-policies-message">
                           <Editor
                             onClick={(e) => console.log(">>>>>>>click", e)}
                             editorState={editor}
