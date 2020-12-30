@@ -57,7 +57,7 @@ const BaseFieldsAccordion = (props) => {
             nodeId='5'
             style={{ margin: '0 0 20px 5px' }}
           >
-            <TreeItem label={props.nameList} nodeId='6' />
+            <TreeItem onClick={() => console.log('Hola')} label={props.nameList} nodeId='6' />
             <TreeItem label={props.lastNameList} nodeId='7' />
             <TreeItem label={props.emailList} nodeId='8' />
           </TreeItem>
