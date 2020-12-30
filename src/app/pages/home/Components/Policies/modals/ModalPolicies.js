@@ -72,20 +72,21 @@ const employeesFields = {
   references: {
     baseFields: {
       name: { id: "name", label: "Name" },
+      ssn: { id: 'ssn', label: 'Social Service Number' }
     },
     customFields: {
-      name: "Receptionist",
+      // name: "Receptionist",
       receptionist: {
         ootoDay: { id: "ootoDay", label: "Ooto Day" },
         favoriteOffice: { id: "favoriteOffice", label: "Favorite Office" },
       },
-      name2: "emp02",
+      // name2: "emp02",
       emp02: {
         birthday: { id: "birthday", label: "Birthday" },
       },
     },
-    nameReferencesBF: "BF - References",
-    nameReferencesCF: "CF - References",
+    name: "BF - References",
+    // nameReferencesCF: "CF - References",
   },
   list: {
     baseFields: {
@@ -93,8 +94,8 @@ const employeesFields = {
       lastName: { id: "lastNname", label: "Last Name" },
       email: { id: "email", label: "Email" },
     },
-    nameListBF: "BF - List",
-    nameListCF: "CF - List",
+    name: "BF - List",
+    // nameListCF: "CF - List",
   },
 };
 
@@ -366,7 +367,7 @@ const ModalPolicies = ({
     } else if (name === "To") setNotificationTo(values);
   };
 
-  const insertVariable = (varId) => {
+  const insertVariable = (  ) => {
     const contentState = Modifier.replaceText(
       editor.getCurrentContent(),
       editor.getSelection(),
@@ -375,7 +376,6 @@ const ModalPolicies = ({
     );
     setEditor(EditorState.push(editor, contentState, 'insert-characters'))
   };
-  
 
   return (
     <div style={{ width: "1000px" }}>
@@ -440,6 +440,7 @@ const ModalPolicies = ({
                       </div>
                     </ExpansionPanelDetails>
                   </ExpansionPanel>
+                  {/* Base and Custom Fields */}
                   <ExpansionPanel>
                     <ExpansionPanelSummary
                       expandIcon={<ExpandMoreIcon />}
@@ -454,7 +455,7 @@ const ModalPolicies = ({
                       <div className="__container-baseandcustom-panel">
                         <div className="__container-basefield">
                           <h4>Base Fields</h4>
-                          <BaseFieldAccordion
+                          {/* <BaseFieldAccordion
                             baseList={employeesFields.list.nameListBF}
                             baseReferences={
                               employeesFields.references.nameReferencesBF
@@ -471,6 +472,10 @@ const ModalPolicies = ({
                             nameReferences={
                               employeesFields.references.baseFields.name.label
                             }
+                          /> */}
+                          <BaseFieldAccordion
+                            data={employeesFields}
+                            onElementClick={insertVariable}  
                           />
                         </div>
                         <div className="__container-customfield">
@@ -497,6 +502,10 @@ const ModalPolicies = ({
                             nameCustomEmp={
                               employeesFields.references.customFields.name2
                             }
+                          />
+                          <CustomFieldAccordion
+                            data={employeesFields}
+                            customFieldKey={['references']}
                           />
                         </div>
                       </div>
