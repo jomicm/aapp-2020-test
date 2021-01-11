@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import NotificationImportantIcon from "@material-ui/icons/NotificationImportant";
 import NotificationsIcon from "@material-ui/icons/Notifications";
@@ -6,6 +6,8 @@ import NotificationsActiveIcon from "@material-ui/icons/NotificationsActive";
 import NotificationsNoneIcon from "@material-ui/icons/NotificationsNone";
 import NotificationsOffIcon from "@material-ui/icons/NotificationsOff";
 import NotificationsPausedIcon from "@material-ui/icons/NotificationsPaused";
+import ToggleButton from "@material-ui/lab/ToggleButton";
+import ToggleButtonGroup from "@material-ui/lab/ToggleButtonGroup";
 import {
   Button,
   Checkbox,
@@ -39,9 +41,23 @@ import {
 import CloseIcon from "@material-ui/icons/Close";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import { withStyles, useTheme, makeStyles } from "@material-ui/core/styles";
-import { EditorState, Modifier } from "draft-js";
+import { pick } from "lodash";
+import {
+  EditorState,
+  ContentState,
+  convertToRaw,
+  convertFromHTML,
+  Modifier,
+} from "draft-js";
 import { Editor } from "react-draft-wysiwyg";
 import SwipeableViews from "react-swipeable-views";
+import {
+  Portlet,
+  PortletBody,
+  PortletFooter,
+  PortletHeader,
+  PortletHeaderToolbar,
+} from "../../../../../a../../../app/partials/content/Portlet";
 import {
   postDBEncryptPassword,
   getDB,
@@ -67,36 +83,11 @@ import {
 import BaseFieldAccordion from "../components/BaseFieldsAccordion";
 import CustomFieldAccordion from "../components/CustomFieldsAccordion";
 import "./ModalPolicies.scss";
+import draftToHtml from "draftjs-to-html";
+import htmlToDraft from "html-to-draftjs";
+import { Formik } from "formik";
 
-const employeesFields = {
-  references: {
-    baseFields: {
-      name: { id: "name", label: "Name" },
-    },
-    customFields: {
-      name: "Receptionist",
-      receptionist: {
-        ootoDay: { id: "ootoDay", label: "Ooto Day" },
-        favoriteOffice: { id: "favoriteOffice", label: "Favorite Office" },
-      },
-      name2: "emp02",
-      emp02: {
-        birthday: { id: "birthday", label: "Birthday" },
-      },
-    },
-    nameReferencesBF: "BF - References",
-    nameReferencesCF: "CF - References",
-  },
-  list: {
-    baseFields: {
-      name: { id: "name", label: "Name" },
-      lastName: { id: "lastNname", label: "Last Name" },
-      email: { id: "email", label: "Email" },
-    },
-    nameListBF: "BF - List",
-    nameListCF: "CF - List",
-  },
-};
+const localStorageActiveTabKey = "builderActiveTab";
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -155,17 +146,17 @@ const DialogActions5 = withStyles((theme) => ({
   },
 }))(DialogActions);
 
-function TabContainer4({ children, dir }) {
+const TabContainer4 = ({ children, dir }) => {
   return (
     <Typography component="div" dir={dir} style={{ padding: 8 * 3 }}>
       {children}
     </Typography>
   );
-}
+};
 const useStyles4 = makeStyles((theme) => ({
   root: {
     backgroundColor: theme.palette.background.paper,
-    width: 1000,
+    minWidth: 1000,
   },
 }));
 
@@ -201,29 +192,143 @@ const ModalPolicies = ({
   reloadTable,
   id,
   employeeProfileRows,
-  props
 }) => {
-  const classes4 = useStyles4();
-  const theme4 = useTheme();
-  const [value4, setValue4] = useState(0);
-  function handleChange4(event, newValue) {
-    setValue4(newValue);
-  }
-  function handleChangeIndex4(index) {
-    setValue4(index);
-  }
-
+  const [alignment, setAlignment] = useState("");
+  const actions = [
+    { value: "OnAdd", label: "On Add" },
+    { value: "OnEdit", label: "On Edit" },
+    { value: "OnDelete", label: "On Delete" },
+    { value: "OnLoad", label: "On Load" },
+  ];
+  const activeTab = localStorage.getItem(localStorageActiveTabKey);
+  const catalogues = [
+    { value: "list", label: "List" },
+    { value: "references", label: "References" },
+  ];
   const classes = useStyles();
+  const classes4 = useStyles4();
+  const [cursorPosition, setCursorPosition] = useState([0, 0]);
   const [editor, setEditor] = useState(EditorState.createEmpty());
+  const employeesFields = {
+    references: {
+      baseFields: {
+        name: { id: "nameReferences", label: "name" },
+        ssn: { id: "ssn", label: "Social Service Number" },
+      },
+      customFields: {
+        recepcionist: {
+          ootoDay: { id: "ootoDay", label: "Ooto Day" },
+          favoriteOffice: { id: "favoriteOffice", label: "Favorite Office" },
+        },
+        emp02: {
+          birthday: { id: "birthday", label: "Birthday" },
+        },
+        emp03: {
+          age: { id: "age", label: "Age" },
+        },
+      },
+      name: "BF - References",
+    },
+    list: {
+      baseFields: {
+        name: { id: "nameList", label: "name" },
+        lastName: { id: "lastName", label: "Laste Name" },
+        email: { id: "email", label: "Email" },
+      },
+      name: "BF - List",
+    },
+  };
+  const iconsList = {
+    notificationImportantIcon: <NotificationImportantIcon />,
+    notificationsIcon: <NotificationsIcon />,
+    notificationsActiveIcon: <NotificationsActiveIcon />,
+    notificationsNoneIcon: <NotificationsNoneIcon />,
+    notificationsOffIcon: <NotificationsOffIcon />,
+    notificationsPausedIcon: <NotificationsPausedIcon />,
+  };
+  const [messageFrom, setMessageFrom] = useState([]);
+  const [messageTo, setMessageTo] = useState([]);
+  const [notificationFrom, setNotificationFrom] = useState([]);
+  const [notificationTo, setNotificationTo] = useState([]);
   const [profileSelected, setProfileSelected] = useState(0);
+  const [selectedControl, setSelectedControl] = useState(null);
+  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const theme4 = useTheme();
+  const [users, setUsers] = useState([]);
+  const [value4, setValue4] = useState(0);
+  const [values, setValues] = useState({
+    policiesName: "",
+    selectedAction: "",
+    selectedCatalogue: "",
+    subjectMessage: "",
+    subjectNotification: "",
+    messageNotification: "",
+    selectedIcon: "",
+    urlAPI: "",
+    bodyAPI: "",
+    messageDisabled: false,
+    messageMail: false,
+    messageInternal: false,
+    notificationDisabled: false,
+    apiDisabled: false,
+  });
+
+  // Functions
+
+  const handleAlignment = (event, newAlignment) => {
+    setAlignment(newAlignment);
+  };
+
+  const handleChange4 = (event, newValue) => {
+    setValue4(newValue);
+  };
+  const handleChangeIndex4 = (index) => {
+    setValue4(index);
+  };
+
+  const handleChangeCheck = (name) => (event) => {
+    setValues({ ...values, [name]: event.target.checked });
+  };
+
+  const handleChangeName = (name) => (event) => {
+    const text = event.target.value;
+    setValues({ ...values, [name]: text });
+
+    setSelectedControlAndIndexes(event);
+  };
+
+  const handleClickIcon = (selectedIcon) => {
+    setValues({ ...values, selectedIcon });
+  };
+
+  const handleCloseModal = () => {
+    reset();
+    setShowModal(false);
+    setValue4(0);
+  };
+
+  const handleOnChangeValue = (name) => (event) => {
+    const {
+      target: { value },
+    } = event;
+    setValues({ ...values, [name]: value });
+  };
 
   const handleSave = () => {
-    const { action, type, name } = values;
-    if (!action || !type || !name) {
+    const { selectedAction, selectedCatalogue } = values;
+    if (!selectedAction || !selectedCatalogue) {
       alert("Select values before saving...");
       return;
     }
-    const body = { ...values };
+    const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
+    const body = {
+      ...values,
+      messageFrom,
+      messageTo,
+      layout,
+      notificationFrom,
+      notificationTo,
+    };
     if (!id) {
       postDB("policies", body)
         .then((data) => data.json())
@@ -242,24 +347,65 @@ const ModalPolicies = ({
     handleCloseModal();
   };
 
+  const insertVariable = (varId) => {
+    if (selectedControl === "htmlMessage") {
+      const contentState = Modifier.replaceText(
+        editor.getCurrentContent(),
+        editor.getSelection(),
+        `%{${varId}}`,
+        editor.getCurrentInlineStyle()
+      );
+      setEditor(EditorState.push(editor, contentState, "insert-characters"));
+    } else {
+      const text = values[selectedControl];
+      const left = text.substr(0, cursorPosition[0]);
+      const right = text.substr(cursorPosition[1], text.length);
+      const final = `${left}%{${varId}}${right}`;
+      setValues({ ...values, [selectedControl]: final });
+    }
+  };
+
+  const onChangeMessageFromTo = (name) => (event, values) => {
+    if (name === "From") {
+      setMessageFrom(values);
+    } else if (name === "To") setMessageTo(values);
+  };
+
+  const onChangeNotificationFromTo = (name) => (event, values) => {
+    if (name === "From") {
+      setNotificationFrom(values);
+    } else if (name === "To") setNotificationTo(values);
+  };
+
+  const reset = () => {
+    setValues({
+      policiesName: "",
+      selectedAction: "",
+      selectedCatalogue: "",
+      subjectMessage: "",
+      subjectNotification: "",
+      selectedIcon: "",
+      urlAPI: "",
+      messageNotification: "",
+      messageDisabled: false,
+      messageMail: false,
+      messageInternal: false,
+      notificationDisabled: false,
+      apiDisabled: false,
+    });
+  };
+
   const saveAndReload = (folderName, id) => {
     reloadTable();
   };
 
-  const handleCloseModal = () => {
-    reset();
-    setShowModal(false);
-    setValue4(0);
+  const setSelectedControlAndIndexes = (event) => {
+    const {
+      target: { selectionStart, selectionEnd, name },
+    } = event;
+    setSelectedControl(name);
+    setCursorPosition([selectionStart, selectionEnd]);
   };
-  const reset = () => {
-    setValues({
-      action: "",
-      type: "",
-      name: "",
-    });
-  };
-
-  const [users, setUsers] = useState([]);
 
   useEffect(() => {
     getDB("user")
@@ -274,108 +420,45 @@ const ModalPolicies = ({
       return;
     }
 
-    getOneDB("Policies/", id[0])
+    getOneDB("policies/", id[0])
       .then((response) => response.json())
       .then((data) => {
-        const values = data.response;
-        setValues(values);
+        const {
+          messageFrom,
+          messageTo,
+          notificationFrom,
+          notificationTo,
+          layout,
+        } = data.response;
+        const obj = pick(data.response, [
+          "policiesName",
+          "selectedAction",
+          "selectedCatalogue",
+          "subjectMessage",
+          "subjectNotification",
+          "selectedIcon",
+          "urlAPI",
+          "messageNotification",
+          "messageDisabled",
+          "messageMail",
+          "messageInternal",
+          "notifiactionDisabled",
+          "apiDisabled",
+          "arregloPapa",
+        ]);
+        const contentBlock = htmlToDraft(layout);
+        const contentState = ContentState.createFromBlockArray(
+          contentBlock.contentBlocks
+        );
+        setValues(obj);
+        setMessageFrom(messageFrom);
+        setMessageTo(messageTo);
+        setEditor(EditorState.createWithContent(contentState));
+        setNotificationFrom(notificationFrom);
+        setNotificationTo(notificationTo);
       })
       .catch((error) => console.log(error));
   }, [id, employeeProfileRows]);
-
-  const [values, setValues] = useState({
-    subject: "",
-    title: "",
-    url: "",
-    isAssetEdition: false,
-  });
-
-  const [value, setValue] = React.useState(0);
-
-  function handleChange(event, newValue) {
-    setValue(newValue);
-  }
-
-  const [types, setTypes] = useState([]);
-
-  const handleChangeName = (name) => (event) => {
-    setValues({ ...values, [name]: event.target.value });
-  };
-
-  const handleChangeCheck = (name) => (event) => {
-    setValues({ ...values, [name]: event.target.checked });
-  };
-
-  const [checkDisable, setCheckDisable] = useState({
-    label: "Disable",
-    checkedDisableA: false,
-    checkedDisableB: false,
-    checkedDisableC: false,
-  });
-
-  const handleCheckDisable = (event) => {
-    setCheckDisable({
-      ...checkDisable,
-      [event.target.name]: event.target.checked,
-    });
-  };
-
-  const [action, setAction] = React.useState("");
-  const [openAction, setOpenAction] = React.useState(false);
-
-  function handleChangeAction(event) {
-    setAction(event.target.value);
-  }
-
-  function handleCloseAction() {
-    setOpenAction(false);
-  }
-
-  function handleOpenAction() {
-    setOpenAction(true);
-  }
-
-  const [listRef, setListRef] = React.useState("");
-  const [openListRef, setOpenListRef] = React.useState(false);
-
-  function handleChangeListRef(event) {
-    setListRef(event.target.value);
-  }
-
-  function handleCloseListRef() {
-    setOpenListRef(false);
-  }
-
-  function handleOpenListRef() {
-    setOpenListRef(true);
-  }
-
-  const [messageFrom, setMessageFrom] = useState([]);
-  const [messageTo, setMessageTo] = useState([]);
-  const onChangeMessageFromTo = (name) => (event, values) => {
-    if (name === "From") {
-      setMessageFrom(values);
-    } else if (name === "To") setMessageTo(values);
-  };
-
-  const [notificationFrom, setNotificationFrom] = useState([]);
-  const [notificationTo, setNotificationTo] = useState([]);
-  const onChangeNotificationFromTo = (name) => (event, values) => {
-    if (name === "From") {
-      setNotificationFrom(values);
-    } else if (name === "To") setNotificationTo(values);
-  };
-
-  const insertVariable = (varId) => {
-    const contentState = Modifier.replaceText(
-      editor.getCurrentContent(),
-      editor.getSelection(),
-      `%{${varId}}`,
-      editor.getCurrentInlineStyle(),
-    );
-    setEditor(EditorState.push(editor, contentState, 'insert-characters'))
-  };
-  
 
   return (
     <div style={{ width: "1000px" }}>
@@ -388,38 +471,37 @@ const ModalPolicies = ({
           {`${id ? "Edit" : "Add"} Policies`}
         </DialogTitle5>
         <DialogContent5 dividers>
-          <div className="kt-section__content" style={{ margin: "-16px" }}>
-            <div className={classes4.root}>
-              <div className="profile-tab-wrapper">
+          <div className="kt-section__content " style={{ margin: "-16px" }}>
+            <div className={classes4.root} style={{ width: "1200px" }}>
+              <div className="profile-tab-wrapper" style={{ margin: "0" }}>
                 <div
                   name="Expansion Panel"
                   style={{ width: "95%", margin: "15px" }}
                 >
-                  <ExpansionPanel>
-                    <ExpansionPanelSummary
-                      expandIcon={<ExpandMoreIcon />}
-                      aria-controls="panel1a-content"
-                      id="panel1a-header"
-                    >
-                      <Typography className={classes.heading}>
-                        General
-                      </Typography>
-                    </ExpansionPanelSummary>
-                    <ExpansionPanelDetails>
+                  <div className="__container-policies-tab">
+                    {/* Action and Catalogue */}
+                    <div className="__container-policies-general-fields">
                       <div className="__container-general-panel">
+                        <TextField
+                          className={classes.textField}
+                          id="standard-subjectMessage"
+                          label="Policie Name"
+                          margin="normal"
+                          name="policiesName"
+                          onChange={handleChangeName("policiesName")}
+                          value={values.policiesName}
+                        />
                         <FormControl className={classes.textField}>
                           <InputLabel htmlFor="age-simple">Action</InputLabel>
                           <Select
-                            open={openAction}
-                            onClose={handleCloseAction}
-                            onOpen={handleOpenAction}
-                            value={action}
-                            onChange={handleChangeAction}
+                            onChange={handleOnChangeValue("selectedAction")}
+                            value={values.selectedAction}
                           >
-                            <MenuItem value={10}>On Add</MenuItem>
-                            <MenuItem value={20}>On Edit</MenuItem>
-                            <MenuItem value={30}>On Delete</MenuItem>
-                            <MenuItem value={40}>On Load</MenuItem>
+                            {actions.map(({ value, label }) => (
+                              <MenuItem key={value} value={value}>
+                                {label}
+                              </MenuItem>
+                            ))}
                           </Select>
                         </FormControl>
                         <FormControl className={classes.textField}>
@@ -427,364 +509,348 @@ const ModalPolicies = ({
                             Catalogue
                           </InputLabel>
                           <Select
-                            open={openListRef}
-                            onClose={handleCloseListRef}
-                            onOpen={handleOpenListRef}
-                            value={listRef}
-                            onChange={handleChangeListRef}
+                            onChange={handleOnChangeValue("selectedCatalogue")}
+                            value={values.selectedCatalogue}
                           >
-                            <MenuItem value={50}>List</MenuItem>
-                            <MenuItem value={60}>References</MenuItem>
+                            {catalogues.map(({ value, label }) => (
+                              <MenuItem key={value} value={value}>
+                                {label}
+                              </MenuItem>
+                            ))}
                           </Select>
                         </FormControl>
                       </div>
-                    </ExpansionPanelDetails>
-                  </ExpansionPanel>
-                  <ExpansionPanel>
-                    <ExpansionPanelSummary
-                      expandIcon={<ExpandMoreIcon />}
-                      aria-controls="panel1a-content"
-                      id="panel1a-header"
-                    >
-                      <Typography className={classes.heading}>
-                        Base and Custom Fields
-                      </Typography>
-                    </ExpansionPanelSummary>
-                    <ExpansionPanelDetails>
-                      <div className="__container-baseandcustom-panel">
-                        <div className="__container-basefield">
-                          <h4>Base Fields</h4>
-                          <BaseFieldAccordion
-                            baseList={employeesFields.list.nameListBF}
-                            baseReferences={
-                              employeesFields.references.nameReferencesBF
-                            }
-                            emailList={
-                              employeesFields.list.baseFields.email.label
-                            }
-                            lastNameList={
-                              employeesFields.list.baseFields.lastName.label
-                            }
-                            nameList={
-                              employeesFields.list.baseFields.name.label
-                            }
-                            nameReferences={
-                              employeesFields.references.baseFields.name.label
-                            }
-                          />
-                        </div>
-                        <div className="__container-customfield">
-                          <h4>Custom Fields</h4>
-                          <CustomFieldAccordion
-                            customFieldBirthday={
-                              employeesFields.references.customFields.emp02
-                                .birthday.label
-                            }
-                            customFieldOffice={
-                              employeesFields.references.customFields
-                                .receptionist.favoriteOffice.label
-                            }
-                            customFieldOoto={
-                              employeesFields.references.customFields
-                                .receptionist.ootoDay.label
-                            }
-                            customReferences={
-                              employeesFields.references.nameReferencesCF
-                            }
-                            nameCustomReceptionist={
-                              employeesFields.references.customFields.name
-                            }
-                            nameCustomEmp={
-                              employeesFields.references.customFields.name2
-                            }
-                          />
+                      <div className="__container-policies-base-custom-fields">
+                        <div className="__container-baseandcustom-panel">
+                          <div className="__container-basefield">
+                            <h4>Base Fields</h4>
+                            <BaseFieldAccordion
+                              data={employeesFields}
+                              onElementClick={insertVariable}
+                            />
+                          </div>
+                          <div className="__container-customfield">
+                            <h4>Custom Fields</h4>
+                            <CustomFieldAccordion
+                              customFieldKey={["references"]}
+                              data={employeesFields}
+                              onElementClick={insertVariable}
+                            />
+                          </div>
                         </div>
                       </div>
-                    </ExpansionPanelDetails>
-                  </ExpansionPanel>
-                  <ExpansionPanel>
-                    <ExpansionPanelSummary
-                      expandIcon={<ExpandMoreIcon />}
-                      aria-controls="panel1a-content"
-                      id="panel1a-header"
-                    >
-                      <Typography className={classes.heading}>
-                        Send Message
-                      </Typography>
-                    </ExpansionPanelSummary>
-                    <ExpansionPanelDetails>
-                      <div className="__container-sendmessage-panel">
-                        <div className="__container-form-checkbox">
-                          <div className="__container-form">
-                            <Autocomplete
-                              className={classes.textField}
-                              multiple
-                              id="tags-standard"
-                              options={users}
-                              getOptionLabel={(option) => option.email}
-                              onChange={onChangeMessageFromTo("From")}
-                              defaultValue={messageFrom}
-                              value={messageFrom}
-                              renderInput={(params) => (
-                                <TextField
-                                  {...params}
-                                  variant="standard"
-                                  label="From"
-                                />
-                              )}
-                            />
-                            <Autocomplete
-                              className={classes.textField}
-                              multiple
-                              id="tags-standard"
-                              options={users}
-                              getOptionLabel={(option) => option.email}
-                              onChange={onChangeMessageFromTo("To")}
-                              defaultValue={messageTo}
-                              value={messageTo}
-                              renderInput={(params) => (
-                                <TextField
-                                  {...params}
-                                  variant="standard"
-                                  label="To"
-                                />
-                              )}
-                            />
-                            <TextField
-                              id="standard-name"
-                              label="Subject"
-                              className={classes.textField}
-                              value={values.subject}
-                              margin="normal"
-                            />
-                          </div>
-                          <div className="__container-checkbox">
-                            <FormControlLabel
-                              value="start"
-                              control={
-                                <Switch
-                                  color="primary"
-                                  checked={values.isAssetEdition}
-                                  onChange={handleChangeCheck("isAssetEdition")}
-                                />
-                              }
-                              label="Disabled"
-                              labelPlacement="start"
-                            />
-                            <FormControlLabel
-                              value="start"
-                              control={
-                                <Switch
-                                  color="primary"
-                                  checked={values.isAssetEdition}
-                                  onChange={handleChangeCheck("isAssetEdition")}
-                                />
-                              }
-                              label="Mail"
-                              labelPlacement="start"
-                            />
-                            <FormControlLabel
-                              value="start"
-                              control={
-                                <Switch
-                                  color="primary"
-                                  checked={values.isUserFilter}
-                                  onChange={handleChangeCheck("isUserFilter")}
-                                />
-                              }
-                              label="Internal"
-                              labelPlacement="start"
-                            />
-                          </div>
-                        </div>
-                        <div className="__container-policies-message">
-                          <Editor
-                            onClick={(e) => console.log(">>>>>>>click", e)}
-                            editorState={editor}
-                            toolbarClassName="toolbarClassName"
-                            wrapperClassName="wrapperClassName"
-                            editorClassName="editorClassName"
-                            onEditorStateChange={(ed) => setEditor(ed)}
-                          />
-                        </div>
+                    </div>
+                    <div className="__container-message-notification-api">
+                      {/* TABS */}
+                      <div className="__container-policies-tabs">
+                        <PortletHeader
+                          toolbar={
+                            <PortletHeaderToolbar>
+                              <Tabs
+                                className="builder-tabs"
+                                component="div"
+                                onChange={(_, nextTab) => {
+                                  setTab(nextTab);
+                                  localStorage.setItem(
+                                    localStorageActiveTabKey,
+                                    nextTab
+                                  );
+                                }}
+                                value={tab}
+                              >
+                                <Tab label="Send Message" />
+                                <Tab label="Send Notification" />
+                                <Tab label="Send API" />
+                              </Tabs>
+                            </PortletHeaderToolbar>
+                          }
+                        />
                       </div>
-                    </ExpansionPanelDetails>
-                  </ExpansionPanel>
-                  <ExpansionPanel>
-                    <ExpansionPanelSummary
-                      expandIcon={<ExpandMoreIcon />}
-                      aria-controls="panel1a-content"
-                      id="panel1a-header"
-                    >
-                      <Typography className={classes.heading}>
-                        Send Notification
-                      </Typography>
-                    </ExpansionPanelSummary>
-                    <ExpansionPanelDetails>
-                      <div className="__container-sendmessage-panel">
-                        <div className="__container-form-checkbox">
-                          <div className="__container-form">
-                            <Autocomplete
-                              className={classes.textField}
-                              multiple
-                              id="tags-standard"
-                              options={users}
-                              getOptionLabel={(option) => option.email}
-                              onChange={onChangeNotificationFromTo(
-                                "From"
-                              )}
-                              defaultValue={notificationFrom}
-                              value={notificationFrom}
-                              renderInput={(params) => (
+                      {/* Send Messages */}
+                      {tab === 0 && (
+                        <PortletBody>
+                          <div className="__container-sendmessage-panel">
+                            <div className="__container-form-checkbox">
+                              <div className="__container-form">
+                                <Autocomplete
+                                  className={classes.textField}
+                                  defaultValue={messageFrom}
+                                  id="tags-message-from"
+                                  getOptionLabel={(option) => option.email}
+                                  multiple
+                                  onChange={onChangeMessageFromTo("From")}
+                                  options={users}
+                                  renderInput={(params) => (
+                                    <TextField
+                                      {...params}
+                                      label="From"
+                                      variant="standard"
+                                    />
+                                  )}
+                                  value={messageFrom}
+                                />
+                                <Autocomplete
+                                  className={classes.textField}
+                                  defaultValue={messageTo}
+                                  getOptionLabel={(option) => option.email}
+                                  id="tags-message-to"
+                                  multiple
+                                  onChange={onChangeMessageFromTo("To")}
+                                  options={users}
+                                  renderInput={(params) => (
+                                    <TextField
+                                      {...params}
+                                      label="To"
+                                      variant="standard"
+                                    />
+                                  )}
+                                  value={messageTo}
+                                />
                                 <TextField
-                                  {...params}
-                                  variant="standard"
-                                  label="From"
+                                  className={classes.textField}
+                                  id="standard-subjectMessage"
+                                  label="Subject"
+                                  margin="normal"
+                                  name="subjectMessage"
+                                  onChange={handleChangeName("subjectMessage")}
+                                  onClick={setSelectedControlAndIndexes}
+                                  value={values.subjectMessage}
                                 />
-                              )}
-                            />
-                            <Autocomplete
-                              className={classes.textField}
-                              multiple
-                              id="tags-standard"
-                              options={users}
-                              getOptionLabel={(option) => option.email}
-                              onChange={onChangeNotificationFromTo(
-                                "To"
-                              )}
-                              defaultValue={notificationTo}
-                              value={notificationTo}
-                              renderInput={(params) => (
-                                <TextField
-                                  {...params}
-                                  variant="standard"
-                                  label="To"
+                              </div>
+                              <div className="__container-checkbox">
+                                <FormControlLabel
+                                  control={
+                                    <Switch
+                                      checked={values.messageDisabled}
+                                      color="primary"
+                                      onChange={handleChangeCheck(
+                                        "messageDisabled"
+                                      )}
+                                    />
+                                  }
+                                  label="Disabled"
+                                  labelPlacement="start"
+                                  value="start"
                                 />
-                              )}
-                            />
-                            <TextField
-                              id="standard-name"
-                              label="Title"
-                              className={classes.textField}
-                              value={values.title}
-                              margin="normal"
-                            />
-                          </div>
-                          <div className="__container-checkbox-notification">
-                            <FormControlLabel
-                              value="start"
-                              control={
-                                <Switch
-                                  color="primary"
-                                  checked={values.isAssetEdition}
-                                  onChange={handleChangeCheck("isAssetEdition")}
+                                <FormControlLabel
+                                  control={
+                                    <Switch
+                                      checked={values.messageMail}
+                                      color="primary"
+                                      onChange={handleChangeCheck(
+                                        "messageMail"
+                                      )}
+                                    />
+                                  }
+                                  label="Mail"
+                                  labelPlacement="start"
+                                  value="start"
                                 />
-                              }
-                              label="Disabled"
-                              labelPlacement="start"
-                            />
-                            <div className="__container-icons">
-                              <Table>
-                                <TableBody>
-                                  <TableRow>
-                                    <TableCell>
-                                      {" "}
-                                      <NotificationImportantIcon className="icon" />{" "}
-                                    </TableCell>
-                                    <TableCell>
-                                      {" "}
-                                      <NotificationsIcon className="icon" />{" "}
-                                    </TableCell>
-                                    <TableCell>
-                                      {" "}
-                                      <NotificationsActiveIcon className="icon" />{" "}
-                                    </TableCell>
-                                  </TableRow>
-                                  <TableRow>
-                                    <TableCell>
-                                      {" "}
-                                      <NotificationsNoneIcon className="icon" />{" "}
-                                    </TableCell>
-                                    <TableCell>
-                                      {" "}
-                                      <NotificationsOffIcon className="icon" />{" "}
-                                    </TableCell>
-                                    <TableCell>
-                                      {" "}
-                                      <NotificationsPausedIcon className="icon" />{" "}
-                                    </TableCell>
-                                  </TableRow>
-                                </TableBody>
-                              </Table>
+                                <FormControlLabel
+                                  control={
+                                    <Switch
+                                      checked={values.messageInternal}
+                                      color="primary"
+                                      onChange={handleChangeCheck(
+                                        "messageInternal"
+                                      )}
+                                    />
+                                  }
+                                  label="Internal"
+                                  labelPlacement="start"
+                                  value="start"
+                                />
+                              </div>
+                            </div>
+                            <div
+                              className="__container-policies-message"
+                              onClick={() => setSelectedControl("htmlMessage")}
+                            >
+                              <Editor
+                                editorClassName="editorClassName"
+                                editorState={editor}
+                                onEditorStateChange={(ed) => setEditor(ed)}
+                                toolbarClassName="toolbarClassName"
+                                wrapperClassName="wrapperClassName"
+                              />
                             </div>
                           </div>
-                        </div>
-                        <div className="__container-message-multiline">
-                          <TextField
-                            id="outlined-multiline-static"
-                            label="Message"
-                            multiline
-                            rows="4"
-                            className={classes.textField}
-                            margin="normal"
-                            style={{ width: "100%" }}
-                          />
-                        </div>
-                      </div>
-                    </ExpansionPanelDetails>
-                  </ExpansionPanel>
-                  <ExpansionPanel>
-                    <ExpansionPanelSummary
-                      expandIcon={<ExpandMoreIcon />}
-                      aria-controls="panel1a-content"
-                      id="panel1a-header"
-                    >
-                      <Typography className={classes.heading}>
-                        Send API
-                      </Typography>
-                    </ExpansionPanelSummary>
-                    <ExpansionPanelDetails>
-                      <div className="__container-send-api">
-                        <div className="__container-url-disabled">
-                          <div className="__container-url">
-                            <TextField
-                              id="standard-name"
-                              label="URL"
-                              className={classes.textField}
-                              value={values.url}
-                              margin="normal"
-                              style={{ width: "600px" }}
-                            />
-                          </div>
-                          <div className="__container-disabled">
-                            <FormControlLabel
-                              value="start"
-                              control={
-                                <Switch
-                                  color="primary"
-                                  checked={values.isAssetEdition}
-                                  onChange={handleChangeCheck("isAssetEdition")}
+                        </PortletBody>
+                      )}
+                      {/* Send Notification */}
+                      {tab === 1 && (
+                        <PortletBody>
+                          <div className="__container-sendnotification-panel">
+                            <div className="__container-form-checkbox">
+                              <div className="__container-form">
+                                <Autocomplete
+                                  className={classes.textField}
+                                  defaultValue={notificationFrom}
+                                  getOptionLabel={(option) => option.email}
+                                  id="tags-notification-from"
+                                  multiple
+                                  onChange={onChangeNotificationFromTo("From")}
+                                  options={users}
+                                  renderInput={(params) => (
+                                    <TextField
+                                      {...params}
+                                      label="From"
+                                      variant="standard"
+                                    />
+                                  )}
+                                  value={notificationFrom}
                                 />
-                              }
-                              label="Disabled"
-                              labelPlacement="start"
-                            />
+                                <Autocomplete
+                                  className={classes.textField}
+                                  defaultValue={notificationTo}
+                                  getOptionLabel={(option) => option.email}
+                                  id="tags-notification-to"
+                                  multiple
+                                  onChange={onChangeNotificationFromTo("To")}
+                                  options={users}
+                                  renderInput={(params) => (
+                                    <TextField
+                                      {...params}
+                                      variant="standard"
+                                      label="To"
+                                    />
+                                  )}
+                                  value={notificationTo}
+                                />
+                                <TextField
+                                  className={classes.textField}
+                                  id="standard-subjectNotification"
+                                  label="Subject"
+                                  margin="normal"
+                                  onChange={handleChangeName(
+                                    "subjectNotification"
+                                  )}
+                                  onClick={() =>
+                                    setSelectedControl("subjectNotification")
+                                  }
+                                  value={values.subjectNotification}
+                                />
+                              </div>
+                              <div className="__container-checkbox-notification">
+                                <FormControlLabel
+                                  control={
+                                    <Switch
+                                      color="primary"
+                                      checked={values.notificationDisabled}
+                                      onChange={handleChangeCheck(
+                                        "notificationDisabled"
+                                      )}
+                                    />
+                                  }
+                                  label="Disabled"
+                                  labelPlacement="start"
+                                  value="start"
+                                />
+                                <div className="__container-icons">
+                                  <h6 className="iconSelected">
+                                    Icon selected:
+                                    {iconsList[values.selectedIcon]}
+                                  </h6>
+                                  <div className="__box-icons">
+                                    {Object.keys(iconsList).map((key) => (
+                                      <ToggleButtonGroup
+                                        aria-label="text aligment"
+                                        exclusive
+                                        onChange={handleAlignment}
+                                        value={alignment}
+                                      >
+                                        <ToggleButton
+                                          className="notification-icons"
+                                          id={key}
+                                          key={key}
+                                          onClick={() => handleClickIcon(key)}
+                                          value={key}
+                                        >
+                                          <span
+                                            style={{ color: "black" }}
+                                            value={key}
+                                          >
+                                            {iconsList[key]}
+                                          </span>
+                                        </ToggleButton>
+                                      </ToggleButtonGroup>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="__container-message-multiline">
+                              <TextField
+                                className={classes.textField}
+                                id="outlined-multiline-static"
+                                label="Message"
+                                margin="normal"
+                                multiline
+                                onChange={handleChangeName(
+                                  "messageNotification"
+                                )}
+                                onClick={() =>
+                                  setSelectedControl("messageNotification")
+                                }
+                                rows="4"
+                                style={{ width: "100%" }}
+                                value={values.messageNotification}
+                              />
+                            </div>
                           </div>
-                        </div>
-                        <div className="__container-post">
-                          <TextField
-                            id="outlined-multiline-static"
-                            label="Body"
-                            multiline
-                            rows="4"
-                            className={classes.textField}
-                            margin="normal"
-                            style={{ width: "100%" }}
-                          />
-                        </div>
-                      </div>
-                    </ExpansionPanelDetails>
-                  </ExpansionPanel>
+                        </PortletBody>
+                      )}
+                      {/* Send API */}
+                      {tab === 2 && (
+                        <PortletBody>
+                          <div className="__container-send-api">
+                            <div className="__container-url-disabled">
+                              <div className="__container-url">
+                                <TextField
+                                  className={classes.textField}
+                                  id="standard-url"
+                                  label="URL"
+                                  margin="normal"
+                                  onChange={handleChangeName("urlAPI")}
+                                  style={{ width: "600px" }}
+                                  value={values.urlAPI}
+                                />
+                              </div>
+                              <div className="__container-disabled">
+                                <FormControlLabel
+                                  value="start"
+                                  control={
+                                    <Switch
+                                      checked={values.apiDisabled}
+                                      color="primary"
+                                      onChange={handleChangeCheck(
+                                        "apiDisabled"
+                                      )}
+                                    />
+                                  }
+                                  label="Disabled"
+                                  labelPlacement="start"
+                                />
+                              </div>
+                            </div>
+                            <div className="__container-post">
+                              <TextField
+                                className={classes.textField}
+                                id="outlined-multiline-static"
+                                label="Body"
+                                margin="normal"
+                                multiline
+                                onChange={handleChangeName("bodyAPI")}
+                                rows="4"
+                                style={{ width: "100%" }}
+                                value={values.bodyAPI}
+                              />
+                            </div>
+                          </div>
+                        </PortletBody>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

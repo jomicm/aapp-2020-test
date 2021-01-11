@@ -17,18 +17,12 @@ import {
 } from "@material-ui/core";
 import { TreeItem, TreeView } from "@material-ui/lab";
 
-const BaseFieldsAccordion = (props) => {
+const BaseFieldsAccordion = ({ data, onElementClick }) => {
   const [open, setOpen] = React.useState(true);
 
   const handleClick = () => {
     setOpen(!open);
-  }
-
-  const variables = [
-    {name: props.nameReferences, id: 'bfName'},
-    {name: 'Dos', id: 'bfNameDos'},
-    {name: 'Tres', id: 'bfNameTres'}
-  ];
+  };
 
   return (
     <div>
@@ -36,34 +30,35 @@ const BaseFieldsAccordion = (props) => {
         defaultCollapseIcon={<ExpandMoreIcon />}
         defaultExpandIcon={<ChevronRightIcon />}
       >
-        <List style={{ fontSize: '3rem' }}>
-          <TreeItem
-            className='baseform-tree-item'
-            label={props.baseReferences}
-            nodeId='1'
-            style={{ margin: '0 0 20px 5px' }}
-          >
-            {variables.map((vari, ix) => {
-              return (
-                <div key={ix}>
-                  <TreeItem nodeId={vari.id} label={vari.name} />
-                </div>
-              )
-            })}
-          </TreeItem>
-          <TreeItem
-            className='baseform-tree-item'
-            label={props.baseList}
-            nodeId='5'
-            style={{ margin: '0 0 20px 5px' }}
-          >
-            <TreeItem onClick={() => console.log('Hola')} label={props.nameList} nodeId='6' />
-            <TreeItem label={props.lastNameList} nodeId='7' />
-            <TreeItem label={props.emailList} nodeId='8' />
-          </TreeItem>
+        <List style={{ fontSize: "3rem" }}>
+          {Object.keys(data).map((keyName, ix) => {
+            return (
+              <TreeItem
+                className="baseform-tree-item"
+                key={`tree-item-catalogue-${ix}`}
+                label={keyName}
+                nodeId={`tree-item-catalogue-${ix}`}
+                style={{ margin: "0 0 20px 5px" }}
+              >
+                {Object.values(data[keyName].baseFields).map(
+                  ({ id, label }, f_ix) => {
+                    return (
+                      <TreeItem
+                      key={f_ix}
+                      label={label}
+                      nodeId={`${id}-${f_ix}`}
+                      onClick={() => onElementClick(id)}
+                      />
+                    );
+                  }
+                )}
+              </TreeItem>
+            );
+          })}
         </List>
       </TreeView>
     </div>
   );
 };
+
 export default BaseFieldsAccordion;

@@ -122,6 +122,19 @@ const PoliciesTable = () => {
     };
   };
 
+  const getTypeString = (
+    messageDisabled,
+    notificationDisabled,
+    apiDisabled
+  ) => {
+    const array = [
+      ...(!messageDisabled ? ["Message"] : []),
+      ...(!notificationDisabled ? ["Notification"] : []),
+      ...(!apiDisabled ? ["API"] : []),
+    ];
+    return array.join(", ");
+  };
+
   const loadInitData = (collectionNames = ["policies"]) => {
     collectionNames = !Array.isArray(collectionNames)
       ? [collectionNames]
@@ -132,12 +145,26 @@ const PoliciesTable = () => {
         .then((data) => {
           if (collectionName === "policies") {
             const rows = data.response.map((row) => {
+              const {
+                _id,
+                policiesName,
+                selectedCatalogue,
+                selectedAction,
+                messageDisabled,
+                notificationDisabled,
+                apiDisabled,
+              } = row;
+              const typeString = getTypeString(
+                messageDisabled,
+                notificationDisabled,
+                apiDisabled
+              );
               return createPoliciesRow(
-                row._id,
-                row.name,
-                row.target,
-                row.action,
-                row.type,
+                _id,
+                policiesName,
+                selectedCatalogue,
+                selectedAction,
+                typeString,
                 "Admin",
                 "12/2/2020"
               );
@@ -177,13 +204,13 @@ const PoliciesTable = () => {
             <div className="kt-separator kt-separator--dashed" />
             <div className="kt-section__content">
               <TableComponent
-                title={"Policies"}
                 headRows={policiesHeadRows}
-                rows={control.policiesRows}
-                onEdit={tableActions("policies").onEdit}
                 onAdd={tableActions("policies").onAdd}
+                onEdit={tableActions("policies").onEdit}
                 onDelete={tableActions("policies").onDelete}
                 onSelect={tableActions("policies").onSelect}
+                rows={control.policiesRows}
+                title={"Policies"}
               />
             </div>
           </div>
@@ -192,4 +219,5 @@ const PoliciesTable = () => {
     </PortletBody>
   );
 };
+
 export default PoliciesTable;

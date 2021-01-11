@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import ExpandLess from "@material-ui/icons/ExpandLess";
 import ExpandMore from "@material-ui/icons/ExpandMore";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
@@ -17,12 +17,12 @@ import {
 } from "@material-ui/core";
 import { TreeItem, TreeView } from "@material-ui/lab";
 
-const CustomFieldsAccordion = (props) => {
-  const [open, setOpen] = React.useState(true);
+const CustomFieldsAccordion = ({ data, onElementClick, customFieldKey }) => {
+  const [open, setOpen] = useState(true);
 
   const handleClick = () => {
     setOpen(!open);
-  }
+  };
 
   return (
     <div>
@@ -30,29 +30,29 @@ const CustomFieldsAccordion = (props) => {
         defaultCollapseIcon={<ExpandMoreIcon />}
         defaultExpandIcon={<ChevronRightIcon />}
       >
-        <List style={{ fontSize: '3rem' }}>
-          <TreeItem
-            className='baseform-tree-item'
-            label={props.customReferences}
-            nodeId='1'
-            style={{ margin: '0 0 20px 5px' }}
-          >
-            <TreeItem
-              className='baseform-tree-item'
-              label={props.nameCustomReceptionist}
-              nodeId='2'
-            >
-              <TreeItem label={props.customFieldOoto} nodeId='3' />
-              <TreeItem label={props.customFieldOffice} nodeId='4' />
-            </TreeItem>
-            <TreeItem
-              className='baseform-tree-item'
-              label={props.nameCustomEmp}
-              nodeId='5'
-            >
-              <TreeItem label={props.customFieldBirthday} nodeId="6" />
-            </TreeItem>
-          </TreeItem>
+        <List style={{ fontSize: "3rem" }}>
+          {Object.keys(data[customFieldKey].customFields).map((keyName, ix) => {
+            return (
+              <TreeItem
+                className="baseform-tree-item"
+                key={`tree-item-catalogue-${ix}`}
+                label={keyName}
+                nodeId={`tree-item-catalogue-${ix}`}
+                style={{ margin: "0 0 20px 5px" }}
+                >
+                  {Object.values(data[customFieldKey].customFields[keyName]).map(({id, label}, f_ix) => {
+                    return(
+                      <TreeItem 
+                      key={f_ix}
+                      label={label}
+                      nodeId={`${id}-${f_ix}`}
+                      onClick={() => onElementClick(id)}
+                      />
+                    )
+                  })}
+              </TreeItem>
+            );
+          })}
         </List>
       </TreeView>
     </div>
