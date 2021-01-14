@@ -216,8 +216,35 @@ export default function Employees() {
     });
   };
 
+  const getAction = (selectedAction) => {
+    // const array = [
+    //   ...(selectedAction === 'OnAdd' ? ['OnAdd'] : []),
+    //   ...(selectedAction === 'OnEdit' ? ['OnEdit'] : []),
+    //   ...(selectedAction === 'OnDelete' ? ['OnDelete'] : []),
+    // ]
+    // return array
+
+    return selectedAction
+  }
+
+  const loadPoliciesCollection = () => {
+    getDB("policies")
+    .then((response) => response.json())
+    .then((data) => {
+      data.response.map((action) => {
+        const { selectedAction } = action
+        const typeAction = getAction(selectedAction);
+        const arr = []
+        console.log(typeAction)
+        console.log(arr.push(action.selectedAction))
+      })
+    })
+    .catch((error) => console.log(error));
+  }
+
   useEffect(() => {
     loadEmployeesData();
+    loadPoliciesCollection();
   }, []);
 
   const [control, setControl] = useState({
