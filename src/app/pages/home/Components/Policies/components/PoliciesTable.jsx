@@ -17,48 +17,48 @@ import ModalPolicies from "../modals/ModalPolicies";
 
 const policiesHeadRows = [
   {
-    id: "name",
+    id: 'name',
     numeric: false,
     disablePadding: false,
-    label: "Name",
+    label: 'Name',
   },
   {
-    id: "target",
+    id: 'target',
     numeric: false,
     disablePadding: false,
-    label: "Target",
+    label: 'Target',
   },
   {
-    id: "action",
+    id: 'action',
     numeric: false,
     disablePadding: false,
-    label: "Action",
+    label: 'Action',
   },
   {
-    id: "type",
+    id: 'type',
     numeric: false,
     disablePadding: false,
-    label: "Type",
+    label: 'Type',
   },
   {
-    id: "creator",
+    id: 'creator',
     numeric: false,
     disablePadding: false,
-    label: "Creator",
+    label: 'Creator',
   },
   {
-    id: "creationDate",
+    id: 'creationDate',
     numeric: false,
     disablePadding: false,
-    label: "Creation Date",
+    label: 'Creation Date',
   },
 ];
 
 const collections = {
   policies: {
-    id: "idPolicies",
-    modal: "openPoliciesModal",
-    name: "policies",
+    id: 'idPolicies',
+    modal: 'openPoliciesModal',
+    name: 'policies',
   },
 };
 
@@ -112,17 +112,30 @@ const PoliciesTable = () => {
         id.forEach((_id) => {
           deleteDB(`${collection.name}/`, _id)
             .then((response) => loadInitData(collection.name))
-            .catch((error) => console.log("Error", error));
+            .catch((error) => console.log('Error', error));
         });
       },
       onSelect(id) {
-        if (collectionName === "references") {
+        if (collectionName === 'references') {
         }
       },
     };
   };
 
-  const loadInitData = (collectionNames = ["policies"]) => {
+  const getTypeString = (
+    messageDisabled,
+    notificationDisabled,
+    apiDisabled
+  ) => {
+    const array = [
+      ...(!messageDisabled ? ['Message'] : []),
+      ...(!notificationDisabled ? ['Notification'] : []),
+      ...(!apiDisabled ? ['API'] : []),
+    ];
+    return array.join(', ');
+  };
+
+  const loadInitData = (collectionNames = ['policies']) => {
     collectionNames = !Array.isArray(collectionNames)
       ? [collectionNames]
       : collectionNames;
@@ -130,16 +143,30 @@ const PoliciesTable = () => {
       getDB(collectionName)
         .then((response) => response.json())
         .then((data) => {
-          if (collectionName === "policies") {
+          if (collectionName === 'policies') {
             const rows = data.response.map((row) => {
+              const {
+                _id,
+                policiesName,
+                selectedCatalogue,
+                selectedAction,
+                messageDisabled,
+                notificationDisabled,
+                apiDisabled,
+              } = row;
+              const typeString = getTypeString(
+                messageDisabled,
+                notificationDisabled,
+                apiDisabled
+              );
               return createPoliciesRow(
-                row._id,
-                row.name,
-                row.target,
-                row.action,
-                row.type,
-                "Admin",
-                "12/2/2020"
+                _id,
+                policiesName,
+                selectedCatalogue,
+                selectedAction,
+                typeString,
+                'Admin',
+                '12/2/2020'
               );
             });
             setControl((prev) => ({
@@ -149,7 +176,7 @@ const PoliciesTable = () => {
             }));
           }
         })
-        .catch((error) => console.log("error>", error));
+        .catch((error) => console.log('error>', error));
     });
   };
 
@@ -159,10 +186,10 @@ const PoliciesTable = () => {
 
   return (
     <PortletBody>
-      <div className="kt-section kt-margin-t-0">
-        <div className="kt-section__body">
-          <div className="kt-section">
-            <span className="kt-section__sub">
+      <div className='kt-section kt-margin-t-0'>
+        <div className='kt-section__body'>
+          <div className='kt-section'>
+            <span className='kt-section__sub'>
               This section will integrate <code>Policies</code>
             </span>
             <ModalPolicies
@@ -170,20 +197,20 @@ const PoliciesTable = () => {
               setShowModal={(onOff) =>
                 setControl({ ...control, openPoliciesModal: onOff })
               }
-              reloadTable={() => loadInitData("policies")}
+              reloadTable={() => loadInitData('policies')}
               id={control.idPolicies}
               employeeProfileRows={[]}
             />
-            <div className="kt-separator kt-separator--dashed" />
-            <div className="kt-section__content">
+            <div className='kt-separator kt-separator--dashed' />
+            <div className='kt-section__content'>
               <TableComponent
-                title={"Policies"}
                 headRows={policiesHeadRows}
+                onAdd={tableActions('policies').onAdd}
+                onEdit={tableActions('policies').onEdit}
+                onDelete={tableActions('policies').onDelete}
+                onSelect={tableActions('policies').onSelect}
                 rows={control.policiesRows}
-                onEdit={tableActions("policies").onEdit}
-                onAdd={tableActions("policies").onAdd}
-                onDelete={tableActions("policies").onDelete}
-                onSelect={tableActions("policies").onSelect}
+                title={'Policies'}
               />
             </div>
           </div>
@@ -192,4 +219,5 @@ const PoliciesTable = () => {
     </PortletBody>
   );
 };
+
 export default PoliciesTable;
