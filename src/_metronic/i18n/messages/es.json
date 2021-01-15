@@ -72,5 +72,38 @@
   "ECOMMERCE.CUSTOMERS.UPDATE_STATUS.TITLE": "Status has been updated for selected customers",
   "ECOMMERCE.CUSTOMERS.UPDATE_STATUS.MESSAGE": "Selected customers status have successfully been updated",
   "ECOMMERCE.CUSTOMERS.EDIT.UPDATE_MESSAGE": "Customer has been updated",
-  "ECOMMERCE.CUSTOMERS.EDIT.ADD_MESSAGE": "Customer has been created"
+  "ECOMMERCE.CUSTOMERS.EDIT.ADD_MESSAGE": "Customer has been created",
+
+  "TABS.ASSETS.LIST":"Lista",
+  "TABS.ASSETS.REFERENCES":"Referencias",
+  "TABS.ASSETS.CATEGORIES":"Categorías",
+  "TABS.ASSETS.POLICIES":"Pólizas",
+
+  "TABS.PROCESSES.LIST":"Lista",
+  "TABS.PROCESSES.STAGES":"Etapas",
+  "TABS.PROCESSES.LIVE":"Vivos*",
+
+  "TABS.USERS.LIST":"Lista",
+  "TABS.USERS.REFERENCES":"Referencias",
+  "TABS.USERS.POLICIES":"Pólizas",
+
+  "TABS.EMPLOYEES.LIST":"Lista",
+  "TABS.EMPLOYEES.REFERENCES":"Referencias",
+  "TABS.EMPLOYEES.POLICIES":"Pólizas",
+
+  "TABS.LOCATIONS.LIST":"Lista",
+  "TABS.LOCATIONS.PROFILES":"Perfiles",
+  "TABS.LOCATIONS.POLICIES":"Pólizas",
+  "TABS.LOCATIONS.SETTINGS":"Ajustes",
+
+  "TABS.REPORTS.GENERAL":"General",
+  "TABS.REPORTS.SAVED":"Guardados",
+
+  "TABS.SETTINGS.GENERAL":"General",
+  "TABS.SETTINGS.DESIGN":"Diseño",
+  "TABS.SETTINGS.LAYOUTSPRESETS":"Layouts & Presets*",
+  "TABS.SETTINGS.FIELDS":"Campos",
+  "TABS.SETTINGS.CUSTOM":"Customizados*",
+  "TABS.SETTINGS.USERS":"Usuarios",
+  "TABS.SETTINGS.PROCESSES":"Procesos"
 }

@@ -29,11 +29,34 @@ import './Assets.scss';
 import { getDB, deleteDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 
+//Translation
+import { useIntl } from "react-intl";
 
+const TabsConfig = {
+  tabs:[
+    {
+      title: "List",
+      translate: "TABS.ASSETS.LIST"
+    },
+    {
+      title: "References",
+      translate: "TABS.ASSETS.REFERENCES"
+    },
+    {
+      title: "Categories",
+      translate: "TABS.ASSETS.CATEGORIES"
+    },
+    {
+      title:"Policies",
+      translate:"TABS.ASSETS.POLICIES"
+    }
+  ]
+};
 
 const localStorageActiveTabKey = "builderActiveTab";
 export default function Assets() {
 
+  const intl = useIntl();
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const dispatch = useDispatch();
@@ -107,10 +130,10 @@ export default function Assets() {
 
   const assetReferencesRows = [
     createAssetReferenceRow('Laptop', 'Acer', 'vhrf12', 'Electronics', 'Admin', '11/03/2020'),
-    createAssetReferenceRow('Chair',  'PMP', 'derds25', 'Furniture', 'Admin', '11/03/2020'),
-    createAssetReferenceRow('Pump',  'CKT', 'wedsd52', 'Vehicles', 'Admin', '11/03/2020'),
+    createAssetReferenceRow('Chair', 'PMP', 'derds25', 'Furniture', 'Admin', '11/03/2020'),
+    createAssetReferenceRow('Pump', 'CKT', 'wedsd52', 'Vehicles', 'Admin', '11/03/2020'),
   ];
- 
+
   const createAssetListRow = (id, name, brand, model, category, serial, EPC, creator, creation_date) => {
     return { id, name, brand, model, category, serial, EPC, creator, creation_date };
   };
@@ -128,10 +151,10 @@ export default function Assets() {
 
   const assetListRows = [
     createAssetListRow('Laptop', 'Acer', 'vhrf12', 'Electronics', 'SN: 12131', 'ABCDEF123', 'Admin', '11/03/2020'),
-    createAssetListRow('Chair',  'PMP', 'derds25', 'Furniture', 'SN: 2343', 'ABCDEF124', 'Admin', '11/03/2020'),
-    createAssetListRow('Pump',  'CKT', 'wedsd52', 'Vehicles', 'SN: 435665', 'ABCDEF125', 'Admin', '11/03/2020'),
+    createAssetListRow('Chair', 'PMP', 'derds25', 'Furniture', 'SN: 2343', 'ABCDEF124', 'Admin', '11/03/2020'),
+    createAssetListRow('Pump', 'CKT', 'wedsd52', 'Vehicles', 'SN: 435665', 'ABCDEF125', 'Admin', '11/03/2020'),
   ];
-  
+
   const [openCategoriesModal, setOpenCategoriesModal] = useState(false);
   const [openListModal, setOpenListModal] = useState(false);
   const [openReferencesModal, setOpenReferencesModal] = useState(false);
@@ -139,34 +162,34 @@ export default function Assets() {
   const [anchorEl, setAnchorEl] = React.useState(null);
 
   const loadAssetsData = (collectionNames = ['assets', 'references', 'categories']) => {
-    collectionNames =  !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
+    collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
       getDB(collectionName)
-      .then(response => response.json())
-      .then(data => {
-        if (collectionName === 'assets') {
-          console.log('d:', data)
-          const rows = data.response.map(row => {
-            console.log('row:', row)
-            return createAssetListRow(row._id, row.name, row.brand, row.model, row.category, row.serial, row.EPC, 'Admin', '11/03/2020');
-          });
-          setControl(prev => ({ ...prev, assetRows: rows, assetRowsSelected: [] }));
-          console.log('inside assets', rows)
-        }
-        if (collectionName === 'references') {
-          const rows = data.response.map(row => {
-            return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.category, 'Admin', '11/03/2020');
-          });
-          setControl(prev => ({ ...prev, referenceRows: rows, referenceRowsSelected: [] }));
-        }
-        if (collectionName === 'categories') {
-          const rows = data.response.map(row => {
-            return createAssetCategoryRow(row._id, row.name, row.depreciation, 'Admin', '11/03/2020');
-          });
-          setControl(prev => ({ ...prev, categoryRows: rows, categoryRowsSelected: [] }));
-        }
-      })
-      .catch(error => console.log('error>', error));
+        .then(response => response.json())
+        .then(data => {
+          if (collectionName === 'assets') {
+            console.log('d:', data)
+            const rows = data.response.map(row => {
+              console.log('row:', row)
+              return createAssetListRow(row._id, row.name, row.brand, row.model, row.category, row.serial, row.EPC, 'Admin', '11/03/2020');
+            });
+            setControl(prev => ({ ...prev, assetRows: rows, assetRowsSelected: [] }));
+            console.log('inside assets', rows)
+          }
+          if (collectionName === 'references') {
+            const rows = data.response.map(row => {
+              return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.category, 'Admin', '11/03/2020');
+            });
+            setControl(prev => ({ ...prev, referenceRows: rows, referenceRowsSelected: [] }));
+          }
+          if (collectionName === 'categories') {
+            const rows = data.response.map(row => {
+              return createAssetCategoryRow(row._id, row.name, row.depreciation, 'Admin', '11/03/2020');
+            });
+            setControl(prev => ({ ...prev, categoryRows: rows, categoryRowsSelected: [] }));
+          }
+        })
+        .catch(error => console.log('error>', error));
     });
   };
 
@@ -279,11 +302,18 @@ export default function Assets() {
                         localStorage.setItem(localStorageActiveTabKey, nextTab);
                       }}
                     >
-                      <Tab label="List" />
+                      {
+                        TabsConfig.tabs.map((e) => {
+                          return (
+                            <Tab label={
+                              !e.translate ? (e.title) : (
+                                intl.formatMessage({id:e.translate})
+                              )
+                            }/>
+                          );
+                        })
+                      }
                       {/* <Tab label="Page" /> */}
-                      <Tab label="References" />
-                      <Tab label="Categories" />
-                      <Tab label="Policies" />
                       {/* <Tab label="Aside" />
                       <Tab label="Footer" /> */}
                     </Tabs>
@@ -296,30 +326,30 @@ export default function Assets() {
                   <div className="kt-section kt-margin-t-0">
                     <div className="kt-section__body">
                       <div className="kt-section">
-                          <span className="kt-section__sub">
-                            This section will integrate <code>Assets List</code>
-                          </span>
-                          <ModalAssetList
-                            showModal={control.openAssetsModal}
-                            setShowModal={(onOff) => setControl({ ...control, openAssetsModal: onOff })}
-                            reloadTable={() => loadAssetsData('assets')}
-                            id={control.idAsset}
-                            categoryRows={control.categoryRows}
-                            referencesSelectedId={referencesSelectedId}
+                        <span className="kt-section__sub">
+                          This section will integrate <code>Assets List</code>
+                        </span>
+                        <ModalAssetList
+                          showModal={control.openAssetsModal}
+                          setShowModal={(onOff) => setControl({ ...control, openAssetsModal: onOff })}
+                          reloadTable={() => loadAssetsData('assets')}
+                          id={control.idAsset}
+                          categoryRows={control.categoryRows}
+                          referencesSelectedId={referencesSelectedId}
+                        />
+                        <div className="kt-separator kt-separator--dashed" />
+                        <div className="kt-section__content">
+                          <TableComponent
+                            title={'Asset List'}
+                            headRows={assetListHeadRows}
+                            rows={control.assetRows}
+                            onEdit={tableActions('assets').onEdit}
+                            onAdd={tableActions('assets').onAdd}
+                            onDelete={tableActions('assets').onDelete}
+                            onSelect={tableActions('assets').onSelect}
                           />
-                          <div className="kt-separator kt-separator--dashed"/>
-                          <div className="kt-section__content">
-                            <TableComponent
-                              title={'Asset List'}
-                              headRows={assetListHeadRows}
-                              rows={control.assetRows}
-                              onEdit={tableActions('assets').onEdit}
-                              onAdd={tableActions('assets').onAdd}
-                              onDelete={tableActions('assets').onDelete}
-                              onSelect={tableActions('assets').onSelect}
-                            />
-                          </div>
                         </div>
+                      </div>
                     </div>
                   </div>
                 </PortletBody>
@@ -330,29 +360,29 @@ export default function Assets() {
                   <div className="kt-section kt-margin-t-0">
                     <div className="kt-section__body">
                       <div className="kt-section">
-                          <span className="kt-section__sub">
-                            This section will integrate <code>Assets References</code>
-                          </span>
-                            <ModalAssetReferences
-                              showModal={control.openReferencesModal}
-                              setShowModal={(onOff) => setControl({ ...control, openReferencesModal: onOff })}
-                              reloadTable={() => loadAssetsData('references')}
-                              id={control.idReference}
-                              categoryRows={control.categoryRows}
-                            />
-                            <div className="kt-separator kt-separator--dashed"/>
-                            <div className="kt-section__content">
-                              <TableComponent 
-                                title={'Asset References'}
-                                headRows={assetReferencesHeadRows}
-                                rows={control.referenceRows}
-                                onEdit={tableActions('references').onEdit}
-                                onAdd={tableActions('references').onAdd}
-                                onDelete={tableActions('references').onDelete}
-                                onSelect={tableActions('references').onSelect}
-                              />
-                            </div>
+                        <span className="kt-section__sub">
+                          This section will integrate <code>Assets References</code>
+                        </span>
+                        <ModalAssetReferences
+                          showModal={control.openReferencesModal}
+                          setShowModal={(onOff) => setControl({ ...control, openReferencesModal: onOff })}
+                          reloadTable={() => loadAssetsData('references')}
+                          id={control.idReference}
+                          categoryRows={control.categoryRows}
+                        />
+                        <div className="kt-separator kt-separator--dashed" />
+                        <div className="kt-section__content">
+                          <TableComponent
+                            title={'Asset References'}
+                            headRows={assetReferencesHeadRows}
+                            rows={control.referenceRows}
+                            onEdit={tableActions('references').onEdit}
+                            onAdd={tableActions('references').onAdd}
+                            onDelete={tableActions('references').onDelete}
+                            onSelect={tableActions('references').onSelect}
+                          />
                         </div>
+                      </div>
                     </div>
                   </div>
                 </PortletBody>
@@ -363,37 +393,37 @@ export default function Assets() {
                   <div className="kt-section kt-margin-t-0">
                     <div className="kt-section__body">
                       <div className="kt-section">
-                          <span className="kt-section__sub">
-                            This section will integrate <code>Assets Categories</code>
-                          </span>
-                          <ModalAssetCategories
-                            // showModal={openCategoriesModal}
-                            // setShowModal={setOpenCategoriesModal}
-                            // reloadTable={loadAssetsData.categories}
-                            // id={idCategory}
-                              showModal={control.openCategoriesModal}
-                              setShowModal={(onOff) => setControl({ ...control, openCategoriesModal: onOff })}
-                              reloadTable={() => loadAssetsData('categories')}
-                              id={control.idCategory}
-                          />
+                        <span className="kt-section__sub">
+                          This section will integrate <code>Assets Categories</code>
+                        </span>
+                        <ModalAssetCategories
+                          // showModal={openCategoriesModal}
+                          // setShowModal={setOpenCategoriesModal}
+                          // reloadTable={loadAssetsData.categories}
+                          // id={idCategory}
+                          showModal={control.openCategoriesModal}
+                          setShowModal={(onOff) => setControl({ ...control, openCategoriesModal: onOff })}
+                          reloadTable={() => loadAssetsData('categories')}
+                          id={control.idCategory}
+                        />
 
-                          <div className="kt-separator kt-separator--dashed"/>
-                          <div className="kt-section__content">
-                            <TableComponent 
-                              title={'Asset Categories'}
-                              headRows={assetCategoriesHeadRows}
-                              rows={control.categoryRows}
-                              onEdit={tableActions('categories').onEdit}
-                              onAdd={tableActions('categories').onAdd}
-                              onDelete={tableActions('categories').onDelete}
-                              onSelect={tableActions('categories').onSelect}
-                              // rows={categoryRows.rows}
-                              // onEdit={categoriesTableActions.onEditProfileLocation}
-                              // onAdd={categoriesTableActions.onAddProfileLocation}
-                              // onDelete={categoriesTableActions.onDeleteProfileLocation}
-                            />
-                          </div>
+                        <div className="kt-separator kt-separator--dashed" />
+                        <div className="kt-section__content">
+                          <TableComponent
+                            title={'Asset Categories'}
+                            headRows={assetCategoriesHeadRows}
+                            rows={control.categoryRows}
+                            onEdit={tableActions('categories').onEdit}
+                            onAdd={tableActions('categories').onAdd}
+                            onDelete={tableActions('categories').onDelete}
+                            onSelect={tableActions('categories').onSelect}
+                          // rows={categoryRows.rows}
+                          // onEdit={categoriesTableActions.onEditProfileLocation}
+                          // onAdd={categoriesTableActions.onAddProfileLocation}
+                          // onDelete={categoriesTableActions.onDeleteProfileLocation}
+                          />
                         </div>
+                      </div>
                     </div>
                   </div>
                 </PortletBody>
@@ -404,11 +434,11 @@ export default function Assets() {
                   <div className="kt-section kt-margin-t-0">
                     <div className="kt-section__body">
                       <div className="kt-section">
-                          <span className="kt-section__sub">
-                            This section will integrate <code>Asset Policies</code>
-                          </span>
-                          <div className="kt-separator kt-separator--dashed"/>
-                        </div>
+                        <span className="kt-section__sub">
+                          This section will integrate <code>Asset Policies</code>
+                        </span>
+                        <div className="kt-separator kt-separator--dashed" />
+                      </div>
                     </div>
                   </div>
                 </PortletBody>

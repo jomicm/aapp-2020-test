@@ -61,9 +61,28 @@ import StarBorder from "@material-ui/icons/StarBorder";
 import { getDB, deleteDB } from "../../../crud/api";
 import ModalYesNo from "../Components/ModalYesNo";
 import Policies from "../Components/Policies/Policies";
+//Tabs translation
+import { useIntl } from "react-intl";
+const TabsConfig = {
+  tabs:[
+    {
+      title: "List",
+      translate: "TABS.EMPLOYEES.LIST"
+    },
+    {
+      title: "References",
+      translate: "TABS.EMPLOYEES.REFERENCES"
+    },
+    {
+      title:"Policies",
+      translate:"TABS.EMPLOYEES.POLICIES"
+    }
+  ]
+};
 
 const localStorageActiveTabKey = "builderActiveTab";
 export default function Employees() {
+  const intl = useIntl();
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const dispatch = useDispatch();
@@ -323,9 +342,17 @@ export default function Employees() {
                         localStorage.setItem(localStorageActiveTabKey, nextTab);
                       }}
                     >
-                      <Tab label="List" />
-                      <Tab label="References" />
-                      <Tab label="Policies" />
+                      {
+                        TabsConfig.tabs.map((e) => {
+                          return (
+                            <Tab label={
+                              !e.translate ? (e.title) : (
+                                intl.formatMessage({id:e.translate})
+                              )
+                            }/>
+                          );
+                        })
+                      }
                     </Tabs>
                   </PortletHeaderToolbar>
                 }
