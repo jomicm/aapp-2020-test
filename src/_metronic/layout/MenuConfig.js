@@ -549,22 +549,6 @@ export default {
         title: "Settings",
         translate: "MENU.SETTINGS"
       },
-      {
-        bullet: "dot",
-        icon: "flaticon-email",
-        page: "messages",
-        root: true,
-        title: "Messages",
-        translate: "MENU.MESSAGES"
-      },
-      {
-        title: "Help",
-        root: true,
-        icon: "flaticon2-help",
-        page: "help",
-        translate: "MENU.HELP",
-        bullet: "dot",
-      },
     ],
   },
 };

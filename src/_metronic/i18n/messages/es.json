@@ -105,5 +105,8 @@
   "TABS.SETTINGS.FIELDS":"Campos",
   "TABS.SETTINGS.CUSTOM":"Customizados*",
   "TABS.SETTINGS.USERS":"Usuarios",
-  "TABS.SETTINGS.PROCESSES":"Procesos"
+  "TABS.SETTINGS.PROCESSES":"Procesos",
+
+  "TOPBAR.TOOLTIP.MESSAGES":"Mensajes",
+  "TOPBAR.TOOLTIP.HELP":"Soporte"
 }
