@@ -216,10 +216,11 @@ const ModalEmployees = ({
     const filteredPolicies = policies.filter(
       (policy) => policy.selectedAction === catalogueName
     );
-    filteredPolicies.forEach(({ policyName, selectedAction, selectedCatalogue }) =>
-      alert(
-        `Policy <${policyName}> with action <${selectedAction}> of type <${selectedCatalogue}> will be executed`
-      )
+    filteredPolicies.forEach(
+      ({ policyName, selectedAction, selectedCatalogue }) =>
+        alert(
+          `Policy <${policyName}> with action <${selectedAction}> of type <${selectedCatalogue}> will be executed`
+        )
     );
   };
 
@@ -295,17 +296,6 @@ const ModalEmployees = ({
       return;
     }
 
-    // const queryExact = ['selectedCatalogue', 'module'].map(key => ({ key, value: searchText }))
-    // getDBComplex({ collection: 'policies', queryExact })
-    //   .then(response => response.json())
-    //   .then(data => {
-    //     const rows = data.response.map(row => {
-    //       debugger
-    //       const { selectedCatalogue, module, _id: id, sn = 'sn' } = row;
-    //       const assigned = !!row.assigned;
-    //       return { selectedCatalogue, module, id, sn, assigned };
-    //     })
-
     getOneDB('employees/', id[0])
       .then((response) => response.json())
       .then((data) => {
@@ -321,6 +311,7 @@ const ModalEmployees = ({
           fileExt,
           assetsAssigned = [],
         } = data.response;
+        executePolicies('OnLoad');
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
         setLayoutSelected(layoutSelected);
@@ -421,8 +412,8 @@ const ModalEmployees = ({
   return (
     <div style={{ width: '1000px' }}>
       <Dialog
-        onClose={handleCloseModal}
         aria-labelledby='customized-dialog-title'
+        onClose={handleCloseModal}
         open={showModal}
       >
         <DialogTitle5 id='customized-dialog-title' onClose={handleCloseModal}>
@@ -433,11 +424,11 @@ const ModalEmployees = ({
             <div className={classes4.root}>
               <Paper className={classes4.root}>
                 <Tabs
-                  value={value4}
-                  onChange={handleChange4}
                   indicatorColor='primary'
+                  onChange={handleChange4}
                   textColor='primary'
                   variant='fullWidth'
+                  value={value4}
                 >
                   <Tab label='Employee' />
                   <Tab label='Assignments' />
@@ -453,7 +444,7 @@ const ModalEmployees = ({
               >
                 <TabContainer4 dir={theme4.direction}>
                   <div className='profile-tab-wrapper'>
-                    <ImageUpload setImage={setImage} image={values.imageURL}>
+                    <ImageUpload image={values.imageURL} setImage={setImage}>
                       Employee Profile Photo
                     </ImageUpload>
                     <div className='profile-tab-wrapper__content'>
@@ -467,55 +458,55 @@ const ModalEmployees = ({
                         <FormGroup>
                           <Select
                             // defaultValue={!id ? null : profileSelected }
-                            value={profileSelected}
                             classNamePrefix='select'
                             isClearable={true}
+                            isDisabled={values.isDisableUserProfile}
                             name='color'
                             onChange={onChangeEmployeeProfile}
                             options={employeeProfilesFiltered}
-                            isDisabled={values.isDisableUserProfile}
+                            value={profileSelected}
                           />
                         </FormGroup>
                       </FormControl>
                       <TextField
+                        className={classes.textField}
                         id='standard-name'
                         label='Name'
-                        className={classes.textField}
-                        value={values.name}
-                        onChange={handleChange('name')}
                         margin='normal'
+                        onChange={handleChange('name')}
+                        value={values.name}
                       />
                       <TextField
+                        className={classes.textField}
                         id='standard-name'
                         label='Last Name'
-                        className={classes.textField}
-                        value={values.lastName}
-                        onChange={handleChange('lastName')}
                         margin='normal'
+                        onChange={handleChange('lastName')}
+                        value={values.lastName}
                       />
                       <TextField
+                        className={classes.textField}
                         id='standard-name'
                         label='Email'
-                        className={classes.textField}
-                        value={values.email}
-                        onChange={handleChange('email')}
                         margin='normal'
+                        onChange={handleChange('email')}
+                        value={values.email}
                       />
                       <div className={classes.textField}>
                         <FormLabel
-                          style={{ marginTop: '25px' }}
                           component='legend'
+                          style={{ marginTop: '25px' }}
                         >
                           Responsibility Layout
                         </FormLabel>
                         <FormGroup>
                           <Select
-                            onChange={(e) => setLayoutSelected(e)}
-                            value={layoutSelected}
                             classNamePrefix='select'
                             isClearable={true}
                             name='color'
+                            onChange={(e) => setLayoutSelected(e)}
                             options={layoutOptions}
+                            value={layoutSelected}
                           />
                         </FormGroup>
                       </div>
@@ -541,17 +532,17 @@ const ModalEmployees = ({
                           <div className='modal-asset-reference__list-field'>
                             {tab.content[colIndex].map((customField) => (
                               <CustomFieldsPreview
-                                id={customField.id}
-                                type={customField.content}
-                                values={customField.values}
-                                onDelete={() => {}}
-                                onSelect={() => {}}
                                 columnIndex={colIndex}
                                 from='form'
-                                tab={tab}
-                                onUpdateCustomField={handleUpdateCustomFields}
-                                // customFieldIndex={props.customFieldIndex}
+                                id={customField.id}
                                 onClick={() => alert(customField.content)}
+                                onDelete={() => {}}
+                                onSelect={() => {}}
+                                onUpdateCustomField={handleUpdateCustomFields}
+                                tab={tab}
+                                // customFieldIndex={props.customFieldIndex}
+                                type={customField.content}
+                                values={customField.values}
                               />
                             ))}
                           </div>

@@ -273,7 +273,6 @@ export default function Employees() {
       },
       onEdit(id) {
         console.log('onEdit:', id, collection, collection.id);
-        executePolicies('OnLoad')
         setControl({
           ...control,
           [collection.id]: id,
