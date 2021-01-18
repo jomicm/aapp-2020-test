@@ -14,21 +14,23 @@ import {
   TextField,
   FormControl,
   FormLabel,
-  FormGroup
-} from "@material-ui/core";
+  FormGroup,
+} from '@material-ui/core';
 import Select from 'react-select';
-import {
-  withStyles,
-  useTheme,
-  makeStyles
-} from "@material-ui/core/styles";
-import SwipeableViews from "react-swipeable-views";
-import CloseIcon from "@material-ui/icons/Close";
+import { withStyles, useTheme, makeStyles } from '@material-ui/core/styles';
+import SwipeableViews from 'react-swipeable-views';
+import CloseIcon from '@material-ui/icons/Close';
 import CustomFields from '../../Components/CustomFields/CustomFields';
 
 // import './ModalAssetCategories.scss';
 import ImageUpload from '../../Components/ImageUpload';
-import { postDBEncryptPassword, getOneDB, updateDB, postDB, getDB } from '../../../../crud/api';
+import {
+  postDBEncryptPassword,
+  getOneDB,
+  updateDB,
+  postDB,
+  getDB,
+} from '../../../../crud/api';
 import ModalYesNo from '../../Components/ModalYesNo';
 import Permission from '../components/Permission';
 import AssetTable from '../components/AssetTable';
@@ -42,44 +44,44 @@ import {
   DropDown,
   RadioButtons,
   Checkboxes,
-  FileUpload
+  FileUpload,
 } from '../../Components/CustomFields/CustomFieldsPreview';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
-    singleLine: <SingleLine { ...props } />,
-    multiLine: <MultiLine { ...props } />,
-    date: <Date { ...props } />,
-    dateTime: <DateTime { ...props } />,
-    dropDown: <DropDown { ...props } />,
-    radioButtons: <RadioButtons { ...props } />,
-    checkboxes: <Checkboxes { ...props } />,
-    fileUpload: <FileUpload { ...props } />
+    singleLine: <SingleLine {...props} />,
+    multiLine: <MultiLine {...props} />,
+    date: <Date {...props} />,
+    dateTime: <DateTime {...props} />,
+    dropDown: <DropDown {...props} />,
+    radioButtons: <RadioButtons {...props} />,
+    checkboxes: <Checkboxes {...props} />,
+    fileUpload: <FileUpload {...props} />,
   };
   return customFieldsPreviewObj[props.type];
 };
 
 // Example 5 - Modal
-const styles5 = theme => ({
+const styles5 = (theme) => ({
   root: {
     margin: 0,
-    padding: theme.spacing(2)
+    padding: theme.spacing(2),
   },
   closeButton: {
-    position: "absolute",
+    position: 'absolute',
     right: theme.spacing(1),
     top: theme.spacing(1),
-    color: theme.palette.grey[500]
-  }
+    color: theme.palette.grey[500],
+  },
 });
 
 const DialogTitle5 = withStyles(styles5)(({ children, classes, onClose }) => {
   return (
     <DialogTitle disableTypography className={classes.root}>
-      <Typography variant="h6">{children}</Typography>
+      <Typography variant='h6'>{children}</Typography>
       {onClose ? (
         <IconButton
-          aria-label="Close"
+          aria-label='Close'
           className={classes.closeButton}
           onClick={onClose}
         >
@@ -90,54 +92,60 @@ const DialogTitle5 = withStyles(styles5)(({ children, classes, onClose }) => {
   );
 });
 
-const DialogContent5 = withStyles(theme => ({
+const DialogContent5 = withStyles((theme) => ({
   root: {
-    padding: theme.spacing(2)
-  }
+    padding: theme.spacing(2),
+  },
 }))(DialogContent);
 
-const DialogActions5 = withStyles(theme => ({
+const DialogActions5 = withStyles((theme) => ({
   root: {
     margin: 0,
-    padding: theme.spacing(1)
-  }
+    padding: theme.spacing(1),
+  },
 }))(DialogActions);
 
 // Example 4 - Tabs
 function TabContainer4({ children, dir }) {
   return (
-    <Typography component="div" dir={dir} style={{ padding: 8 * 3 }}>
+    <Typography component='div' dir={dir} style={{ padding: 8 * 3 }}>
       {children}
     </Typography>
   );
 }
-const useStyles4 = makeStyles(theme => ({
+const useStyles4 = makeStyles((theme) => ({
   root: {
     backgroundColor: theme.palette.background.paper,
-    width: 1000
-  }
+    width: 1000,
+  },
 }));
 
 // Example 1 - TextField
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   container: {
-    display: "flex",
-    flexWrap: "wrap"
+    display: 'flex',
+    flexWrap: 'wrap',
   },
   textField: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
-    width: 200
+    width: 200,
   },
   dense: {
-    marginTop: 19
+    marginTop: 19,
   },
   menu: {
-    width: 200
-  }
+    width: 200,
+  },
 }));
 
-const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProfileRows }) => {
+const ModalEmployees = ({
+  showModal,
+  setShowModal,
+  reloadTable,
+  id,
+  employeeProfileRows,
+}) => {
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -152,18 +160,18 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
   // Example 1 - TextField
   const classes = useStyles();
   const [values, setValues] = useState({
-    name: "",
+    name: '',
     lastName: '',
     email: '',
     isDisableUserProfile: false,
     selectedUserProfile: null,
     categoryPic: '/media/misc/placeholder-image.jpg',
-    categoryPicDefault: '/media/misc/placeholder-image.jpg'
+    categoryPicDefault: '/media/misc/placeholder-image.jpg',
   });
   const [profileSelected, setProfileSelected] = useState(0);
   const [layoutSelected, setLayoutSelected] = useState(0);
 
-  const handleChange = name => event => {
+  const handleChange = (name) => (event) => {
     setValues({ ...values, [name]: event.target.value });
   };
 
@@ -176,30 +184,45 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
       locationsTable,
       layoutSelected,
       fileExt,
-      assetsAssigned: assetRows
+      assetsAssigned: assetRows,
     };
-    
+
     if (!id) {
       body.idUserProfile = idUserProfile;
       postDB('employees', body)
-        .then(data => data.json())
-        .then(response => {
+        .then((data) => data.json())
+        .then((response) => {
           const { _id } = response.response[0];
           saveAndReload('employees', _id);
+          executePolicies('OnAdd');
           updateAssignedEmpToAssets(_id);
         })
-        .catch(error => console.log('ERROR', error));
+        .catch((error) => console.log('ERROR', error));
     } else {
       updateDB('employees/', body, id[0])
-        .then(response => {
+        .then((response) => {
           saveAndReload('employees', id[0]);
           updateAssignedEmpToAssets(id[0]);
+          executePolicies('OnEdit');
         })
-        .catch(error => console.log(error));
+        .catch((error) => console.log(error));
     }
     handleCloseModal();
   };
-  
+
+  const [policies, setPolicies] = useState(['']);
+
+  const executePolicies = (catalogueName) => {
+    const filteredPolicies = policies.filter(
+      (policy) => policy.selectedAction === catalogueName
+    );
+    filteredPolicies.forEach(({ policyName, selectedAction, selectedCatalogue }) =>
+      alert(
+        `Policy <${policyName}> with action <${selectedAction}> of type <${selectedCatalogue}> will be executed`
+      )
+    );
+  };
+
   const [image, setImage] = useState(null);
   const saveAndReload = (folderName, id) => {
     saveImage(image, folderName, id);
@@ -207,17 +230,16 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
   };
 
   const updateAssignedEmpToAssets = (_id) => {
-    assetRows.forEach(asset => {
+    assetRows.forEach((asset) => {
       getOneDB('assets/', asset.id)
-      .then(response => response.json())
-      .then(data => { 
-        const body = { ...data.response, assigned: _id };
-        updateDB('assets/', { assigned: _id }, asset.id)
-        .then(response => {
+        .then((response) => response.json())
+        .then((data) => {
+          const body = { ...data.response, assigned: _id };
+          updateDB('assets/', { assigned: _id }, asset.id)
+            .then((response) => {})
+            .catch((error) => console.log(error));
         })
-        .catch(error => console.log(error));
-      })
-      .catch(error => console.log(error));
+        .catch((error) => console.log(error));
     });
   };
 
@@ -226,15 +248,15 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
     setProfilePermissions([]);
     setTabs([]);
     setProfileSelected(null);
-    setValues({ 
-      name: "",
+    setValues({
+      name: '',
       lastName: '',
       email: '',
       password: '',
       isDisableUserProfile: false,
       selectedUserProfile: null,
       categoryPic: '/media/misc/placeholder-image.jpg',
-      categoryPicDefault: '/media/misc/placeholder-image.jpg'
+      categoryPicDefault: '/media/misc/placeholder-image.jpg',
     });
     setShowModal(false);
     setValue4(0);
@@ -246,46 +268,88 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
   const [employeeProfilesFiltered, setEmployeeProfilesFiltered] = useState([]);
 
   useEffect(() => {
-    const userProfiles = employeeProfileRows.map((profile, ix) => ({ value: profile.id, label: profile.name }));
+    const userProfiles = employeeProfileRows.map((profile, ix) => ({
+      value: profile.id,
+      label: profile.name,
+    }));
     setEmployeeProfilesFiltered(userProfiles);
 
     getDB('settingsLayoutsEmployees')
-      .then(response => response.json())
-      .then(data => {
-          const layoutOptions = data.response.map(({ _id: value, name: label }) => ({ value, label }));
-          setLayoutOptions(layoutOptions);
+      .then((response) => response.json())
+      .then((data) => {
+        const layoutOptions = data.response.map(
+          ({ _id: value, name: label }) => ({ value, label })
+        );
+        setLayoutOptions(layoutOptions);
       })
-      .catch(error => console.log('error>', error));
+      .catch((error) => console.log('error>', error));
 
-    if(!id || !Array.isArray(id)) {
+    getDB('policies')
+      .then((response) => response.json())
+      .then((data) => {
+        setPolicies(data.response);
+      })
+      .catch((error) => console.log('error>', error));
+
+    if (!id || !Array.isArray(id)) {
       return;
     }
 
+    // const queryExact = ['selectedCatalogue', 'module'].map(key => ({ key, value: searchText }))
+    // getDBComplex({ collection: 'policies', queryExact })
+    //   .then(response => response.json())
+    //   .then(data => {
+    //     const rows = data.response.map(row => {
+    //       debugger
+    //       const { selectedCatalogue, module, _id: id, sn = 'sn' } = row;
+    //       const assigned = !!row.assigned;
+    //       return { selectedCatalogue, module, id, sn, assigned };
+    //     })
+
     getOneDB('employees/', id[0])
-      .then(response => response.json())
-      .then(data => { 
-        const { name, lastName, email, customFieldsTab, profilePermissions, idUserProfile, locationsTable, layoutSelected, fileExt, assetsAssigned = [] } = data.response;
+      .then((response) => response.json())
+      .then((data) => {
+        const {
+          name,
+          lastName,
+          email,
+          customFieldsTab,
+          profilePermissions,
+          idUserProfile,
+          locationsTable,
+          layoutSelected,
+          fileExt,
+          assetsAssigned = [],
+        } = data.response;
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
-        setLayoutSelected(layoutSelected)
-        setProfileSelected(employeeProfilesFiltered.filter(profile => profile.value === idUserProfile));
+        setLayoutSelected(layoutSelected);
+        setProfileSelected(
+          employeeProfilesFiltered.filter(
+            (profile) => profile.value === idUserProfile
+          )
+        );
         setLocationsTable(locationsTable || []);
-        setValues({ 
+        setValues({
           ...values,
           name,
           lastName,
           email,
           isDisableUserProfile: true,
-          imageURL: getImageURL(id, 'employees', fileExt)
+          imageURL: getImageURL(id, 'employees', fileExt),
         });
         setAssetRows(assetsAssigned);
         //
-        const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
+        const tabs = Object.keys(customFieldsTab).map((key) => ({
+          key,
+          info: customFieldsTab[key].info,
+          content: [customFieldsTab[key].left, customFieldsTab[key].right],
+        }));
         tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
         setCustomFieldsTab(customFieldsTab);
         setTabs(tabs);
       })
-      .catch(error => console.log(error));
+      .catch((error) => console.log(error));
   }, [id, employeeProfileRows]);
 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
@@ -295,7 +359,7 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
   const [layoutOptions, setLayoutOptions] = useState([]);
 
   const [idUserProfile, setIdUserProfile] = useState('');
-  const onChangeEmployeeProfile = e => {
+  const onChangeEmployeeProfile = (e) => {
     if (!e) {
       setCustomFieldsTab({});
       setProfilePermissions({});
@@ -305,18 +369,22 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
     console.log('onChangeEmployeeProfile>>>', e);
     setProfileSelected(e);
     getOneDB('employeeProfiles/', e.value)
-    .then(response => response.json())
-    .then(data => { 
-      console.log(data.response);
-      const { customFieldsTab, profilePermissions } = data.response;
-      const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
-      tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
-      setCustomFieldsTab(customFieldsTab);
-      setProfilePermissions(profilePermissions);
-      setTabs(tabs);
-      setIdUserProfile(e.value);
-    })
-    .catch(error => console.log(error));
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data.response);
+        const { customFieldsTab, profilePermissions } = data.response;
+        const tabs = Object.keys(customFieldsTab).map((key) => ({
+          key,
+          info: customFieldsTab[key].info,
+          content: [customFieldsTab[key].left, customFieldsTab[key].right],
+        }));
+        tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
+        setCustomFieldsTab(customFieldsTab);
+        setProfilePermissions(profilePermissions);
+        setTabs(tabs);
+        setIdUserProfile(e.value);
+      })
+      .catch((error) => console.log(error));
   };
 
   // Function to update customFields
@@ -325,78 +393,84 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
     console.log('Looking for you', tab, id, colIndex, values);
     const customFieldsTabTmp = { ...customFieldsTab };
 
-    const field = customFieldsTabTmp[tab][colValue[colIndex]]
-      .find(cf => cf.id === id);
+    const field = customFieldsTabTmp[tab][colValue[colIndex]].find(
+      (cf) => cf.id === id
+    );
     field.values = CFValues;
   };
   const [assetRows, setAssetRows] = useState([]);
   const handleOnAssetFinderSubmit = (filteredRows) => {
-    let validRows = filteredRows.rows.filter(row => !row.assigned);
-    validRows = validRows.map(rowTR => {
-      if (!assetRows.find(row => row.id === rowTR.id)) {
-        return rowTR;
-      }
-    }).filter(row => row);
-    setAssetRows([...assetRows, ...validRows])
+    let validRows = filteredRows.rows.filter((row) => !row.assigned);
+    validRows = validRows
+      .map((rowTR) => {
+        if (!assetRows.find((row) => row.id === rowTR.id)) {
+          return rowTR;
+        }
+      })
+      .filter((row) => row);
+    setAssetRows([...assetRows, ...validRows]);
   };
   const handleOnDeleteAssetAssigned = (id) => {
-    const restRows = assetRows.filter(row => row.id !== id);
+    const restRows = assetRows.filter((row) => row.id !== id);
     setAssetRows(restRows);
     updateDB('assets/', { assigned: null }, id)
-      .then(response => {
-      })
-      .catch(error => console.log(error));
+      .then((response) => {})
+      .catch((error) => console.log(error));
   };
 
   return (
-    <div style={{width:'1000px'}}>
+    <div style={{ width: '1000px' }}>
       <Dialog
         onClose={handleCloseModal}
-        aria-labelledby="customized-dialog-title"
+        aria-labelledby='customized-dialog-title'
         open={showModal}
       >
-        <DialogTitle5
-          id="customized-dialog-title"
-          onClose={handleCloseModal}
-        >
-          {`${id ? 'Edit' : 'Add' } Employees`}
+        <DialogTitle5 id='customized-dialog-title' onClose={handleCloseModal}>
+          {`${id ? 'Edit' : 'Add'} Employees`}
         </DialogTitle5>
         <DialogContent5 dividers>
-          <div className="kt-section__content" style={{margin:'-16px'}}>
+          <div className='kt-section__content' style={{ margin: '-16px' }}>
             <div className={classes4.root}>
               <Paper className={classes4.root}>
                 <Tabs
                   value={value4}
                   onChange={handleChange4}
-                  indicatorColor="primary"
-                  textColor="primary"
-                  variant="fullWidth"
+                  indicatorColor='primary'
+                  textColor='primary'
+                  variant='fullWidth'
                 >
-                  <Tab label="Employee" />
-                  <Tab label="Assignments" />
-                  {tabs.map((tab, index) => <Tab key={`tab-reference-${index}`} label={tab.info.name} />)}
+                  <Tab label='Employee' />
+                  <Tab label='Assignments' />
+                  {tabs.map((tab, index) => (
+                    <Tab key={`tab-reference-${index}`} label={tab.info.name} />
+                  ))}
                 </Tabs>
               </Paper>
               <SwipeableViews
-                axis={theme4.direction === "rtl" ? "x-reverse" : "x"}
+                axis={theme4.direction === 'rtl' ? 'x-reverse' : 'x'}
                 index={value4}
                 onChangeIndex={handleChangeIndex4}
               >
                 <TabContainer4 dir={theme4.direction}>
-                  <div className="profile-tab-wrapper">
+                  <div className='profile-tab-wrapper'>
                     <ImageUpload setImage={setImage} image={values.imageURL}>
                       Employee Profile Photo
                     </ImageUpload>
-                    <div className="profile-tab-wrapper__content">
-                      <FormControl component="fieldset" className={classes.textField}>
-                        <FormLabel component="legend">Employee Profile</FormLabel>
+                    <div className='profile-tab-wrapper__content'>
+                      <FormControl
+                        component='fieldset'
+                        className={classes.textField}
+                      >
+                        <FormLabel component='legend'>
+                          Employee Profile
+                        </FormLabel>
                         <FormGroup>
                           <Select
                             // defaultValue={!id ? null : profileSelected }
                             value={profileSelected}
-                            classNamePrefix="select"
+                            classNamePrefix='select'
                             isClearable={true}
-                            name="color"
+                            name='color'
                             onChange={onChangeEmployeeProfile}
                             options={employeeProfilesFiltered}
                             isDisabled={values.isDisableUserProfile}
@@ -404,38 +478,43 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
                         </FormGroup>
                       </FormControl>
                       <TextField
-                        id="standard-name"
-                        label="Name"
+                        id='standard-name'
+                        label='Name'
                         className={classes.textField}
                         value={values.name}
-                        onChange={handleChange("name")}
-                        margin="normal"
+                        onChange={handleChange('name')}
+                        margin='normal'
                       />
                       <TextField
-                        id="standard-name"
-                        label="Last Name"
+                        id='standard-name'
+                        label='Last Name'
                         className={classes.textField}
                         value={values.lastName}
-                        onChange={handleChange("lastName")}
-                        margin="normal"
+                        onChange={handleChange('lastName')}
+                        margin='normal'
                       />
                       <TextField
-                        id="standard-name"
-                        label="Email"
+                        id='standard-name'
+                        label='Email'
                         className={classes.textField}
                         value={values.email}
-                        onChange={handleChange("email")}
-                        margin="normal"
+                        onChange={handleChange('email')}
+                        margin='normal'
                       />
                       <div className={classes.textField}>
-                        <FormLabel style={{marginTop: '25px'}} component="legend">Responsibility Layout</FormLabel>
+                        <FormLabel
+                          style={{ marginTop: '25px' }}
+                          component='legend'
+                        >
+                          Responsibility Layout
+                        </FormLabel>
                         <FormGroup>
                           <Select
-                            onChange={e => setLayoutSelected(e)}
+                            onChange={(e) => setLayoutSelected(e)}
                             value={layoutSelected}
-                            classNamePrefix="select"
+                            classNamePrefix='select'
                             isClearable={true}
-                            name="color"
+                            name='color'
                             options={layoutOptions}
                           />
                         </FormGroup>
@@ -444,7 +523,7 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
                   </div>
                 </TabContainer4>
                 <TabContainer4 dir={theme4.direction}>
-                  <div className="profile-tab-wrapper">
+                  <div className='profile-tab-wrapper'>
                     <AssetTable
                       assetRows={assetRows}
                       onAssetFinderSubmit={handleOnAssetFinderSubmit}
@@ -453,28 +532,30 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
                   </div>
                 </TabContainer4>
                 {/* TABS CUSTOM FIELDS */}
-                {tabs.map(tab => (
+                {tabs.map((tab) => (
                   <TabContainer4 dir={theme4.direction}>
-                    <div className="modal-asset-reference">
-                      {Array(tab.content[1].length === 0 ? 1 : 2).fill(0).map((col, colIndex) => (
-                        <div className="modal-asset-reference__list-field" >
-                          {tab.content[colIndex].map(customField => (
-                            <CustomFieldsPreview 
-                              id={customField.id}
-                              type={customField.content}
-                              values={customField.values}
-                              onDelete={() => {}}
-                              onSelect={() => {}}
-                              columnIndex={colIndex}
-                              from="form"
-                              tab={tab}
-                              onUpdateCustomField={handleUpdateCustomFields}
-                              // customFieldIndex={props.customFieldIndex}
-                              onClick={() => alert(customField.content)}
-                            />
-                          ))}
-                        </div>
-                      ))}
+                    <div className='modal-asset-reference'>
+                      {Array(tab.content[1].length === 0 ? 1 : 2)
+                        .fill(0)
+                        .map((col, colIndex) => (
+                          <div className='modal-asset-reference__list-field'>
+                            {tab.content[colIndex].map((customField) => (
+                              <CustomFieldsPreview
+                                id={customField.id}
+                                type={customField.content}
+                                values={customField.values}
+                                onDelete={() => {}}
+                                onSelect={() => {}}
+                                columnIndex={colIndex}
+                                from='form'
+                                tab={tab}
+                                onUpdateCustomField={handleUpdateCustomFields}
+                                // customFieldIndex={props.customFieldIndex}
+                                onClick={() => alert(customField.content)}
+                              />
+                            ))}
+                          </div>
+                        ))}
                     </div>
                   </TabContainer4>
                 ))}
@@ -483,13 +564,13 @@ const ModalEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProf
           </div>
         </DialogContent5>
         <DialogActions5>
-          <Button onClick={handleSave} color="primary">
+          <Button onClick={handleSave} color='primary'>
             Save changes
           </Button>
         </DialogActions5>
-      </Dialog>    
+      </Dialog>
     </div>
-  )
+  );
 };
 
 export default ModalEmployees;

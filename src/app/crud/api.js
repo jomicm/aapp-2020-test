@@ -78,6 +78,15 @@ const getDBComplex = ({
     const queryString = JSON.stringify({ "$or": qLike });
     additionalParams += `query=${queryString}`;
   }
+  else if(queryExact){
+    const qExact = queryExact.map(({ key, value }) => {
+      const res = {};
+      res[key] = `${value}` ;
+      return res;
+  })
+  const queryString = JSON.stringify({ "$or": qExact });
+    additionalParams += `query=${queryString}`;
+}
   additionalParams = additionalParams ? `?${additionalParams}` : '';
   const reqURL = `${getAPIPath(collection)}${additionalParams}`;
   console.log('reqURL:', reqURL)

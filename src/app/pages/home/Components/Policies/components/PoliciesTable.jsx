@@ -82,7 +82,7 @@ const createPoliciesRow = (
   };
 };
 
-const PoliciesTable = () => {
+const PoliciesTable = ({ module }) => {
   const [control, setControl] = useState({
     idPolicies: null,
     openPoliciesModal: false,
@@ -147,7 +147,7 @@ const PoliciesTable = () => {
             const rows = data.response.map((row) => {
               const {
                 _id,
-                policiesName,
+                policyName,
                 selectedCatalogue,
                 selectedAction,
                 messageDisabled,
@@ -161,7 +161,7 @@ const PoliciesTable = () => {
               );
               return createPoliciesRow(
                 _id,
-                policiesName,
+                policyName,
                 selectedCatalogue,
                 selectedAction,
                 typeString,
@@ -200,6 +200,7 @@ const PoliciesTable = () => {
               reloadTable={() => loadInitData('policies')}
               id={control.idPolicies}
               employeeProfileRows={[]}
+              module={module}
             />
             <div className='kt-separator kt-separator--dashed' />
             <div className='kt-section__content'>

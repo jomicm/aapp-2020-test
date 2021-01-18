@@ -192,6 +192,7 @@ const ModalPolicies = ({
   reloadTable,
   id,
   employeeProfileRows,
+  module
 }) => {
   const [alignment, setAlignment] = useState("");
   const actions = [
@@ -257,7 +258,7 @@ const ModalPolicies = ({
   const [users, setUsers] = useState([]);
   const [value4, setValue4] = useState(0);
   const [values, setValues] = useState({
-    policiesName: "",
+    policyName: "",
     selectedAction: "",
     selectedCatalogue: "",
     subjectMessage: "",
@@ -328,6 +329,7 @@ const ModalPolicies = ({
       layout,
       notificationFrom,
       notificationTo,
+      module
     };
     if (!id) {
       postDB("policies", body)
@@ -379,7 +381,7 @@ const ModalPolicies = ({
 
   const reset = () => {
     setValues({
-      policiesName: "",
+      policyName: "",
       selectedAction: "",
       selectedCatalogue: "",
       subjectMessage: "",
@@ -431,7 +433,7 @@ const ModalPolicies = ({
           layout,
         } = data.response;
         const obj = pick(data.response, [
-          "policiesName",
+          "policyName",
           "selectedAction",
           "selectedCatalogue",
           "subjectMessage",
@@ -487,9 +489,9 @@ const ModalPolicies = ({
                           id="standard-subjectMessage"
                           label="Policie Name"
                           margin="normal"
-                          name="policiesName"
-                          onChange={handleChangeName("policiesName")}
-                          value={values.policiesName}
+                          name="policyName"
+                          onChange={handleChangeName("policyName")}
+                          value={values.policyName}
                         />
                         <FormControl className={classes.textField}>
                           <InputLabel htmlFor="age-simple">Action</InputLabel>
