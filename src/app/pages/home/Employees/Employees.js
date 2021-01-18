@@ -98,7 +98,6 @@ export default function Employees() {
   const initialValues = useMemo(
     () =>
       merge(
-        // Fulfill changeable fields.
         LayoutConfig,
         layoutConfig
       ),
@@ -110,7 +109,6 @@ export default function Employees() {
   };
 
   const employeeProfilesHeadRows = [
-    // { id: "id", numeric: true, disablePadding: false, label: "ID" },
     { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator' },
     {
@@ -152,8 +150,6 @@ export default function Employees() {
       label: 'Last Name',
     },
     { id: 'email', numeric: true, disablePadding: false, label: 'Email' },
-    // { id: "designation", numeric: true, disablePadding: false, label: "Designation" },
-    // { id: "manager", numeric: true, disablePadding: false, label: "Manager" },
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator' },
     {
       id: 'creation_date',
@@ -166,7 +162,6 @@ export default function Employees() {
   const loadEmployeesData = (
     collectionNames = ['employees', 'employeeProfiles']
   ) => {
-    // console.log('lets reload')
     collectionNames = !Array.isArray(collectionNames)
       ? [collectionNames]
       : collectionNames;
@@ -175,9 +170,7 @@ export default function Employees() {
         .then((response) => response.json())
         .then((data) => {
           if (collectionName === 'employeeProfiles') {
-            // console.log('User Profiles id:', data)
             const rows = data.response.map((row) => {
-              // console.log('row:', row)
               return createUserProfilesRow(
                 row._id,
                 row.name,
@@ -190,7 +183,6 @@ export default function Employees() {
               employeeProfilesRows: rows,
               employeeProfilesRowsSelected: [],
             }));
-            // console.log('inside User Profiles', rows)
           }
           if (collectionName === 'employees') {
             const rows = data.response.map((row) => {
@@ -233,7 +225,6 @@ export default function Employees() {
     openEmployeeProfilesModal: false,
     employeeProfilesRows: [],
     employeeProfilesRowsSelected: [],
-    //
     idUser: null,
     openUsersModal: false,
     usersRows: [],
@@ -260,7 +251,6 @@ export default function Employees() {
   };
 
   const tableActions = (collectionName) => {
-    // return;
     const collection = collections[collectionName];
     return {
       onAdd() {
@@ -373,10 +363,7 @@ export default function Employees() {
                           }
                           reloadTable={() => loadEmployeesData('employees')}
                           id={control.idEmployee}
-                          // employeeProfileRows={control.employeeProfilesRows}
                           employeeProfileRows={control.employeeProfilesRows}
-                          // categoryRows={control.usersRows}
-                          // referencesSelectedId={ referencesSelectedId}
                         />
                         <div className='kt-separator kt-separator--dashed' />
                         <div className='kt-section__content'>
@@ -416,7 +403,6 @@ export default function Employees() {
                             loadEmployeesData('employeeProfiles')
                           }
                           id={control.idEmployeeProfile}
-                          // categoryRows={control.categoryRows}
                         />
                         <div className='kt-separator kt-separator--dashed' />
                         <div className='kt-section__content'>
