@@ -147,18 +147,22 @@ const ModalEmployees = ({
   employeeProfileRows,
 }) => {
   // Example 4 - Tabs
+  const [assetRows, setAssetRows] = useState([]);
+  const classes = useStyles();
   const classes4 = useStyles4();
+  const [customFieldsTab, setCustomFieldsTab] = useState({});
+  const [employeeProfilesFiltered, setEmployeeProfilesFiltered] = useState([]);
+  const [idUserProfile, setIdUserProfile] = useState('');
+  const [image, setImage] = useState(null);
+  const [layoutOptions, setLayoutOptions] = useState([]);
+  const [layoutSelected, setLayoutSelected] = useState(0);
+  const [locationsTable, setLocationsTable] = useState([]);
+  const [policies, setPolicies] = useState(['']);
+  const [profilePermissions, setProfilePermissions] = useState({});
+  const [profileSelected, setProfileSelected] = useState(0);
+  const [tabs, setTabs] = useState([]);
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
-  function handleChange4(event, newValue) {
-    setValue4(newValue);
-  }
-  function handleChangeIndex4(index) {
-    setValue4(index);
-  }
-
-  // Example 1 - TextField
-  const classes = useStyles();
   const [values, setValues] = useState({
     name: '',
     lastName: '',
@@ -168,11 +172,98 @@ const ModalEmployees = ({
     categoryPic: '/media/misc/placeholder-image.jpg',
     categoryPicDefault: '/media/misc/placeholder-image.jpg',
   });
-  const [profileSelected, setProfileSelected] = useState(0);
-  const [layoutSelected, setLayoutSelected] = useState(0);
+
+  const executePolicies = (catalogueName) => {
+    const filteredPolicies = policies.filter(
+      (policy) => policy.selectedAction === catalogueName
+    );
+    filteredPolicies.forEach(
+      ({ policyName, selectedAction, selectedCatalogue }) =>
+        alert(
+          `Policy <${policyName}> with action <${selectedAction}> of type <${selectedCatalogue}> will be executed`
+        )
+    );
+  };
 
   const handleChange = (name) => (event) => {
     setValues({ ...values, [name]: event.target.value });
+  };
+
+  const handleChange4 = (event, newValue) => {
+    setValue4(newValue);
+  };
+  const handleChangeIndex4 = (index) => {
+    setValue4(index);
+  };
+
+  const handleCloseModal = () => {
+    setCustomFieldsTab({});
+    setProfilePermissions([]);
+    setTabs([]);
+    setProfileSelected(null);
+    setValues({
+      name: '',
+      lastName: '',
+      email: '',
+      password: '',
+      isDisableUserProfile: false,
+      selectedUserProfile: null,
+      categoryPic: '/media/misc/placeholder-image.jpg',
+      categoryPicDefault: '/media/misc/placeholder-image.jpg',
+    });
+    setShowModal(false);
+    setValue4(0);
+    setLayoutOptions([]);
+    setLayoutSelected(null);
+    setAssetRows([]);
+  };
+
+  const handleOnAssetFinderSubmit = (filteredRows) => {
+    let validRows = filteredRows.rows.filter((row) => !row.assigned);
+    validRows = validRows
+      .map((rowTR) => {
+        if (!assetRows.find((row) => row.id === rowTR.id)) {
+          return rowTR;
+        }
+      })
+      .filter((row) => row);
+    setAssetRows([...assetRows, ...validRows]);
+  };
+
+  const onChangeEmployeeProfile = (e) => {
+    if (!e) {
+      setCustomFieldsTab({});
+      setProfilePermissions({});
+      setTabs([]);
+      return;
+    }
+    console.log('onChangeEmployeeProfile>>>', e);
+    setProfileSelected(e);
+    getOneDB('employeeProfiles/', e.value)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data.response);
+        const { customFieldsTab, profilePermissions } = data.response;
+        const tabs = Object.keys(customFieldsTab).map((key) => ({
+          key,
+          info: customFieldsTab[key].info,
+          content: [customFieldsTab[key].left, customFieldsTab[key].right],
+        }));
+        tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
+        setCustomFieldsTab(customFieldsTab);
+        setProfilePermissions(profilePermissions);
+        setTabs(tabs);
+        setIdUserProfile(e.value);
+      })
+      .catch((error) => console.log(error));
+  };
+
+  const handleOnDeleteAssetAssigned = (id) => {
+    const restRows = assetRows.filter((row) => row.id !== id);
+    setAssetRows(restRows);
+    updateDB('assets/', { assigned: null }, id)
+      .then((response) => {})
+      .catch((error) => console.log(error));
   };
 
   const handleSave = () => {
@@ -210,21 +301,18 @@ const ModalEmployees = ({
     handleCloseModal();
   };
 
-  const [policies, setPolicies] = useState(['']);
+  // Function to update customFields
+  const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
+    const colValue = ['left', 'right'];
+    console.log('Looking for you', tab, id, colIndex, values);
+    const customFieldsTabTmp = { ...customFieldsTab };
 
-  const executePolicies = (catalogueName) => {
-    const filteredPolicies = policies.filter(
-      (policy) => policy.selectedAction === catalogueName
+    const field = customFieldsTabTmp[tab][colValue[colIndex]].find(
+      (cf) => cf.id === id
     );
-    filteredPolicies.forEach(
-      ({ policyName, selectedAction, selectedCatalogue }) =>
-        alert(
-          `Policy <${policyName}> with action <${selectedAction}> of type <${selectedCatalogue}> will be executed`
-        )
-    );
+    field.values = CFValues;
   };
 
-  const [image, setImage] = useState(null);
   const saveAndReload = (folderName, id) => {
     saveImage(image, folderName, id);
     reloadTable();
@@ -243,30 +331,6 @@ const ModalEmployees = ({
         .catch((error) => console.log(error));
     });
   };
-
-  const handleCloseModal = () => {
-    setCustomFieldsTab({});
-    setProfilePermissions([]);
-    setTabs([]);
-    setProfileSelected(null);
-    setValues({
-      name: '',
-      lastName: '',
-      email: '',
-      password: '',
-      isDisableUserProfile: false,
-      selectedUserProfile: null,
-      categoryPic: '/media/misc/placeholder-image.jpg',
-      categoryPicDefault: '/media/misc/placeholder-image.jpg',
-    });
-    setShowModal(false);
-    setValue4(0);
-    setLayoutOptions([]);
-    setLayoutSelected(null);
-    setAssetRows([]);
-  };
-
-  const [employeeProfilesFiltered, setEmployeeProfilesFiltered] = useState([]);
 
   useEffect(() => {
     const userProfiles = employeeProfileRows.map((profile, ix) => ({
@@ -342,72 +406,6 @@ const ModalEmployees = ({
       })
       .catch((error) => console.log(error));
   }, [id, employeeProfileRows]);
-
-  const [customFieldsTab, setCustomFieldsTab] = useState({});
-  const [profilePermissions, setProfilePermissions] = useState({});
-  const [tabs, setTabs] = useState([]);
-  const [locationsTable, setLocationsTable] = useState([]);
-  const [layoutOptions, setLayoutOptions] = useState([]);
-
-  const [idUserProfile, setIdUserProfile] = useState('');
-  const onChangeEmployeeProfile = (e) => {
-    if (!e) {
-      setCustomFieldsTab({});
-      setProfilePermissions({});
-      setTabs([]);
-      return;
-    }
-    console.log('onChangeEmployeeProfile>>>', e);
-    setProfileSelected(e);
-    getOneDB('employeeProfiles/', e.value)
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data.response);
-        const { customFieldsTab, profilePermissions } = data.response;
-        const tabs = Object.keys(customFieldsTab).map((key) => ({
-          key,
-          info: customFieldsTab[key].info,
-          content: [customFieldsTab[key].left, customFieldsTab[key].right],
-        }));
-        tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
-        setCustomFieldsTab(customFieldsTab);
-        setProfilePermissions(profilePermissions);
-        setTabs(tabs);
-        setIdUserProfile(e.value);
-      })
-      .catch((error) => console.log(error));
-  };
-
-  // Function to update customFields
-  const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
-    const colValue = ['left', 'right'];
-    console.log('Looking for you', tab, id, colIndex, values);
-    const customFieldsTabTmp = { ...customFieldsTab };
-
-    const field = customFieldsTabTmp[tab][colValue[colIndex]].find(
-      (cf) => cf.id === id
-    );
-    field.values = CFValues;
-  };
-  const [assetRows, setAssetRows] = useState([]);
-  const handleOnAssetFinderSubmit = (filteredRows) => {
-    let validRows = filteredRows.rows.filter((row) => !row.assigned);
-    validRows = validRows
-      .map((rowTR) => {
-        if (!assetRows.find((row) => row.id === rowTR.id)) {
-          return rowTR;
-        }
-      })
-      .filter((row) => row);
-    setAssetRows([...assetRows, ...validRows]);
-  };
-  const handleOnDeleteAssetAssigned = (id) => {
-    const restRows = assetRows.filter((row) => row.id !== id);
-    setAssetRows(restRows);
-    updateDB('assets/', { assigned: null }, id)
-      .then((response) => {})
-      .catch((error) => console.log(error));
-  };
 
   return (
     <div style={{ width: '1000px' }}>
