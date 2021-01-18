@@ -168,7 +168,7 @@ const ModalAssetFinder = ({ showModal, setShowModal, reloadTable, id, employeePr
           id="customized-dialog-title"
           onClose={handleCloseModal}
         >
-          {'Assign Asset'}
+          {'Assign Asset'} 
         </DialogTitle5>
         <DialogContent5 dividers>
           <div className="kt-section__content">

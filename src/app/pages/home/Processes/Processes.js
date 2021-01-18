@@ -61,6 +61,7 @@ import StarBorder from '@material-ui/icons/StarBorder';
 //DB API methods
 import { getDB, deleteDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
+import LiveProcesses from './components/LiveProcesses';
 
 
 const localStorageActiveTabKey = "builderActiveTab";
@@ -366,7 +367,8 @@ export default function Processes() {
                           </span>
                           <div className="kt-separator kt-separator--dashed"/>
                           <div className="kt-section__content">
-                              <TableComponent
+                            <LiveProcesses />
+                              {/* <TableComponent
                                 title={'Live Processes'}
                                 headRows={liveProcessesHeadRows}
                                 rows={control.employeeProfilesRows}
@@ -374,7 +376,7 @@ export default function Processes() {
                                 onDelete={tableActions('employeeProfiles').onDelete}
                                 onEdit={tableActions('employeeProfiles').onEdit}
                                 onSelect={tableActions('employeeProfiles').onSelect}
-                              />
+                              /> */}
                             </div>
                         </div>
                     </div>

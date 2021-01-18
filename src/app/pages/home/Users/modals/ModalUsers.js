@@ -201,7 +201,6 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     reloadTable();
   };
   const updateCurrentUserPic = (editId, fileExt) => {
-    debugger;
     if (user.id === editId) {
       let _v = getRandomArbitrary(1, 999);
       const defaultPic = `http://localhost:3000/media/misc/placeholder-image.jpg?v=${_v}`;
@@ -235,7 +234,6 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     setShowModal(false);
     setValue4(0);
     //
-    debugger;
     const a = user;
   };
 

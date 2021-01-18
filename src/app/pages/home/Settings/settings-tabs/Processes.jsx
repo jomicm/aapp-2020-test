@@ -45,7 +45,6 @@ const Processes = props => {
     setDays(0);
   };
   const handleDeleteAlert = (days) => {
-    debugger;
     const alerts = (values.alerts || []).filter(x => Number(x.days) !== Number(days));
     setValues(prev => ({ ...prev, alerts }));
   };

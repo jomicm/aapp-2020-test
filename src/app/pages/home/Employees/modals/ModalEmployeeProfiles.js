@@ -137,7 +137,6 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   };
 
   const handleSave = () => {
-    debugger;
     const fileExt = getFileExtension(image);
     const body = { ...values, customFieldsTab, isAssetRepository, fileExt };
     if (!id) {
