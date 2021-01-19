@@ -1,0 +1,14 @@
+.container-messages-snapshot {
+  display: flex;
+  align-items: center;
+}
+
+.snapshot-wrapper:hover {
+  background-color: rgba($color: #302c2c8c, $alpha: 0.1);
+  cursor: pointer;
+}
+
+.snapshot-delete-icon:hover {
+  color: red;
+  cursor: pointer;
+}

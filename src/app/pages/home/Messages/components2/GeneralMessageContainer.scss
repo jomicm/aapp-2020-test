@@ -1,0 +1,62 @@
+.__container-gmc {
+  width: 100%;
+  min-height: 600px;
+  display: flex;
+  padding: 0;
+  margin: 0;
+}
+
+.__container-general-snapshot {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  height: 600px;
+  margin: 0 20px;
+  overflow: scroll;
+  width: 30%;
+}
+
+.__container-general-snapshot::-webkit-scrollbar {
+  -webkit-appearance: none;
+}
+
+.__container-general-snapshot::-webkit-scrollbar:vertical {
+  width: 10px;
+}
+
+.__container-general-snapshot::-webkit-scrollbar-button:increment,
+.__container-general-snapshot::-webkit-scrollbar-button {
+  display: none;
+}
+
+.__container-general-snapshot::-webkit-scrollbar:horizontal {
+  height: 10px;
+}
+
+.__container-general-snapshot::-webkit-scrollbar-thumb {
+  background-color: #797979;
+  border-radius: 20px;
+  border: 2px solid #f1f2f3;
+}
+
+.__container-general-snapshot::-webkit-scrollbar-track {
+  border-radius: 10px;
+}
+
+.__container-snapshot {
+  background-color: blue;
+  margin: 15px;
+  min-height: 100px;
+}
+
+.__container-preview {
+  background-color: orange;
+  margin: 0 20px;
+  min-height: 600px;
+  width: 70%;
+}
+
+.__container-information {
+  background-color: yellow;
+  min-height: 100px;
+}
