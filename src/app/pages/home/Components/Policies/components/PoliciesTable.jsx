@@ -3,14 +3,14 @@ import {
   Portlet,
   PortletBody,
   PortletHeader,
-  PortletHeaderToolbar,
+  PortletHeaderToolbar
 } from "../../../../../partials/content/Portlet";
 import {
   getDB,
   postDB,
   getOneDB,
   updateDB,
-  deleteDB,
+  deleteDB
 } from "../../../../../crud/api";
 import TableComponent from "../../TableComponent";
 import ModalPolicies from "../modals/ModalPolicies";
@@ -21,7 +21,7 @@ const policiesHeadRows = [
   { id: 'action', numeric: false, disablePadding: false, label: 'Action' },
   { id: 'type', numeric: false, disablePadding: false, label: 'Type' },
   { id: 'creator', numeric: false, disablePadding: false, label: 'Creator' },
-  { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date' },
+  { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date' }
 ];
 
 const collections = {
@@ -57,7 +57,7 @@ const PoliciesTable = ({ module }) => {
     idPolicies: null,
     openPoliciesModal: false,
     policiesRows: [],
-    policiesRowsSelected: [],
+    policiesRowsSelected: []
   });
 
   const tableActions = (collectionName) => {

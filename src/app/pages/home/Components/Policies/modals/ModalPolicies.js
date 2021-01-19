@@ -36,7 +36,7 @@ import {
   TableRow,
   TextareaAutosize,
   TextField,
-  Typography,
+  Typography
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
@@ -47,7 +47,7 @@ import {
   ContentState,
   convertToRaw,
   convertFromHTML,
-  Modifier,
+  Modifier
 } from 'draft-js';
 import { Editor } from 'react-draft-wysiwyg';
 import SwipeableViews from 'react-swipeable-views';
@@ -56,14 +56,14 @@ import {
   PortletBody,
   PortletFooter,
   PortletHeader,
-  PortletHeaderToolbar,
+  PortletHeaderToolbar
 } from '../../../../../a../../../app/partials/content/Portlet';
 import {
   postDBEncryptPassword,
   getDB,
   getOneDB,
   updateDB,
-  postDB,
+  postDB
 } from '../../../../../crud/api';
 import CustomFields from '../../../Components/CustomFields/CustomFields';
 import TreeView from '../../../Components/TreeViewComponent';
@@ -78,7 +78,7 @@ import {
   DropDown,
   RadioButtons,
   FileUpload,
-  Checkboxes,
+  Checkboxes
 } from '../../../Components/CustomFields/CustomFieldsPreview';
 import BaseFieldAccordion from '../components/BaseFieldsAccordion';
 import CustomFieldAccordion from '../components/CustomFieldsAccordion';
@@ -106,14 +106,14 @@ const CustomFieldsPreview = (props) => {
 const styles5 = (theme) => ({
   root: {
     margin: 0,
-    padding: theme.spacing(2),
+    padding: theme.spacing(2)
   },
   closeButton: {
     position: 'absolute',
     right: theme.spacing(1),
     top: theme.spacing(1),
-    color: theme.palette.grey[500],
-  },
+    color: theme.palette.grey[500]
+  }
 });
 
 const DialogTitle5 = withStyles(styles5)(({ children, classes, onClose }) => {
@@ -142,7 +142,7 @@ const DialogContent5 = withStyles((theme) => ({
 const DialogActions5 = withStyles((theme) => ({
   root: {
     margin: 0,
-    padding: theme.spacing(1),
+    padding: theme.spacing(1)
   },
 }))(DialogActions);
 
@@ -156,34 +156,34 @@ const TabContainer4 = ({ children, dir }) => {
 const useStyles4 = makeStyles((theme) => ({
   root: {
     backgroundColor: theme.palette.background.paper,
-    minWidth: 1000,
-  },
+    minWidth: 1000
+  }
 }));
 
 const useStyles = makeStyles((theme) => ({
   container: {
     display: 'flex',
-    flexWrap: 'wrap',
+    flexWrap: 'wrap'
   },
   textField: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
-    width: 200,
+    width: 200
   },
   dense: {
-    marginTop: 19,
+    marginTop: 19
   },
   menu: {
-    width: 200,
+    width: 200
   },
   button: {
     display: 'block',
-    marginTop: theme.spacing(2),
+    marginTop: theme.spacing(2)
   },
   formControl: {
     margin: theme.spacing(1),
-    minWidth: 120,
-  },
+    minWidth: 120
+  }
 }));
 
 const ModalPolicies = ({
@@ -192,19 +192,19 @@ const ModalPolicies = ({
   module,
   reloadTable,
   setShowModal,
-  showModal,
+  showModal
 }) => {
   const [alignment, setAlignment] = useState('');
   const actions = [
     { value: 'OnAdd', label: 'On Add' },
     { value: 'OnEdit', label: 'On Edit' },
     { value: 'OnDelete', label: 'On Delete' },
-    { value: 'OnLoad', label: 'On Load' },
+    { value: 'OnLoad', label: 'On Load' }
   ];
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const catalogues = [
     { value: 'list', label: 'List' },
-    { value: 'references', label: 'References' },
+    { value: 'references', label: 'References' }
   ];
   const classes = useStyles();
   const classes4 = useStyles4();
@@ -214,30 +214,30 @@ const ModalPolicies = ({
     references: {
       baseFields: {
         name: { id: 'nameReferences', label: 'name' },
-        ssn: { id: 'ssn', label: 'Social Service Number' },
+        ssn: { id: 'ssn', label: 'Social Service Number' }
       },
       customFields: {
         recepcionist: {
           ootoDay: { id: 'ootoDay', label: 'Ooto Day' },
-          favoriteOffice: { id: 'favoriteOffice', label: 'Favorite Office' },
+          favoriteOffice: { id: 'favoriteOffice', label: 'Favorite Office' }
         },
         emp02: {
-          birthday: { id: 'birthday', label: 'Birthday' },
+          birthday: { id: 'birthday', label: 'Birthday' }
         },
         emp03: {
-          age: { id: 'age', label: 'Age' },
-        },
+          age: { id: 'age', label: 'Age' }
+        }
       },
-      name: 'BF - References',
+      name: 'BF - References'
     },
     list: {
       baseFields: {
         name: { id: 'nameList', label: 'name' },
         lastName: { id: 'lastName', label: 'Laste Name' },
-        email: { id: 'email', label: 'Email' },
+        email: { id: 'email', label: 'Email' }
       },
-      name: 'BF - List',
-    },
+      name: 'BF - List'
+    }
   };
   const iconsList = {
     notificationImportantIcon: <NotificationImportantIcon />,
@@ -245,7 +245,7 @@ const ModalPolicies = ({
     notificationsActiveIcon: <NotificationsActiveIcon />,
     notificationsNoneIcon: <NotificationsNoneIcon />,
     notificationsOffIcon: <NotificationsOffIcon />,
-    notificationsPausedIcon: <NotificationsPausedIcon />,
+    notificationsPausedIcon: <NotificationsPausedIcon />
   };
   const [messageFrom, setMessageFrom] = useState([]);
   const [messageTo, setMessageTo] = useState([]);
@@ -271,7 +271,7 @@ const ModalPolicies = ({
     selectedIcon: '',
     subjectMessage: '',
     subjectNotification: '',
-    urlAPI: '',
+    urlAPI: ''
   });
 
   const handleAlignment = (event, newAlignment) => {
@@ -390,7 +390,7 @@ const ModalPolicies = ({
       selectedIcon: '',
       subjectMessage: '',
       subjectNotification: '',
-      urlAPI: '',
+      urlAPI: ''
     });
   };
 

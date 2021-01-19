@@ -52,7 +52,7 @@ const CustomFieldsPreview = (props) => {
     dropDown: <DropDown {...props} />,
     radioButtons: <RadioButtons {...props} />,
     checkboxes: <Checkboxes {...props} />,
-    fileUpload: <FileUpload {...props} />,
+    fileUpload: <FileUpload {...props} />
   };
   return customFieldsPreviewObj[props.type];
 };
@@ -60,14 +60,14 @@ const CustomFieldsPreview = (props) => {
 const styles5 = (theme) => ({
   root: {
     margin: 0,
-    padding: theme.spacing(2),
+    padding: theme.spacing(2)
   },
   closeButton: {
     position: 'absolute',
     right: theme.spacing(1),
     top: theme.spacing(1),
-    color: theme.palette.grey[500],
-  },
+    color: theme.palette.grey[500]
+  }
 });
 
 const DialogTitle5 = withStyles(styles5)(({ children, classes, onClose }) => {
@@ -89,15 +89,15 @@ const DialogTitle5 = withStyles(styles5)(({ children, classes, onClose }) => {
 
 const DialogContent5 = withStyles((theme) => ({
   root: {
-    padding: theme.spacing(2),
-  },
+    padding: theme.spacing(2)
+  }
 }))(DialogContent);
 
 const DialogActions5 = withStyles((theme) => ({
   root: {
     margin: 0,
-    padding: theme.spacing(1),
-  },
+    padding: theme.spacing(1)
+  }
 }))(DialogActions);
 
 function TabContainer4({ children, dir }) {
@@ -111,7 +111,7 @@ const useStyles4 = makeStyles((theme) => ({
   root: {
     backgroundColor: theme.palette.background.paper,
     width: 1000
-  },
+  }
 }));
 
 const useStyles = makeStyles((theme) => ({
@@ -129,7 +129,7 @@ const useStyles = makeStyles((theme) => ({
   },
   menu: {
     width: 200
-  },
+  }
 }));
 
 const ModalEmployees = ({
