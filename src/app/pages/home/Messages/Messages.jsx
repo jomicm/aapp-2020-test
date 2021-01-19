@@ -7,9 +7,11 @@ import {
   PortletHeader,
   PortletHeaderToolbar,
 } from "../../../../app/partials/content/Portlet";
-import GeneralMessageContainer from "./components/GeneralMessageContainer";
+// import GeneralMessageContainer from "./components/GeneralMessageContainer";
+import GeneralMessageContainer from "./components2/GeneralMessageContainer";
 
 export default function Messages() {
+
   const localStorageActiveTabKey = "builderActiveTab";
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
