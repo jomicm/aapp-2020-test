@@ -1,10 +1,10 @@
-import React, { useState } from "react";
-import Snapshot from "./Snapshot";
-import Preview from "./Preview";
-import MessageInformation from "./MessageInformation";
-import "./GeneralMessageContainer.scss";
+import React, { useState } from 'react';
+import Snapshot from './Snapshot';
+import MessageInformation from './MessageInformation';
+import './GeneralMessageContainer.scss';
 
 const GeneralMessageContainer = () => {
+
   const [data, setData] = useState([
     {
       id: 1,
@@ -97,27 +97,26 @@ const GeneralMessageContainer = () => {
       content: "<h1>Prueba 8</h1>"
     },
   ]);
-
-  const [preview, setPreview] = useState("");
+  const [preview, setPreview] = useState('');
   const [headerInfo, setHeaderInfo] = useState({
+    dateTime: '',
     img: '',
-    subject: '',
     senderName: '',
-    dateTime: ''
+    subject: ''
   });
 
   return (
-    <div className="__container-gmc">
-      <div className="__container-general-snapshot">
+    <div className='__container-gmc'>
+      <div className='__container-general-snapshot'>
         {data.map((msg, index) => (
           <div key={msg.id} onClick={() => setPreview(msg.content)}>
             <div
               onClick={() =>
                 setHeaderInfo({
-                    img: msg.img,
-                    subject: msg.subject,
-                    senderName: msg.senderName,
-                    dateTime: msg.time
+                  dateTime: msg.time,
+                  img: msg.img,
+                  senderName: msg.senderName,
+                  subject: msg.subject
                 })
               }
             >
@@ -133,16 +132,14 @@ const GeneralMessageContainer = () => {
           </div>
         ))}
       </div>
-      <div className="__container-preview">
-        {/* <div className="__container-information"> </div> */}
-          <MessageInformation
-            senderName={headerInfo.senderName}
-            subject={headerInfo.subject}
-            dateTime={headerInfo.dateTime}
-            img={headerInfo.img}
-            preview={preview}
-          />
-        {/* <Preview preview={preview} /> */}
+      <div className='__container-preview'>
+        <MessageInformation
+          dateTime={headerInfo.dateTime}
+          img={headerInfo.img}
+          preview={preview}
+          senderName={headerInfo.senderName}
+          subject={headerInfo.subject}
+        />
       </div>
     </div>
   );
