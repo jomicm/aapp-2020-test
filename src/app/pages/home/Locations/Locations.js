@@ -59,6 +59,7 @@ import {
 } from "@material-ui/core";
 
 // AApp Components
+import { TabsTitles } from '../Components/Translations/tabsTitles';
 import TableComponent from '../Components/TableComponent';
 import ModalLocationProfiles from './modals/ModalLocationProfiles';
 import ModalLocationList from './modals/ModalLocationList';
@@ -105,29 +106,6 @@ import AddIcon from '@material-ui/icons/Add';
 import EditIcon from '@material-ui/icons/Edit';
 import RemoveIcon from '@material-ui/icons/Remove';
 
-//Tabs translation
-import { useIntl } from "react-intl";
-const TabsConfig = {
-  tabs:[
-    {
-      title: "List",
-      translate: "TABS.LOCATIONS.LIST"
-    },
-    {
-      title: "Profiles",
-      translate: "TABS.LOCATIONS.PROFILES"
-    },
-    {
-      title: "Policies",
-      translate: "TABS.LOCATIONS.POLICIES"
-    },
-    {
-      title:"Settings",
-      translate:"TABS.LOCATIONS.SETTINGS"
-    }
-  ]
-};
-
 const localStorageActiveTabKey = "builderActiveTab";
 
 const Divider = () => <div style={{width: '100%', height: '3px', backgroundColor: 'black'}}></div>;
@@ -141,7 +119,6 @@ const locationsTreeData = {
 
 export default function Locations() {
 
-  const intl = useIntl();
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const dispatch = useDispatch();
@@ -395,20 +372,7 @@ export default function Locations() {
                         localStorage.setItem(localStorageActiveTabKey, nextTab);
                       }}
                     >
-                      {
-                        TabsConfig.tabs.map((e) => {
-                          return (
-                            <Tab label={
-                              !e.translate ? (e.title) : (
-                                intl.formatMessage({id:e.translate})
-                              )
-                            }/>
-                          );
-                        })
-                      }
-                      {/* <Tab label="Page" /> */}
-                      {/* <Tab label="Aside" />
-                      <Tab label="Footer" /> */}
+                      {TabsTitles('locations')}
                     </Tabs>
                   </PortletHeaderToolbar>
                 }

@@ -29,12 +29,12 @@ export default class Topbar extends React.Component {
             useSVG='true'
           />
 
-          <LanguageSelector iconType="" />
-
           <Help
             iconType=''
             useSVG='true'
           />
+          
+          <LanguageSelector iconType="" />
           
         <UserProfile showAvatar={true} showHi={true} showBadge={false} />
       </div>

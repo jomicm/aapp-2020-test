@@ -15,6 +15,7 @@ import {
 } from "../../../partials/content/Portlet";
 
 // AApp Components
+import { TabsTitles } from '../Components/Translations/tabsTitles';
 import TableComponent from '../Components/TableComponent';
 // import ModalAssetCategories from './modals/ModalAssetCategories';
 // import ModalAssetReferences from './modals/ModalAssetReferences';
@@ -61,25 +62,9 @@ import { getDB, deleteDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 import TabGeneral from './TabGeneral';
 
-//Tabs translation
-import { useIntl } from "react-intl";
-const TabsConfig = {
-  tabs:[
-    {
-      title: "General",
-      translate: "TABS.REPORTS.GENERAL"
-    },
-    {
-      title: "Saved",
-      translate: "TABS.REPORTS.SAVED"
-    },
-  ]
-};
-
 const localStorageActiveTabKey = "builderActiveTab";
 export default function Reports() {
 
-  const intl = useIntl();
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const dispatch = useDispatch();
@@ -326,17 +311,7 @@ export default function Reports() {
                         localStorage.setItem(localStorageActiveTabKey, nextTab);
                       }}
                     >
-                     {
-                        TabsConfig.tabs.map((e) => {
-                          return (
-                            <Tab label={
-                              !e.translate ? (e.title) : (
-                                intl.formatMessage({id:e.translate})
-                              )
-                            }/>
-                          );
-                        })
-                      }
+                     {TabsTitles('reports')}
                     </Tabs>
                   </PortletHeaderToolbar>
                 }

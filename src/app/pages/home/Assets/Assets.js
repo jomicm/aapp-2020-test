@@ -15,6 +15,7 @@ import {
 } from "../../../partials/content/Portlet";
 
 // AApp Components
+import { TabsTitles } from '../Components/Translations/tabsTitles';
 import TableComponent from '../Components/TableComponent';
 import ModalAssetCategories from './modals/ModalAssetCategories';
 import ModalAssetReferences from './modals/ModalAssetReferences';
@@ -24,39 +25,13 @@ import TreeView from '../Components/TreeViewComponent';
 import GoogleMaps from '../Components/GoogleMaps';
 import './Assets.scss';
 
-
 //DB API methods
 import { getDB, deleteDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 
-//Translation
-import { useIntl } from "react-intl";
-
-const TabsConfig = {
-  tabs:[
-    {
-      title: "List",
-      translate: "TABS.ASSETS.LIST"
-    },
-    {
-      title: "References",
-      translate: "TABS.ASSETS.REFERENCES"
-    },
-    {
-      title: "Categories",
-      translate: "TABS.ASSETS.CATEGORIES"
-    },
-    {
-      title:"Policies",
-      translate:"TABS.ASSETS.POLICIES"
-    }
-  ]
-};
-
 const localStorageActiveTabKey = "builderActiveTab";
 export default function Assets() {
 
-  const intl = useIntl();
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const dispatch = useDispatch();
@@ -302,20 +277,7 @@ export default function Assets() {
                         localStorage.setItem(localStorageActiveTabKey, nextTab);
                       }}
                     >
-                      {
-                        TabsConfig.tabs.map((e) => {
-                          return (
-                            <Tab label={
-                              !e.translate ? (e.title) : (
-                                intl.formatMessage({id:e.translate})
-                              )
-                            }/>
-                          );
-                        })
-                      }
-                      {/* <Tab label="Page" /> */}
-                      {/* <Tab label="Aside" />
-                      <Tab label="Footer" /> */}
+                      {TabsTitles('assets')}
                     </Tabs>
                   </PortletHeaderToolbar>
                 }

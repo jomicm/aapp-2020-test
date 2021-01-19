@@ -38,6 +38,7 @@ import {
 } from "@material-ui/core";
 
 // AApp Components
+import { TabsTitles } from '../Components/Translations/tabsTitles';
 import TableComponent from '../Components/TableComponent';
 import ModalProcessStages from './modals/ModalProcessStages';
 import Autocomplete from '../Components/Inputs/Autocomplete';
@@ -77,46 +78,9 @@ import SaveButton from './settings-tabs/components/SaveButton';
 
 import Example from './Example';
 
-//Tabs translation
-import { useIntl } from "react-intl";
-const TabsConfig = {
-  tabs:[
-    {
-      title: "General",
-      translate: "TABS.SETTINGS.GENERAL"
-    },
-    {
-      title: "Desing",
-      translate: "TABS.SETTINGS.DESIGN"
-    },
-    {
-      title: "Layouts & Presets",
-      translate: "TABS.SETTINGS.LAYOUTSPRESETS"
-    },
-    {
-      title:"Fields",
-      translate:"TABS.SETTINGS.FIELDS"
-    },
-    {
-      title: "Custom",
-      translate: "TABS.SETTINGS.CUSTOM"
-    },
-    {
-      title: "Users",
-      translate: "TABS.SETTINGS.USERS"
-    },
-    {
-      title: "Processes",
-      translate: "TABS.SETTINGS.PROCESSES"
-    }
-  ]
-};
-
-
 const localStorageActiveTabKey = "builderActiveTab";
 export default function Settings() {
 
-  const intl = useIntl();
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const dispatch = useDispatch();
@@ -327,17 +291,7 @@ export default function Settings() {
                         localStorage.setItem(localStorageActiveTabKey, nextTab);
                       }}
                     >
-                      {
-                        TabsConfig.tabs.map((e) => {
-                          return (
-                            <Tab label={
-                              !e.translate ? (e.title) : (
-                                intl.formatMessage({id:e.translate})
-                              )
-                            }/>
-                          );
-                        })
-                      }
+                      {TabsTitles('settings')}
                     </Tabs>
                   </PortletHeaderToolbar>
                 }
