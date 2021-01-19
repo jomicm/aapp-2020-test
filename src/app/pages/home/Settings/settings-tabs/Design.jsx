@@ -93,7 +93,6 @@ const Design = props => {
     .then(data => {
       const _values = data.response[0] || {};
       setValues(omit(_values, '_id'));
-      debugger;
       const { logoLoginExt, logoBackgroundExt, loginBackgroundColor } = _values;
       if (logoLoginExt) {
         handleImageChange('logoLogin', `http://159.203.41.87:3001/uploads/settingsDesign/logoLogin.${logoLoginExt}`);
@@ -116,7 +115,6 @@ const Design = props => {
 
   const [color, setColor] = useState('');
   const handleChangeColor = async newValue => {
-    debugger;
     setColor(newValue);
     console.log('ALRT', newValue)
     await setValues(prev => ({ ...prev, loginBackgroundColor: `#${newValue.hex}` }));

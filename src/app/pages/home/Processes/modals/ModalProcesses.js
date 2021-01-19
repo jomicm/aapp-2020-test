@@ -298,7 +298,6 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
   };
 
   const handleSave = () => {
-    debugger
     const body = { ...values, processStages, usersProcess, validMessages };
     const r = JSON.stringify(body);
     if (!id) {
@@ -367,7 +366,6 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     getOneDB('processes/', id[0])
     .then(response => response.json())
     .then(data => { 
-      debugger
       const { processStages, usersProcess, validMessages } = data.response;
       const values = omit(data.response, '_id');
       // setValues({ name, goBackEnabled });

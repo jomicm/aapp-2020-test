@@ -34,7 +34,6 @@ const AuthPage = () => {
     getPublicDB(collectionName)
     .then(response => response.json())
     .then(data => {
-      debugger;
       const designData = (data.response && data.response[0]) || {};
       setValues(designData);
       const { logoLoginExt, logoBackgroundExt } = designData;

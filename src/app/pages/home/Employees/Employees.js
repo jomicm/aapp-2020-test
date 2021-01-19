@@ -114,8 +114,8 @@ const Employees = () => {
       id: 'creation_date',
       numeric: false,
       disablePadding: false,
-      label: 'Creation Date',
-    },
+      label: 'Creation Date'
+    }
   ];
 
   const createEmployeeRow = (
@@ -145,7 +145,7 @@ const Employees = () => {
     { id: 'lastName', numeric: true, disablePadding: false, label: 'Last Name' },
     { id: 'email', numeric: true, disablePadding: false, label: 'Email' },
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator' },
-    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date' },
+    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date' }
   ];
 
   const loadEmployeesData = (
@@ -217,7 +217,7 @@ const Employees = () => {
     openEmployeeProfilesModal: false,
     openUsersModal: false,
     usersRows: [],
-    usersRowsSelected: [],
+    usersRowsSelected: []
   });
 
   const [referencesSelectedId, setReferencesSelectedId] = useState(null);
@@ -236,7 +236,7 @@ const Employees = () => {
       id: 'idEmployee',
       modal: 'openEmployeesModal',
       name: 'employees'
-    },
+    }
   };
 
   const tableActions = (collectionName) => {
@@ -246,14 +246,14 @@ const Employees = () => {
         setControl({
           ...control,
           [collection.id]: null,
-          [collection.modal]: true,
+          [collection.modal]: true
         });
       },
       onEdit(id) {
         setControl({
           ...control,
           [collection.id]: id,
-          [collection.modal]: true,
+          [collection.modal]: true
         });
       },
       onDelete(id) {
@@ -299,13 +299,13 @@ const Employees = () => {
       />
       <Formik
         initialValues={initialValues}
-        onSubmit={(values) => {
-          enableLoadingPreview();
-          updateLayoutConfig(values);
-        }}
         onReset={() => {
           enableLoadingReset();
           updateLayoutConfig(initLayoutConfig);
+        }}
+        onSubmit={(values) => {
+          enableLoadingPreview();
+          updateLayoutConfig(values);
         }}
       >
         {({ values, handleReset, handleSubmit, handleChange, handleBlur }) => (
@@ -342,8 +342,8 @@ const Employees = () => {
                         </span>
                         <ModalEmployees
                         employeeProfileRows={control.employeeProfilesRows}
-                        reloadTable={() => loadEmployeesData('employees')}
                         id={control.idEmployee}
+                        reloadTable={() => loadEmployeesData('employees')}
                         setShowModal={(onOff) =>
                           setControl({
                             ...control,
