@@ -1,31 +1,23 @@
-/* eslint-disable no-restricted-imports */
-import React, { useMemo, useState, useEffect } from "react";
-import { shallowEqual, useDispatch, useSelector } from "react-redux";
-import { Formik, setNestedObjectValues } from "formik";
-import { get, merge } from "lodash";
-import { FormHelperText, Switch, Tab, Tabs, Styles } from "@material-ui/core";
-import clsx from "clsx";
-import {
-  metronic,
-  initLayoutConfig,
-  LayoutConfig
-} from "../../../../_metronic";
-import {
-  Portlet,
-  PortletBody,
-  PortletFooter,
-  PortletHeader,
-  PortletHeaderToolbar
-} from "../../../partials/content/Portlet";
-import { CodeBlock } from "../../../partials/content/CodeExample";
-import Notice from "../../../partials/content/Notice";
-import CodeExample from "../../../partials/content/CodeExample";
+import React, { useMemo, useState, useEffect } from 'react';
+import clsx from 'clsx';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import { Formik, setNestedObjectValues } from 'formik';
+import { get, merge } from 'lodash';
+import { FormHelperText, Switch, Tab, Tabs, Styles } from '@material-ui/core';
+import CloseIcon from '@material-ui/icons/Close';
+import DraftsIcon from '@material-ui/icons/Drafts';
+import DeleteIcon from '@material-ui/icons/Delete';
+import ExpandLess from '@material-ui/icons/ExpandLess';
+import ExpandMore from '@material-ui/icons/ExpandMore';
+import InboxIcon from '@material-ui/icons/MoveToInbox';
+import SendIcon from '@material-ui/icons/Send';
+import StarBorder from '@material-ui/icons/StarBorder';
 import {
   makeStyles,
   lighten,
   withStyles,
   useTheme
-} from "@material-ui/core/styles";
+} from '@material-ui/core/styles';
 import {
   Checkbox,
   Card,
@@ -37,33 +29,40 @@ import {
   ListItemIcon,
   Button,
   Divider
-} from "@material-ui/core";
+} from '@material-ui/core';
+import {
+  Portlet,
+  PortletBody,
+  PortletFooter,
+  PortletHeader,
+  PortletHeaderToolbar
+} from '../../../partials/content/Portlet';
+import { CodeBlock } from '../../../partials/content/CodeExample';
+import Notice from '../../../partials/content/Notice';
+import CodeExample from '../../../partials/content/CodeExample';
+import {
+  metronic,
+  initLayoutConfig,
+  LayoutConfig
+} from '../../../../_metronic';
 
 // AApp Components
-import TableComponent from "../Components/TableComponent";
-import ModalEmployeeProfiles from "./modals/ModalEmployeeProfiles";
-import Autocomplete from "../Components/Inputs/Autocomplete";
-import ModalEmployees from "./modals/ModalEmployees";
-import TreeView from "../Components/TreeViewComponent";
+import TableComponent from '../Components/TableComponent';
+import ModalEmployeeProfiles from './modals/ModalEmployeeProfiles';
+import Autocomplete from '../Components/Inputs/Autocomplete';
+import ModalEmployees from './modals/ModalEmployees';
+import TreeView from '../Components/TreeViewComponent';
 // import GoogleMaps from '../Components/GoogleMaps';
 // import './Assets.scss';
-//Icons
-import CloseIcon from "@material-ui/icons/Close";
-import DeleteIcon from "@material-ui/icons/Delete";
-import InboxIcon from "@material-ui/icons/MoveToInbox";
-import DraftsIcon from "@material-ui/icons/Drafts";
-import SendIcon from "@material-ui/icons/Send";
-import ExpandLess from "@material-ui/icons/ExpandLess";
-import ExpandMore from "@material-ui/icons/ExpandMore";
-import StarBorder from "@material-ui/icons/StarBorder";
 
 //DB API methods
-import { getDB, deleteDB } from "../../../crud/api";
-import ModalYesNo from "../Components/ModalYesNo";
-import Policies from "../Components/Policies/Policies";
+import ModalYesNo from '../Components/ModalYesNo';
+import Policies from '../Components/Policies/Policies';
+import { getDB, deleteDB } from '../../../crud/api';
 
-const localStorageActiveTabKey = "builderActiveTab";
-export default function Employees() {
+const localStorageActiveTabKey = 'builderActiveTab';
+
+const Employees = () => {
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const dispatch = useDispatch();
@@ -73,20 +72,20 @@ export default function Employees() {
   );
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [loadingButtonPreviewStyle, setLoadingButtonPreviewStyle] = useState({
-    paddingRight: "2.5rem",
+    paddingRight: '2.5rem',
   });
   const [loadingReset, setLoadingReset] = useState(false);
   const [loadingButtonResetStyle, setLoadingButtonResetStyle] = useState({
-    paddingRight: "2.5rem",
+    paddingRight: '2.5rem',
   });
 
   const enableLoadingPreview = () => {
     setLoadingPreview(true);
-    setLoadingButtonPreviewStyle({ paddingRight: "3.5rem" });
+    setLoadingButtonPreviewStyle({ paddingRight: '3.5rem' });
   };
   const enableLoadingReset = () => {
     setLoadingReset(true);
-    setLoadingButtonResetStyle({ paddingRight: "3.5rem" });
+    setLoadingButtonResetStyle({ paddingRight: '3.5rem' });
   };
   const updateLayoutConfig = (_config) => {
     dispatch(metronic.builder.actions.setLayoutConfigs(_config));
@@ -98,7 +97,6 @@ export default function Employees() {
   const initialValues = useMemo(
     () =>
       merge(
-        // Fulfill changeable fields.
         LayoutConfig,
         layoutConfig
       ),
@@ -110,15 +108,14 @@ export default function Employees() {
   };
 
   const employeeProfilesHeadRows = [
-    // { id: "id", numeric: true, disablePadding: false, label: "ID" },
-    { id: "name", numeric: false, disablePadding: false, label: "Name" },
-    { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
+    { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
+    { id: 'creator', numeric: false, disablePadding: false, label: 'Creator' },
     {
-      id: "creation_date",
+      id: 'creation_date',
       numeric: false,
       disablePadding: false,
-      label: "Creation Date",
-    },
+      label: 'Creation Date'
+    }
   ];
 
   const createEmployeeRow = (
@@ -139,34 +136,21 @@ export default function Employees() {
       designation,
       manager,
       creator,
-      creation_date,
+      creation_date
     };
   };
 
   const employeesHeadRows = [
-    { id: "name", numeric: false, disablePadding: false, label: "Name" },
-    {
-      id: "lastName",
-      numeric: true,
-      disablePadding: false,
-      label: "Last Name",
-    },
-    { id: "email", numeric: true, disablePadding: false, label: "Email" },
-    // { id: "designation", numeric: true, disablePadding: false, label: "Designation" },
-    // { id: "manager", numeric: true, disablePadding: false, label: "Manager" },
-    { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-    {
-      id: "creation_date",
-      numeric: false,
-      disablePadding: false,
-      label: "Creation Date",
-    },
+    { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
+    { id: 'lastName', numeric: true, disablePadding: false, label: 'Last Name' },
+    { id: 'email', numeric: true, disablePadding: false, label: 'Email' },
+    { id: 'creator', numeric: false, disablePadding: false, label: 'Creator' },
+    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date' }
   ];
 
   const loadEmployeesData = (
-    collectionNames = ["employees", "employeeProfiles"]
+    collectionNames = ['employees', 'employeeProfiles']
   ) => {
-    // console.log('lets reload')
     collectionNames = !Array.isArray(collectionNames)
       ? [collectionNames]
       : collectionNames;
@@ -174,15 +158,13 @@ export default function Employees() {
       getDB(collectionName)
         .then((response) => response.json())
         .then((data) => {
-          if (collectionName === "employeeProfiles") {
-            // console.log('User Profiles id:', data)
+          if (collectionName === 'employeeProfiles') {
             const rows = data.response.map((row) => {
-              // console.log('row:', row)
               return createUserProfilesRow(
                 row._id,
                 row.name,
-                "Admin",
-                "11/03/2020"
+                'Admin',
+                '11/03/2020'
               );
             });
             setControl((prev) => ({
@@ -190,9 +172,8 @@ export default function Employees() {
               employeeProfilesRows: rows,
               employeeProfilesRowsSelected: [],
             }));
-            // console.log('inside User Profiles', rows)
           }
-          if (collectionName === "employees") {
+          if (collectionName === 'employees') {
             const rows = data.response.map((row) => {
               return createEmployeeRow(
                 row._id,
@@ -201,131 +182,150 @@ export default function Employees() {
                 row.email,
                 row.designation,
                 row.manager,
-                "Admin",
-                "11/03/2020"
+                'Admin',
+                '11/03/2020'
               );
             });
             setControl((prev) => ({
               ...prev,
               usersRows: rows,
-              usersRowsSelected: [],
+              usersRowsSelected: []
             }));
           }
         })
-        .catch((error) => console.log("error>", error));
+        .catch((error) => console.log('error>', error));
     });
   };
 
+  const [policies, setPolicies] = useState(['']);
+
   useEffect(() => {
+    getDB('policies')
+      .then((response) => response.json())
+      .then((data) => {
+        setPolicies(data.response);
+      })
+      .catch((error) => console.log('error>', error));
     loadEmployeesData();
   }, []);
 
   const [control, setControl] = useState({
-    idEmployeeProfile: null,
-    openEmployeeProfilesModal: false,
     employeeProfilesRows: [],
     employeeProfilesRowsSelected: [],
-    //
+    idEmployeeProfile: null,
     idUser: null,
+    openEmployeeProfilesModal: false,
     openUsersModal: false,
     usersRows: [],
-    usersRowsSelected: [],
+    usersRowsSelected: []
   });
 
   const [referencesSelectedId, setReferencesSelectedId] = useState(null);
   const [
-    selectReferenceConfirmation,
-    setSelectReferenceConfirmation,
+    selectReferenceConfirmation, 
+    setSelectReferenceConfirmation
   ] = useState(false);
 
   const collections = {
     employeeProfiles: {
-      id: "idEmployeeProfile",
-      modal: "openEmployeeProfilesModal",
-      name: "employeeProfiles",
+      id: 'idEmployeeProfile',
+      modal: 'openEmployeeProfilesModal',
+      name: 'employeeProfiles'
     },
     employees: {
-      id: "idEmployee",
-      modal: "openEmployeesModal",
-      name: "employees",
-    },
+      id: 'idEmployee',
+      modal: 'openEmployeesModal',
+      name: 'employees'
+    }
   };
 
   const tableActions = (collectionName) => {
-    // return;
     const collection = collections[collectionName];
     return {
       onAdd() {
-        console.log("MAIN ON ADD>> ", referencesSelectedId);
         setControl({
           ...control,
           [collection.id]: null,
-          [collection.modal]: true,
+          [collection.modal]: true
         });
       },
       onEdit(id) {
-        console.log("onEdit:", id, collection, collection.id);
         setControl({
           ...control,
           [collection.id]: id,
-          [collection.modal]: true,
+          [collection.modal]: true
         });
       },
       onDelete(id) {
         if (!id || !Array.isArray(id)) return;
         id.forEach((_id) => {
           deleteDB(`${collection.name}/`, _id)
-            .then((response) => loadEmployeesData("employeeProfiles"))
-            .catch((error) => console.log("Error", error));
+            .then((response) => {
+              executePolicies('OnDelete');
+              loadEmployeesData('employeeProfiles');
+            })
+            .catch((error) => console.log('Error', error));
         });
         loadEmployeesData(collection.name);
       },
       onSelect(id) {
-        if (collectionName === "references") {
+        if (collectionName === 'references') {
           setReferencesSelectedId(id);
         }
       },
     };
   };
 
+  const executePolicies = (catalogueName) => {
+    const filteredPolicies = policies.filter(
+      (policy) => policy.selectedAction === catalogueName
+    );
+    filteredPolicies.forEach(
+      ({ policyName, selectedAction, selectedCatalogue }) =>
+        alert(
+          `Policy <${policyName}> with action <${selectedAction}> of type <${selectedCatalogue}> will be executed`
+        )
+    );
+  };
+
   return (
     <>
       <ModalYesNo
-        showModal={selectReferenceConfirmation}
-        onOK={() => setSelectReferenceConfirmation(false)}
         onCancel={() => setSelectReferenceConfirmation(false)}
-        title={"Add New Asset"}
-        message={"Please first select a Reference from the next tab"}
+        onOK={() => setSelectReferenceConfirmation(false)}
+        message={'Please first select a Reference from the next tab'}
+        showModal={selectReferenceConfirmation}
+        title={'Add New Asset'}
       />
       <Formik
         initialValues={initialValues}
-        onSubmit={(values) => {
-          enableLoadingPreview();
-          updateLayoutConfig(values);
-        }}
         onReset={() => {
           enableLoadingReset();
           updateLayoutConfig(initLayoutConfig);
         }}
+        onSubmit={(values) => {
+          enableLoadingPreview();
+          updateLayoutConfig(values);
+        }}
       >
         {({ values, handleReset, handleSubmit, handleChange, handleBlur }) => (
-          <div className="kt-form kt-form--label-right">
+          <div className='kt-form kt-form--label-right'>
             <Portlet>
               <PortletHeader
                 toolbar={
                   <PortletHeaderToolbar>
                     <Tabs
-                      component="div"
-                      className="builder-tabs"
-                      value={tab}
+                      className='builder-tabs'
+                      component='div'
                       onChange={(_, nextTab) => {
                         setTab(nextTab);
                         localStorage.setItem(localStorageActiveTabKey, nextTab);
                       }}
+                      value={tab}
                     >
-                      <Tab label="List" />
-                      <Tab label="References" />
-                      <Tab label="Policies" />
+                      <Tab label='List' />
+                      <Tab label='References' />
+                      <Tab label='Policies' />
                     </Tabs>
                   </PortletHeaderToolbar>
                 }
@@ -333,38 +333,35 @@ export default function Employees() {
 
               {tab === 0 && (
                 <PortletBody>
-                  <div className="kt-section kt-margin-t-0">
-                    <div className="kt-section__body">
-                      <div className="kt-section">
-                        <span className="kt-section__sub">
-                          This section will integrate{" "}
+                  <div className='kt-section kt-margin-t-0'>
+                    <div className='kt-section__body'>
+                      <div className='kt-section'>
+                        <span className='kt-section__sub'>
+                          This section will integrate{' '}
                           <code>Employees List</code>
                         </span>
                         <ModalEmployees
-                          showModal={control.openEmployeesModal}
-                          setShowModal={(onOff) =>
-                            setControl({
-                              ...control,
-                              openEmployeesModal: onOff,
-                            })
-                          }
-                          reloadTable={() => loadEmployeesData("employees")}
-                          id={control.idEmployee}
-                          // employeeProfileRows={control.employeeProfilesRows}
-                          employeeProfileRows={control.employeeProfilesRows}
-                          // categoryRows={control.usersRows}
-                          // referencesSelectedId={ referencesSelectedId}
+                        employeeProfileRows={control.employeeProfilesRows}
+                        id={control.idEmployee}
+                        reloadTable={() => loadEmployeesData('employees')}
+                        setShowModal={(onOff) =>
+                          setControl({
+                            ...control,
+                            openEmployeesModal: onOff,
+                          })
+                        }
+                        showModal={control.openEmployeesModal}
                         />
-                        <div className="kt-separator kt-separator--dashed" />
-                        <div className="kt-section__content">
+                        <div className='kt-separator kt-separator--dashed' />
+                        <div className='kt-section__content'>
                           <TableComponent
-                            title={"Employee List"}
                             headRows={employeesHeadRows}
+                            onAdd={tableActions('employees').onAdd}
+                            onDelete={tableActions('employees').onDelete}
+                            onEdit={tableActions('employees').onEdit}
+                            onSelect={tableActions('employees').onSelect}
                             rows={control.usersRows}
-                            onEdit={tableActions("employees").onEdit}
-                            onAdd={tableActions("employees").onAdd}
-                            onDelete={tableActions("employees").onDelete}
-                            onSelect={tableActions("employees").onSelect}
+                            title={'Employee List'}
                           />
                         </div>
                       </div>
@@ -375,36 +372,35 @@ export default function Employees() {
 
               {tab === 1 && (
                 <PortletBody>
-                  <div className="kt-section kt-margin-t-0">
-                    <div className="kt-section__body">
-                      <div className="kt-section">
-                        <span className="kt-section__sub">
+                  <div className='kt-section kt-margin-t-0'>
+                    <div className='kt-section__body'>
+                      <div className='kt-section'>
+                        <span className='kt-section__sub'>
                           This section will integrate <code>User Profiles</code>
                         </span>
                         <ModalEmployeeProfiles
-                          showModal={control.openEmployeeProfilesModal}
+                            reloadTable={() =>
+                              loadEmployeesData('employeeProfiles')
+                            }
                           setShowModal={(onOff) =>
                             setControl({
                               ...control,
                               openEmployeeProfilesModal: onOff,
                             })
                           }
-                          reloadTable={() =>
-                            loadEmployeesData("employeeProfiles")
-                          }
+                          showModal={control.openEmployeeProfilesModal}
                           id={control.idEmployeeProfile}
-                          // categoryRows={control.categoryRows}
                         />
-                        <div className="kt-separator kt-separator--dashed" />
-                        <div className="kt-section__content">
+                        <div className='kt-separator kt-separator--dashed' />
+                        <div className='kt-section__content'>
                           <TableComponent
-                            title={"Employee Profiles"}
                             headRows={employeeProfilesHeadRows}
+                            onAdd={tableActions('employeeProfiles').onAdd}
+                            onEdit={tableActions('employeeProfiles').onEdit}
+                            onDelete={tableActions('employeeProfiles').onDelete}
+                            onSelect={tableActions('employeeProfiles').onSelect}
                             rows={control.employeeProfilesRows}
-                            onAdd={tableActions("employeeProfiles").onAdd}
-                            onDelete={tableActions("employeeProfiles").onDelete}
-                            onEdit={tableActions("employeeProfiles").onEdit}
-                            onSelect={tableActions("employeeProfiles").onSelect}
+                            title={'Employee Profiles'}
                           />
                         </div>
                       </div>
@@ -413,7 +409,7 @@ export default function Employees() {
                 </PortletBody>
               )}
 
-              {tab === 2 && <Policies />}
+              {tab === 2 && <Policies module='employees' />}
             </Portlet>
           </div>
         )}
@@ -421,3 +417,4 @@ export default function Employees() {
     </>
   );
 }
+export default Employees;
