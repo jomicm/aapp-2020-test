@@ -307,9 +307,7 @@ const ModalPolicies = ({
   };
 
   const handleOnChangeValue = (name) => (event) => {
-    const {
-      target: { value },
-    } = event;
+    const { target: { value } } = event;
     setValues({ ...values, [name]: value });
   };
 
@@ -327,7 +325,7 @@ const ModalPolicies = ({
       layout,
       notificationFrom,
       notificationTo,
-      module,
+      module
     };
     if (!id) {
       postDB('policies', body)
@@ -425,27 +423,26 @@ const ModalPolicies = ({
       .then((response) => response.json())
       .then((data) => {
         const {
+          layout,
           messageFrom,
           messageTo,
           notificationFrom,
-          notificationTo,
-          layout,
+          notificationTo
         } = data.response;
         const obj = pick(data.response, [
+          'apiDisabled',
+          'messageDisabled',
+          'messageInternal',
+          'messageMail',
+          'messageNotification',
+          'notifiactionDisabled',
           'policyName',
           'selectedAction',
           'selectedCatalogue',
           'subjectMessage',
           'subjectNotification',
           'selectedIcon',
-          'urlAPI',
-          'messageNotification',
-          'messageDisabled',
-          'messageMail',
-          'messageInternal',
-          'notifiactionDisabled',
-          'apiDisabled',
-          'arregloPapa',
+          'urlAPI'
         ]);
         const contentBlock = htmlToDraft(layout);
         const contentState = ContentState.createFromBlockArray(
@@ -464,8 +461,8 @@ const ModalPolicies = ({
   return (
     <div style={{ width: '1000px' }}>
       <Dialog
-        onClose={handleCloseModal}
         aria-labelledby='customized-dialog-title'
+        onClose={handleCloseModal}
         open={showModal}
       >
         <DialogTitle5 id='customized-dialog-title' onClose={handleCloseModal}>

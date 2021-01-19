@@ -5,9 +5,7 @@ const Policies = ({ module }) => {
 
   return (
     <div className="__container-policies">
-        <PoliciesTable
-        module={module}
-        />
+        <PoliciesTable module={module} />
     </div>
   );
 };

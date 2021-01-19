@@ -1,5 +1,6 @@
-/* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import Select from 'react-select';
+import SwipeableViews from 'react-swipeable-views';
 import {
   Button,
   Dialog,
@@ -14,28 +15,13 @@ import {
   TextField,
   FormControl,
   FormLabel,
-  FormGroup,
+  FormGroup
 } from '@material-ui/core';
-import Select from 'react-select';
 import { withStyles, useTheme, makeStyles } from '@material-ui/core/styles';
-import SwipeableViews from 'react-swipeable-views';
 import CloseIcon from '@material-ui/icons/Close';
-import CustomFields from '../../Components/CustomFields/CustomFields';
-
-// import './ModalAssetCategories.scss';
-import ImageUpload from '../../Components/ImageUpload';
-import {
-  postDBEncryptPassword,
-  getOneDB,
-  updateDB,
-  postDB,
-  getDB,
-} from '../../../../crud/api';
-import ModalYesNo from '../../Components/ModalYesNo';
 import Permission from '../components/Permission';
 import AssetTable from '../components/AssetTable';
-import { getFileExtension, saveImage, getImageURL } from '../../utils';
-
+import CustomFields from '../../Components/CustomFields/CustomFields';
 import {
   SingleLine,
   MultiLine,
@@ -44,8 +30,18 @@ import {
   DropDown,
   RadioButtons,
   Checkboxes,
-  FileUpload,
+  FileUpload 
 } from '../../Components/CustomFields/CustomFieldsPreview';
+import ImageUpload from '../../Components/ImageUpload';
+import ModalYesNo from '../../Components/ModalYesNo';
+import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import {
+  postDBEncryptPassword,
+  getOneDB,
+  updateDB,
+  postDB,
+  getDB
+} from '../../../../crud/api';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -61,7 +57,6 @@ const CustomFieldsPreview = (props) => {
   return customFieldsPreviewObj[props.type];
 };
 
-// Example 5 - Modal
 const styles5 = (theme) => ({
   root: {
     margin: 0,
@@ -105,7 +100,6 @@ const DialogActions5 = withStyles((theme) => ({
   },
 }))(DialogActions);
 
-// Example 4 - Tabs
 function TabContainer4({ children, dir }) {
   return (
     <Typography component='div' dir={dir} style={{ padding: 8 * 3 }}>
@@ -116,26 +110,25 @@ function TabContainer4({ children, dir }) {
 const useStyles4 = makeStyles((theme) => ({
   root: {
     backgroundColor: theme.palette.background.paper,
-    width: 1000,
+    width: 1000
   },
 }));
 
-// Example 1 - TextField
 const useStyles = makeStyles((theme) => ({
   container: {
     display: 'flex',
-    flexWrap: 'wrap',
+    flexWrap: 'wrap'
   },
   textField: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
-    width: 200,
+    width: 200
   },
   dense: {
-    marginTop: 19,
+    marginTop: 19
   },
   menu: {
-    width: 200,
+    width: 200
   },
 }));
 
@@ -144,9 +137,8 @@ const ModalEmployees = ({
   setShowModal,
   reloadTable,
   id,
-  employeeProfileRows,
+  employeeProfileRows
 }) => {
-  // Example 4 - Tabs
   const [assetRows, setAssetRows] = useState([]);
   const classes = useStyles();
   const classes4 = useStyles4();
@@ -164,13 +156,13 @@ const ModalEmployees = ({
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
   const [values, setValues] = useState({
-    name: '',
-    lastName: '',
-    email: '',
-    isDisableUserProfile: false,
-    selectedUserProfile: null,
     categoryPic: '/media/misc/placeholder-image.jpg',
     categoryPicDefault: '/media/misc/placeholder-image.jpg',
+    email: '',
+    isDisableUserProfile: false,
+    lastName: '',
+    name: '',
+    selectedUserProfile: null
   });
 
   const executePolicies = (catalogueName) => {
@@ -202,14 +194,14 @@ const ModalEmployees = ({
     setTabs([]);
     setProfileSelected(null);
     setValues({
-      name: '',
-      lastName: '',
-      email: '',
-      password: '',
-      isDisableUserProfile: false,
-      selectedUserProfile: null,
       categoryPic: '/media/misc/placeholder-image.jpg',
       categoryPicDefault: '/media/misc/placeholder-image.jpg',
+      email: '',
+      isDisableUserProfile: false,
+      lastName: '',
+      name: '',
+      password: '',
+      selectedUserProfile: null
     });
     setShowModal(false);
     setValue4(0);
@@ -247,7 +239,7 @@ const ModalEmployees = ({
         const tabs = Object.keys(customFieldsTab).map((key) => ({
           key,
           info: customFieldsTab[key].info,
-          content: [customFieldsTab[key].left, customFieldsTab[key].right],
+          content: [customFieldsTab[key].left, customFieldsTab[key].right]
         }));
         tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
         setCustomFieldsTab(customFieldsTab);
@@ -275,7 +267,7 @@ const ModalEmployees = ({
       locationsTable,
       layoutSelected,
       fileExt,
-      assetsAssigned: assetRows,
+      assetsAssigned: assetRows
     };
 
     if (!id) {
@@ -335,7 +327,7 @@ const ModalEmployees = ({
   useEffect(() => {
     const userProfiles = employeeProfileRows.map((profile, ix) => ({
       value: profile.id,
-      label: profile.name,
+      label: profile.name
     }));
     setEmployeeProfilesFiltered(userProfiles);
 
@@ -373,7 +365,7 @@ const ModalEmployees = ({
           locationsTable,
           layoutSelected,
           fileExt,
-          assetsAssigned = [],
+          assetsAssigned = []
         } = data.response;
         executePolicies('OnLoad');
         setCustomFieldsTab(customFieldsTab);
@@ -391,14 +383,14 @@ const ModalEmployees = ({
           lastName,
           email,
           isDisableUserProfile: true,
-          imageURL: getImageURL(id, 'employees', fileExt),
+          imageURL: getImageURL(id, 'employees', fileExt)
         });
         setAssetRows(assetsAssigned);
         //
         const tabs = Object.keys(customFieldsTab).map((key) => ({
           key,
           info: customFieldsTab[key].info,
-          content: [customFieldsTab[key].left, customFieldsTab[key].right],
+          content: [customFieldsTab[key].left, customFieldsTab[key].right]
         }));
         tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
         setCustomFieldsTab(customFieldsTab);
@@ -520,7 +512,6 @@ const ModalEmployees = ({
                     />
                   </div>
                 </TabContainer4>
-                {/* TABS CUSTOM FIELDS */}
                 {tabs.map((tab) => (
                   <TabContainer4 dir={theme4.direction}>
                     <div className='modal-asset-reference'>
@@ -538,7 +529,6 @@ const ModalEmployees = ({
                                 onSelect={() => {}}
                                 onUpdateCustomField={handleUpdateCustomFields}
                                 tab={tab}
-                                // customFieldIndex={props.customFieldIndex}
                                 type={customField.content}
                                 values={customField.values}
                               />
