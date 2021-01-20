@@ -11,9 +11,20 @@ import {
 
 // App Components
 import TableComponent from '../../Components/TableComponent';
-import ModalLayoutEmployees from './modals/ModalLayoutEmployees';
-import ModalLayoutStages from './modals/ModalLayoutStages';
+import ModalProcessesLive from '../modals/ModalProcessLive.js';
+// import ModalLayoutEmployees from './modals/ModalLayoutEmployees';
+// import ModalLayoutStages from './modals/ModalLayoutStages';
 
+const liveProcessesHeadRows = [
+  { id: "folio", numeric: false, disablePadding: false, label: "Folio" },
+  { id: "name", numeric: false, disablePadding: false, label: "Name" },
+  { id: "type", numeric: false, disablePadding: false, label: "Type" },
+  { id: "date", numeric: false, disablePadding: false, label: "Date" },
+  { id: "approvals", numeric: false, disablePadding: false, label: "Approvals" },
+  { id: "status", numeric: false, disablePadding: false, label: "Status" },
+  { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
+  { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
+];
 const stagesLayoutsHeadRows = [
   { id: "name", numeric: false, disablePadding: false, label: "Name" },
   { id: "stage", numeric: false, disablePadding: false, label: "Stage" },
@@ -47,7 +58,7 @@ const collections = {
   }
 };
 
-const LayoutsPresets = props => {
+const LiveProcesses = (props) => {
   const [control, setControl] = useState({
     idLayoutEmployee: null,
     openLayoutEmployeesModal: false,
@@ -104,12 +115,6 @@ const LayoutsPresets = props => {
           });
           setControl(prev => ({ ...prev, layoutStagesRows: rows, layoutStagesRowsSelected: [] }));
         }
-        // if (collectionName === 'employees') {
-        //   const rows = data.response.map(row => {
-        //     return createEmployeeRow(row._id, row.name, row.lastName, row.email, row.designation, row.manager, 'Admin', '11/03/2020');
-        //   });
-        //   setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));
-        // }
       })
       .catch(error => console.log('error>', error));
     });
@@ -133,9 +138,9 @@ const LayoutsPresets = props => {
                   setTab(nextTab);
                 }}
               >
-                <Tab label="Employees" />
-                <Tab label="Stage Layouts" />
-                {/* <Tab label="Assets in Locations" /> */}
+                <Tab label="My Requests" />
+                <Tab label="Notifications" />
+                <Tab label="Approvals" />
               </Tabs>
             </PortletHeaderToolbar>
           }
@@ -146,7 +151,7 @@ const LayoutsPresets = props => {
             <div className="kt-section kt-margin-t-0">
               <div className="kt-section__body">
                 <div className="kt-section">
-                  <ModalLayoutEmployees
+                  <ModalProcessesLive
                     showModal={control.openLayoutEmployeesModal}
                     setShowModal={(onOff) => setControl({ ...control, openLayoutEmployeesModal: onOff })}
                     reloadTable={() => loadLayoutsData('settingsLayoutsEmployees')}
@@ -155,9 +160,10 @@ const LayoutsPresets = props => {
                   />
                   <div className="kt-section__content">
                     <TableComponent
-                      title={'Employee List'}
-                      headRows={layoutsHeadRows}
-                      rows={control.layoutEmployeesRows}
+                      title={'My Processes Requests'}
+                      headRows={liveProcessesHeadRows}
+                      // rows={control.layoutEmployeesRows}
+                      rows={[]}
                       onEdit={tableActions('layoutsEmployees').onEdit}
                       onAdd={tableActions('layoutsEmployees').onAdd}
                       onDelete={tableActions('layoutsEmployees').onDelete}
@@ -176,16 +182,16 @@ const LayoutsPresets = props => {
               <div className="kt-section__body">
                 <div className="kt-section">
                   <div className="kt-section">
-                    <ModalLayoutStages
+                    {/* <ModalLayoutStages
                       showModal={control.openLayoutStagesModal}
                       setShowModal={(onOff) => setControl({ ...control, openLayoutStagesModal: onOff })}
                       reloadTable={() => loadLayoutsData('settingsLayoutsStages')}
                       id={control.idLayoutStage}
                       // employeeProfileRows={[]}
-                    />
+                    /> */}
                     <div className="kt-section__content">
                       <TableComponent
-                        title={'Stage Layouts List'}
+                        title={'Process Notifications'}
                         headRows={stagesLayoutsHeadRows}
                         rows={control.layoutStagesRows}
                         onEdit={tableActions('layoutsStages').onEdit}
@@ -217,4 +223,4 @@ const LayoutsPresets = props => {
   );
 }
 
-export default LayoutsPresets;
+export default LiveProcesses;

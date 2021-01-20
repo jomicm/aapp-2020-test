@@ -3,62 +3,32 @@ import {
   Portlet,
   PortletBody,
   PortletHeader,
-  PortletHeaderToolbar,
+  PortletHeaderToolbar
 } from "../../../../../partials/content/Portlet";
 import {
   getDB,
   postDB,
   getOneDB,
   updateDB,
-  deleteDB,
+  deleteDB
 } from "../../../../../crud/api";
 import TableComponent from "../../TableComponent";
 import ModalPolicies from "../modals/ModalPolicies";
 
 const policiesHeadRows = [
-  {
-    id: 'name',
-    numeric: false,
-    disablePadding: false,
-    label: 'Name',
-  },
-  {
-    id: 'target',
-    numeric: false,
-    disablePadding: false,
-    label: 'Target',
-  },
-  {
-    id: 'action',
-    numeric: false,
-    disablePadding: false,
-    label: 'Action',
-  },
-  {
-    id: 'type',
-    numeric: false,
-    disablePadding: false,
-    label: 'Type',
-  },
-  {
-    id: 'creator',
-    numeric: false,
-    disablePadding: false,
-    label: 'Creator',
-  },
-  {
-    id: 'creationDate',
-    numeric: false,
-    disablePadding: false,
-    label: 'Creation Date',
-  },
+  { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
+  { id: 'target', numeric: false, disablePadding: false, label: 'Target' },
+  { id: 'action', numeric: false, disablePadding: false, label: 'Action' },
+  { id: 'type', numeric: false, disablePadding: false, label: 'Type' },
+  { id: 'creator', numeric: false, disablePadding: false, label: 'Creator' },
+  { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date' }
 ];
 
 const collections = {
   policies: {
     id: 'idPolicies',
     modal: 'openPoliciesModal',
-    name: 'policies',
+    name: 'policies'
   },
 };
 
@@ -78,16 +48,16 @@ const createPoliciesRow = (
     action,
     type,
     creator,
-    creationDate,
+    creationDate
   };
 };
 
-const PoliciesTable = () => {
+const PoliciesTable = ({ module }) => {
   const [control, setControl] = useState({
     idPolicies: null,
     openPoliciesModal: false,
     policiesRows: [],
-    policiesRowsSelected: [],
+    policiesRowsSelected: []
   });
 
   const tableActions = (collectionName) => {
@@ -130,7 +100,7 @@ const PoliciesTable = () => {
     const array = [
       ...(!messageDisabled ? ['Message'] : []),
       ...(!notificationDisabled ? ['Notification'] : []),
-      ...(!apiDisabled ? ['API'] : []),
+      ...(!apiDisabled ? ['API'] : [])
     ];
     return array.join(', ');
   };
@@ -147,21 +117,21 @@ const PoliciesTable = () => {
             const rows = data.response.map((row) => {
               const {
                 _id,
-                policiesName,
-                selectedCatalogue,
-                selectedAction,
+                apiDisabled,
                 messageDisabled,
                 notificationDisabled,
-                apiDisabled,
+                policyName,
+                selectedAction,
+                selectedCatalogue
               } = row;
               const typeString = getTypeString(
+                apiDisabled,
                 messageDisabled,
-                notificationDisabled,
-                apiDisabled
+                notificationDisabled
               );
               return createPoliciesRow(
                 _id,
-                policiesName,
+                policyName,
                 selectedCatalogue,
                 selectedAction,
                 typeString,
@@ -172,7 +142,7 @@ const PoliciesTable = () => {
             setControl((prev) => ({
               ...prev,
               policiesRows: rows,
-              policiesRowsSelected: [],
+              policiesRowsSelected: []
             }));
           }
         })
@@ -193,13 +163,14 @@ const PoliciesTable = () => {
               This section will integrate <code>Policies</code>
             </span>
             <ModalPolicies
-              showModal={control.openPoliciesModal}
+              id={control.idPolicies}
+              employeeProfileRows={[]}
+              module={module}
+              reloadTable={() => loadInitData('policies')}
               setShowModal={(onOff) =>
                 setControl({ ...control, openPoliciesModal: onOff })
               }
-              reloadTable={() => loadInitData('policies')}
-              id={control.idPolicies}
-              employeeProfileRows={[]}
+              showModal={control.openPoliciesModal}
             />
             <div className='kt-separator kt-separator--dashed' />
             <div className='kt-section__content'>

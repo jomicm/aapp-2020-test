@@ -191,7 +191,6 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
   };
 
   const saveAndReload = (folderName, id) => {
-    debugger;
     saveImage(folderName, id);
     reloadTable();
   };
@@ -237,7 +236,6 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
     getOneDB('processStages/', id[0])
       .then(response => response.json())
       .then(data => { 
-        debugger;
         
         // const { name, functions, selectedFunction, selectedType, isAssetEdition, isUserFilter, isCustomLockedStage, isSelfApprove, isSelfApproveContinue, isControlDueDate } = data.response;
         const { types, customFieldsTab } = data.response;

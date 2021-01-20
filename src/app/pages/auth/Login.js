@@ -70,10 +70,8 @@ function Login(props) {
               return errors;
             }}
             onSubmit={(values, { setStatus, setSubmitting }) => {
-              // debugger;
               enableLoading();
               setTimeout(() => {
-                debugger;
                 // loginReal(values.email, values.password)
                 const { email: user, password } = values;
                 loginReal('user', { user, password })
@@ -82,7 +80,6 @@ function Login(props) {
                   // .then(({response: { accessToken }}) => {
                   .then(({ response }) => {
                     // console.log('data:', data)
-                    debugger;
                     console.log('accessToken:', response)
                     disableLoading();
                     const { email, accessToken, id, fileExt } = response;

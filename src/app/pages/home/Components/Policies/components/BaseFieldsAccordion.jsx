@@ -13,7 +13,7 @@ import {
   ListItem,
   ListItemText,
   StarBorder,
-  Typography,
+  Typography
 } from "@material-ui/core";
 import { TreeItem, TreeView } from "@material-ui/lab";
 

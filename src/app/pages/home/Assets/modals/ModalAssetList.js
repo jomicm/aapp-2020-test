@@ -326,7 +326,6 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       .then(response => response.json())
       .then(data => { 
         console.log(data.response);
-        debugger;
         const { name, brand, model, category, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt } = data.response;
         setValues({
           ...values,
