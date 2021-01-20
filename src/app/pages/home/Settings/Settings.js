@@ -38,6 +38,7 @@ import {
 } from "@material-ui/core";
 
 // AApp Components
+import { TabsTitles } from '../Components/Translations/tabsTitles';
 import TableComponent from '../Components/TableComponent';
 import ModalProcessStages from './modals/ModalProcessStages';
 import Autocomplete from '../Components/Inputs/Autocomplete';
@@ -76,7 +77,6 @@ import ProcessFlow from "../Processes/components/ProcessFlow";
 import SaveButton from './settings-tabs/components/SaveButton';
 
 import Example from './Example';
-
 
 const localStorageActiveTabKey = "builderActiveTab";
 export default function Settings() {
@@ -291,13 +291,7 @@ export default function Settings() {
                         localStorage.setItem(localStorageActiveTabKey, nextTab);
                       }}
                     >
-                      <Tab label="General" />
-                      <Tab label="Design" />
-                      <Tab label="Layouts & Presets" />
-                      <Tab label="Fields" />
-                      <Tab label="Custom" />
-                      <Tab label="Users" />
-                      <Tab label="Processes" />
+                      {TabsTitles('settings')}
                     </Tabs>
                   </PortletHeaderToolbar>
                 }

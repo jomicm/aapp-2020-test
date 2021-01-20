@@ -17,7 +17,7 @@ import {
   lighten,
   withStyles,
   useTheme
-} from '@material-ui/core/styles';
+} from '@material-ui/core';
 import {
   Checkbox,
   Card,
@@ -52,6 +52,7 @@ import ModalEmployeeProfiles from './modals/ModalEmployeeProfiles';
 import Autocomplete from '../Components/Inputs/Autocomplete';
 import ModalEmployees from './modals/ModalEmployees';
 import TreeView from '../Components/TreeViewComponent';
+import { TabsTitles } from '../Components/Translations/tabsTitles';
 // import GoogleMaps from '../Components/GoogleMaps';
 // import './Assets.scss';
 
@@ -323,9 +324,7 @@ const Employees = () => {
                       }}
                       value={tab}
                     >
-                      <Tab label='List' />
-                      <Tab label='References' />
-                      <Tab label='Policies' />
+                      {TabsTitles('employees')}
                     </Tabs>
                   </PortletHeaderToolbar>
                 }

@@ -59,6 +59,7 @@ import {
 } from "@material-ui/core";
 
 // AApp Components
+import { TabsTitles } from '../Components/Translations/tabsTitles';
 import TableComponent from '../Components/TableComponent';
 import ModalLocationProfiles from './modals/ModalLocationProfiles';
 import ModalLocationList from './modals/ModalLocationList';
@@ -371,13 +372,7 @@ export default function Locations() {
                         localStorage.setItem(localStorageActiveTabKey, nextTab);
                       }}
                     >
-                      <Tab label="List" />
-                      {/* <Tab label="Page" /> */}
-                      <Tab label="Profiles" />
-                      <Tab label="Policies" />
-                      <Tab label="Settings" />
-                      {/* <Tab label="Aside" />
-                      <Tab label="Footer" /> */}
+                      {TabsTitles('locations')}
                     </Tabs>
                   </PortletHeaderToolbar>
                 }

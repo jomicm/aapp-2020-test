@@ -72,5 +72,25 @@
   "ECOMMERCE.CUSTOMERS.UPDATE_STATUS.TITLE": "Status has been updated for selected customers",
   "ECOMMERCE.CUSTOMERS.UPDATE_STATUS.MESSAGE": "Selected customers status have successfully been updated",
   "ECOMMERCE.CUSTOMERS.EDIT.UPDATE_MESSAGE": "Customer has been updated",
-  "ECOMMERCE.CUSTOMERS.EDIT.ADD_MESSAGE": "Customer has been created"
+  "ECOMMERCE.CUSTOMERS.EDIT.ADD_MESSAGE": "Customer has been created",
+
+  "TABS.TITLES.LIST":"List",
+  "TABS.TITLES.REFERENCES":"References",
+  "TABS.TITLES.CATEGORIES":"Categories",
+  "TABS.TITLES.POLICIES":"Policies",
+  "TABS.TITLES.STAGES":"Stages",
+  "TABS.TITLES.LIVE":"Live",
+  "TABS.TITLES.PROFILES":"Profiles",
+  "TABS.TITLES.SETTINGS":"Settings",
+  "TABS.TITLES.GENERAL":"General",
+  "TABS.TITLES.SAVED":"Saved",
+  "TABS.TITLES.DESIGN":"Desing",
+  "TABS.TITLES.LAYOUTSPRESETS":"Layouts & Presets",
+  "TABS.TITLES.FIELDS":"Fields",
+  "TABS.TITLES.CUSTOM":"Custom",
+  "TABS.TITLES.USERS":"Users",
+  "TABS.TITLES.PROCESSES":"Processes",
+
+  "TOPBAR.TOOLTIP.MESSAGES":"Messages",
+  "TOPBAR.TOOLTIP.HELP":"Help"
 }

@@ -39,8 +39,9 @@ import {
 
 // AApp Components
 import TableComponent from '../Components/TableComponent';
-import ModalUserProfiles from './modals/ModalUserProfiles';
+import { TabsTitles } from '../Components/Translations/tabsTitles';
 import Autocomplete from '../Components/Inputs/Autocomplete';
+import ModalUserProfiles from './modals/ModalUserProfiles';
 import ModalUsers from './modals/ModalUsers';
 
 import TreeView from '../Components/TreeViewComponent';
@@ -61,7 +62,6 @@ import StarBorder from '@material-ui/icons/StarBorder';
 //DB API methods
 import { getDB, deleteDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
-
 
 const localStorageActiveTabKey = "builderActiveTab";
 export default function Users() {
@@ -258,9 +258,7 @@ export default function Users() {
                         localStorage.setItem(localStorageActiveTabKey, nextTab);
                       }}
                     >
-                      <Tab label="List" />
-                      <Tab label="References" />
-                      <Tab label="Policies" />
+                    {TabsTitles('users')}
                     </Tabs>
                   </PortletHeaderToolbar>
                 }
