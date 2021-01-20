@@ -16,7 +16,7 @@ export default class Messages extends React.Component {
         placement='bottom'
         overlay={<Tooltip id='quick-panel-tooltip'>{msg}</Tooltip>}
       >
-        <Link to={'/help'} className='kt-header__topbar-item' drop='down' alignRight>
+        <Link to={'/messages'} className='kt-header__topbar-item' drop='down' alignRight>
           
             <span
               className={clsx('kt-header__topbar-icon', {
