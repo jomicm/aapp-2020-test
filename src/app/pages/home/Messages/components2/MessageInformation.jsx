@@ -35,14 +35,15 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const MessageInformation = ({ dateTime, img, preview, senderName, subject }) => {
+const MessageInformation = ({ dateTime, img, preview, senderName, subject, to }) => {
 
   const classes = useStyles();
 
   return (
     <Card className={classes.card}>
       <CardHeader
-        avatar={<img className='message-information-img' src={img} />}
+        // avatar={<img className='message-information-img' src={img} />}
+        avatar={<Avatar alt='Remy Sharp' src={img} />}
         title={
           <Typography 
           className={classes.subject} 
@@ -54,20 +55,22 @@ const MessageInformation = ({ dateTime, img, preview, senderName, subject }) => 
           </Typography>
          }
         subheader={
-          <Typography 
-          className={classes.dateTime} 
-          color='textSecondary' 
-          component='div'
-          variant='body2'
-          > 
-            {dateTime}
-          </Typography>
+            <Typography 
+            className={classes.dateTime} 
+            color='textSecondary' 
+            component='div'
+            variant='body2'
+            > 
+              {`${dateTime}`}
+            </Typography>
          }
       />
       <Divider />
       <CardContent>
         <Typography className={classes.preview} variant='body2' color='p'>
+          <div className='container-messages-preview'>
           <Preview preview={preview}/>
+          </div>
         </Typography>
       </CardContent>
     </Card>
