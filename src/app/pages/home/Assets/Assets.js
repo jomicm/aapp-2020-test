@@ -3,7 +3,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { Formik, setNestedObjectValues } from "formik";
 import { get, merge } from "lodash";
-import { FormHelperText, Switch, Tab, Tabs, Styles } from "@material-ui/core";
+import { FormHelperText, Switch, Tab, Tabs, Styles, Button } from "@material-ui/core";
 import clsx from "clsx";
 import { metronic, initLayoutConfig, LayoutConfig } from "../../../../_metronic";
 import {
@@ -182,6 +182,7 @@ export default function Assets() {
     //
     idCategory: null,
     openCategoriesModal: false,
+    openTileView: false,
     categoryRows: [],
     categories: [],
     categoryRowsSelected: [],
@@ -361,12 +362,15 @@ export default function Assets() {
                         <span className="kt-section__sub">
                           This section will integrate <code>Assets Categories</code>
                         </span>
+                        <Button variant='contained' onClick={() => control.openTileView ? setControl({...control, openTileView: false}):setControl({...control, openTileView: true})} >Tile View</Button>
                         <div className="kt-separator kt-separator--dashed" />
                         <TileView 
-                        tiles={control.categories} 
-                        collection='categories'
-                        onEdit={tableActions('categories').onEdit}
-                        onDelete={tableActions('categories').onDelete}
+                          showTileView={control.openTileView}
+                          tiles={control.categories} 
+                          collection='categories'
+                          onEdit={tableActions('categories').onEdit}
+                          onDelete={tableActions('categories').onDelete}
+                          onReload={() => loadAssetsData('categories')}
                         />
                         { /* <TileView /> */}
                         <ModalAssetCategories

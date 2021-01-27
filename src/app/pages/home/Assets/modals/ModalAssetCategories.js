@@ -180,6 +180,7 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
   };
 
   const handleCloseModal = () => {
+    setImage(null);
     setCustomFieldsTab({});
     setValues({ 
       name: "",
