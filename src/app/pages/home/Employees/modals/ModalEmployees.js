@@ -175,7 +175,7 @@ const ModalEmployees = ({
 
   const executePolicies = (catalogueName) => {
     const formatDate = new Date()
-    const dformat = `${("0" + formatDate.getDate()).slice(-2)}/${("0" + formatDate.getMonth()+1).slice(-2)}/${formatDate.getFullYear()}`
+    const dformat = `${('0' + formatDate.getDate()).slice(-2)}/${('0' + formatDate.getMonth()+1).slice(-2)}/${formatDate.getFullYear()}`
     const tformat = `${formatDate.getHours()}:${formatDate.getMinutes()}:${formatDate.getSeconds()}`
     const timeStamp = dformat + ' ' + tformat
     const read = false;
@@ -185,15 +185,20 @@ const ModalEmployees = ({
       filteredPolicies.forEach(({ 
         _id,
         apiDisabled,
+        selectedIcon,
         layout,
         messageDisabled,
         messageFrom,
+        messageNotification,
         messageTo,
         notificationDisabled,
+        notificationFrom,
+        notificationTo,
         policyName,
         selectedAction,
         selectedCatalogue,
-        subjectMessage
+        subjectMessage,
+        subjectNotification
          }) => {
           if(!messageDisabled){
             return(
@@ -212,7 +217,29 @@ const ModalEmployees = ({
               })
               .then(data => data.json())
               .then((response) => {
-                 const { _id, messageFrom, messageTo, layout, subject } = response.response[0];
+                 const { } = response.response[0];
+              })
+              .catch((error) => console.log('ERROR', error))
+            )} else if(!notificationDisabled){
+            return(
+            alert(
+              `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`
+              ),
+              postDB('notifications', {
+                _id,
+                formatDate: formatDate,
+                from: notificationFrom,
+                icon: selectedIcon,
+                message: messageNotification,
+                read: read,
+                status: status,
+                subject: subjectNotification,
+                timeStamp: timeStamp,
+                to: notificationTo
+              })
+              .then(data => data.json())
+              .then((response) => {
+                 const { } = response.response[0];
               })
               .catch((error) => console.log('ERROR', error))
             )}

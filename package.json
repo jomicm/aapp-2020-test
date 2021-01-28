@@ -87,6 +87,7 @@
     "react-swipeable-views": "0.13.3",
     "react-swipeable-views-utils": "0.13.3",
     "react-syntax-highlighter": "^11.0.2",
+    "react-time-ago": "^6.2.2",
     "react-window": "^1.8.5",
     "reactstrap": "^8.1.1",
     "redux": "^4.0.4",

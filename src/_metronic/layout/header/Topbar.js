@@ -1,6 +1,6 @@
 import React from "react";
 import SearchDropdown from "../../../app/partials/layout/SearchDropdown";
-import UserNotifications from "../../../app/partials/layout/UserNotifications";
+import UserNotifications from "../../../app/partials/layout/functional/UserNotifications";
 import MyCart from "../../../app/partials/layout/MyCart";
 import QuickActionsPanel from "../../../app/partials/layout/QuickActionsPanel";
 import QuickPanelToggler from "./QuickPanelToggle";
