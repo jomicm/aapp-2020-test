@@ -9,33 +9,13 @@ const languages = [
   {
     lang: "en",
     name: "English",
-    flag: toAbsoluteUrl("/media/flags/260-united-kingdom.svg")
-  },
-  {
-    lang: "zh",
-    name: "Mandarin",
-    flag: toAbsoluteUrl("/media/flags/034-china.svg")
+    flag: toAbsoluteUrl("/media/flags/226-united-states.svg")
   },
   {
     lang: "es",
     name: "Spanish",
-    flag: toAbsoluteUrl("/media/flags/128-spain.svg")
+    flag: toAbsoluteUrl("/media/flags/252-mexico.svg")
   },
-  {
-    lang: "ja",
-    name: "Japanese",
-    flag: toAbsoluteUrl("/media/flags/063-japan.svg")
-  },
-  {
-    lang: "de",
-    name: "German",
-    flag: toAbsoluteUrl("/media/flags/162-germany.svg")
-  },
-  {
-    lang: "fr",
-    name: "French",
-    flag: toAbsoluteUrl("/media/flags/195-france.svg")
-  }
 ];
 
 class LanguageSelector extends React.Component {

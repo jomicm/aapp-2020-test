@@ -38,6 +38,7 @@ import {
 } from "@material-ui/core";
 
 // AApp Components
+import { TabsTitles } from '../Components/Translations/tabsTitles';
 import TableComponent from '../Components/TableComponent';
 import ModalProcessStages from './modals/ModalProcessStages';
 import Autocomplete from '../Components/Inputs/Autocomplete';
@@ -63,10 +64,9 @@ import { getDB, deleteDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 import LiveProcesses from './components/LiveProcesses';
 
-
 const localStorageActiveTabKey = "builderActiveTab";
 export default function Processes() {
-
+  
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const dispatch = useDispatch();
@@ -280,9 +280,7 @@ export default function Processes() {
                         localStorage.setItem(localStorageActiveTabKey, nextTab);
                       }}
                     >
-                      <Tab label="List" />
-                      <Tab label="Stages" />
-                      <Tab label="Live" />
+                      {TabsTitles('processes')}
                     </Tabs>
                   </PortletHeaderToolbar>
                 }

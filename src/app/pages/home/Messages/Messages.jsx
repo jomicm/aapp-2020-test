@@ -7,7 +7,7 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../../app/partials/content/Portlet';
-import GeneralMessageContainer from './components2/GeneralMessageContainer';
+import GeneralMessageContainer from './components/GeneralMessageContainer';
 
 export default function Messages() {
 

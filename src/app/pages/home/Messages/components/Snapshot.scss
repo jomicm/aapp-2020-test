@@ -1,68 +1,14 @@
-.__container-s {
-  border: 1px solid gray;
-  border-radius: 10px;
+.container-messages-snapshot {
+  align-items: center;
   display: flex;
-  margin: 10px;
-  min-height: 70px;
-  padding: 10px;
 }
 
-.__container-s:hover {
+.snapshot-wrapper:hover {
   background-color: rgba($color: #302c2c8c, $alpha: 0.1);
   cursor: pointer;
 }
 
-.__container-img {
-  align-items: center;
-  display: flex;
-  justify-content: start;
-  width: 15%;
-}
-
-.__container-img > img {
-  border-radius: 50%;
-  width: 70%;
-}
-
-.__container-mail {
-  display: flex;
-  flex-direction: column;
-  width: 85%;
-}
-
-.__container-subject-delete {
-  display: flex;
-  height: 21px;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.__container-subject,
-.__container-delete {
-  display: inline-block;
-}
-
-.__container-subject {
-  font-size: 1rem;
-  font-weight: bold;
-}
-
-.__container-delete:hover {
+.snapshot-delete-icon:hover {
   color: red;
   cursor: pointer;
-}
-
-.__container-message {
-  align-items: center;
-  display: flex;
-  height: 28px;
-  width: 100%;
-}
-
-.__container-sender-time {
-  display: flex;
-  font-weight: bold;
-  height: 21px;
-  justify-content: space-between;
-  width: 100%;
 }

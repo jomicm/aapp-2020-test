@@ -15,6 +15,7 @@ import {
 } from "../../../partials/content/Portlet";
 
 // AApp Components
+import { TabsTitles } from '../Components/Translations/tabsTitles';
 import TableComponent from '../Components/TableComponent';
 // import ModalAssetCategories from './modals/ModalAssetCategories';
 // import ModalAssetReferences from './modals/ModalAssetReferences';
@@ -310,8 +311,7 @@ export default function Reports() {
                         localStorage.setItem(localStorageActiveTabKey, nextTab);
                       }}
                     >
-                      <Tab label="General" />
-                      <Tab label="Saved" />
+                     {TabsTitles('reports')}
                     </Tabs>
                   </PortletHeaderToolbar>
                 }
