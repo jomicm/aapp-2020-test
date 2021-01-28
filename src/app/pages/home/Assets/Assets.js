@@ -159,11 +159,10 @@ export default function Assets() {
             setControl(prev => ({ ...prev, referenceRows: rows, referenceRowsSelected: [] }));
           }
           if (collectionName === 'categories') {
-            const categoriesInfo = data.response
             const rows = data.response.map(row => {
               return createAssetCategoryRow(row._id, row.name, row.depreciation, 'Admin', '11/03/2020');
             });
-            setControl(prev => ({ ...prev, categoryRows: rows, categoryRowsSelected: [], categories: categoriesInfo }));
+            setControl(prev => ({ ...prev, categoryRows: rows, categoryRowsSelected: [], categories: data.response }));
           }
         })
         .catch(error => console.log('error>', error));
@@ -244,6 +243,9 @@ export default function Assets() {
         }
       }
     }
+  };
+  const toggleTileView = () => {
+    control.openTileView ? setControl({...control, openTileView: false}) : setControl({...control, openTileView: true})
   };
 
   return (
@@ -362,17 +364,16 @@ export default function Assets() {
                         <span className="kt-section__sub">
                           This section will integrate <code>Assets Categories</code>
                         </span>
-                        <Button variant='contained' onClick={() => control.openTileView ? setControl({...control, openTileView: false}):setControl({...control, openTileView: true})} >Tile View</Button>
+                        <Button variant='contained' onClick={() => toggleTileView()} >Tile View</Button>
                         <div className="kt-separator kt-separator--dashed" />
                         <TileView 
-                          showTileView={control.openTileView}
-                          tiles={control.categories} 
                           collection='categories'
-                          onEdit={tableActions('categories').onEdit}
                           onDelete={tableActions('categories').onDelete}
+                          onEdit={tableActions('categories').onEdit}
                           onReload={() => loadAssetsData('categories')}
+                          showTileView={control.openTileView}
+                          tiles={control.categories}  
                         />
-                        { /* <TileView /> */}
                         <ModalAssetCategories
                           // showModal={openCategoriesModal}
                           // setShowModal={setOpenCategoriesModal}
