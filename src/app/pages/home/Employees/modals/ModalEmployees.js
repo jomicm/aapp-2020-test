@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getHours } from 'date-fns';
 import Select from 'react-select';
 import SwipeableViews from 'react-swipeable-views';
 import {
@@ -42,7 +43,6 @@ import {
   postDB,
   getDB
 } from '../../../../crud/api';
-import { getHours } from 'date-fns';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -135,7 +135,7 @@ const useStyles = makeStyles((theme) => ({
 
 const collections = {
   messages: {
-    id: 'idMessages',
+    id: 'idMessage',
     name: 'messages'
   },
 };
