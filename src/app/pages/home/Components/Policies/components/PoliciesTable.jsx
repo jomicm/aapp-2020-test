@@ -125,9 +125,9 @@ const PoliciesTable = ({ module }) => {
                 selectedCatalogue
               } = row;
               const typeString = getTypeString(
-                apiDisabled,
                 messageDisabled,
-                notificationDisabled
+                notificationDisabled,
+                apiDisabled
               );
               return createPoliciesRow(
                 _id,

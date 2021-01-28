@@ -392,6 +392,11 @@ const ModalPolicies = ({
       subjectNotification: '',
       urlAPI: ''
     });
+    setMessageFrom([]);
+    setMessageTo([]);
+    setNotificationFrom([]);
+    setNotificationTo([]);
+    setEditor(EditorState.createEmpty());
   };
 
   const saveAndReload = (folderName, id) => {
@@ -406,11 +411,13 @@ const ModalPolicies = ({
     setCursorPosition([selectionStart, selectionEnd]);
   };
 
+  console.log('Users: ', users)
+
   useEffect(() => {
     getDB('user')
       .then((response) => response.json())
       .then((data) => {
-        const users = data.response.map(({ _id, email }) => ({ _id, email }));
+        const users = data.response.map(({ _id, email, lastName, name }) => ({ _id, email, lastName, name }));
         setUsers(users);
       })
       .catch((error) => console.log(error));

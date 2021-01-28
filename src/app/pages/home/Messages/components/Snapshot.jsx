@@ -1,29 +1,80 @@
-import React from "react";
-import DeleteIcon from "@material-ui/icons/Delete";
+import React from 'react';
+import { makeStyles } from '@material-ui/core/styles';
+import{
+  Avatar,
+  Divider,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Typography
+} from '@material-ui/core';
+import DeleteIcon from '@material-ui/icons/Delete';
 import "./Snapshot.scss";
+import {
+  postDBEncryptPassword,
+  deleteDB,
+  getOneDB,
+  updateDB,
+  postDB,
+  getDB
+} from '../../../../crud/api';
 
-const Snapshot = ({ subject, description, img, senderName, dateTime }) => {
+const useStyles = makeStyles(theme => ({
+  root: {
+    width: '100%',
+    minWidth: 390,
+    maxWidth: 390,
+    backgroundColor: theme.palette.background.paper
+  },
+  subject: {
+    display: 'block'
+  },
+  To: {
+    display: 'block',
+    fontWeight: 'bold'
+  }
+}));
+
+const Snapshot = ({ id, lastName, name, subject, description, img, senderName, dateTime, to }) => {
+
+  const classes = useStyles();
+
   return (
-    <div className="__container-s">
-      <div className="__container-img">
-        <img src={img} alt="" />
-      </div>
-      <div className="__container-mail">
-        <div className="__container-subject-delete">
-          <div className="__container-subject">{subject.substring(0, 20)}.</div>
-          <div className="__container-delete">
-            <DeleteIcon onClick={() => alert('Deleted')} />
-          </div>
-        </div>
-        <div className="__container-message">
-          <div className="__container-msg">
-            {description.substring(0, 25)}...
-          </div>
-        </div>
-        <div className="__container-sender-time">
-          <div className="__container-sender"> {senderName} </div>
-          <div className="__container-time"> {dateTime} </div>
-        </div>
+    <div className='container-messages-snapshot'>
+      <List className={classes.root}>
+        <ListItem alignItems='flex-start' className='snapshot-wrapper'>
+          <ListItemAvatar>
+            <Avatar alt='Remy Sharp' src={img} />
+          </ListItemAvatar>
+          <ListItemText
+            primary={`${name} ${lastName} <${senderName}>`}
+            secondary={
+              <React.Fragment>
+                <Typography
+                  className={classes.subject}
+                  color='textPrimary'
+                  component='div'
+                  variant='body2'
+                >
+                  {subject}
+                </Typography>
+                <Typography
+                  className={classes.To}
+                  color='textPrimary'
+                  component='div'
+                  variant='body2'
+                >
+                  {`${dateTime}`}
+                </Typography>
+              </React.Fragment>
+            }
+          />
+        </ListItem>
+        <Divider component='li' variant='inset' />
+      </List>
+      <div className='container-snapshot-delete-icon'>
+        <DeleteIcon className='snapshot-delete-icon' onClick={() => alert('Deleted')} />
       </div>
     </div>
   );

@@ -7,6 +7,11 @@ import "react-app-polyfill/stable";
 import React from "react";
 import ReactDOM from "react-dom";
 import axios from "axios";
+import TimeAgo from 'javascript-time-ago'
+import en from 'javascript-time-ago/locale/en'
+import es from 'javascript-time-ago/locale/es'
+import fr from 'javascript-time-ago/locale/fr'
+import ru from 'javascript-time-ago/locale/ru'
 import { mockAxios, setupAxios } from "./_metronic";
 import store, { persistor } from "./app/store/store";
 import App from "./App";
@@ -37,6 +42,12 @@ const { PUBLIC_URL } = process.env;
  *
  * @see https://github.com/axios/axios#interceptors
  */
+
+TimeAgo.addDefaultLocale(en)
+TimeAgo.addLocale(ru)
+TimeAgo.addLocale(es)
+TimeAgo.addLocale(fr)
+
 setupAxios(axios, store);
 ReactDOM.render(
   <App

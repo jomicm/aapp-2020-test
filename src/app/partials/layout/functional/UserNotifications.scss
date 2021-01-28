@@ -1,0 +1,21 @@
+.blue-bar {
+    align-self: center;
+    border-left: 4px solid #4258BB;
+    height: 85px;
+}
+
+.firstColor {
+    border-radius: 1%;
+    flex: 100%;
+}
+
+.firstColor:hover, .secondColor:hover {
+    background-color: rgba($color: #000000, $alpha: 0.1);
+    border-radius: 1%;
+    cursor: pointer;
+}
+
+.secondColor {
+    border-radius: 1%;
+    flex: 100%;
+}

@@ -25,7 +25,7 @@ import CustomFields from '../../Components/CustomFields/CustomFields';
 import {
   SingleLine,
   MultiLine,
-  Date,
+  Date as DateField,
   DateTime,
   DropDown,
   RadioButtons,
@@ -42,12 +42,13 @@ import {
   postDB,
   getDB
 } from '../../../../crud/api';
+import { getHours } from 'date-fns';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
     singleLine: <SingleLine {...props} />,
     multiLine: <MultiLine {...props} />,
-    date: <Date {...props} />,
+    date: <DateField {...props} />,
     dateTime: <DateTime {...props} />,
     dropDown: <DropDown {...props} />,
     radioButtons: <RadioButtons {...props} />,
@@ -132,6 +133,13 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
+const collections = {
+  messages: {
+    id: 'idMessages',
+    name: 'messages'
+  },
+};
+
 const ModalEmployees = ({
   showModal,
   setShowModal,
@@ -166,16 +174,77 @@ const ModalEmployees = ({
   });
 
   const executePolicies = (catalogueName) => {
+    const formatDate = new Date()
+    const dformat = `${('0' + formatDate.getDate()).slice(-2)}/${('0' + formatDate.getMonth()+1).slice(-2)}/${formatDate.getFullYear()}`
+    const tformat = `${formatDate.getHours()}:${formatDate.getMinutes()}:${formatDate.getSeconds()}`
+    const timeStamp = dformat + ' ' + tformat
+    const read = false;
+    const status = 'new'
     const filteredPolicies = policies.filter(
-      (policy) => policy.selectedAction === catalogueName
-    );
-    filteredPolicies.forEach(
-      ({ policyName, selectedAction, selectedCatalogue }) =>
-        alert(
-          `Policy <${policyName}> with action <${selectedAction}> of type <${selectedCatalogue}> will be executed`
-        )
-    );
-  };
+      (policy) => policy.selectedAction === catalogueName);
+      filteredPolicies.forEach(({ 
+        _id,
+        apiDisabled,
+        selectedIcon,
+        layout,
+        messageDisabled,
+        messageFrom,
+        messageNotification,
+        messageTo,
+        notificationDisabled,
+        notificationFrom,
+        notificationTo,
+        policyName,
+        selectedAction,
+        selectedCatalogue,
+        subjectMessage,
+        subjectNotification
+         }) => {
+          if(!messageDisabled){
+            return(
+            alert(
+              `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`
+              ),
+              postDB('messages', {
+                _id,
+                from: messageFrom,
+                html: layout,
+                read: read,
+                status: status,
+                subject: subjectMessage,
+                timeStamp: timeStamp,
+                to: messageTo
+              })
+              .then(data => data.json())
+              .then((response) => {
+                 const { } = response.response[0];
+              })
+              .catch((error) => console.log('ERROR', error))
+            )} else if(!notificationDisabled){
+            return(
+            alert(
+              `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`
+              ),
+              postDB('notifications', {
+                _id,
+                formatDate: formatDate,
+                from: notificationFrom,
+                icon: selectedIcon,
+                message: messageNotification,
+                read: read,
+                status: status,
+                subject: subjectNotification,
+                timeStamp: timeStamp,
+                to: notificationTo
+              })
+              .then(data => data.json())
+              .then((response) => {
+                 const { } = response.response[0];
+              })
+              .catch((error) => console.log('ERROR', error))
+            )}
+        })
+  }
 
   const handleChange = (name) => (event) => {
     setValues({ ...values, [name]: event.target.value });
