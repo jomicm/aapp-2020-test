@@ -185,7 +185,6 @@ const ModalEmployees = ({
       filteredPolicies.forEach(({ 
         _id,
         apiDisabled,
-        selectedIcon,
         layout,
         messageDisabled,
         messageFrom,
@@ -197,6 +196,7 @@ const ModalEmployees = ({
         policyName,
         selectedAction,
         selectedCatalogue,
+        selectedIcon,
         subjectMessage,
         subjectNotification
          }) => {

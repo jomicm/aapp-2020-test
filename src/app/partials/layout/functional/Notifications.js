@@ -10,7 +10,7 @@ import NotificationsActiveIcon from '@material-ui/icons/NotificationsActive';
 import NotificationsNoneIcon from '@material-ui/icons/NotificationsNone';
 import NotificationsOffIcon from '@material-ui/icons/NotificationsOff';
 import NotificationsPausedIcon from '@material-ui/icons/NotificationsPaused';
-import ModalUserNotifications from './modalNotification/ModalUserNotifications'
+import ModalNotifications from './modalNotification/ModalNotifications'
 import HeaderDropdownToggle from '../../content/CustomDropdowns/HeaderDropdownToggle';
 import {
   postDBEncryptPassword,
@@ -20,14 +20,14 @@ import {
   getDB
 } from '../../../crud/api'
 import { ReactComponent as CompilingIcon } from '../../../../_metronic/layout/assets/layout-svg-icons/Compiling.svg';
-import './UserNotifications.scss'
+import './Notifications.scss'
 
 const perfectScrollbarOptions = {
   wheelPropagation: false,
   wheelSpeed: 2
 };
 
-const UserNotifications = ({ 
+const Notifications = ({ 
   bgImage,
   click,
   dot,
@@ -107,20 +107,14 @@ const UserNotifications = ({
   
   const getHeaderTopBarCssClassList = () => {
     let result = 'kt-header__topbar-icon ';
-    if (pulse) {
-      result += 'kt-pulse kt-pulse--brand ';
-    }
-    if (iconType) {
-      result += `kt-header__topbar-icon--${iconType}`;
-    }
+    result += pulse ? 'kt-pulse kt-pulse--brand ' : '';
+    result += iconType ? `kt-header__topbar-icon--${iconType}` : '';
     return result;
   };
   
   const getSvgCssClassList = () => {
     let result = 'kt-svg-icon ';
-    if (iconType) {
-      result += `kt-svg-icon--${iconType}`;
-    }
+      result += iconType ? `kt-svg-icon--${iconType}` : '';
     return result;
   };
   
@@ -260,7 +254,7 @@ const UserNotifications = ({
                               </div>
                           )})}
                         </div>
-                          <ModalUserNotifications
+                          <ModalNotifications
                             from={values.from}
                             subject={values.subject}
                             message={values.message}
@@ -280,4 +274,4 @@ const UserNotifications = ({
     );
 }
 
-export default UserNotifications;
+export default Notifications;

@@ -1,22 +1,22 @@
 import React, {useState} from 'react';
 import {
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Typography,
-  IconButton,
-  Tab, 
   AppBar, 
-  Tabs,
+  Button,
+  Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  IconButton,
+  InputAdornment,
   Modal,
   Paper,
-  TextField,
-  Checkbox,
-  FormControlLabel,
   Switch,
-  InputAdornment,
+  Tab, 
+  Tabs,
+  TextField,
+  Typography,
 } from '@material-ui/core';
 import {
   withStyles,
@@ -90,7 +90,7 @@ const DialogContent5 = withStyles(theme => ({
   }
 }))(DialogContent);
 
-const ModalUserNotifications = ({ subject, message, formatDate, openModal, showModal, setShowModal, from }) => {
+const ModalNotifications = ({ subject, message, formatDate, openModal, showModal, setShowModal, from }) => {
 
   const [modalStyle] = useState(getModalStyle);
   const [open, setOpen] = useState(false);
@@ -148,4 +148,4 @@ const ModalUserNotifications = ({ subject, message, formatDate, openModal, showM
   );
 }
 
-export default ModalUserNotifications;
+export default ModalNotifications;
