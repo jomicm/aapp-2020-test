@@ -4,6 +4,15 @@
     height: 85px;
 }
 
+.container-notifications-deleteicon{
+    padding-right: 20px;
+}
+
+.container-notifications-deleteicon:hover {
+    color: red;
+    padding-right: 20px;
+}
+
 .firstColor {
     border-radius: 1%;
     flex: 100%;

@@ -4,6 +4,7 @@ import { Nav, Tab, Dropdown } from 'react-bootstrap';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import ReactTimeAgo from 'react-time-ago'
 import Badge from '@material-ui/core/Badge';
+import DeleteIcon from '@material-ui/icons/Delete';
 import NotificationImportantIcon from '@material-ui/icons/NotificationImportant';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import NotificationsActiveIcon from '@material-ui/icons/NotificationsActive';
@@ -13,11 +14,12 @@ import NotificationsPausedIcon from '@material-ui/icons/NotificationsPaused';
 import ModalNotifications from './modalNotification/ModalNotifications'
 import HeaderDropdownToggle from '../../content/CustomDropdowns/HeaderDropdownToggle';
 import {
-  postDBEncryptPassword,
+  deleteDB,
+  getDB,
   getOneDB,
-  updateDB,
   postDB,
-  getDB
+  postDBEncryptPassword,
+  updateDB
 } from '../../../crud/api'
 import { ReactComponent as CompilingIcon } from '../../../../_metronic/layout/assets/layout-svg-icons/Compiling.svg';
 import './Notifications.scss'
@@ -53,6 +55,7 @@ const Notifications = ({
   };
   const [openModal, setOpenModal] = useState(false)
   const [values, setValues] = useState({
+    id: '',
     formatDate: '',
     from: '',
     message: '',
@@ -142,6 +145,13 @@ const Notifications = ({
     return result;
   };
 
+  const handleDelete = (id) => {
+    deleteDB('notifications/', id)
+    .then(response => console.log('success', response))
+    .catch(error => console.log('Error', error));
+    alert('Deleted: ' + id)
+  }
+
   useEffect(() => {
     getDB('notifications/')
     .then((response) => response.json())
@@ -221,36 +231,43 @@ const Notifications = ({
                             return(
                               <div style={{ display: 'flex'}}>
                                 <div className={changeBarColor(read)} />
-                                <div
-                                  style={{padding: '20px'}}
-                                  className={changeColor(read)}
-                                  onClick={() => changeModal(read, _id, subject, message, formatDate, from)}
-                                >
-                                <div className='kt-notification__item-icon' style={{display: 'flex'}}>
-                                  <div className='notification-icon'>
-                                    {Object.keys(iconsList).map((key) => {
-                                      return (key === icon) ? iconsList[key] : ''
-                                    })}
-                                  </div>
-                                  <div 
-                                    className='kt-notification__item-title' 
-                                    style={{padding: '0 10px 5px', textTransform: 'upperCase'}}
+                                  <div
+                                    style={{padding: '20px'}}
+                                    className={changeColor(read)}
+                                    onClick={() => changeModal(read, _id, subject, message, formatDate, from)}
                                   >
-                                    {subject ? ((subject.length > 20) ? subject.substring(0, 25) + '...' : subject)  : '' }
+                                <div style={{ display: 'flex'}}>
+                                  <div className='kt-notification__item-icon' style={{display: 'flex', flexDirection: 'column', width: '100%'}}>
+                                    <div className='notification-icon' style={{display: 'flex'}}>
+                                      {Object.keys(iconsList).map((key) => {
+                                        return (key === icon) ? iconsList[key] : ''
+                                      })}
+                                    <div 
+                                      className='kt-notification__item-title' 
+                                      style={{padding: '0 10px 5px', textTransform: 'upperCase'}}
+                                    >
+                                      {subject ? ((subject.length > 20) ? subject.substring(0, 25) + '...' : subject)  : '' }
+                                    </div>
+                                    </div>
+                                  <div>
+                                  {message ? ((message.length > 25) ? message.substring(0, 25) + '...' : message) : ''}
+                                  </div>
+                                    <div className='kt-notification__item-time'>
+                                      {formatDate ? 
+                                        (<ReactTimeAgo 
+                                          date={formatDate}
+                                          locale='en-EN'
+                                          timeStyle='round' />)
+                                          : ''}
+                                    </div>
+                                          </div>
                                   </div>
                                 </div>
-                                <div>
-                                {message ? ((message.length > 25) ? message.substring(0, 25) + '...' : message) : ''}
-                                </div>
-                                  <div className='kt-notification__item-time'>
-                                    {formatDate ? 
-                                      (<ReactTimeAgo 
-                                        date={formatDate}
-                                        locale='en-EN'
-                                        timeStyle='round' />)
-                                        : ''}
-                                  </div>
-                                </div>
+                                    <div className="container-notifications-deleteicon" style={{alignSelf: 'center'}}> 
+                                      <DeleteIcon
+                                        onClick={() => handleDelete(_id)}
+                                      />
+                                    </div>
                               </div>
                           )})}
                         </div>

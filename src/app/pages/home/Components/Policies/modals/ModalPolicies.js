@@ -301,7 +301,6 @@ const ModalPolicies = ({
   };
 
   const handleCloseModal = () => {
-    reset();
     setShowModal(false);
     setValue4(0);
   };
@@ -342,6 +341,7 @@ const ModalPolicies = ({
         })
         .catch((error) => console.log(error));
     }
+    reset();
     handleCloseModal();
   };
 
@@ -443,7 +443,7 @@ const ModalPolicies = ({
           'messageInternal',
           'messageMail',
           'messageNotification',
-          'notifiactionDisabled',
+          'notificationDisabled',
           'policyName',
           'selectedAction',
           'selectedCatalogue',

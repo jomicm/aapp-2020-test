@@ -200,13 +200,12 @@ const ModalEmployees = ({
         subjectMessage,
         subjectNotification
          }) => {
+           debugger
           if(!messageDisabled){
-            return(
             alert(
               `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`
-              ),
+              )
               postDB('messages', {
-                _id,
                 from: messageFrom,
                 html: layout,
                 read: read,
@@ -220,13 +219,11 @@ const ModalEmployees = ({
                  const { } = response.response[0];
               })
               .catch((error) => console.log('ERROR', error))
-            )} else if(!notificationDisabled){
-            return(
+          } if(!notificationDisabled){
             alert(
               `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`
-              ),
+              )
               postDB('notifications', {
-                _id,
                 formatDate: formatDate,
                 from: notificationFrom,
                 icon: selectedIcon,
@@ -242,7 +239,7 @@ const ModalEmployees = ({
                  const { } = response.response[0];
               })
               .catch((error) => console.log('ERROR', error))
-            )}
+            }
         })
   }
 
