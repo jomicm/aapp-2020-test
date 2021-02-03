@@ -355,7 +355,6 @@ const ModalPolicies = ({
       );
       setEditor(EditorState.push(editor, contentState, 'insert-characters'));
     } else {
-      debugger
       const text = values[selectedControl];
       const left = text.substr(0, cursorPosition[0]);
       const right = text.substr(cursorPosition[1], text.length);
@@ -411,8 +410,6 @@ const ModalPolicies = ({
     setSelectedControl(name);
     setCursorPosition([selectionStart, selectionEnd]);
   };
-
-  console.log('Users: ', users)
 
   useEffect(() => {
     getDB('user')

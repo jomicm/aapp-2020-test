@@ -183,7 +183,6 @@ const ModalEmployees = ({
     const filteredPolicies = policies.filter(
       (policy) => policy.selectedAction === catalogueName);
       filteredPolicies.forEach(({ 
-        _id,
         apiDisabled,
         layout,
         messageDisabled,
@@ -200,7 +199,6 @@ const ModalEmployees = ({
         subjectMessage,
         subjectNotification
          }) => {
-           debugger
           if(!messageDisabled){
             alert(
               `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`
@@ -295,12 +293,10 @@ const ModalEmployees = ({
       setTabs([]);
       return;
     }
-    console.log('onChangeEmployeeProfile>>>', e);
     setProfileSelected(e);
     getOneDB('employeeProfiles/', e.value)
       .then((response) => response.json())
       .then((data) => {
-        console.log(data.response);
         const { customFieldsTab, profilePermissions } = data.response;
         const tabs = Object.keys(customFieldsTab).map((key) => ({
           key,
@@ -362,7 +358,6 @@ const ModalEmployees = ({
   // Function to update customFields
   const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
     const colValue = ['left', 'right'];
-    console.log('Looking for you', tab, id, colIndex, values);
     const customFieldsTabTmp = { ...customFieldsTab };
 
     const field = customFieldsTabTmp[tab][colValue[colIndex]].find(
