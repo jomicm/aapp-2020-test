@@ -16,14 +16,14 @@ import {
   Tab, 
   Tabs,
   TextField,
-  Typography,
+  Typography
 } from '@material-ui/core';
+import CloseIcon from '@material-ui/icons/Close';
 import {
   withStyles,
   useTheme,
   makeStyles
 } from '@material-ui/core/styles';
-import CloseIcon from '@material-ui/icons/Close';
 
 const getModalStyle = () => {
   const top = 50;
@@ -31,9 +31,33 @@ const getModalStyle = () => {
   return {
     top: `${top}%`,
     left: `${left}%`,
-    transform: `translate(-${top}%, -${left}%)`,
+    transform: `translate(-${top}%, -${left}%)`
   };
 }
+
+const DialogContent5 = withStyles(theme => ({
+  root: {
+    padding: theme.spacing(2)
+  }
+}))(DialogContent);
+
+const DialogTitle5 = withStyles(styles5)(props => {
+  const { children, classes, onClose } = props;
+  return (
+    <DialogTitle disableTypography className={classes.root}>
+      <Typography variant='h6'>{children}</Typography>
+      {onClose ? (
+        <IconButton
+          aria-label='Close'
+          className={classes.closeButton}
+          onClick={onClose}
+          >
+          <CloseIcon />
+        </IconButton>
+      ) : null}
+    </DialogTitle>
+  );
+});
 
 const styles5 = theme => ({
   root: {
@@ -46,24 +70,6 @@ const styles5 = theme => ({
     right: theme.spacing(1),
     top: theme.spacing(1)
   }
-});
-
-const DialogTitle5 = withStyles(styles5)(props => {
-  const { children, classes, onClose } = props;
-  return (
-    <DialogTitle disableTypography className={classes.root}>
-      <Typography variant='h6'>{children}</Typography>
-      {onClose ? (
-        <IconButton
-          aria-label='Close'
-          className={classes.closeButton}
-          onClick={onClose}
-        >
-          <CloseIcon />
-        </IconButton>
-      ) : null}
-    </DialogTitle>
-  );
 });
 
 const useStyles = makeStyles(theme => ({
@@ -84,25 +90,19 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const DialogContent5 = withStyles(theme => ({
-  root: {
-    padding: theme.spacing(2)
-  }
-}))(DialogContent);
+  const ModalNotifications = ({
+    formatDate, 
+    from,
+    message, 
+    openModal, 
+    setShowModal, 
+    showModal, 
+    subject 
+  }) => {
 
-const ModalNotifications = ({ subject, message, formatDate, openModal, showModal, setShowModal, from }) => {
-
+  const classes = useStyles();
   const [modalStyle] = useState(getModalStyle);
   const [open, setOpen] = useState(false);
-  const classes = useStyles();
-
-  const handleOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setShowModal(false);
-  };
   
   const body = (
     <div>
@@ -125,25 +125,35 @@ const ModalNotifications = ({ subject, message, formatDate, openModal, showModal
     </div>
   );
 
+  const handleClose = () => {
+    setShowModal(false);
+  };
+
+  const handleOpen = () => {
+    setOpen(true);
+  };
+
   return (
     <div>
-        <Dialog
-          aria-describedby='simple-modal-description'
-          aria-labelledby='simple-modal-title'
-          fullWidth={false}
-          maxWidth={'sm'}
-          open={showModal}
+      <Dialog
+        aria-describedby='simple-modal-description'
+        aria-labelledby='simple-modal-title'
+        fullWidth={false}
+        maxWidth={'sm'}
+        open={showModal}
+      >
+        <DialogTitle5
+        id='customized-dialog-title'
+        onClose={handleClose}
         >
-          <DialogTitle5
-          id='customized-dialog-title'
-          onClose={handleClose}
-          >
-            Notification Preview
-          </DialogTitle5>
-          <DialogContent5 dividers style={{maxWidth:'500px', maxHeight:'500px', minWidth:'260px', minHeight:'270px'}}>
-            {body}
-          </DialogContent5>
-        </Dialog>
+          Notification Preview
+        </DialogTitle5>
+        <DialogContent5 
+          dividers 
+          style={{maxWidth:'500px', maxHeight:'500px', minWidth:'260px', minHeight:'270px'}}>
+          {body}
+        </DialogContent5>
+      </Dialog>
     </div>
   );
 }
