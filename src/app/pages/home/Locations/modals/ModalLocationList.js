@@ -18,6 +18,16 @@ import {
   Switch,
   InputLabel
 } from "@material-ui/core";
+import GoogleMaps from '../../Components/GoogleMaps';
+import ImageUpload from '../../Components/ImageUpload';
+import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import {
+  Portlet,
+  PortletBody,
+  PortletFooter,
+  PortletHeader,
+  PortletHeaderToolbar
+} from "../../../../partials/content/Portlet";
 import {
   withStyles,
   useTheme,
@@ -37,11 +47,14 @@ import {
   Checkboxes,
   FileUpload
 } from '../../Components/CustomFields/CustomFieldsPreview';
+import { TabsTitles } from '../../Components/Translations/tabsTitles';
 
 import './ModalLocationList.scss';
 
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import { Label } from 'reactstrap';
+
+const localStorageActiveTabKey = "builderActiveTab";
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -146,6 +159,8 @@ const useStyles = makeStyles(theme => ({
 const ModalLocationProfiles = ({ showModal, setShowModal, profile, parent, setParentSelected, realParent, reload, editOrNew }) => {
   // console.log('profile: <=>>>>>>', profile)
   // Example 4 - Tabs
+  const activeTab = localStorage.getItem(localStorageActiveTabKey);
+  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
@@ -161,13 +176,15 @@ const ModalLocationProfiles = ({ showModal, setShowModal, profile, parent, setPa
   // Example 1 - TextField
   const classes = useStyles();
   const [values, setValues] = useState({
+    categoryPic: '/media/misc/placeholder-image.jpg',
+    categoryPicDefault: '/media/misc/placeholder-image.jpg',
+    customFieldsTab: {},
     name: '',
     // level: 0,
     profileName: '',
     profileId: '',
     profileLevel: '',
-    parent: '',
-    customFieldsTab: {}
+    parent: ''
   });
 
   const [profileLabel, setProfileLabel] = useState('');
@@ -177,7 +194,8 @@ const ModalLocationProfiles = ({ showModal, setShowModal, profile, parent, setPa
   };
 
   const handleSave = () => {
-    const body = values;
+    const fileExt = getFileExtension(image);
+    const body = {...values, fileExt };
     if (editOrNew === 'new') {
       body.parent = parent;
       console.log('save body:', body)
@@ -260,6 +278,21 @@ const ModalLocationProfiles = ({ showModal, setShowModal, profile, parent, setPa
 
   const [tabs, setTabs] = useState([]);
 
+  const style = {
+    border: '5px solid blue',
+    minWidth: '200px',
+    minHeight: '200px'
+  }
+
+  const containerStyle = {
+    border: '5px dashed green',
+    position: 'relative',  
+    minWidth: '200px',
+    minHeight: '200px'
+  }
+
+  const [image, setImage] = useState(null);
+
   return (
     <div style={{width:'1000px'}}>
       <Dialog
@@ -307,6 +340,52 @@ const ModalLocationProfiles = ({ showModal, setShowModal, profile, parent, setPa
                       />
                     </div>
                   </div>
+                  <PortletHeader
+                    toolbar={
+                      <PortletHeaderToolbar>
+                        <Tabs
+                          className='builder-tabs'
+                          indicatorColor="primary"
+                          textColor="primary"
+                          variant="fullWidth"
+                          component='div'
+                          onChange={(_, nextTab) => {
+                            setTab(nextTab);
+                            localStorage.setItem(localStorageActiveTabKey, nextTab);
+                          }}
+                          value={tab}
+                        >
+                          <Tab label='Pin Map' />
+                          <Tab label='Pin Layout' />
+                          <Tab label='Layout' />
+                        </Tabs>
+                      </PortletHeaderToolbar>
+                    }
+                  />
+                  {tab === 0 && (
+                    <PortletBody>
+                      PIN MAP
+                      <div className="container-map-view-modal">
+                        {/* <GoogleMaps style={{width: '100%', height: '500px', position: 'relative'}}/> */}
+                        <GoogleMaps
+                         containerStyle={containerStyle}
+                         style={style}
+                         />
+                      </div>
+                    </PortletBody>
+                  )}
+                  {tab === 1 && (
+                    <PortletBody>
+                      PIN LAYOUT
+                    </PortletBody>
+                  )}
+                  {tab === 2 && (
+                    <PortletBody>
+                      <ImageUpload setImage={setImage} image={values.imageURL}>
+                      Sketch Layout
+                      </ImageUpload>
+                    </PortletBody>
+                  )}
                 </TabContainer4>
                 {tabs.map(tab => (
                   <TabContainer4 dir={theme4.direction}>
