@@ -4,7 +4,11 @@
     height: 85px;
 }
 
-.container-notifications-deleteicon{
+.container-notifications-subject-message-date {
+    max-width: 235px;
+}
+
+.container-notifications-deleteicon {
     padding-right: 20px;
 }
 
@@ -22,6 +26,10 @@
     background-color: rgba($color: #000000, $alpha: 0.1);
     border-radius: 1%;
     cursor: pointer;
+}
+
+.notifications-text-ellipsis {
+
 }
 
 .secondColor {

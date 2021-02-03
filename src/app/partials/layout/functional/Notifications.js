@@ -1,8 +1,12 @@
 import React, {useState, useEffect} from 'react';
 import { id } from 'date-fns/locale';
+import { makeStyles } from '@material-ui/core/styles';
+import Fade from '@material-ui/core/Fade';
 import { Nav, Tab, Dropdown } from 'react-bootstrap';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import ReactTimeAgo from 'react-time-ago'
+import Typography from '@material-ui/core/Typography';
+import Tooltip from '@material-ui/core/Tooltip';
 import Badge from '@material-ui/core/Badge';
 import DeleteIcon from '@material-ui/icons/Delete';
 import NotificationImportantIcon from '@material-ui/icons/NotificationImportant';
@@ -28,6 +32,16 @@ const perfectScrollbarOptions = {
   wheelPropagation: false,
   wheelSpeed: 2
 };
+
+const useStyles = makeStyles((theme) => ({
+  customWidth: {
+    maxWidth: 500,
+    fontSize: 13,
+  },
+  noMaxWidth: {
+    maxWidth: 'none',
+  },
+}));
 
 const Notifications = ({ 
   bgImage,
@@ -61,6 +75,8 @@ const Notifications = ({
     message: '',
     subject: ''
   })
+
+  const classes = useStyles();
 
   const backGroundStyle = () => {
     if (!bgImage) {
@@ -231,42 +247,57 @@ const Notifications = ({
                             return(
                               <div style={{ display: 'flex'}}>
                                 <div className={changeBarColor(read)} />
-                                  <div
-                                    style={{padding: '20px'}}
-                                    className={changeColor(read)}
-                                    onClick={() => changeModal(read, _id, subject, message, formatDate, from)}
-                                  >
-                                <div style={{ display: 'flex'}}>
-                                  <div className='kt-notification__item-icon' style={{display: 'flex', flexDirection: 'column', width: '100%'}}>
-                                    <div className='notification-icon' style={{display: 'flex'}}>
-                                      {Object.keys(iconsList).map((key) => {
-                                        return (key === icon) ? iconsList[key] : ''
-                                      })}
-                                    <div 
-                                      className='kt-notification__item-title' 
-                                      style={{padding: '0 10px 5px', textTransform: 'upperCase'}}
-                                    >
-                                      {subject ? ((subject.length > 20) ? subject.substring(0, 25) + '...' : subject)  : '' }
+                                <div
+                                  style={{padding: '20px'}}
+                                  className={changeColor(read)}
+                                  onClick={() => changeModal(read, _id, subject, message, formatDate, from)}
+                                >
+                                  <div className='container-notifications-subject-message-date' style={{ display: 'flex'}}>
+                                    <div className='kt-notification__item-icon' style={{display: 'flex', flexDirection: 'column', width: '100%'}}>
+                                      <div className='notification-icon' style={{display: 'flex'}}>
+                                        {Object.keys(iconsList).map((key) => {
+                                          return (key === icon) ? iconsList[key] : ''
+                                        })}
+                                        <div 
+                                          className='kt-notification__item-title' 
+                                          style={{padding: '0 10px 5px', textTransform: 'upperCase', width: '95%'}}
+                                        >
+                                          <Tooltip 
+                                            classes={{ tooltip: classes.customWidth }} 
+                                            placement="left"
+                                            title={subject}
+                                            TransitionProps={{ timeout: 600 }}
+                                            >
+                                            <Typography variant="body1" noWrap='true' gutterBottom>
+                                              {subject}
+                                            </Typography>
+                                          </Tooltip>
+                                        </div>
+                                      </div>
+                                    <div className='notifications-text-ellipsis'>
+                                      <Tooltip 
+                                        classes={{ tooltip: classes.customWidth }} 
+                                        placement="left"
+                                        TransitionProps={{ timeout: 600 }}
+                                        title={message}>
+                                        <Typography variant="body1" noWrap='true' gutterBottom>
+                                          {message}
+                                        </Typography>
+                                      </Tooltip>
                                     </div>
+                                      <div className='kt-notification__item-time'>
+                                        {formatDate && 
+                                          (<ReactTimeAgo 
+                                            date={formatDate}
+                                            locale='en-EN'
+                                            timeStyle='round' />)
+                                            }
+                                      </div>
                                     </div>
-                                  <div>
-                                  {message ? ((message.length > 25) ? message.substring(0, 25) + '...' : message) : ''}
-                                  </div>
-                                    <div className='kt-notification__item-time'>
-                                      {formatDate ? 
-                                        (<ReactTimeAgo 
-                                          date={formatDate}
-                                          locale='en-EN'
-                                          timeStyle='round' />)
-                                          : ''}
-                                    </div>
-                                          </div>
                                   </div>
                                 </div>
                                     <div className="container-notifications-deleteicon" style={{alignSelf: 'center'}}> 
-                                      <DeleteIcon
-                                        onClick={() => handleDelete(_id)}
-                                      />
+                                      <DeleteIcon onClick={() => handleDelete(_id)} />
                                     </div>
                               </div>
                           )})}
