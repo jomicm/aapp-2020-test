@@ -174,12 +174,12 @@ const ModalEmployees = ({
   });
 
   const executePolicies = (catalogueName) => {
-    const formatDate = new Date()
-    const dformat = formatDate.toDateString()
-    const tformat = formatDate.toLocaleTimeString()
-    const timeStamp = dformat + ' ' + tformat
+    const formatDate = new Date();
+    const dformat = formatDate.toDateString();
+    const tformat = formatDate.toLocaleTimeString();
+    const timeStamp = dformat + ' ' + tformat;
     const read = false;
-    const status = 'new'
+    const status = 'new';
     const filteredPolicies = policies.filter(
       (policy) => policy.selectedAction === catalogueName);
       filteredPolicies.forEach(({ 
@@ -202,7 +202,7 @@ const ModalEmployees = ({
           if(!messageDisabled){
             alert(
               `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`
-              )
+              );
               postDB('messages', {
                 from: messageFrom,
                 html: layout,
@@ -216,11 +216,11 @@ const ModalEmployees = ({
               .then((response) => {
                  const { } = response.response[0];
               })
-              .catch((error) => console.log('ERROR', error))
+              .catch((error) => console.log('ERROR', error));
           } if(!notificationDisabled){
             alert(
               `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`
-              )
+              );
               postDB('notifications', {
                 formatDate: formatDate,
                 from: notificationFrom,
@@ -238,7 +238,7 @@ const ModalEmployees = ({
               })
               .catch((error) => console.log('ERROR', error))
             }
-        })
+        });
   }
 
   const handleChange = (name) => (event) => {
@@ -417,16 +417,16 @@ const ModalEmployees = ({
       .then((response) => response.json())
       .then((data) => {
         const {
-          name,
-          lastName,
-          email,
+          assetsAssigned,
           customFieldsTab,
-          profilePermissions,
-          idUserProfile,
-          locationsTable,
-          layoutSelected,
+          email,
           fileExt,
-          assetsAssigned = []
+          idUserProfile,
+          lastName,
+          layoutSelected,
+          locationsTable,
+          name,
+          profilePermissions = []
         } = data.response;
         executePolicies('OnLoad');
         setCustomFieldsTab(customFieldsTab);
