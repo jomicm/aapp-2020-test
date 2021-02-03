@@ -364,7 +364,7 @@ export default function Assets() {
                         <span className="kt-section__sub">
                           This section will integrate <code>Assets Categories</code>
                         </span>
-                        <Button variant='contained' onClick={() => toggleTileView()} >Tile View</Button>
+                        <Button variant='contained' onClick={toggleTileView} >Tile View</Button>
                         <div className="kt-separator kt-separator--dashed" />
                         <TileView 
                           collection='categories'
