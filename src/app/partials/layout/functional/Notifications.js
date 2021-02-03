@@ -1,13 +1,15 @@
 import React, {useState, useEffect} from 'react';
 import { id } from 'date-fns/locale';
-import { makeStyles } from '@material-ui/core/styles';
-import Fade from '@material-ui/core/Fade';
 import { Nav, Tab, Dropdown } from 'react-bootstrap';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import ReactTimeAgo from 'react-time-ago'
-import Typography from '@material-ui/core/Typography';
-import Tooltip from '@material-ui/core/Tooltip';
-import Badge from '@material-ui/core/Badge';
+import { makeStyles } from '@material-ui/core/styles';
+import {
+  Badge,
+  Fade,
+  Tooltip,
+  Typography
+} from '@material-ui/core'
 import DeleteIcon from '@material-ui/icons/Delete';
 import NotificationImportantIcon from '@material-ui/icons/NotificationImportant';
 import NotificationsIcon from '@material-ui/icons/Notifications';
@@ -17,6 +19,7 @@ import NotificationsOffIcon from '@material-ui/icons/NotificationsOff';
 import NotificationsPausedIcon from '@material-ui/icons/NotificationsPaused';
 import ModalNotifications from './modalNotification/ModalNotifications'
 import HeaderDropdownToggle from '../../content/CustomDropdowns/HeaderDropdownToggle';
+import { ReactComponent as CompilingIcon } from '../../../../_metronic/layout/assets/layout-svg-icons/Compiling.svg';
 import {
   deleteDB,
   getDB,
@@ -25,7 +28,6 @@ import {
   postDBEncryptPassword,
   updateDB
 } from '../../../crud/api'
-import { ReactComponent as CompilingIcon } from '../../../../_metronic/layout/assets/layout-svg-icons/Compiling.svg';
 import './Notifications.scss'
 
 const perfectScrollbarOptions = {
@@ -55,7 +57,8 @@ const Notifications = ({
   type,
   useSVG,
 }) => {
-
+  
+  const classes = useStyles();
   const [countNotifications, setCountNotifications] = useState(0)
   const [data, setData] = useState([])
   const [getKey, setGetKey] = useState({key: 'alerts'})
@@ -76,7 +79,6 @@ const Notifications = ({
     subject: ''
   })
 
-  const classes = useStyles();
 
   const backGroundStyle = () => {
     if (!bgImage) {
@@ -85,18 +87,12 @@ const Notifications = ({
     return 'url(' + bgImage + ')';
   };
 
-  const checkStatus = (read, id) => {
-    const notif = data.findIndex( item => item._id === id)
-    const newData = data;
-    newData[notif].read = true
-    setData(newData)
-    updateCount(data);
-  }
-
-  const changeModal = (read, _id, subject, message, formatDate, from) => {
-    setOpenModal(true)
-    setValues({subject: subject, message: message, formatDate: formatDate, from: from[0].email})
-    checkStatus(read, _id)
+  const changeBarColor = (read) => {
+    if(read){
+      return ''
+    }else{
+      return 'blue-bar'
+    }
   }
 
   const changeColor = (read) => {
@@ -107,13 +103,26 @@ const Notifications = ({
     }
   }
 
-  const changeBarColor = (read) => {
-    if(read){
-      return ''
-    }else{
-      return 'blue-bar'
-    }
+  const changeModal = (read, _id, subject, message, formatDate, from) => {
+    setOpenModal(true)
+    setValues({subject: subject, message: message, formatDate: formatDate, from: from[0].email})
+    checkStatus(read, _id)
   }
+
+  const checkStatus = (read, id) => {
+    const notif = data.findIndex( item => item._id === id)
+    const newData = data;
+    newData[notif].read = true
+    setData(newData)
+    updateCount(data);
+  }
+
+  const getHeaderTopBarCssClassList = () => {
+    let result = 'kt-header__topbar-icon ';
+    result += pulse ? 'kt-pulse kt-pulse--brand ' : '';
+    result += iconType ? `kt-header__topbar-icon--${iconType}` : '';
+    return result;
+  };
 
   const getHetBackGroundCssClassList = () => {
     let result = 'kt-head ';
@@ -124,20 +133,19 @@ const Notifications = ({
     return result;
   };
   
-  const getHeaderTopBarCssClassList = () => {
-    let result = 'kt-header__topbar-icon ';
-    result += pulse ? 'kt-pulse kt-pulse--brand ' : '';
-    result += iconType ? `kt-header__topbar-icon--${iconType}` : '';
-    return result;
-  };
-  
   const getSvgCssClassList = () => {
     let result = 'kt-svg-icon ';
       result += iconType ? `kt-svg-icon--${iconType}` : '';
     return result;
   };
   
-  
+  const handleDelete = (id) => {
+    deleteDB('notifications/', id)
+    .then(response => console.log('success', response))
+    .catch(error => console.log('Error', error));
+    alert('Deleted: ' + id)
+  }
+
   const ulTabsClassList = () => {
     let result = 'nav nav-tabs nav-tabs-line nav-tabs-bold nav-tabs-line-3x  ';
     if (type) {
@@ -160,13 +168,6 @@ const Notifications = ({
     result += 'btn-sm btn-bold btn-font-md';
     return result;
   };
-
-  const handleDelete = (id) => {
-    deleteDB('notifications/', id)
-    .then(response => console.log('success', response))
-    .catch(error => console.log('Error', error));
-    alert('Deleted: ' + id)
-  }
 
   useEffect(() => {
     getDB('notifications/')
@@ -196,130 +197,128 @@ const Notifications = ({
             <span className='kt-pulse__ring' hidden={!pulse} />
         </span>
       </Dropdown.Toggle>
-        <Dropdown.Menu className='dropdown-menu-fit dropdown-menu-right dropdown-menu-anim dropdown-menu-top-unround dropdown-menu-lg'>
-          <form>
-            {/** Head */}
-            <div
-              className={getHetBackGroundCssClassList()}
-              style={{ backgroundImage: backGroundStyle() }}
-            >
-              <h3 className='kt-head__title'>
-                <span style={{paddingRight:'10px'}}>
+      <Dropdown.Menu className='dropdown-menu-fit dropdown-menu-right dropdown-menu-anim dropdown-menu-top-unround dropdown-menu-lg'>
+        <form>
+          {/** Head */}
+          <div
+            className={getHetBackGroundCssClassList()}
+            style={{ backgroundImage: backGroundStyle() }}
+          >
+            <h3 className='kt-head__title'>
+              <span style={{paddingRight:'10px'}}>
                 Notifications&nbsp;
-                </span>
-                <span className={userNotificationsButtonCssClassList()} >
-                  {countNotifications}
-                </span>
-              </h3>
-
-              <Tab.Container
-                defaultActiveKey='List'
+              </span>
+              <span className={userNotificationsButtonCssClassList()} >
+                {countNotifications}
+              </span>
+            </h3>
+            <Tab.Container
+              defaultActiveKey='List'
+              className={ulTabsClassList()}
+            >
+              <Nav
                 className={ulTabsClassList()}
+                onSelect={_key => setGetKey({ key: _key })}
               >
-                <Nav
-                  className={ulTabsClassList()}
-                  onSelect={_key => setGetKey({ key: _key })}
+                <Nav.Item className='nav-item'>
+                  <Nav.Link eventKey='List' className='nav-link show'>
+                    List
+                  </Nav.Link>
+                </Nav.Item>
+              </Nav>
+            <Tab.Content>
+              <Tab.Pane eventKey='List'>
+                <PerfectScrollbar
+                  options={perfectScrollbarOptions}
+                  style={{ maxHeight: '100vh', position: 'relative' }}
                 >
-                  <Nav.Item className='nav-item'>
-                    <Nav.Link eventKey='List' className='nav-link show'>
-                      List
-                    </Nav.Link>
-                  </Nav.Item>
-                </Nav>
-
-                <Tab.Content>
-                  <Tab.Pane eventKey='List'>
-                    <PerfectScrollbar
-                      options={perfectScrollbarOptions}
-                      style={{ maxHeight: '100vh', position: 'relative' }}
+                  <div
+                    className='kt-notification kt-margin-t-10 kt-margin-b-10'
+                    style={{ maxHeight: '40vh', position: 'relative' }}
+                  >
+                    <div
+                      className='kt-notification kt-margin-t-10 kt-margin-b-10 kt-scroll'
+                      data-scroll='true'
+                      data-height='300'
+                      data-mobile-height='200'
                     >
-                      <div
-                        className='kt-notification kt-margin-t-10 kt-margin-b-10'
-                        style={{ maxHeight: '40vh', position: 'relative' }}
-                      >
-                        <div
-                          className='kt-notification kt-margin-t-10 kt-margin-b-10 kt-scroll'
-                          data-scroll='true'
-                          data-height='300'
-                          data-mobile-height='200'
-                        >
-                          {data.map(({ formatDate, icon, _id, message, subject, read, status, from }) => {
-                            return(
-                              <div style={{ display: 'flex'}}>
-                                <div className={changeBarColor(read)} />
-                                <div
-                                  style={{padding: '20px'}}
-                                  className={changeColor(read)}
-                                  onClick={() => changeModal(read, _id, subject, message, formatDate, from)}
-                                >
-                                  <div className='container-notifications-subject-message-date' style={{ display: 'flex'}}>
-                                    <div className='kt-notification__item-icon' style={{display: 'flex', flexDirection: 'column', width: '100%'}}>
-                                      <div className='notification-icon' style={{display: 'flex'}}>
-                                        {Object.keys(iconsList).map((key) => {
-                                          return (key === icon) ? iconsList[key] : ''
-                                        })}
-                                        <div 
-                                          className='kt-notification__item-title' 
-                                          style={{padding: '0 10px 5px', textTransform: 'upperCase', width: '95%'}}
-                                        >
-                                          <Tooltip 
-                                            classes={{ tooltip: classes.customWidth }} 
-                                            placement="left"
-                                            title={subject}
-                                            TransitionProps={{ timeout: 600 }}
-                                            >
-                                            <Typography variant="body1" noWrap='true' gutterBottom>
-                                              {subject}
-                                            </Typography>
-                                          </Tooltip>
-                                        </div>
-                                      </div>
-                                    <div className='notifications-text-ellipsis'>
+                      {data.map(({ formatDate, icon, _id, message, subject, read, status, from }) => {
+                        return(
+                          <div style={{ display: 'flex'}}>
+                            <div className={changeBarColor(read)} />
+                            <div
+                              style={{padding: '20px'}}
+                              className={changeColor(read)}
+                              onClick={() => changeModal(read, _id, subject, message, formatDate, from)}
+                            >
+                              <div className='container-notifications-subject-message-date' style={{ display: 'flex'}}>
+                                <div className='kt-notification__item-icon' style={{display: 'flex', flexDirection: 'column', width: '100%'}}>
+                                  <div className='notification-icon' style={{display: 'flex'}}>
+                                    {Object.keys(iconsList).map((key) => {
+                                      return (key === icon) ? iconsList[key] : ''
+                                    })}
+                                    <div 
+                                      className='kt-notification__item-title' 
+                                      style={{padding: '0 10px 5px', textTransform: 'upperCase', width: '95%'}}
+                                    >
                                       <Tooltip 
                                         classes={{ tooltip: classes.customWidth }} 
                                         placement="left"
+                                        title={subject}
                                         TransitionProps={{ timeout: 600 }}
-                                        title={message}>
+                                        >
                                         <Typography variant="body1" noWrap='true' gutterBottom>
-                                          {message}
+                                          {subject}
                                         </Typography>
                                       </Tooltip>
                                     </div>
-                                      <div className='kt-notification__item-time'>
-                                        {formatDate && 
-                                          (<ReactTimeAgo 
-                                            date={formatDate}
-                                            locale='en-EN'
-                                            timeStyle='round' />)
-                                            }
-                                      </div>
-                                    </div>
+                                  </div>
+                                <div className='notifications-text-ellipsis'>
+                                  <Tooltip 
+                                    classes={{ tooltip: classes.customWidth }} 
+                                    placement="left"
+                                    TransitionProps={{ timeout: 600 }}
+                                    title={message}>
+                                    <Typography variant="body1" noWrap='true' gutterBottom>
+                                      {message}
+                                    </Typography>
+                                  </Tooltip>
+                                </div>
+                                  <div className='kt-notification__item-time'>
+                                    {formatDate && 
+                                      (<ReactTimeAgo 
+                                        date={formatDate}
+                                        locale='en-EN'
+                                        timeStyle='round' />)
+                                        }
                                   </div>
                                 </div>
-                                    <div className="container-notifications-deleteicon" style={{alignSelf: 'center'}}> 
-                                      <DeleteIcon onClick={() => handleDelete(_id)} />
-                                    </div>
                               </div>
-                          )})}
-                        </div>
-                          <ModalNotifications
-                            from={values.from}
-                            subject={values.subject}
-                            message={values.message}
-                            formatDate={values.formatDate}
-                            showModal={openModal}
-                            setShowModal={(onOff) => setOpenModal(onOff)}
-                          />
-                      </div>
-                    </PerfectScrollbar>
-                  </Tab.Pane>
-                </Tab.Content>
-              </Tab.Container>
-            </div>
-          </form>
-        </Dropdown.Menu>
-      </Dropdown>
-    );
+                            </div>
+                                <div className="container-notifications-deleteicon" style={{alignSelf: 'center'}}> 
+                                  <DeleteIcon onClick={() => handleDelete(_id)} />
+                                </div>
+                          </div>
+                      )})}
+                    </div>
+                      <ModalNotifications
+                        from={values.from}
+                        subject={values.subject}
+                        message={values.message}
+                        formatDate={values.formatDate}
+                        showModal={openModal}
+                        setShowModal={(onOff) => setOpenModal(onOff)}
+                      />
+                  </div>
+                </PerfectScrollbar>
+              </Tab.Pane>
+            </Tab.Content>
+          </Tab.Container>
+        </div>
+      </form>
+    </Dropdown.Menu>
+  </Dropdown>
+ );
 }
 
 export default Notifications;
