@@ -10,12 +10,14 @@ const useStyles = makeStyles((theme) => ({
   root: {
     overflow: 'auto',
     backgroundColor: theme.palette.background.paper,
-    width: '100%',
+    width: '90%',
     maxHeight: 400,
+    padding: 10,
   },
   container: {
     display: 'flex',
     flexWrap: 'wrap',
+    padding: 15,
   },
   tile: {
     margin: 2,
@@ -104,67 +106,66 @@ const TileView = ({ tiles, collection, tailWidth = '120px', tailHeight = '120px'
     onReload()
     setSelectedId([])
   }
-  
-  
+
+
   return (
     <Collapse in={showTileView}>
-      <div className={classes.root}>
-        <ModalYesNo
-          showModal={openYesNoModal[0]}
-          onOK={() => confirmDelete()}
-          onCancel={() => setOpenYesNoModal([false, []])}
-          title={'Remove Element'}
-          message={'Are you sure you want to remove this element?'}
-        />
-          <div className={classes.container}>
-            {tiles.map((tile) => {
-              const imageURL = getImageURL(tile._id, collection, tile.fileExt)
-              return (
-                <div 
-                  className={classes.tile} 
-                  style={{ width: tailWidth, height: tailHeight }} 
-                  onMouseEnter={() => onTileHover(tile._id)} 
-                  onMouseLeave={() => onTileHover(null)} 
-                  key={tile._id}
-                >
-                  <img 
-                    src={imageURL ? `${imageURL}?${new Date()}` : 'http://localhost:3000/media/misc/placeholder-image.jpg'} 
-                    width='100%' 
-                    height='100%' 
-                    className={classes.image} 
-                    alt='Categories' 
-                  />
-                  {
-                    tile._id === selectedId[0] ?
-                      <div className={classes.optionsShow}>
-                        <div className={classes.buttonsContainer}>
-                          <IconButton size='small' className={classes.iconButton} onClick={() => onEdit(selectedId)}>
-                            <EditIcon fontSize='small' />
-                          </IconButton>
-                          <IconButton size='small' color='grey' className={classes.iconButton} onClick={() => setOpenYesNoModal([true, [selectedId]])}>
-                            <DeleteIcon fontSize='small' />
-                          </IconButton>
-                        </div>
-                        <div className={classes.textContainer}>
-                          <div className={classes.text}>
-                            <Typography noWrap={true}>{tile.name}</Typography>
-                          </div>
-                        </div>
+
+      <ModalYesNo
+        showModal={openYesNoModal[0]}
+        onOK={() => confirmDelete()}
+        onCancel={() => setOpenYesNoModal([false, []])}
+        title={'Remove Element'}
+        message={'Are you sure you want to remove this element?'}
+      />
+      <div className={classes.container}>
+        {tiles.map((tile) => {
+          const imageURL = getImageURL(tile.id, collection, tile.fileExt)
+          return (
+            <div
+              className={classes.tile}
+              style={{ width: tailWidth, height: tailHeight }}
+              onMouseEnter={() => onTileHover(tile.id)}
+              onMouseLeave={() => onTileHover(null)}
+              key={tile.id}
+            >
+              <img
+                src={imageURL ? `${imageURL}?${new Date()}` : 'http://localhost:3000/media/misc/placeholder-image.jpg'}
+                width='100%'
+                height='100%'
+                className={classes.image}
+                alt='Categories'
+              />
+              {
+                tile.id === selectedId[0] ?
+                  <div className={classes.optionsShow}>
+                    <div className={classes.buttonsContainer}>
+                      <IconButton size='small' className={classes.iconButton} onClick={() => onEdit(selectedId)}>
+                        <EditIcon fontSize='small' />
+                      </IconButton>
+                      <IconButton size='small' color='grey' className={classes.iconButton} onClick={() => setOpenYesNoModal([true, [selectedId]])}>
+                        <DeleteIcon fontSize='small' />
+                      </IconButton>
+                    </div>
+                    <div className={classes.textContainer}>
+                      <div className={classes.text}>
+                        <Typography noWrap={true}>{tile.name}</Typography>
                       </div>
-                      :
-                      <div className={classes.optionsNotShow}>
-                        <div className={classes.textContainer}>
-                          <div className={classes.text}>
-                            <Typography noWrap={true}>{tile.name}</Typography>
-                          </div>
-                        </div>
+                    </div>
+                  </div>
+                  :
+                  <div className={classes.optionsNotShow}>
+                    <div className={classes.textContainer}>
+                      <div className={classes.text}>
+                        <Typography noWrap={true}>{tile.name}</Typography>
                       </div>
-                  }
-                </div>
-              )
-            }
-            )}
-          </div>
+                    </div>
+                  </div>
+              }
+            </div>
+          )
+        }
+        )}
       </div>
     </Collapse>
   )

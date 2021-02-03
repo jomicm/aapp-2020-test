@@ -16,8 +16,8 @@ import {
 
 // AApp Components
 import { TabsTitles } from '../Components/Translations/tabsTitles';
+import TableComponentTile from '../Components/TableComponent&TileView';
 import TableComponent from '../Components/TableComponent';
-import TileView from '../Components/TileView';
 import ModalAssetCategories from './modals/ModalAssetCategories';
 import ModalAssetReferences from './modals/ModalAssetReferences';
 import ModalAssetList from './modals/ModalAssetList';
@@ -74,8 +74,8 @@ export default function Assets() {
     [layoutConfig]
   );
 
-  const createAssetCategoryRow = (id, name, depreciation, creator, creation_date) => {
-    return { id, name, depreciation, creator, creation_date };
+  const createAssetCategoryRow = (id, name, depreciation, creator, creation_date, fileExt) => {
+    return { id, name, depreciation, creator, creation_date, fileExt };
   };
 
   const assetCategoriesHeadRows = [
@@ -161,7 +161,7 @@ export default function Assets() {
           if (collectionName === 'categories') {
             const categoriesInfo = data.response
             const rows = data.response.map(row => {
-              return createAssetCategoryRow(row._id, row.name, row.depreciation, 'Admin', '11/03/2020');
+              return createAssetCategoryRow(row._id, row.name, row.depreciation, 'Admin', '11/03/2020', row.fileExt);
             });
             setControl(prev => ({ ...prev, categoryRows: rows, categoryRowsSelected: [], categories: categoriesInfo }));
           }
@@ -182,7 +182,6 @@ export default function Assets() {
     //
     idCategory: null,
     openCategoriesModal: false,
-    openTileView: false,
     categoryRows: [],
     categories: [],
     categoryRowsSelected: [],
@@ -362,17 +361,6 @@ export default function Assets() {
                         <span className="kt-section__sub">
                           This section will integrate <code>Assets Categories</code>
                         </span>
-                        <Button variant='contained' onClick={() => control.openTileView ? setControl({...control, openTileView: false}):setControl({...control, openTileView: true})} >Tile View</Button>
-                        <div className="kt-separator kt-separator--dashed" />
-                        <TileView 
-                          showTileView={control.openTileView}
-                          tiles={control.categories} 
-                          collection='categories'
-                          onEdit={tableActions('categories').onEdit}
-                          onDelete={tableActions('categories').onDelete}
-                          onReload={() => loadAssetsData('categories')}
-                        />
-                        { /* <TileView /> */}
                         <ModalAssetCategories
                           // showModal={openCategoriesModal}
                           // setShowModal={setOpenCategoriesModal}
@@ -386,7 +374,7 @@ export default function Assets() {
 
                         <div className="kt-separator kt-separator--dashed" />
                         <div className="kt-section__content">
-                          <TableComponent
+                          <TableComponentTile
                             title={'Asset Categories'}
                             headRows={assetCategoriesHeadRows}
                             rows={control.categoryRows}
@@ -394,6 +382,7 @@ export default function Assets() {
                             onAdd={tableActions('categories').onAdd}
                             onDelete={tableActions('categories').onDelete}
                             onSelect={tableActions('categories').onSelect}
+                            onReload={() => loadAssetsData('categories')}
                           // rows={categoryRows.rows}
                           // onEdit={categoriesTableActions.onEditProfileLocation}
                           // onAdd={categoriesTableActions.onAddProfileLocation}
