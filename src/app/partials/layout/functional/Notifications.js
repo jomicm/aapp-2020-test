@@ -77,6 +77,7 @@ const Notifications = ({
     formatDate: '',
     from: '',
     message: '',
+    status: '',
     subject: ''
   })
 
@@ -92,10 +93,11 @@ const Notifications = ({
     return clsx('firstColor', !read && 'secondColor')
   }
 
-  const changeModal = (_id, formatDate, from, message, read, subject) => {
+  const changeModal = (_id, formatDate, from, message, read, status, subject) => {
     setOpenModal(true)
     setValues({subject: subject, message: message, formatDate: formatDate, from: from[0].email})
     checkStatus(read, _id)
+    handleUpdate(_id, read)
   }
 
   const checkStatus = (read, id) => {
@@ -132,6 +134,15 @@ const Notifications = ({
     .then(response => console.log('success', response))
     .catch(error => console.log('Error', error));
     alert('Deleted: ' + id)
+    loadNotificationsData();
+  }
+
+  const handleUpdate = (id, read) => {
+    const body = {read: true}
+    updateDB('notifications/', body, id)
+    .then(response => console.log('success', response))
+    .catch(error => console.log('Error', error));
+    alert('Updated: ' + id + ' ' + read)
   }
 
   const ulTabsClassList = () => {
@@ -157,7 +168,7 @@ const Notifications = ({
     return result;
   };
 
-  useEffect(() => {
+  const loadNotificationsData = () => {
     getDB('notifications/')
     .then((response) => response.json())
     .then((data) => {
@@ -165,6 +176,10 @@ const Notifications = ({
       updateCount(data.response);
     })
     .catch((error) => console.log('error>', error));
+  };
+
+  useEffect(() => {
+    loadNotificationsData();
   }, []);
 
   return (
@@ -237,7 +252,7 @@ const Notifications = ({
                             <div
                               style={{padding: '20px'}}
                               className={changeColor(read)}
-                              onClick={() => changeModal(_id, formatDate, from, message, read, subject)}
+                              onClick={() => changeModal(_id, formatDate, from, message, read, status, subject)}
                             >
                               <div className='container-notifications-subject-message-date' style={{ display: 'flex'}}>
                                 <div className='kt-notification__item-icon' style={{display: 'flex', flexDirection: 'column', width: '100%'}}>
