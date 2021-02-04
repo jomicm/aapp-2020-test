@@ -1,4 +1,5 @@
 import React, {useState, useEffect} from 'react';
+import clsx from 'clsx';
 import { id } from 'date-fns/locale';
 import { Nav, Tab, Dropdown } from 'react-bootstrap';
 import PerfectScrollbar from 'react-perfect-scrollbar';
@@ -79,31 +80,19 @@ const Notifications = ({
     subject: ''
   })
 
-
   const backGroundStyle = () => {
-    if (!bgImage) {
-      return 'none';
-    }
-    return 'url(' + bgImage + ')';
+    return clsx('url(' + bgImage + ')', !bgImage && 'none');
   };
 
   const changeBarColor = (read) => {
-    if(read){
-      return ''
-    }else{
-      return 'blue-bar'
-    }
+    return clsx('', !read && 'blue-bar')
   }
 
   const changeColor = (read) => {
-    if(read){
-      return 'firstColor'
-    }else{
-      return 'secondColor'
-    }
+    return clsx('firstColor', !read && 'secondColor')
   }
 
-  const changeModal = (read, _id, subject, message, formatDate, from) => {
+  const changeModal = (_id, formatDate, from, message, read, subject) => {
     setOpenModal(true)
     setValues({subject: subject, message: message, formatDate: formatDate, from: from[0].email})
     checkStatus(read, _id)
@@ -134,9 +123,8 @@ const Notifications = ({
   };
   
   const getSvgCssClassList = () => {
-    let result = 'kt-svg-icon ';
-      result += iconType ? `kt-svg-icon--${iconType}` : '';
-    return result;
+    let result = 'kt-svg-icon';
+    return clsx(`${result}`, iconType && `${result} kt-svg-icon--${iconType}`)
   };
   
   const handleDelete = (id) => {
@@ -242,14 +230,14 @@ const Notifications = ({
                       data-height='300'
                       data-mobile-height='200'
                     >
-                      {data.map(({ formatDate, icon, _id, message, subject, read, status, from }) => {
+                      {data.map(({ _id, formatDate, from, icon, message, read, status, subject,  }) => {
                         return(
                           <div style={{ display: 'flex'}}>
                             <div className={changeBarColor(read)} />
                             <div
                               style={{padding: '20px'}}
                               className={changeColor(read)}
-                              onClick={() => changeModal(read, _id, subject, message, formatDate, from)}
+                              onClick={() => changeModal(_id, formatDate, from, message, read, subject)}
                             >
                               <div className='container-notifications-subject-message-date' style={{ display: 'flex'}}>
                                 <div className='kt-notification__item-icon' style={{display: 'flex', flexDirection: 'column', width: '100%'}}>

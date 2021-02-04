@@ -44,7 +44,10 @@ const DialogContent5 = withStyles(theme => ({
 const DialogTitle5 = withStyles(styles5)(props => {
   const { children, classes, onClose } = props;
   return (
-    <DialogTitle disableTypography className={classes.root}>
+    <DialogTitle 
+      className={classes.root} 
+      disableTypography 
+      style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}} >
       <Typography variant='h6'>{children}</Typography>
       {onClose ? (
         <IconButton
@@ -141,7 +144,7 @@ const useStyles = makeStyles(theme => ({
         fullWidth={false}
         maxWidth={'sm'}
         open={showModal}
-      >
+        >
         <DialogTitle5
         id='customized-dialog-title'
         onClose={handleClose}
@@ -150,7 +153,7 @@ const useStyles = makeStyles(theme => ({
         </DialogTitle5>
         <DialogContent5 
           dividers 
-          style={{maxWidth:'500px', maxHeight:'500px', minWidth:'260px', minHeight:'270px'}}>
+          style={{maxWidth:'500px', maxHeight:'500px', minWidth:'300px', minHeight:'270px'}}>
           {body}
         </DialogContent5>
       </Dialog>
