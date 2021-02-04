@@ -385,6 +385,15 @@ const ModalEmployees = ({
     });
   };
 
+  const loadPoliciesData = () => {
+    getDB('policies')
+      .then((response) => response.json())
+      .then((data) => {
+        setPolicies(data.response);
+      })
+      .catch((error) => console.log('error>', error));
+  }
+
   useEffect(() => {
     const userProfiles = employeeProfileRows.map((profile, ix) => ({
       value: profile.id,
@@ -402,12 +411,7 @@ const ModalEmployees = ({
       })
       .catch((error) => console.log('error>', error));
 
-    getDB('policies')
-      .then((response) => response.json())
-      .then((data) => {
-        setPolicies(data.response);
-      })
-      .catch((error) => console.log('error>', error));
+    loadPoliciesData()
 
     if (!id || !Array.isArray(id)) {
       return;

@@ -145,6 +145,16 @@ const Notifications = ({
     alert('Updated: ' + id + ' ' + read)
   }
 
+  const loadNotificationsData = () => {
+    getDB('notifications/')
+    .then((response) => response.json())
+    .then((data) => {
+      setData(data.response);
+      updateCount(data.response);
+    })
+    .catch((error) => console.log('error>', error));
+  };
+
   const ulTabsClassList = () => {
     let result = 'nav nav-tabs nav-tabs-line nav-tabs-bold nav-tabs-line-3x  ';
     if (type) {
@@ -166,16 +176,6 @@ const Notifications = ({
     }
     result += 'btn-sm btn-bold btn-font-md';
     return result;
-  };
-
-  const loadNotificationsData = () => {
-    getDB('notifications/')
-    .then((response) => response.json())
-    .then((data) => {
-      setData(data.response);
-      updateCount(data.response);
-    })
-    .catch((error) => console.log('error>', error));
   };
 
   useEffect(() => {
