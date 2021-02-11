@@ -81,17 +81,20 @@ const DialogContent5 = withStyles(theme => ({
 const DialogTitle5 = withStyles(styles5)(props => {
   const { children, classes, onClose } = props;
   return (
-    <DialogTitle disableTypography className={classes.root}>
-      <Typography variant="h6">{children}</Typography>
-      {onClose ? (
-        <IconButton
-          aria-label="Close"
-          className={classes.closeButton}
-          onClick={onClose}
-        >
-          <CloseIcon />
-        </IconButton>
-      ) : null}
+    <DialogTitle 
+      disableTypography 
+      className={classes.root} 
+      style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+        <Typography variant="h6">{children}</Typography>
+        {onClose ? (
+          <IconButton
+            aria-label="Close"
+            className={classes.closeButton}
+            onClick={onClose}
+          >
+            <CloseIcon />
+          </IconButton>
+        ) : null}
     </DialogTitle>
   );
 });
@@ -141,7 +144,7 @@ const useStyles = makeStyles(theme => ({
 const useStyles4 = makeStyles(theme => ({
   root: {
     backgroundColor: theme.palette.background.paper,
-    width: 1000
+    minWidth: 1000,
   }
 }));
 
@@ -325,6 +328,7 @@ const ModalLocationList = ({ editOrNew, parent, profile, realParent, reload, set
                 axis={theme4.direction === "rtl" ? "x-reverse" : "x"}
                 index={value4}
                 onChangeIndex={handleChangeIndex4}
+                style={{overflowY: 'hidden'}}
               >
                 <TabContainer4 dir={theme4.direction}>
                   <div className="profile-tab-wrapper">
@@ -371,6 +375,7 @@ const ModalLocationList = ({ editOrNew, parent, profile, realParent, reload, set
                         edit
                         setCoords={setModalCoords}                        
                         setZoom={(newZoom) => setModalMapZoom(newZoom)}
+                        styleMap={{margin: '20px 20px 0 0', width: '95%', height: '63%'}}
                         zoom={modalMapZoom}
                       >
                       </GoogleMaps>
@@ -397,7 +402,7 @@ const ModalLocationList = ({ editOrNew, parent, profile, realParent, reload, set
                   <TabContainer4 dir={theme4.direction}>
                   <div className="modal-location">
                     {Array(tab.content[1].length === 0 ? 1 : 2).fill(0).map((col, colIndex) => (
-                      <div className="modal-location__list-field" >
+                      <div className="modal-location__list-field">
                         {tab.content[colIndex].map(customField => (
                           <CustomFieldsPreview 
                             columnIndex={colIndex}

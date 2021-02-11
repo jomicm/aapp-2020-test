@@ -1,7 +1,7 @@
 import React from "react";
 import { GoogleApiWrapper, InfoWindow, Map, Marker } from "google-maps-react";
 
-const GoogleMaps = ({ center, coords, edit = false, google, setCoords, setZoom, zoom }) => {
+const GoogleMaps = ({ center, coords, edit = false, google, setCoords, setZoom, styleMap, zoom }) => {
 
   const handleClick = (mapProps, map, clickEvent) => {
     if(edit){
@@ -32,6 +32,7 @@ const GoogleMaps = ({ center, coords, edit = false, google, setCoords, setZoom, 
         google={google}
         onClick={(mapProps, map, clickEvent) => handleClick(mapProps, map, clickEvent)}
         onMouseout={(mapProps, map, clickEvent) => handleMouse(mapProps, map, clickEvent)}
+        style={styleMap}
         zoom={zoom}
         >
         {coords.map(coord => (  
