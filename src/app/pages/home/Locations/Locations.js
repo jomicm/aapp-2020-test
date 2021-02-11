@@ -1,10 +1,10 @@
-/* eslint-disable no-restricted-imports */
 import React, { useMemo, useState, useEffect } from "react";
-import { shallowEqual, useDispatch, useSelector } from "react-redux";
-import { Formik } from "formik";
-import { get, merge } from "lodash";
-import { FormHelperText, Switch, Tab, Tabs, Styles } from "@material-ui/core";
 import clsx from "clsx";
+import SwipeableViews from "react-swipeable-views";
+import { get, merge } from "lodash";
+import { Formik } from "formik";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
+import { FormHelperText, Switch, Tab, Tabs, Styles } from "@material-ui/core";
 import { metronic, initLayoutConfig, LayoutConfig } from "../../../../_metronic";
 import {
   Portlet,
@@ -13,102 +13,94 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from "../../../partials/content/Portlet";
-import { CodeBlock } from "../../../partials/content/CodeExample";
-import Notice from "../../../partials/content/Notice";
-
 import CodeExample from '../../../partials/content/CodeExample';
-
+import Notice from "../../../partials/content/Notice";
+import { CodeBlock } from "../../../partials/content/CodeExample";
+import { getDB, deleteDB } from '../../../crud/api'; 
+// import { postDB } from '../../../crud/api';
 import {
-  makeStyles,
-  lighten,
-  withStyles,
-  useTheme
-} from "@material-ui/core/styles";
-import {
-  Paper,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Checkbox,
-  Toolbar,
-  Typography,
-  Tooltip,
-  IconButton,
-  TableSortLabel,
-  TablePagination,
-  // Switch,
-  FormControlLabel,
-  TableFooter,
   Button,
+  Checkbox,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
-  TextField,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  FormLabel,
+  IconButton,
   InputLabel,
-  Select,
   Menu,
   MenuItem,
-  FormControl,
-  FormLabel,
-  RadioGroup,
+  Paper,
   Radio,
-  FormGroup,
+  RadioGroup,
+  Select,
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TablePagination,
+  TableRow,
+  TableSortLabel,
+  TextField,
+  Toolbar,
+  Tooltip,
+  Typography
 } from "@material-ui/core";
-
-// AApp Components
-import { TabsTitles } from '../Components/Translations/tabsTitles';
-import TableComponent from '../Components/TableComponent';
-import ModalLocationProfiles from './modals/ModalLocationProfiles';
-import ModalLocationList from './modals/ModalLocationList';
-import TreeView from '../Components/TreeViewComponent';
-import GoogleMaps from '../Components/GoogleMaps';
-import './Locations.scss';
-
 //Icons
+import AddIcon from '@material-ui/icons/Add';
 import CloseIcon from "@material-ui/icons/Close";
 import DeleteIcon from '@material-ui/icons/Delete';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
 import DraftsIcon from '@material-ui/icons/Drafts';
-import SendIcon from '@material-ui/icons/Send';
+import EditIcon from '@material-ui/icons/Edit';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
+import InboxIcon from '@material-ui/icons/MoveToInbox';
+import RemoveIcon from '@material-ui/icons/Remove';
+import SendIcon from '@material-ui/icons/Send';
 import StarBorder from '@material-ui/icons/StarBorder';
-
-
+import {
+  lighten,
+  makeStyles,
+  useTheme,
+  withStyles
+} from "@material-ui/core/styles";
+// AApp Components
+import { TabsTitles } from '../Components/Translations/tabsTitles';
+import GoogleMaps from '../Components/GoogleMaps';
+import TableComponent from '../Components/TableComponent';
+import TreeView from '../Components/TreeViewComponent';
+import ModalLocationList from './modals/ModalLocationList';
+import ModalLocationProfiles from './modals/ModalLocationProfiles';
+import './Locations.scss';
 //Custom Fields Preview
 import {
-  SingleLine,
-  MultiLine,
-  Date,
-  DateTime,
-  DropDown,
-  RadioButtons,
   Checkboxes,
-  FileUpload,
-  SingleLineSettings,
-  MultiLineSettings,
-  DateSettings,
-  DateTimeSettings,
-  DropDownSettings,
-  RadioButtonsSettings,
   CheckboxesSettings,
-  FileUploadSettings
+  Date,
+  DateSettings,
+  DateTime,
+  DateTimeSettings,
+  DropDown,
+  DropDownSettings,
+  FileUpload,
+  FileUploadSettings,
+  MultiLine,
+  MultiLineSettings,
+  RadioButtons,
+  RadioButtonsSettings,
+  SingleLine,
+  SingleLineSettings,
 } from '../Components/CustomFields/CustomFieldsPreview';
 import ModalYesNo from '../Components/ModalYesNo';
-import SwipeableViews from "react-swipeable-views";
-// import { Map, GoogleApiWrapper } from 'google-maps-react';
-// import { postDB } from '../../../crud/api';
-import { getDB, deleteDB } from '../../../crud/api';
-import AddIcon from '@material-ui/icons/Add';
-import EditIcon from '@material-ui/icons/Edit';
-import RemoveIcon from '@material-ui/icons/Remove';
-
-const localStorageActiveTabKey = "builderActiveTab";
 
 const Divider = () => <div style={{width: '100%', height: '3px', backgroundColor: 'black'}}></div>;
+
+let locations;
+const localStorageActiveTabKey = "builderActiveTab";
 
 const locationsTreeData = {
   id: 'root',
@@ -117,24 +109,80 @@ const locationsTreeData = {
   parent: null
 };
 
-export default function Locations() {
 
+const Locations = () => {
+  
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const dispatch = useDispatch();
+  const initialValues = useMemo(
+    () =>
+      merge(
+        // Fulfill changeable fields.
+        LayoutConfig,
+        layoutConfig
+      ),
+    [layoutConfig]
+  );
+  const locationActions = {
+    openYesNoModal() {
+      if (!parentSelected || parentSelected === 'root') return;
+      setOpenYesNoModal(true);
+    },
+    closeYesNoModal() {
+      setOpenYesNoModal(false);
+    },
+    removeLocation() {
+      deleteDB('locationsReal/', parentSelected)
+      .then(response => handleLoadLocations())
+      .catch(error => console.log('Error', error));
+      setOpenYesNoModal(false);
+    },
+    openProfilesListBox(e) {
+      setAnchorEl(e.currentTarget);
+    },
+    editLocation() {
+      if (!parentSelected || parentSelected === 'root') return;
+      setEditOrNew('edit');
+      setOpenListModal(true);
+    }
+  };
+  const theme4 = useTheme();
+  // Mini menu to add new location
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [coordinates, setCoordinates] = useState([]);
+  const [editOrNew, setEditOrNew] = useState('new');
+  const [googleMapsZoom, setGoogleMapsZoom] = useState(12);
+  const [id, setId] = useState(null);
+  const [loadingButtonPreviewStyle, setLoadingButtonPreviewStyle] = useState({
+    paddingRight: "2.5rem"
+  });
+  const [loadingButtonResetStyle, setLoadingButtonResetStyle] = useState({
+    paddingRight: "2.5rem"
+  });
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [loadingReset, setLoadingReset] = useState(false);
+  const [locationsList, setLocationsList] = useState([]);
+  const [locationProfileRows, setLocationProfileRows] = useState([]);
+  const [locationsTree, setLocationsTree] = useState({});
+  const [mapCenter, setMapCenter] = useState(null);
+  const [parentSelected, setParentSelected] = useState(null);
+  const [profileSelected, setProfileSelected] = useState({});
+  const [openListModal, setOpenListModal] = useState(false);
+  const [openProfileModal, setOpenProfileModal] = useState(false);
+  const [openYesNoModal, setOpenYesNoModal] = useState(false);
+  const [realParentSelected, setRealParentSelected] = useState(null);
+  const [selectedLocationProfileRows, setSelectedLocationProfileRows] = useState([]);
+  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [value4, setValue4] = useState(0);
   const { layoutConfig } = useSelector(
     ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
     shallowEqual
   );
-  const [loadingPreview, setLoadingPreview] = useState(false);
-  const [loadingButtonPreviewStyle, setLoadingButtonPreviewStyle] = useState({
-    paddingRight: "2.5rem"
-  });
-  const [loadingReset, setLoadingReset] = useState(false);
-  const [loadingButtonResetStyle, setLoadingButtonResetStyle] = useState({
-    paddingRight: "2.5rem"
-  });
 
+  const createLocationProfileRow = (id, level, name, creator, creation_date) => {
+    return { id, level, name, creator, creation_date };
+  };
+  
   const enableLoadingPreview = () => {
     setLoadingPreview(true);
     setLoadingButtonPreviewStyle({ paddingRight: "3.5rem" });
@@ -150,19 +198,6 @@ export default function Locations() {
     }, 1000);
   };
 
-  const initialValues = useMemo(
-    () =>
-      merge(
-        // Fulfill changeable fields.
-        LayoutConfig,
-        layoutConfig
-      ),
-    [layoutConfig]
-  );
-
-  const createLocationProfileRow = (id, level, name, creator, creation_date) => {
-    return { id, level, name, creator, creation_date };
-  };
 
   const locHeadRows = [
     { id: "id", numeric: false, disablePadding: true, label: "ID" },
@@ -186,37 +221,30 @@ export default function Locations() {
     createLocationProfileRow('3', '2', 'Guadalajara', 'Admin', '11/03/2020'),
   ];
   
-  const [openProfileModal, setOpenProfileModal] = useState(false);
-  const [openListModal, setOpenListModal] = useState(false);
-  const [openYesNoModal, setOpenYesNoModal] = useState(false);
-  
   // Example 4 - Tabs
-  function TabContainer4({ children, dir }) {
+  const TabContainer4 = ({ children, dir }) => {
     return (
       <Typography component="div" dir={dir} style={{ padding: 8 * 3 }}>
         {children}
       </Typography>
     );
   }
+
   const useStyles4 = makeStyles(theme => ({
     root: {
       backgroundColor: theme.palette.background.paper,
       width: 1000
     }
   }));
-  const theme4 = useTheme();
-  const [value4, setValue4] = useState(0);
-  function handleChange4(event, newValue) {
+
+  const handleChange4 = (event, newValue) => {
     setValue4(newValue);
   }
-  function handleChangeIndex4(index) {
+  const handleChangeIndex4 = (index) => {
     setValue4(index);
   }
 
-  // Mini menu to add new location
-  const [anchorEl, setAnchorEl] = React.useState(null);
-
-  function handleClose() {
+  const handleClose = () => {
     setAnchorEl(null);
   }
 
@@ -226,15 +254,6 @@ export default function Locations() {
     setOpenListModal(true);
     setProfileSelected(profile);
   };
-
-  const [profileSelected, setProfileSelected] = useState({});
-
-  const [locationProfileRows, setLocationProfileRows] = useState([]);
-  const [selectedLocationProfileRows, setSelectedLocationProfileRows] = useState([]);
-  const [locationsList, setLocationsList] = useState([]);
-
-  const [parentSelected, setParentSelected] = useState(null);
-  const [realParentSelected, setRealParentSelected] = useState(null);
 
   const onDeleteProfileLocation = (id) => {
     if (!id || !Array.isArray(id)) return;
@@ -247,7 +266,6 @@ export default function Locations() {
     
   };
 
-  const [id, setId] = useState(null);
   const onEditProfileLocation = (_id) => {
     setId(_id);
     setOpenProfileModal(true);
@@ -257,16 +275,26 @@ export default function Locations() {
     setOpenProfileModal(true);
   };
 
-  const handleSetProfileLocationFilter = (parent, level, realParent) => {
-    console.log('level, parent', level, parent)
-    const lvl = Number(level) + 1;
-    setParentSelected(parent);
-    setRealParentSelected(realParent);
-    let locationProf = locationProfileRows.filter(row => row.level == lvl);
-    setSelectedLocationProfileRows(locationProf);
-  };
+  const getChildren = (id) => {
+    if(id === 'root'){
+      setCoordinates([])
+    }else{
+      const result = locations.filter(location =>  location.parent === id)
+      const latLng = result.map( (coordinate) => coordinate.mapInfo)
+      setCoordinates(latLng)
+    }
+  }
 
-  const [locationsTree, setLocationsTree] = useState({});
+  const getSelfCenter = (id) => {
+    if(id === 'root'){
+      setCoordinates([])
+    }else{
+      const result = locations.filter(location =>  location.id === id)
+      const latLngZoom = result.map( (coordinate) => coordinate.mapInfo)
+      setMapCenter({lat: latLngZoom[0].lat, lng: latLngZoom[0].lng})
+      setGoogleMapsZoom(latLngZoom[0].zoom)
+    }
+  }
 
   const constructLocationTreeRecursive = (locs) => {
     if (!locs || !Array.isArray(locs) || !locs.length) return [];
@@ -279,7 +307,24 @@ export default function Locations() {
     });
     return res;
   };
-
+  
+  const handleLoadLocations = () => {
+    setLocationsTree({});
+    getDB('locationsReal')
+    .then(response => response.json())
+    .then(async data => {
+      locations = data.response.map(res => ({ ...res, id: res._id }));
+      const homeLocations = data.response.filter(loc => loc.profileLevel === 0);
+      const children = constructLocationTreeRecursive(homeLocations);
+      locationsTreeData.children = children;
+      setLocationsTree(locationsTreeData);
+    })
+      .catch(error => console.log('error>', error));
+      const selectedProfileTmp = profileSelected;
+    setProfileSelected({});
+    setProfileSelected(selectedProfileTmp);
+  };
+  
   const handleLoadLocationProfiles = () => {
     getDB('locations')
       .then(response => response.json())
@@ -293,56 +338,20 @@ export default function Locations() {
       .catch(error => console.log('error>', error));
   };
 
-  let locations;
-  const handleLoadLocations = () => {
-    setLocationsTree({});
-    getDB('locationsReal')
-      .then(response => response.json())
-      .then(async data => {
-        locations = data.response.map(res => ({ ...res, id: res._id }));
-        const homeLocations = data.response.filter(loc => loc.profileLevel === 0);
-        const children = constructLocationTreeRecursive(homeLocations);
-        locationsTreeData.children = children;
-        console.log('locationsTreeData:', locationsTreeData)
-        setLocationsTree(locationsTreeData);
-      })
-      .catch(error => console.log('error>', error));
-    const selectedProfileTmp = profileSelected;
-    setProfileSelected({});
-    setProfileSelected(selectedProfileTmp);
+  const handleSetProfileLocationFilter = (parent, level, realParent) => {
+    getChildren(parent)
+    getSelfCenter(parent)
+    const lvl = Number(level) + 1;
+    setParentSelected(parent);
+    setRealParentSelected(realParent);
+    let locationProf = locationProfileRows.filter(row => row.level == lvl);
+    setSelectedLocationProfileRows(locationProf);
   };
-
+  
   useEffect(() => {
-    console.log('One time');
     handleLoadLocationProfiles();
     handleLoadLocations();
   }, []);
-
-  const [editOrNew, setEditOrNew] = useState('new');
-  const locationActions = {
-    openYesNoModal() {
-      console.log('INTENT>>>', parentSelected);
-      if (!parentSelected || parentSelected === 'root') return;
-      setOpenYesNoModal(true);
-    },
-    closeYesNoModal() {
-      setOpenYesNoModal(false);
-    },
-    removeLocation() {
-      deleteDB('locationsReal/', parentSelected)
-        .then(response => handleLoadLocations())
-        .catch(error => console.log('Error', error));
-      setOpenYesNoModal(false);
-    },
-    openProfilesListBox(e) {
-      setAnchorEl(e.currentTarget);
-    },
-    editLocation() {
-      if (!parentSelected || parentSelected === 'root') return;
-      setEditOrNew('edit');
-      setOpenListModal(true);
-    }
-  };
 
   return (
     <>
@@ -364,13 +373,13 @@ export default function Locations() {
                 toolbar={
                   <PortletHeaderToolbar>
                     <Tabs
-                      component="div"
                       className="builder-tabs"
-                      value={tab}
+                      component="div"
                       onChange={(_, nextTab) => {
                         setTab(nextTab);
                         localStorage.setItem(localStorageActiveTabKey, nextTab);
                       }}
+                      value={tab}
                     >
                       {TabsTitles('locations')}
                     </Tabs>
@@ -387,21 +396,21 @@ export default function Locations() {
                             This section will integrate <code>Locations Section</code>
                           </span>
                           <ModalLocationList
-                            showModal={openListModal}
-                            setShowModal={setOpenListModal}
-                            profile={profileSelected}
+                            editOrNew={editOrNew}
                             parent={parentSelected}
-                            setParentSelected={setParentSelected}
+                            profile={profileSelected}
                             realParent={realParentSelected}
                             reload={handleLoadLocations}
-                            editOrNew={editOrNew}
+                            setParentSelected={setParentSelected}
+                            setShowModal={setOpenListModal}
+                            showModal={openListModal}
                           />
                           <ModalYesNo
-                            showModal={openYesNoModal}
-                            onOK={locationActions.removeLocation}
-                            onCancel={locationActions.closeYesNoModal}
-                            title={'Remove Location'}
                             message={'Are you sure you want to remove this location?'}
+                            onCancel={locationActions.closeYesNoModal}
+                            onOK={locationActions.removeLocation}
+                            showModal={openYesNoModal}
+                            title={'Remove Location'}
                           />
                           <div className="kt-separator kt-separator--dashed"/>
                           <div className="kt-section__content">
@@ -409,11 +418,11 @@ export default function Locations() {
                             <div className="locations-list__top">
                               <div className="locations-list_top-add">
                                 <Menu
-                                  id="simple-menu"
                                   anchorEl={anchorEl}
+                                  id="simple-menu"
                                   keepMounted
-                                  open={Boolean(anchorEl)}
                                   onClose={handleClose}
+                                  open={Boolean(anchorEl)}
                                 >
                                   { selectedLocationProfileRows.map(locProfile => (
                                     <MenuItem onClick={() => handleOpenLocationListModal(locProfile)}>{locProfile.name}</MenuItem>
@@ -424,18 +433,18 @@ export default function Locations() {
                             <div className="locations-list">
                               <div className="locations-list__left-content">
                                 <div>
-                                  <Tooltip title="Add Location" placement="top">
-                                    <IconButton onClick={locationActions.openProfilesListBox} aria-label="Filter list">
+                                  <Tooltip placement="top" title="Add Location">
+                                    <IconButton aria-label="Filter list" onClick={locationActions.openProfilesListBox}>
                                       <AddIcon />
                                     </IconButton>
                                   </Tooltip>
-                                  <Tooltip title="Edit Location" placement="top">
-                                    <IconButton onClick={locationActions.editLocation} aria-label="Filter list">
+                                  <Tooltip placement="top" title="Edit Location">
+                                    <IconButton aria-label="Filter list" onClick={locationActions.editLocation}>
                                       <EditIcon />
                                     </IconButton>
                                   </Tooltip>
-                                  <Tooltip title="Remove Location" placement="top">
-                                    <IconButton onClick={locationActions.openYesNoModal} aria-label="Filter list">
+                                  <Tooltip placement="top" title="Remove Location">
+                                    <IconButton aria-label="Filter list" onClick={locationActions.openYesNoModal}>
                                       <RemoveIcon />
                                     </IconButton>
                                   </Tooltip>
@@ -446,10 +455,10 @@ export default function Locations() {
                                 <div>
                                   <Paper>
                                     <Tabs
-                                      value={value4}
-                                      onChange={handleChange4}
                                       indicatorColor="primary"
+                                      onChange={handleChange4}
                                       textColor="primary"
+                                      value={value4}
                                       variant="fullWidth"
                                     >
                                       <Tab label="Map View" />
@@ -465,7 +474,16 @@ export default function Locations() {
                                       dir={theme4.direction}
                                     >
                                       <div className="locations-list__map-view">
-                                        <GoogleMaps style={{width: '100%', height: '500px', position: 'relative'}}/>
+                                        <GoogleMaps 
+                                          center={mapCenter}
+                                          coords={coordinates}
+                                          setCoords={(newCoords) =>
+                                            setCoordinates({lat: newCoords.lat, lng: newCoords.lng})
+                                          } 
+                                          setZoom={(newZoom) => setGoogleMapsZoom(newZoom)}
+                                          style={{width: '100%', height: '500px', position: 'relative'}}
+                                          zoom={googleMapsZoom}
+                                        />
                                       </div>
                                     </TabContainer4>
                                     <TabContainer4 
@@ -474,10 +492,10 @@ export default function Locations() {
                                       <TextField
                                         id="standard-number"
                                         label="Level"
-                                        value={values.age}
+                                        margin="normal"
                                         onChange={handleChange("level")}
                                         type="number"
-                                        margin="normal"
+                                        value={values.age}
                                       />
                                     </TabContainer4>
                                   </SwipeableViews>
@@ -500,22 +518,22 @@ export default function Locations() {
                             This section will integrate <code>Locations/Profile Table</code>
                           </span>
                           <ModalLocationProfiles
-                            showModal={openProfileModal}
-                            setShowModal={setOpenProfileModal}
-                            reloadTable={handleLoadLocationProfiles}
                             id={id}
+                            reloadTable={handleLoadLocationProfiles}
+                            setShowModal={setOpenProfileModal}
+                            showModal={openProfileModal}
                           />
 
                           <div className="kt-separator kt-separator--dashed"/>
                           <div className="kt-section__content">
                             {/* Insert table here */}
                             <TableComponent
-                              title={'Locations Profiles'}
                               headRows={locHeadRows}
-                              rows={locationProfileRows}
-                              onEdit={onEditProfileLocation}
                               onAdd={onAddProfileLocation}
+                              onEdit={onEditProfileLocation}
                               onDelete={onDeleteProfileLocation}
+                              rows={locationProfileRows}
+                              title={'Locations Profiles'}
                             />
                           </div>
                         </div>
@@ -565,9 +583,9 @@ export default function Locations() {
                       <TextField
                         className="custom-field-preview-wrapper__single-line"
                         label="Single Line"
-                        value=""
-                        type="text"
                         margin="normal"
+                        type="text"
+                        value=""
                       />
                       <DeleteIcon className="custom-field-preview-wrapper__delete-icon"/>
                     </div>
@@ -575,11 +593,11 @@ export default function Locations() {
                     <div className="custom-field-preview-wrapper">
                       <TextField
                         className="custom-field-preview-wrapper__multi-line"
+                        defaultValue=""
                         label="Multiline"
+                        margin="normal"
                         multiline
                         rows="4"
-                        defaultValue=""
-                        margin="normal"
                       />
                       <DeleteIcon className="custom-field-preview-wrapper__delete-icon"/>
                     </div>
@@ -587,12 +605,12 @@ export default function Locations() {
                     <div className="custom-field-preview-wrapper">
                       <TextField
                         className="custom-field-preview-wrapper__date"
-                        label="Date"
-                        type="date"
                         defaultValue=""
                         InputLabelProps={{
                           shrink: true,
                         }}
+                        label="Date"
+                        type="date"
                       />
                       <DeleteIcon className="custom-field-preview-wrapper__delete-icon"/>
                     </div>
@@ -600,12 +618,12 @@ export default function Locations() {
                     <div className="custom-field-preview-wrapper">
                       <TextField
                         className="custom-field-preview-wrapper__date-time"
-                        label="Date Time"
-                        type="datetime-local"
                         defaultValue=""
                         InputLabelProps={{
                           shrink: true,
                         }}
+                        label="Date Time"
+                        type="datetime-local"
                       />
                       <DeleteIcon className="custom-field-preview-wrapper__delete-icon"/>
                     </div>
@@ -614,12 +632,12 @@ export default function Locations() {
                       <FormControl className="custom-field-preview-wrapper__drop-down">
                         <InputLabel htmlFor="age-simple">Drop Down</InputLabel>
                         <Select
-                          value={values.age}
-                          onChange={handleChange}
                           inputProps={{
                             name: 'age',
                             id: 'age-simple',
                           }}
+                          onChange={handleChange}
+                          value={values.age}
                         >
                           <MenuItem value="">
                             <em>None</em>
@@ -638,12 +656,12 @@ export default function Locations() {
                         <RadioGroup
                           aria-label="Gender"
                           name="gender1"
-                          value="rad2"
                           onChange={(e) => console.log(e.target.value)}
+                          value="rad2"
                         >
-                          <FormControlLabel value="rad1" control={<Radio />} label="Radio 1" />
-                          <FormControlLabel value="rad2" control={<Radio />} label="Radio 2" />
-                          <FormControlLabel value="rad3" control={<Radio />} label="Radio 3" />
+                          <FormControlLabel control={<Radio />} label="Radio 1" value="rad1" />
+                          <FormControlLabel control={<Radio />} label="Radio 2" value="rad2" />
+                          <FormControlLabel control={<Radio />} label="Radio 3" value="rad3" />
                         </RadioGroup>
                       </FormControl>
                       <DeleteIcon className="custom-field-preview-wrapper__delete-icon"/>
@@ -662,9 +680,7 @@ export default function Locations() {
                             label="Checkbox 2"
                           />
                           <FormControlLabel
-                            control={
-                              <Checkbox checked={true} onChange={handleChange('antoine')} value="antoine" />
-                            }
+                            control={<Checkbox checked={true} onChange={handleChange('antoine')} value="antoine" />}
                             label="Checkbox 2"
                           />
                         </FormGroup>
@@ -714,26 +730,26 @@ export default function Locations() {
               <PortletFooter>
                 <div className="kt-padding-30 text-center">
                   <button
-                    type="button"
-                    onClick={handleSubmit}
-                    style={loadingButtonPreviewStyle}
                     className={`btn btn-primary btn-elevate kt-login__btn-primary ${clsx(
                       {
                         "kt-spinner kt-spinner--right kt-spinner--md kt-spinner--light": loadingPreview
                       }
                     )}`}
+                    onClick={handleSubmit}
+                    style={loadingButtonPreviewStyle}
+                    type="button"
                   >
                     <i className="la la-eye" /> Preview
                   </button>{" "}
                   <button
-                    type="button"
-                    onClick={handleReset}
-                    style={loadingButtonResetStyle}
                     className={`btn btn-secondary btn-elevate kt-login__btn-primary ${clsx(
                       {
                         "kt-spinner kt-spinner--right kt-spinner--md kt-spinner--dark": loadingReset
                       }
                     )}`}
+                    onClick={handleReset}
+                    style={loadingButtonResetStyle}
+                    type="button"
                   >
                     <i className="la la-recycle" /> Reset
                   </button>
@@ -746,6 +762,6 @@ export default function Locations() {
       </Formik>
     </>
   );
-}
+};
 
-
+export default Locations;

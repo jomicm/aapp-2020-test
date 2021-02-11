@@ -1,26 +1,30 @@
-/* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { Label } from 'reactstrap';
+import SwipeableViews from "react-swipeable-views";
 import {
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Typography,
-  IconButton,
-  Tab, 
   AppBar, 
-  Tabs, 
-  Paper,
-  TextField,
+  Button,
   Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   FormControlLabel,
+  IconButton,
+  InputLabel,
+  Paper,
   Switch,
-  InputLabel
+  Tab, 
+  Tabs, 
+  TextField,
+  Typography,
 } from "@material-ui/core";
-import GoogleMaps from '../../Components/GoogleMaps';
-import ImageUpload from '../../Components/ImageUpload';
-import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import {
+  makeStyles,
+  useTheme,
+  withStyles
+} from "@material-ui/core/styles";
+import CloseIcon from "@material-ui/icons/Close";
 import {
   Portlet,
   PortletBody,
@@ -28,61 +32,51 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from "../../../../partials/content/Portlet";
+import { getOneDB, postDB, updateDB } from '../../../../crud/api';
 import {
-  withStyles,
-  useTheme,
-  makeStyles
-} from "@material-ui/core/styles";
-import SwipeableViews from "react-swipeable-views";
-import CloseIcon from "@material-ui/icons/Close";
-// import CustomFields from '../../Components/CustomFields/CustomFields';
-
-import {
-  SingleLine,
-  MultiLine,
+  Checkboxes,
   Date,
   DateTime,
   DropDown,
+  FileUpload,
+  MultiLine,
   RadioButtons,
-  Checkboxes,
-  FileUpload
+  SingleLine
 } from '../../Components/CustomFields/CustomFieldsPreview';
+import { getFileExtension, getImageURL, saveImage } from '../../utils';
+import GoogleMaps from '../../Components/GoogleMaps';
+import ImageUpload from '../../Components/ImageUpload';
 import { TabsTitles } from '../../Components/Translations/tabsTitles';
-
 import './ModalLocationList.scss';
-
-import { postDB, getOneDB, updateDB } from '../../../../crud/api';
-import { Label } from 'reactstrap';
 
 const localStorageActiveTabKey = "builderActiveTab";
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
-    singleLine: <SingleLine { ...props } />,
-    multiLine: <MultiLine { ...props } />,
+    checkboxes: <Checkboxes { ...props } />,
     date: <Date { ...props } />,
     dateTime: <DateTime { ...props } />,
     dropDown: <DropDown { ...props } />,
+    fileUpload: <FileUpload { ...props } />,
+    multiLine: <MultiLine { ...props } />,
     radioButtons: <RadioButtons { ...props } />,
-    checkboxes: <Checkboxes { ...props } />,
-    fileUpload: <FileUpload { ...props } />
+    singleLine: <SingleLine { ...props } />
   };
   return customFieldsPreviewObj[props.type];
 };
 
-// Example 5 - Modal
-const styles5 = theme => ({
+const DialogActions5 = withStyles(theme => ({
   root: {
     margin: 0,
-    padding: theme.spacing(2)
-  },
-  closeButton: {
-    position: "absolute",
-    right: theme.spacing(1),
-    top: theme.spacing(1),
-    color: theme.palette.grey[500]
+    padding: theme.spacing(1)
   }
-});
+}))(DialogActions);
+
+const DialogContent5 = withStyles(theme => ({
+  root: {
+    padding: theme.spacing(2)
+  }
+}))(DialogContent);
 
 const DialogTitle5 = withStyles(styles5)(props => {
   const { children, classes, onClose } = props;
@@ -102,40 +96,28 @@ const DialogTitle5 = withStyles(styles5)(props => {
   );
 });
 
-const DialogContent5 = withStyles(theme => ({
-  root: {
-    padding: theme.spacing(2)
-  }
-}))(DialogContent);
-
-const DialogActions5 = withStyles(theme => ({
+// Example 5 - Modal
+const styles5 = theme => ({
   root: {
     margin: 0,
-    padding: theme.spacing(1)
+    padding: theme.spacing(2)
+  },
+  closeButton: {
+    position: "absolute",
+    right: theme.spacing(1),
+    top: theme.spacing(1),
+    color: theme.palette.grey[500]
   }
-}))(DialogActions);
+});
 
 // Example 4 - Tabs
-function TabContainer4({ children, dir }) {
+const TabContainer4 = ({ children, dir }) => {
   return (
     <Typography component="div" dir={dir} style={{ padding: 8 * 3 }}>
       {children}
     </Typography>
   );
 }
-const useStyles4 = makeStyles(theme => ({
-  root: {
-    backgroundColor: theme.palette.background.paper,
-    width: 1000
-  }
-}));
-
-// Example 5 - Tabs
-const useStyles5 = makeStyles({
-  root: {
-    flexGrow: 1
-  }
-});
 
 // Example 1 - TextField
 const useStyles = makeStyles(theme => ({
@@ -156,29 +138,50 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ModalLocationProfiles = ({ showModal, setShowModal, profile, parent, setParentSelected, realParent, reload, editOrNew }) => {
-  // console.log('profile: <=>>>>>>', profile)
-  // Example 4 - Tabs
+const useStyles4 = makeStyles(theme => ({
+  root: {
+    backgroundColor: theme.palette.background.paper,
+    width: 1000
+  }
+}));
+
+// Example 5 - Tabs
+const useStyles5 = makeStyles({
+  root: {
+    flexGrow: 1
+  }
+});
+
+const ModalLocationList = ({ editOrNew, parent, profile, realParent, reload, setParentSelected, setShowModal, showModal }) => {
+
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const classes = useStyles();
   const classes4 = useStyles4();
+  const containerStyle = {
+    border: '5px dashed green',
+    position: 'relative',  
+    minWidth: '200px',
+    minHeight: '200px'
+  }
+  const [image, setImage] = useState(null);
+  const [mapCenter, setMapCenter] = useState(null)
+  const [modalCoords, setModalCoords] = useState({lat: 19.432608, lng:  -99.133209})
+  const [modalMapZoom, setModalMapZoom] = useState(12)
+  const [profileLabel, setProfileLabel] = useState('');
+  const style = {
+    border: '5px solid blue',
+    minWidth: '200px',
+    minHeight: '200px'
+  }
+  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [tabs, setTabs] = useState([]);
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
-  function handleChange4(event, newValue) {
-    setValue4(newValue);
-  }
-  function handleChangeIndex4(index) {
-    setValue4(index);
-  }
-
-
-
-  // Example 1 - TextField
-  const classes = useStyles();
   const [values, setValues] = useState({
     categoryPic: '/media/misc/placeholder-image.jpg',
     categoryPicDefault: '/media/misc/placeholder-image.jpg',
     customFieldsTab: {},
+    imageURL: '',
     name: '',
     // level: 0,
     profileName: '',
@@ -187,61 +190,84 @@ const ModalLocationProfiles = ({ showModal, setShowModal, profile, parent, setPa
     parent: ''
   });
 
-  const [profileLabel, setProfileLabel] = useState('');
-
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value });
   };
 
+  const handleChange4 =(event, newValue) => {
+    setValue4(newValue);
+  }
+
+  const handleChangeIndex4 =(index) => {
+    setValue4(index);
+  }
+
+  const handleCloseModal = () => {
+    // setCustomFieldsTab({});
+    setImage(null);
+    setValues({ 
+      categoryPic: '/media/misc/placeholder-image.jpg',
+      categoryPicDefault: '/media/misc/placeholder-image.jpg',
+      name: '', 
+      profileId: '', 
+      profileLevel: '', 
+      profileName: '',
+      parent: '', 
+      customFieldsTab: {} 
+    });
+    setShowModal(false);
+    setValue4(0);
+    setParentSelected('root');
+    setModalCoords({lat: 19.432608, lng:  -99.133209})
+    setModalMapZoom(12)
+    setMapCenter(null)
+    // setIsNew(false);
+  };
+
   const handleSave = () => {
     const fileExt = getFileExtension(image);
-    const body = {...values, fileExt };
+    const body = {...values, fileExt, mapInfo: {lat: modalCoords.lat, lng: modalCoords.lng, zoom: modalMapZoom}};
     if (editOrNew === 'new') {
       body.parent = parent;
-      console.log('save body:', body)
       postDB('locationsReal', body)
         .then(response => {
           reload();
         })
         .catch(error => console.log(error));
-    } else {
-      body.parent = realParent;
-      console.log('edit body:', body)
-      updateDB('locationsReal/', body, parent)
+      } else {
+        body.parent = realParent;
+        updateDB('locationsReal/', body, parent)
         .then(response => {
           reload();
         })
         .catch(error => console.log(error));
-    }
-    handleCloseModal();
-  };
-
-  const handleCloseModal = () => {
-    // setCustomFieldsTab({});
-    setValues({ name: '', profileId: '', profileLevel: '', profileName: '', parent: '', customFieldsTab: {} });
-    setShowModal(false);
-    setValue4(0);
-    setParentSelected('root');
-    // setIsNew(false);
+      }
+      setModalMapZoom(modalMapZoom)
+      handleCloseModal();
+    };
+    
+    // Function to update customFields
+  const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
+    const colValue = ['left', 'right'];
+    const customFieldsTabTmp = { ...values.customFieldsTab };
+    const field = customFieldsTabTmp[tab][colValue[colIndex]]
+    .find(cf => cf.id === id);
+    field.values = CFValues;
   };
 
   useEffect(() => {
-    console.log('USE EFEEEECT NEW>>>>', editOrNew);
     if(!profile || !profile.id || editOrNew === 'edit') return;
     getOneDB('locations/', profile.id)
       .then(response => response.json())
       .then(data => { 
-        console.log('RESPONSE NEW>>>>>', data.response);
         const { _id: profileId, name: profileName, level: profileLevel, customFieldsTab } = data.response;
-        setValues({ ...values, name:'', profileName, profileId, profileLevel, customFieldsTab });
-        console.log('USE EFFECT NEW>>', { ...values, name: '', profileId, profileName, profileLevel, customFieldsTab })
+        const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
         // const tabs = Object.values(customFieldsTab).map(tab => tab.info);
         // const tabs = Object.values(customFieldsTab).map(tab => ({ info: tab.info, content: [tab.left, tab.right] }));
-        const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
-        console.log('PROFILE NAMEEE>>>', profile.name);
         setProfileLabel(profile.name);
         setTabs(tabs);
         setValue4(0);
+        setValues({ ...values, name:'', profileName, profileId, profileLevel, customFieldsTab });
       })
       .catch(error => console.log(error));
   }, [profile.id, editOrNew]);
@@ -251,53 +277,27 @@ const ModalLocationProfiles = ({ showModal, setShowModal, profile, parent, setPa
     getOneDB('locationsReal/', parent)
     .then(response => response.json())
     .then(data => { 
-      console.log('RESPONSE EDIT>>', data.response);
-      const { name, profileId, profileLevel, profileName, customFieldsTab } = data.response;
-      setValues({ ...values, name, profileId, profileLevel, profileName, customFieldsTab });
-      console.log('USE EFFECT EDIT>>', { ...values, profileId, profileLevel, profileName, customFieldsTab })
-      setProfileLabel(profileName);
+      const { name, profileId, profileLevel, profileName, customFieldsTab, mapInfo, fileExt } = data.response;
+      const imageURL = getImageURL(profile.id, 'locations', fileExt);
+      const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
       // const tabs = Object.values(customFieldsTab).map(tab => tab.info);
       // const tabs = Object.values(customFieldsTab).map(tab => ({ info: tab.info, content: [tab.left, tab.right] }));
-      const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
+      setMapCenter({lat: mapInfo.lat, lng: mapInfo.lng})
+      setModalCoords({lat: mapInfo.lat, lng: mapInfo.lng})
+      setModalMapZoom(mapInfo.zoom)
+      setProfileLabel(profileName);
       setTabs(tabs);
       setValue4(0);
+      setValues({ ...values, name, profileId, profileLevel, profileName, customFieldsTab, imageURL });
     })
     .catch(error => console.log(error));
   }, [editOrNew, parent])
 
-  // Function to update customFields
-  const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
-    const colValue = ['left', 'right'];
-    console.log('Looking for you', tab, id, colIndex, values);
-    const customFieldsTabTmp = { ...values.customFieldsTab };
-
-    const field = customFieldsTabTmp[tab][colValue[colIndex]]
-      .find(cf => cf.id === id);
-    field.values = CFValues;
-  };
-
-  const [tabs, setTabs] = useState([]);
-
-  const style = {
-    border: '5px solid blue',
-    minWidth: '200px',
-    minHeight: '200px'
-  }
-
-  const containerStyle = {
-    border: '5px dashed green',
-    position: 'relative',  
-    minWidth: '200px',
-    minHeight: '200px'
-  }
-
-  const [image, setImage] = useState(null);
-
   return (
     <div style={{width:'1000px'}}>
       <Dialog
-        onClose={handleCloseModal}
         aria-labelledby="customized-dialog-title"
+        onClose={handleCloseModal}
         open={showModal}
       >
         <DialogTitle5
@@ -311,11 +311,11 @@ const ModalLocationProfiles = ({ showModal, setShowModal, profile, parent, setPa
             <div className={classes4.root}>
               <Paper className={classes4.root}>
                 <Tabs
-                  value={value4}
-                  onChange={handleChange4}
                   indicatorColor="primary"
+                  onChange={handleChange4}
                   textColor="primary"
                   variant="fullWidth"
+                  value={value4}
                 >
                   <Tab label={profileLabel} />
                   {tabs.map(tab => <Tab label={tab.info.name} />)}
@@ -331,12 +331,12 @@ const ModalLocationProfiles = ({ showModal, setShowModal, profile, parent, setPa
                     <div className="profile-tab-wrapper__content">
                       <InputLabel>{`Selected Level: ${values.profileLevel}`}</InputLabel>
                       <TextField
+                        className={classes.textField}
                         id="standard-name"
                         label="Name"
-                        className={classes.textField}
-                        value={values.name}
-                        onChange={handleChange("name")}
                         margin="normal"
+                        onChange={handleChange("name")}
+                        value={values.name}
                       />
                     </div>
                   </div>
@@ -364,13 +364,16 @@ const ModalLocationProfiles = ({ showModal, setShowModal, profile, parent, setPa
                   />
                   {tab === 0 && (
                     <PortletBody>
-                      PIN MAP
                       <div className="container-map-view-modal">
-                        {/* <GoogleMaps style={{width: '100%', height: '500px', position: 'relative'}}/> */}
-                        <GoogleMaps
-                         containerStyle={containerStyle}
-                         style={style}
-                         />
+                      <GoogleMaps
+                        center={mapCenter}
+                        coords={[modalCoords]}
+                        edit
+                        setCoords={setModalCoords}                        
+                        setZoom={(newZoom) => setModalMapZoom(newZoom)}
+                        zoom={modalMapZoom}
+                      >
+                      </GoogleMaps>
                       </div>
                     </PortletBody>
                   )}
@@ -380,9 +383,12 @@ const ModalLocationProfiles = ({ showModal, setShowModal, profile, parent, setPa
                     </PortletBody>
                   )}
                   {tab === 2 && (
-                    <PortletBody>
-                      <ImageUpload setImage={setImage} image={values.imageURL}>
-                      Sketch Layout
+                    <PortletBody style={{paddingTop: '20px'}}>
+                      <ImageUpload
+                       image={values.imageURL}
+                       setImage={setImage}
+                       >
+                        Sketch Layout
                       </ImageUpload>
                     </PortletBody>
                   )}
@@ -394,17 +400,17 @@ const ModalLocationProfiles = ({ showModal, setShowModal, profile, parent, setPa
                       <div className="modal-location__list-field" >
                         {tab.content[colIndex].map(customField => (
                           <CustomFieldsPreview 
+                            columnIndex={colIndex}
+                          // customFieldIndex={props.customFieldIndex}
+                            from="form"
                             id={customField.id}
-                            type={customField.content}
-                            values={customField.values}
+                            onClick={() => alert(customField.content)}
                             onDelete={() => {}}
                             onSelect={() => {}}
-                            columnIndex={colIndex}
-                            from="form"
-                            tab={tab}
                             onUpdateCustomField={handleUpdateCustomFields}
-                            // customFieldIndex={props.customFieldIndex}
-                            onClick={() => alert(customField.content)}
+                            tab={tab}
+                            type={customField.content}
+                            values={customField.values}
                           />
                         ))}
                       </div>
@@ -428,4 +434,4 @@ const ModalLocationProfiles = ({ showModal, setShowModal, profile, parent, setPa
 
 
 
-export default ModalLocationProfiles;
+export default ModalLocationList;

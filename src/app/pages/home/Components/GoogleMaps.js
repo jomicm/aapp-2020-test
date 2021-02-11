@@ -1,27 +1,50 @@
-import React, { Component } from 'react';
-import { Map, GoogleApiWrapper } from 'google-maps-react';
+import React from "react";
+import { GoogleApiWrapper, InfoWindow, Map, Marker } from "google-maps-react";
 
-const mapStyles = {
-  width: '100%',
-  height: '100%'
-};
+const GoogleMaps = ({ center, coords, edit = false, google, setCoords, setZoom, zoom }) => {
 
-export class MapContainer extends Component {
-  render() {
-    return (
-      <Map
-        google={this.props.google}
-        zoom={12}
-        //style={mapStyles}
-        initialCenter={{
-         lat: 19.432608,
-         lng: -99.133209
-        }}
-      />
-    );
+  const handleClick = (mapProps, map, clickEvent) => {
+    if(edit){
+      const newLat = clickEvent.latLng.lat();
+      const newLng = clickEvent.latLng.lng();
+      setCoords({lat: newLat, lng: newLng});
+    }
   }
+
+  const handleDragend = (mapProps, map, clickEvent) => {
+    if(edit){
+      const newLat = clickEvent.latLng.lat();
+      const newLng = clickEvent.latLng.lng();
+      setCoords({lat: newLat, lng: newLng});
+    }
+  }
+
+  const handleMouse = (mapProps, map, clickEvent) => {
+    if(edit){
+      const newZoom = map.zoom;
+      setZoom(newZoom)
+    }
+  }
+
+  return (
+      <Map
+        initialCenter={center || {lat: 19.432608, lng:  -99.133209}}
+        google={google}
+        onClick={(mapProps, map, clickEvent) => handleClick(mapProps, map, clickEvent)}
+        onMouseout={(mapProps, map, clickEvent) => handleMouse(mapProps, map, clickEvent)}
+        zoom={zoom}
+        >
+        {coords.map(coord => (  
+          <Marker
+            draggable={edit}
+            onDragend={(mapProps, map, clickEvent) => handleDragend(mapProps, map, clickEvent)}
+            position={coord}
+          />
+          ))}
+      </Map>
+  );
 }
 
 export default GoogleApiWrapper({
-  apiKey: 'AIzaSyCaEeuOe9sg0qc0c40bH3-acdVLKWNd7Xg'
-})(MapContainer);
+  apiKey: "AIzaSyCaEeuOe9sg0qc0c40bH3-acdVLKWNd7Xg"
+})(GoogleMaps);
