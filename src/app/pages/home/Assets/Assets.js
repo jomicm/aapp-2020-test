@@ -17,6 +17,8 @@ import {
 // AApp Components
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import TableComponent from '../Components/TableComponent';
+import TableComponent2 from '../Components/TableComponent2';
+// import TableComponent3 from '../Components/TableComponent3';
 import TileView from '../Components/TileView';
 import ModalAssetCategories from './modals/ModalAssetCategories';
 import ModalAssetReferences from './modals/ModalAssetReferences';
@@ -27,7 +29,7 @@ import GoogleMaps from '../Components/GoogleMaps';
 import './Assets.scss';
 
 //DB API methods
-import { getDB, deleteDB } from '../../../crud/api';
+import { getDB, deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 
 const localStorageActiveTabKey = "builderActiveTab";
@@ -91,8 +93,8 @@ export default function Assets() {
     createAssetCategoryRow('Pump', '0.44', 'Admin', '11/03/2020'),
   ];
 
-  const createAssetReferenceRow = (id, name, brand, model, category, creator, creation_date) => {
-    return { id, name, brand, model, category, creator, creation_date };
+  const createAssetReferenceRow = (id, name, brand, model, category, creator, creation_date, price) => {
+    return { id, name, brand, model, category, creator, creation_date, price};
   };
 
   const assetReferencesHeadRows = [
@@ -101,7 +103,8 @@ export default function Assets() {
     { id: "model", numeric: true, disablePadding: false, label: "Model" },
     { id: "category", numeric: true, disablePadding: false, label: "Category" },
     { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-    { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
+    { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" },
+    { id: "price", numeric: false, disablePadding: false, label: "Price" }
   ];
 
   const assetReferencesRows = [
@@ -137,7 +140,7 @@ export default function Assets() {
 
   const [anchorEl, setAnchorEl] = React.useState(null);
 
-  const loadAssetsData = (collectionNames = ['assets', 'references', 'categories']) => {
+  const loadAssetsData = (collectionNames = ['assets', 'categories']) => {
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
       getDB(collectionName)
@@ -170,9 +173,50 @@ export default function Assets() {
     });
   };
 
-  useEffect(() => {
-    loadAssetsData();
-  }, []);
+  const getReferenceData = () => {
+    const queryLike = ['name', 'brand', 'model'].map(key => ({ key, value: referenceTableControl.search }))
+    //Get total elements in the collection
+    getCountDB({ 
+      collection: 'references', 
+      count: true,
+      queryLike: queryLike
+    })
+      .then(response => response.json())
+      .then(data => setReferenceTableControl(prev => ({
+        ...prev, 
+        total: data.response.count
+      })));
+      
+    //Get the specific rows for the slected page
+    if(referenceTableControl.search.length > 0){
+      getDBComplex({
+        collection: 'references', 
+        queryLike: queryLike
+      })
+      .then(response => response.json())
+      .then(data => {
+        const rows = data.response.map(row => {
+          return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.category, 'Admin', '11/03/2020', row.price);
+        });
+        setControl(prev => ({ ...prev, referenceRows: rows, referenceRowsSelected: [] }));
+      })
+    }
+    else {
+      getDBComplex({ 
+        collection: 'references', 
+        limit: referenceTableControl.rowsPerPage, 
+        skip: referenceTableControl.rowsPerPage * referenceTableControl.page,
+        sort: [{key: referenceTableControl.orderBy, value: referenceTableControl.order}]
+      })
+        .then(response => response.json())
+        .then(data => {
+          const rows = data.response.map(row => {
+            return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.category, 'Admin', '11/03/2020', row.price);
+          });
+          setControl(prev => ({ ...prev, referenceRows: rows, referenceRowsSelected: [] }));
+        })
+    }
+  };
 
   const [control, setControl] = useState({
     idReference: null,
@@ -193,6 +237,14 @@ export default function Assets() {
     assetRowsSelected: [],
   });
 
+  const [referenceTableControl, setReferenceTableControl] = useState({
+    total: 0,
+    page: 0,
+    rowsPerPage: 5,
+    orderBy: 'name',
+    order: 1,
+    search: '',
+  }); 
   const [referencesSelectedId, setReferencesSelectedId] = useState(null);
   const [selectReferenceConfirmation, setSelectReferenceConfirmation] = useState(false);
 
@@ -245,6 +297,14 @@ export default function Assets() {
       }
     }
   };
+
+  useEffect(() => {
+    loadAssetsData();
+  }, []);
+
+  useEffect(() => {
+    getReferenceData();
+  }, [referenceTableControl.page, referenceTableControl.rowsPerPage, referenceTableControl.order, referenceTableControl.orderBy, referenceTableControl.search]);
 
   return (
     <>
@@ -332,13 +392,34 @@ export default function Assets() {
                         <ModalAssetReferences
                           showModal={control.openReferencesModal}
                           setShowModal={(onOff) => setControl({ ...control, openReferencesModal: onOff })}
-                          reloadTable={() => loadAssetsData('references')}
+                          reloadTable={() => getReferenceData}
                           id={control.idReference}
                           categoryRows={control.categoryRows}
                         />
                         <div className="kt-separator kt-separator--dashed" />
                         <div className="kt-section__content">
-                          <TableComponent
+                          <TableComponent2
+                            defaultValues={referenceTableControl}
+                            sortByControl={({orderBy, order}) => {
+                              setReferenceTableControl({
+                                ...referenceTableControl, 
+                                orderBy: orderBy,
+                                order: order,
+                              })
+                            }}
+                            paginationControl={({ rowsPerPage, page }) => 
+                              setReferenceTableControl({
+                                ...referenceTableControl, 
+                                rowsPerPage: rowsPerPage,
+                                page: page,
+                              })
+                            }
+                            searchControl={(value) => {
+                              setReferenceTableControl({
+                                ...referenceTableControl, 
+                                search: value,
+                              })
+                            }}
                             title={'Asset References'}
                             headRows={assetReferencesHeadRows}
                             rows={control.referenceRows}
@@ -362,11 +443,11 @@ export default function Assets() {
                         <span className="kt-section__sub">
                           This section will integrate <code>Assets Categories</code>
                         </span>
-                        <Button variant='contained' onClick={() => control.openTileView ? setControl({...control, openTileView: false}):setControl({...control, openTileView: true})} >Tile View</Button>
+                        <Button variant='contained' onClick={() => control.openTileView ? setControl({ ...control, openTileView: false }) : setControl({ ...control, openTileView: true })} >Tile View</Button>
                         <div className="kt-separator kt-separator--dashed" />
-                        <TileView 
+                        <TileView
                           showTileView={control.openTileView}
-                          tiles={control.categories} 
+                          tiles={control.categories}
                           collection='categories'
                           onEdit={tableActions('categories').onEdit}
                           onDelete={tableActions('categories').onDelete}

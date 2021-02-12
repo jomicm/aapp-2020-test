@@ -4,13 +4,15 @@ const version  = 'api/v1/';
 const db = 'notes-db-app/';
 const collection = 'locations/';
 const publicReq = 'public/';
+const count = 'count/';
 
 const getAPIPath = (
   _collection = collection,
   _id = '',
   isEncrypt = false,
-  isPublic =  false
-) => `${host}${version}${isPublic ? publicReq : ''}${db}${_collection}${_id}${isEncrypt ? '/encrypt' : ''}`;
+  isPublic =  false,
+  isCount = false,
+) => `${host}${version}${isPublic ? publicReq : ''}${isCount? count : ''}${db}${_collection}${_id}${isEncrypt ? '/encrypt' : ''}`;
 const getAPIFilePath = (foldername) => `${host}${version}upload/${foldername}`;
 
 
@@ -68,6 +70,62 @@ const getDBComplex = ({
   skip,
   fields
 }) => {
+  let count = 0;
+  let additionalParams = '';
+  if (queryLike) {
+    const qLike = queryLike.map(({ key, value }) => {
+      const res = {};
+      res[key] = { "$regex" : `(?i).*${value}.*` };
+      return res;
+    });
+    const queryString = JSON.stringify({ "$or": qLike });
+    additionalParams += `query=${queryString}`;
+  }
+  else {
+    if(typeof skip === 'number'){
+      count === 0 ? additionalParams += `skip=${skip}` : additionalParams += `&skip=${skip}`;
+      count++;
+    };
+    if(typeof limit === 'number'){
+      count === 0 ? additionalParams += `limit=${limit}` :  additionalParams += `&limit=${limit}`;
+      count++;
+    };
+    if(Array.isArray(fields)){
+      let res = '{';
+      for(let i = 0; i< fields.length; i++){
+        res += '"'+ fields[i].key + '":' + fields[i].value; 
+        if(i+1 < fields.length){
+          res += ',';
+        };
+      }; 
+      res += '}';
+      count === 0 ? additionalParams += `fields=${res}` :  additionalParams += `&fields=${res}`;
+      count++;
+    };
+    if(Array.isArray(sort)){
+      let res = '{';
+      for(let i = 0; i< sort.length; i++){
+        res += '"'+ sort[i].key + '":' + sort[i].value; 
+        if(i+1 < sort.length){
+          res += ',';
+        };
+      }; 
+      res += '}';
+      count === 0 ? additionalParams += `sort=${res}` :  additionalParams += `&sort=${res}`;
+      count++;
+    }
+  }
+  additionalParams = additionalParams ? `?${additionalParams}` : '';
+  const reqURL = `${getAPIPath(collection)}${additionalParams}`;
+  console.log('reqURL:', reqURL)
+
+  return fetch(reqURL, { method: 'GET', headers: getHeaders() });
+};
+
+const getCountDB = ({
+  collection,
+  queryLike,
+}) => {
   let additionalParams = '';
   if (queryLike) {
     const qLike = queryLike.map(({ key, value }) => {
@@ -79,12 +137,11 @@ const getDBComplex = ({
     additionalParams += `query=${queryString}`;
   }
   additionalParams = additionalParams ? `?${additionalParams}` : '';
-  const reqURL = `${getAPIPath(collection)}${additionalParams}`;
+  const reqURL = `${getAPIPath(collection, '', false, false, count)}${additionalParams}`;
   console.log('reqURL:', reqURL)
 
   return fetch(reqURL, { method: 'GET', headers: getHeaders() });
 };
-
 module.exports = {
   deleteDB,
   getDB,
@@ -94,5 +151,6 @@ module.exports = {
   postDBEncryptPassword,
   postFILE,
   updateDB,
-  getDBComplex
+  getDBComplex,
+  getCountDB
 };

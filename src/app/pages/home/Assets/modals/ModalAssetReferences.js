@@ -173,7 +173,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
     name: '',
     brand: '',
     model: '',
-    price: '',
+    price: 0,
     depreciation: 0,
     categoryPic: '/media/misc/placeholder-image.jpg',
     categoryPicDefault: '/media/misc/placeholder-image.jpg',
@@ -186,6 +186,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
 
   const handleChange = name => event => {
     const value = event.target.value;
+    console.log('value:', value, name)
     setValues(prev => ({ ...prev, [name]: value }));
     // Load Custom Fields based on Select Control [Category Selected]
     if (name === 'selectedProfile') {
@@ -220,8 +221,8 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
   const handleSave = () => {
     const fileExt = getFileExtension(image);
     const body = { ...values, customFieldsTab, fileExt };
-    console.log('body:', body)
-    // console.log('isNew:', isNew)
+    body.price = Number(body.price)
+    body.depreciation = Number(body.depreciation)
     if (!id) {
       postDB('references', body)
         .then(data => data.json())
