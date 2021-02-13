@@ -3,7 +3,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { Formik, setNestedObjectValues } from "formik";
 import { get, merge } from "lodash";
-import { FormHelperText, Switch, Tab, Tabs, Styles, Button } from "@material-ui/core";
+import { FormHelperText, Switch, Tab, Tabs, Styles, Button, Grid, responsiveFontSizes } from "@material-ui/core";
 import clsx from "clsx";
 import { metronic, initLayoutConfig, LayoutConfig } from "../../../../_metronic";
 import {
@@ -110,8 +110,8 @@ export default function Assets() {
     createAssetReferenceRow('Pump', 'CKT', 'wedsd52', 'Vehicles', 'Admin', '11/03/2020'),
   ];
 
-  const createAssetListRow = (id, name, brand, model, category, serial, EPC, creator, creation_date) => {
-    return { id, name, brand, model, category, serial, EPC, creator, creation_date };
+  const createAssetListRow = (id, name, brand, model, category, serial, EPC, creator, creation_date, location) => {
+    return { id, name, brand, model, category, serial, EPC, creator, creation_date, location };
   };
 
   const assetListHeadRows = [
@@ -137,7 +137,9 @@ export default function Assets() {
 
   const [anchorEl, setAnchorEl] = React.useState(null);
 
-  const loadAssetsData = (collectionNames = ['assets', 'references', 'categories']) => {
+  let locations;
+  const [locationsTree, setLocationsTree] = useState({});
+  const loadAssetsData = (collectionNames = ['assets', 'references', 'categories', 'locationsReal']) => {
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
       getDB(collectionName)
@@ -147,7 +149,7 @@ export default function Assets() {
             console.log('d:', data)
             const rows = data.response.map(row => {
               console.log('row:', row)
-              return createAssetListRow(row._id, row.name, row.brand, row.model, row.category, row.serial, row.EPC, 'Admin', '11/03/2020');
+              return createAssetListRow(row._id, row.name, row.brand, row.model, row.category, row.serial, row.EPC, 'Admin', '11/03/2020', row.location);
             });
             setControl(prev => ({ ...prev, assetRows: rows, assetRowsSelected: [] }));
             console.log('inside assets', rows)
@@ -165,11 +167,50 @@ export default function Assets() {
             });
             setControl(prev => ({ ...prev, categoryRows: rows, categoryRowsSelected: [], categories: categoriesInfo }));
           }
+          if (collectionName === 'locationsReal') {
+            locations = data.response.map(res => ({ ...res, id: res._id }));
+            const homeLocations = data.response.filter(loc => loc.profileLevel === 0);
+            const children = constructLocationTreeRecursive(homeLocations);
+            locationsTreeData.children = children;
+            setLocationsTree(locationsTreeData);
+          }
         })
         .catch(error => console.log('error>', error));
     });
   };
-
+  const locationsTreeData = {
+    id: 'root',
+    name: 'Locations',
+    profileLevel: -1,
+    parent: null
+  };
+  const constructLocationTreeRecursive = (locs) => {
+    if (!locs || !Array.isArray(locs) || !locs.length) return [];
+    let res = [];
+    locs.forEach((location) => {
+      const locObj = (({ _id: id, name, profileLevel, parent }) => ({ id, name, profileLevel, parent }))(location);
+      const children = locations.filter(loc => loc.parent === locObj.id);
+      locObj.children = constructLocationTreeRecursive(children);
+      res.push(locObj);
+    });
+    return res;
+  };
+  const locationsChildren = (children, res) => {
+    if (!children || !Array.isArray(children) || !children.length) return [];
+    children.map((child) => {
+      locationsChildren(child.children, res);
+      res.push(child.id);
+    })
+    return res;
+  }
+  const selectLocation = (locationId, level, parent, locationName, children) => {
+    let res = [];
+    let allchildren = locationsChildren(children, res)
+    allchildren.push(locationId)
+    let filtered = control.assetRows.filter((row) => allchildren.includes(row.location))
+    console.log('filtered: ', filtered)
+    setControl({ ...control, treeViewFiltering: filtered })
+  };
   useEffect(() => {
     loadAssetsData();
   }, []);
@@ -189,6 +230,8 @@ export default function Assets() {
     //
     idAsset: null,
     openAssetsModal: false,
+    openTreeView: false,
+    treeViewFiltering: [],
     assetRows: [],
     assetRowsSelected: [],
   });
@@ -246,6 +289,10 @@ export default function Assets() {
     }
   };
 
+  const toggleTreeView = () => {
+    control.openTreeView ? setControl({ ...control, openTreeView: false }) : setControl({ ...control, openTreeView: true })
+  };
+
   return (
     <>
       <ModalYesNo
@@ -295,6 +342,12 @@ export default function Assets() {
                         <span className="kt-section__sub">
                           This section will integrate <code>Assets List</code>
                         </span>
+                        <Button
+                          variant="contained"
+                          onClick={() => toggleTreeView()}
+                        >
+                          Tree View
+                        </Button>
                         <ModalAssetList
                           showModal={control.openAssetsModal}
                           setShowModal={(onOff) => setControl({ ...control, openAssetsModal: onOff })}
@@ -305,15 +358,28 @@ export default function Assets() {
                         />
                         <div className="kt-separator kt-separator--dashed" />
                         <div className="kt-section__content">
-                          <TableComponent
-                            title={'Asset List'}
-                            headRows={assetListHeadRows}
-                            rows={control.assetRows}
-                            onEdit={tableActions('assets').onEdit}
-                            onAdd={tableActions('assets').onAdd}
-                            onDelete={tableActions('assets').onDelete}
-                            onSelect={tableActions('assets').onSelect}
-                          />
+                          {
+                            <Grid container>
+                              {
+                                control.openTreeView && (
+                                  <Grid item sm={12} md={2} lg={2}>
+                                    <TreeView data={locationsTree} onClick={selectLocation} />
+                                  </Grid>
+                                )
+                              }
+                              <Grid item sm={12} md={12} lg={control.openTreeView ? 10 : 12} >
+                                <TableComponent
+                                  title={'Asset List'}
+                                  headRows={assetListHeadRows}
+                                  rows={control.openTreeView ? control.treeViewFiltering : control.assetRows}
+                                  onEdit={tableActions('assets').onEdit}
+                                  onAdd={tableActions('assets').onAdd}
+                                  onDelete={tableActions('assets').onDelete}
+                                  onSelect={tableActions('assets').onSelect}
+                                />
+                              </Grid>
+                            </Grid>
+                          }
                         </div>
                       </div>
                     </div>
@@ -362,11 +428,11 @@ export default function Assets() {
                         <span className="kt-section__sub">
                           This section will integrate <code>Assets Categories</code>
                         </span>
-                        <Button variant='contained' onClick={() => control.openTileView ? setControl({...control, openTileView: false}):setControl({...control, openTileView: true})} >Tile View</Button>
+                        <Button variant='contained' onClick={() => control.openTileView ? setControl({ ...control, openTileView: false }) : setControl({ ...control, openTileView: true })} >Tile View</Button>
                         <div className="kt-separator kt-separator--dashed" />
-                        <TileView 
+                        <TileView
                           showTileView={control.openTileView}
-                          tiles={control.categories} 
+                          tiles={control.categories}
                           collection='categories'
                           onEdit={tableActions('categories').onEdit}
                           onDelete={tableActions('categories').onDelete}
