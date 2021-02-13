@@ -277,8 +277,6 @@ const ModalAssetsSpecialists = ({ showModal, setShowModal, reloadTable, id, empl
     if (locationSelected.length !== 24) {
       locationSelected = '';
     }
-    console.log('locationSelected: ', locationSelected)
-    console.log('locationName: ',locationName)
     setValues(prev => ({ ...prev, location: { locationSelected, locationName } }))
   };
 

@@ -111,7 +111,7 @@ export default function Assets() {
   ];
 
   const createAssetListRow = (id, name, brand, model, category, serial, EPC, creator, creation_date, location) => {
-    return { id, name, brand, model, category, serial, EPC, creator, creation_date, location};
+    return { id, name, brand, model, category, serial, EPC, creator, creation_date, location };
   };
 
   const assetListHeadRows = [
@@ -195,7 +195,7 @@ export default function Assets() {
     });
     return res;
   };
-  const locationsChildren = (children, res) =>{
+  const locationsChildren = (children, res) => {
     if (!children || !Array.isArray(children) || !children.length) return [];
     children.map((child) => {
       locationsChildren(child.children, res);
@@ -209,7 +209,7 @@ export default function Assets() {
     allchildren.push(locationId)
     let filtered = control.assetRows.filter((row) => allchildren.includes(row.location))
     console.log('filtered: ', filtered)
-    setControl({...control, treeViewFiltering: filtered})
+    setControl({ ...control, treeViewFiltering: filtered })
   };
   useEffect(() => {
     loadAssetsData();
@@ -290,7 +290,7 @@ export default function Assets() {
   };
 
   const toggleTreeView = () => {
-    control.openTreeView ? setControl({ ...control, openTreeView: false }) : setControl({ ...control, openTreeView: true }) 
+    control.openTreeView ? setControl({ ...control, openTreeView: false }) : setControl({ ...control, openTreeView: true })
   };
 
   return (
@@ -359,33 +359,26 @@ export default function Assets() {
                         <div className="kt-separator kt-separator--dashed" />
                         <div className="kt-section__content">
                           {
-                            control.openTreeView ?
-                              <TableComponent
-                                title={'Asset List'}
-                                headRows={assetListHeadRows}
-                                rows={control.assetRows}
-                                onEdit={tableActions('assets').onEdit}
-                                onAdd={tableActions('assets').onAdd}
-                                onDelete={tableActions('assets').onDelete}
-                                onSelect={tableActions('assets').onSelect}
-                              />
-                              :
-                              <Grid container>
-                                <Grid item sm={12} md={2} lg={2}>
-                                  <TreeView data={locationsTree} onClick={selectLocation} />
-                                </Grid>
-                                <Grid item sm={12} md={10} lg={10} >
-                                  <TableComponent
-                                    title={'Asset List'}
-                                    headRows={assetListHeadRows}
-                                    rows={control.treeViewFiltering}
-                                    onEdit={tableActions('assets').onEdit}
-                                    onAdd={tableActions('assets').onAdd}
-                                    onDelete={tableActions('assets').onDelete}
-                                    onSelect={tableActions('assets').onSelect}
-                                  />
-                                </Grid>
+                            <Grid container>
+                              {
+                                control.openTreeView && (
+                                  <Grid item sm={12} md={2} lg={2}>
+                                    <TreeView data={locationsTree} onClick={selectLocation} />
+                                  </Grid>
+                                )
+                              }
+                              <Grid item sm={12} md={12} lg={control.openTreeView ? 10 : 12} >
+                                <TableComponent
+                                  title={'Asset List'}
+                                  headRows={assetListHeadRows}
+                                  rows={control.openTreeView ? control.treeViewFiltering : control.assetRows}
+                                  onEdit={tableActions('assets').onEdit}
+                                  onAdd={tableActions('assets').onAdd}
+                                  onDelete={tableActions('assets').onDelete}
+                                  onSelect={tableActions('assets').onSelect}
+                                />
                               </Grid>
+                            </Grid>
                           }
                         </div>
                       </div>
@@ -435,11 +428,11 @@ export default function Assets() {
                         <span className="kt-section__sub">
                           This section will integrate <code>Assets Categories</code>
                         </span>
-                        <Button variant='contained' onClick={() => control.openTileView ? setControl({...control, openTileView: false}):setControl({...control, openTileView: true})} >Tile View</Button>
+                        <Button variant='contained' onClick={() => control.openTileView ? setControl({ ...control, openTileView: false }) : setControl({ ...control, openTileView: true })} >Tile View</Button>
                         <div className="kt-separator kt-separator--dashed" />
-                        <TileView 
+                        <TileView
                           showTileView={control.openTileView}
-                          tiles={control.categories} 
+                          tiles={control.categories}
                           collection='categories'
                           onEdit={tableActions('categories').onEdit}
                           onDelete={tableActions('categories').onDelete}
