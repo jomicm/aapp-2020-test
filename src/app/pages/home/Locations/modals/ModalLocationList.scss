@@ -10,10 +10,22 @@
 //   }
 // }
 
-.container-map-view-modal {
+.container-map-delete-modal-location-list {
   // border: 1px solid red;
+  display: flex;
+  flex-direction: column;
+}
+
+.container-map-view-modal-location-list {
+  // border: 1px solid blue;
   width: 100%;
   min-height: 400px;
+}
+
+.container-delete-modal-location-list {
+  // border: 1px solid green;
+  display: flex;
+  justify-content: flex-end;
 }
 
 // .locations-list {

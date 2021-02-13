@@ -7,7 +7,7 @@ const GoogleMaps = ({ center, coords, edit = false, google, setCoords, setZoom, 
     if(edit){
       const newLat = clickEvent.latLng.lat();
       const newLng = clickEvent.latLng.lng();
-      setCoords({lat: newLat, lng: newLng});
+      setCoords([{lat: newLat, lng: newLng}]);
     }
   }
 
@@ -25,6 +25,8 @@ const GoogleMaps = ({ center, coords, edit = false, google, setCoords, setZoom, 
       setZoom(newZoom)
     }
   }
+
+  console.log('GOOGLEMAPS>coords: ', coords)
 
   return (
       <Map

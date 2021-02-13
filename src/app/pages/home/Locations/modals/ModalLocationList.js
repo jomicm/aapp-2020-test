@@ -19,6 +19,7 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
+import DeleteIcon from '@material-ui/icons/Delete';
 import {
   makeStyles,
   useTheme,
@@ -138,7 +139,19 @@ const useStyles = makeStyles(theme => ({
   },
   menu: {
     width: 200
-  }
+  },
+  button: {
+    margin: theme.spacing(1),
+  },
+  leftIcon: {
+    marginRight: theme.spacing(1),
+  },
+  rightIcon: {
+    marginLeft: theme.spacing(1),
+  },
+  iconSmall: {
+    fontSize: 20,
+  },
 }));
 
 const useStyles4 = makeStyles(theme => ({
@@ -155,7 +168,7 @@ const useStyles5 = makeStyles({
   }
 });
 
-const ModalLocationList = ({ editOrNew, parent, profile, realParent, reload, setParentSelected, setShowModal, showModal }) => {
+const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, reload, setParentSelected, setShowModal, showModal }) => {
 
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const classes = useStyles();
@@ -168,8 +181,9 @@ const ModalLocationList = ({ editOrNew, parent, profile, realParent, reload, set
   }
   const [image, setImage] = useState(null);
   const [mapCenter, setMapCenter] = useState(null)
-  const [modalCoords, setModalCoords] = useState({lat: 19.432608, lng:  -99.133209})
+  const [modalCoords, setModalCoords] = useState([{lat: 19.432608, lng:  -99.133209}])
   const [modalMapZoom, setModalMapZoom] = useState(12)
+  const [visiblePin, setVisiblePin] = useState(true)
   const [profileLabel, setProfileLabel] = useState('');
   const style = {
     border: '5px solid blue',
@@ -221,15 +235,29 @@ const ModalLocationList = ({ editOrNew, parent, profile, realParent, reload, set
     setShowModal(false);
     setValue4(0);
     setParentSelected('root');
-    setModalCoords({lat: 19.432608, lng:  -99.133209})
+    setModalCoords([])
     setModalMapZoom(12)
     setMapCenter(null)
+    setVisiblePin(true)
     // setIsNew(false);
   };
 
   const handleSave = () => {
     const fileExt = getFileExtension(image);
-    const body = {...values, fileExt, mapInfo: {lat: modalCoords.lat, lng: modalCoords.lng, zoom: modalMapZoom}};
+    let body;
+    if(modalMapZoom !== null){
+      body = {
+        ...values, 
+        fileExt,
+        mapInfo: {lat: modalCoords[0].lat, lng: modalCoords[0].lng, zoom: modalMapZoom}
+      };
+    }else{
+      body = {
+      ...values, 
+      fileExt,
+      mapInfo: null
+    };
+  }
     if (editOrNew === 'new') {
       body.parent = parent;
       postDB('locationsReal', body)
@@ -245,9 +273,14 @@ const ModalLocationList = ({ editOrNew, parent, profile, realParent, reload, set
         })
         .catch(error => console.log(error));
       }
-      setModalMapZoom(modalMapZoom)
       handleCloseModal();
+      setModalMapZoom(modalMapZoom)
     };
+
+  const handlePinDelete = () => {
+    setModalCoords([{}])
+    setModalMapZoom(null)
+  }
     
     // Function to update customFields
   const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
@@ -264,13 +297,13 @@ const ModalLocationList = ({ editOrNew, parent, profile, realParent, reload, set
       .then(response => response.json())
       .then(data => { 
         const { _id: profileId, name: profileName, level: profileLevel, customFieldsTab } = data.response;
-        const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
+        setValues({ ...values, name:'', profileName, profileId, profileLevel, customFieldsTab });
+        setProfileLabel(profile.name);
         // const tabs = Object.values(customFieldsTab).map(tab => tab.info);
         // const tabs = Object.values(customFieldsTab).map(tab => ({ info: tab.info, content: [tab.left, tab.right] }));
-        setProfileLabel(profile.name);
+        const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
         setTabs(tabs);
         setValue4(0);
-        setValues({ ...values, name:'', profileName, profileId, profileLevel, customFieldsTab });
       })
       .catch(error => console.log(error));
   }, [profile.id, editOrNew]);
@@ -280,18 +313,18 @@ const ModalLocationList = ({ editOrNew, parent, profile, realParent, reload, set
     getOneDB('locationsReal/', parent)
     .then(response => response.json())
     .then(data => { 
-      const { name, profileId, profileLevel, profileName, customFieldsTab, mapInfo, fileExt } = data.response;
+      const { _id, name, profileId, profileLevel, profileName, customFieldsTab, mapInfo, fileExt } = data.response;      
       const imageURL = getImageURL(profile.id, 'locations', fileExt);
-      const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
-      // const tabs = Object.values(customFieldsTab).map(tab => tab.info);
-      // const tabs = Object.values(customFieldsTab).map(tab => ({ info: tab.info, content: [tab.left, tab.right] }));
+      setValues({ ...values, name, profileId, profileLevel, profileName, customFieldsTab, imageURL });
       setMapCenter({lat: mapInfo.lat, lng: mapInfo.lng})
-      setModalCoords({lat: mapInfo.lat, lng: mapInfo.lng})
+      setModalCoords([{lat: mapInfo.lat, lng: mapInfo.lng}])
       setModalMapZoom(mapInfo.zoom)
       setProfileLabel(profileName);
+      // const tabs = Object.values(customFieldsTab).map(tab => tab.info);
+      // const tabs = Object.values(customFieldsTab).map(tab => ({ info: tab.info, content: [tab.left, tab.right] }));
+      const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
       setTabs(tabs);
       setValue4(0);
-      setValues({ ...values, name, profileId, profileLevel, profileName, customFieldsTab, imageURL });
     })
     .catch(error => console.log(error));
   }, [editOrNew, parent])
@@ -368,17 +401,30 @@ const ModalLocationList = ({ editOrNew, parent, profile, realParent, reload, set
                   />
                   {tab === 0 && (
                     <PortletBody>
-                      <div className="container-map-view-modal">
-                      <GoogleMaps
-                        center={mapCenter}
-                        coords={[modalCoords]}
-                        edit
-                        setCoords={setModalCoords}                        
-                        setZoom={(newZoom) => setModalMapZoom(newZoom)}
-                        styleMap={{margin: '20px 20px 0 0', width: '95%', height: '63%'}}
-                        zoom={modalMapZoom}
-                      >
-                      </GoogleMaps>
+                      <div className='container-map-delete-modal-location-list'>
+                        <div className='container-delete-modal-location-list'>
+                          <Button
+                           className={classes.button}
+                           color="secondary"
+                           onClick={() => handlePinDelete()} 
+                           variant="contained" 
+                           >
+                            Delete PIN
+                            <DeleteIcon className={classes.rightIcon} />
+                          </Button>
+                        </div>
+                        <div className='container-map-view-modal-location-list'>
+                          <GoogleMaps
+                            center={mapCenter}
+                            coords={modalCoords}
+                            edit
+                            setCoords={setModalCoords}                
+                            setZoom={(newZoom) => setModalMapZoom(newZoom)}
+                            styleMap={{marginRight: '20px', width: '95%', height: '63%'}}
+                            zoom={modalMapZoom}
+                          >
+                          </GoogleMaps>
+                        </div>
                       </div>
                     </PortletBody>
                   )}

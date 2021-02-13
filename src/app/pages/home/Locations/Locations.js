@@ -165,6 +165,7 @@ const Locations = () => {
   const [locationProfileRows, setLocationProfileRows] = useState([]);
   const [locationsTree, setLocationsTree] = useState({});
   const [mapCenter, setMapCenter] = useState(null);
+  const [modalId, setModalId] = useState(null)
   const [parentSelected, setParentSelected] = useState(null);
   const [profileSelected, setProfileSelected] = useState({});
   const [openListModal, setOpenListModal] = useState(false);
@@ -291,8 +292,15 @@ const Locations = () => {
     }else{
       const result = locations.filter(location =>  location.id === id)
       const latLngZoom = result.map( (coordinate) => coordinate.mapInfo)
+      console.log('latLngZoom: ', latLngZoom)
+      if(latLngZoom[0] === null){
+        setMapCenter({lat: 19.432608, lng:  -99.133209})
+        console.log('mapCenter: ', mapCenter)
+        setGoogleMapsZoom(12)
+      }else{
       setMapCenter({lat: latLngZoom[0].lat, lng: latLngZoom[0].lng})
       setGoogleMapsZoom(latLngZoom[0].zoom)
+      }
     }
   }
 
@@ -339,6 +347,7 @@ const Locations = () => {
   };
 
   const handleSetProfileLocationFilter = (parent, level, realParent) => {
+    setModalId(parent)
     getChildren(parent)
     getSelfCenter(parent)
     const lvl = Number(level) + 1;
@@ -397,6 +406,7 @@ const Locations = () => {
                           </span>
                           <ModalLocationList
                             editOrNew={editOrNew}
+                            modalId={modalId}
                             parent={parentSelected}
                             profile={profileSelected}
                             realParent={realParentSelected}
