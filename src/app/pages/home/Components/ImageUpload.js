@@ -21,7 +21,7 @@ const ImageUpload = ({ children, setImage = () => {}, image = null }) => {
   useEffect(() => {
     setValues({
       ...values,
-      categoryPic: image? `${image}?${new Date()}` : values.categoryPicDefault
+      categoryPic: image ? `${image}?${new Date()}` : values.categoryPicDefault
     });
   }, [image]);
 

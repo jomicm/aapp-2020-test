@@ -3,7 +3,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { Formik, setNestedObjectValues } from "formik";
 import { get, merge } from "lodash";
-import { FormHelperText, Switch, Tab, Tabs, Styles, Button } from "@material-ui/core";
+import { Button, FormHelperText, Switch, Styles, Tab, Tabs} from "@material-ui/core";
 import clsx from "clsx";
 import { metronic, initLayoutConfig, LayoutConfig } from "../../../../_metronic";
 import {

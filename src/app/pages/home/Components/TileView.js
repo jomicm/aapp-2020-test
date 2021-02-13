@@ -1,22 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Typography, Collapse, IconButton } from '@material-ui/core';
+import React, { useState  } from 'react';
+import { Collapse,  IconButton, Typography } from '@material-ui/core';
 import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
 
 import ModalYesNo from '../Components/ModalYesNo';
 import { getImageURL } from '../utils';
-import {TileViewStyles} from './styles';
-
+import { TileViewStyles } from './styles';
 
 const TileView = ({ 
-  tiles, 
   collection, 
-  tailWidth = '120px', 
-  tailHeight = '120px', 
-  onEdit, 
   onDelete, 
-  onReload, 
-  showTileView
+  onEdit,  
+  onReload,
+  showTileView, 
+  tailHeight = '120px',
+  tailWidth = '120px', 
+  tiles
  }) => {
   const classes = TileViewStyles();
   const [selectedId, setSelectedId] = useState([]);
@@ -35,11 +34,11 @@ const TileView = ({
     <Collapse in={showTileView}>
       <div className={classes.root}>
         <ModalYesNo
-          showModal={openYesNoModal[0]}
-          onOK={() => confirmDelete()}
-          onCancel={() => setOpenYesNoModal([false, []])}
-          title={'Remove Element'}
           message={'Are you sure you want to remove this element?'}
+          onCancel={() => setOpenYesNoModal([false, []])}
+          onOK={() => confirmDelete()}
+          showModal={openYesNoModal[0]}
+          title={'Remove Element'}
         />
           <div className={classes.container}>
             {tiles.map((tile) => {
@@ -47,10 +46,10 @@ const TileView = ({
               return (
                 <div 
                   className={classes.tile} 
-                  style={{ width: tailWidth, height: tailHeight }} 
+                  key={tile._id}
                   onMouseEnter={() => onTileHover(tile._id)} 
                   onMouseLeave={() => onTileHover(null)} 
-                  key={tile._id}
+                  style={{ width: tailWidth, height: tailHeight }} 
                 >
                   <img 
                     src={imageURL ? `${imageURL}?${new Date()}` : 'http://localhost:3000/media/misc/placeholder-image.jpg'} 
@@ -60,8 +59,7 @@ const TileView = ({
                     alt='Categories' 
                   />
                   {
-                    tile._id === selectedId[0] ?
-                    (
+                    tile._id === selectedId[0] ? (
                       <div className={classes.optionsShow}>
                         <div className={classes.buttonsContainer}>
                           <IconButton size='small' className={classes.iconButton} onClick={() => onEdit(selectedId)}>
@@ -77,13 +75,11 @@ const TileView = ({
                           </div>
                         </div>
                       </div>
-                    )
-                    :
-                    (
-                      <div className={classes.optionsNotShow}>
-                        <div className={classes.textContainer}>
-                          <div className={classes.text}>
-                            <Typography noWrap={true}>{tile.name}</Typography>
+                    ) : (
+                      <div className={classes.optionsNotShow} aria-label={'OptionsNotShow'}>
+                        <div className={classes.textContainer} aria-label={'TextContainer'}>
+                          <div className={classes.text} aria-label={'Text'}>
+                            <Typography noWrap>{tile.name}</Typography>
                           </div>
                         </div>
                       </div>
