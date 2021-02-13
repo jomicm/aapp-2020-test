@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-imports */
-import React, { useState, useEffect } from 'react';
+import React, {  useEffect, useState } from 'react';
 import clsx from 'clsx';
 import {
   makeStyles,
@@ -8,39 +8,40 @@ import {
   useTheme
 } from '@material-ui/core/styles';
 import {
-  Paper,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Checkbox,
-  Toolbar,
-  Typography,
-  Tooltip,
-  IconButton,
-  TableSortLabel,
-  TablePagination,
-  Switch,
-  FormControlLabel,
-  TableFooter,
   Button,
+  Checkbox,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  FormControlLabel,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableRow,
+  Toolbar,
+  Tooltip,
+  Typography,
+  TablePagination,
+  TableSortLabel,
+  Switch,
 } from '@material-ui/core';
 
-import TileView from '../Components/TileView';
-import ModalYesNo from '../Components/ModalYesNo';
-import DeleteIcon from '@material-ui/icons/Delete';
-import FilterListIcon from '@material-ui/icons/FilterList';
+import AccountTreeRoundedIcon from '@material-ui/icons/AccountTreeRounded';
 import AddIcon from '@material-ui/icons/Add';
 import CloseIcon from '@material-ui/icons/Close';
+import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
-import AccountTreeRoundedIcon from '@material-ui/icons/AccountTreeRounded';
-import ViewModuleRoundedIcon from '@material-ui/icons/ViewModuleRounded';
+import FilterListIcon from '@material-ui/icons/FilterList';
 import ListRoundedIcon from '@material-ui/icons/ListRounded';
+import ViewModuleRoundedIcon from '@material-ui/icons/ViewModuleRounded';
+
+import TileView from './TileView';
+import ModalYesNo from './ModalYesNo';
 
 const useToolbarStyles = makeStyles(theme => ({
   root: {
@@ -101,24 +102,6 @@ const TableComponentTile = props => {
   const isSelected = name => selected.indexOf(name) !== -1;
   const [page, setPage] = useState(0);
 
-  // const createRow = (id, level, name, creator, creation_date) => {
-  //   return { id, level, name, creator, creation_date };
-  // };
-
-  // const headRows = [
-  //   { id: 'id', numeric: false, disablePadding: true, label: 'ID' },
-  //   { id: 'level', numeric: true, disablePadding: false, label: 'Level' },
-  //   { id: 'name', numeric: true, disablePadding: false, label: 'Description' },
-  //   { id: 'creator', numeric: true, disablePadding: false, label: 'Creator' },
-  //   { id: 'creation_date', numeric: true, disablePadding: false, label: 'Creation Date' }
-  // ];
-
-  // const rows = [
-  //   createRow('1', '0', 'Region', 'Admin', '11/03/2020'),
-  //   createRow('2', '1', 'City', 'Admin', '11/03/2020'),
-  //   createRow('3', '2', 'Office', 'Admin', '11/03/2020'),
-  // ];
-
   const EnhancedTableToolbar = props => {
     const classes = useToolbarStyles();
     const { selected, onAdd, noEdit } = props;
@@ -126,7 +109,7 @@ const TableComponentTile = props => {
 
     const onDelete = () => {
       props.onDelete();
-    }
+    };
 
     useEffect(() => {
       if (!props.onSelect) return;
@@ -205,13 +188,13 @@ const TableComponentTile = props => {
 
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage);
 
-  function handleRequestSort(event, property) {
+  const handleRequestSort = (event, property) => {
     const isDesc = orderBy === property && order === 'desc';
     setOrder(isDesc ? 'asc' : 'desc');
     setOrderBy(property);
   }
 
-  function handleSelectAllClick(event) {
+  const handleSelectAllClick = (event) => {
     if (event.target.checked) {
       const newSelecteds = rows.map(n => n.name);
       setSelected(newSelecteds);
@@ -220,7 +203,7 @@ const TableComponentTile = props => {
     setSelected([]);
   }
 
-  function handleClick(event, name, id) {
+  const handleClick = (event, name, id) => {
     const selectedIndex = selected.indexOf(id);
     let newSelected = [], newSelectedId = [];
 
@@ -248,19 +231,19 @@ const TableComponentTile = props => {
     setSelectedId(newSelectedId);
   }
 
-  function handleChangePage(event, newPage) {
+  const handleChangePage = (event, newPage) => {
     setPage(newPage);
   }
 
-  function handleChangeRowsPerPage(event) {
+  const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(+event.target.value);
   }
 
-  function handleChangeDense(event) {
+  const handleChangeDense = (event) => {
     setDense(event.target.checked);
   }
 
-  function stableSort(array, cmp) {
+  const stableSort = (array, cmp) => {
     const stabilizedThis = array.map((el, index) => [el, index]);
     stabilizedThis.sort((a, b) => {
       const order = cmp(a[0], b[0]);
@@ -270,13 +253,13 @@ const TableComponentTile = props => {
     return stabilizedThis.map(el => el[0]);
   }
 
-  function getSorting(order, orderBy) {
+  const getSorting = (order, orderBy) => {
     return order === 'desc'
       ? (a, b) => desc(a, b, orderBy)
       : (a, b) => -desc(a, b, orderBy);
   }
 
-  function desc(a, b, orderBy) {
+  const desc = (a, b, orderBy) => {
     if (b[orderBy] < a[orderBy]) {
       return -1;
     }
@@ -286,7 +269,7 @@ const TableComponentTile = props => {
     return 0;
   }
 
-  function EnhancedTableHead(props) {
+  const EnhancedTableHead = (props) => {
     const {
       onSelectAllClick,
       order,
@@ -406,7 +389,6 @@ const TableComponentTile = props => {
                             aria-checked={isItemSelected}
                             tabIndex={-1}
                             key={`key-row-${row.id}`}
-                            //key={headRows[0].id}
                             selected={isItemSelected}
                           >
                             <TableCell padding='checkbox'>
@@ -471,12 +453,6 @@ const TableComponentTile = props => {
           onChangeRowsPerPage={handleChangeRowsPerPage}
         />
       </Paper>
-      {/* <FormControlLabel
-        control={
-          <Switch checked={dense} onChange={handleChangeDense} />
-        }
-        label='Dense padding'
-      /> */}
     </div>
   );
 };

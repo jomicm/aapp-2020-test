@@ -3,7 +3,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { Formik, setNestedObjectValues } from "formik";
 import { get, merge } from "lodash";
-import { FormHelperText, Switch, Tab, Tabs, Styles, Button } from "@material-ui/core";
+import { Button, FormHelperText, Switch, Styles, Tab, Tabs  } from "@material-ui/core";
 import clsx from "clsx";
 import { metronic, initLayoutConfig, LayoutConfig } from "../../../../_metronic";
 import {
@@ -16,7 +16,7 @@ import {
 
 // AApp Components
 import { TabsTitles } from '../Components/Translations/tabsTitles';
-import TableComponentTile from '../Components/TableComponent&TileView';
+import TableComponentTile from '../Components/TableComponentAndTileView';
 import TableComponent from '../Components/TableComponent';
 import ModalAssetCategories from './modals/ModalAssetCategories';
 import ModalAssetReferences from './modals/ModalAssetReferences';
@@ -375,18 +375,14 @@ export default function Assets() {
                         <div className="kt-separator kt-separator--dashed" />
                         <div className="kt-section__content">
                           <TableComponentTile
-                            title={'Asset Categories'}
                             headRows={assetCategoriesHeadRows}
-                            rows={control.categoryRows}
-                            onEdit={tableActions('categories').onEdit}
                             onAdd={tableActions('categories').onAdd}
                             onDelete={tableActions('categories').onDelete}
-                            onSelect={tableActions('categories').onSelect}
+                            onEdit={tableActions('categories').onEdit}
                             onReload={() => loadAssetsData('categories')}
-                          // rows={categoryRows.rows}
-                          // onEdit={categoriesTableActions.onEditProfileLocation}
-                          // onAdd={categoriesTableActions.onAddProfileLocation}
-                          // onDelete={categoriesTableActions.onDeleteProfileLocation}
+                            onSelect={tableActions('categories').onSelect}
+                            rows={control.categoryRows}
+                            title={'Asset Categories'}
                           />
                         </div>
                       </div>

@@ -137,7 +137,7 @@ const TileView = ({ tiles, collection, tailWidth = '120px', tailHeight = '120px'
                 alt='Categories'
               />
               {
-                tile.id === selectedId[0] ?
+                tile.id === selectedId[0] ? (
                   <div className={classes.optionsShow}>
                     <div className={classes.buttonsContainer}>
                       <IconButton size='small' className={classes.iconButton} onClick={() => onEdit(selectedId)}>
@@ -153,7 +153,7 @@ const TileView = ({ tiles, collection, tailWidth = '120px', tailHeight = '120px'
                       </div>
                     </div>
                   </div>
-                  :
+                ) : (
                   <div className={classes.optionsNotShow}>
                     <div className={classes.textContainer}>
                       <div className={classes.text}>
@@ -161,6 +161,7 @@ const TileView = ({ tiles, collection, tailWidth = '120px', tailHeight = '120px'
                       </div>
                     </div>
                   </div>
+                )
               }
             </div>
           )
