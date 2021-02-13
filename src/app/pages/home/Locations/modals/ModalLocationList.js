@@ -198,7 +198,6 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
     categoryPic: '/media/misc/placeholder-image.jpg',
     categoryPicDefault: '/media/misc/placeholder-image.jpg',
     customFieldsTab: {},
-    imageURL: '',
     name: '',
     // level: 0,
     profileName: '',
@@ -262,6 +261,8 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
       body.parent = parent;
       postDB('locationsReal', body)
         .then(response => {
+          const { _id } = response.response[0];
+          saveAndReload('locationsReal', _id);
           reload();
         })
         .catch(error => console.log(error));
@@ -269,6 +270,7 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
         body.parent = realParent;
         updateDB('locationsReal/', body, parent)
         .then(response => {
+          saveAndReload('locationsReal', parent);
           reload();
         })
         .catch(error => console.log(error));
@@ -289,6 +291,10 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
     const field = customFieldsTabTmp[tab][colValue[colIndex]]
     .find(cf => cf.id === id);
     field.values = CFValues;
+  };
+
+  const saveAndReload = (folderName, id) => {
+    saveImage(image, folderName, id);
   };
 
   useEffect(() => {
@@ -314,7 +320,7 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
     .then(response => response.json())
     .then(data => { 
       const { _id, name, profileId, profileLevel, profileName, customFieldsTab, mapInfo, fileExt } = data.response;      
-      const imageURL = getImageURL(profile.id, 'locations', fileExt);
+      const imageURL = getImageURL(parent, 'locationsReal', fileExt);
       setValues({ ...values, name, profileId, profileLevel, profileName, customFieldsTab, imageURL });
       setMapCenter({lat: mapInfo.lat, lng: mapInfo.lng})
       setModalCoords([{lat: mapInfo.lat, lng: mapInfo.lng}])
@@ -435,12 +441,14 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
                   )}
                   {tab === 2 && (
                     <PortletBody style={{paddingTop: '20px'}}>
-                      <ImageUpload
-                       image={values.imageURL}
-                       setImage={setImage}
-                       >
-                        Sketch Layout
-                      </ImageUpload>
+                      <div className="profile-tab-wrapper">
+                        <ImageUpload
+                          image={values.imageURL}
+                          setImage={setImage}
+                          >
+                           Sketch Layout
+                        </ImageUpload>
+                      </div>
                     </PortletBody>
                   )}
                 </TabContainer4>
