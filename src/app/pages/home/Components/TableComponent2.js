@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import clsx from 'clsx';
 import {
   makeStyles,
@@ -32,6 +33,7 @@ import {
   DialogActions,
   InputBase,
   Popover,
+  Portal,
   Popper,
   TextField,
   Grid,
@@ -40,6 +42,8 @@ import {
   ListItemSecondaryAction,
   ListItemText,
   ListSubheader,
+  Menu,
+  MenuItem
 } from '@material-ui/core';
 
 
@@ -153,11 +157,11 @@ const TableComponentTile = props => {
   const classes = useStyles();
   const isSelected = name => selected.indexOf(name) !== -1;
   const [page, setPage] = useState(0);
-  const [columnPicker, setColumnPicker] = useState(columnPickerControl(headRows));
+  const [columnPicker, setColumnPicker] = useState(columnPickerControl2(headRows));
   const [openColumnSelector, setOpenColumnSelector] = useState(false);
   const [anchorEl, setAnchorEl] = useState();
+  const [windowCoords, setWindowCoords] = useState({ left: 0, top: 0});
   const [debug, setDebug] = useState(false);
-  //setColumnPicker(columnPickerControl(headRows));
 
   useEffect(() => {
     if (!paginationControl) return;
@@ -171,12 +175,11 @@ const TableComponentTile = props => {
   // useEffect(() => {
   //   setColumnPicker(columnPickerControl(headRows))
   // }, [headRows])
-
  
   const recordButtonPosition = (event) => {
     setAnchorEl(event.currentTarget);
-    console.log('event:', event.currentTarget)
     setOpenColumnSelector(true);
+    setWindowCoords({ left: event.pageX - 60, top: event.pageY + 24 });
   }
 
   const EnhancedTableToolbar = props => {
@@ -221,44 +224,6 @@ const TableComponentTile = props => {
       }
       return (
         <React.Fragment>
-          <Popover
-            className={classes.popover}
-            aria-label="Column Picker Selector"
-            anchorEl={anchorEl}
-            getContentAnchorEl={null}
-            onClose={() => setOpenColumnSelector(false)}
-            open={openColumnSelector}
-          >
-            <div className={classes.grid}>
-              <Typography color='inherit' variant='subtitle1'> Find Column </Typography>
-              <TextField />
-              <Typography color='inherit' variant='subtitle1' style={{marginTop: '10px'}}> Columns </Typography>
-              <List>
-                {
-                  columnPicker.map(({label, id, visible}, index) => {
-                    debugger;
-                    return (
-                      <ListItem>
-                        <ListItemText key={id} primary={label} className={classes.listItemText} />
-                        <ListItemSecondaryAction>
-                          <Switch
-                            edge="end"
-                            onChange={(event) => {
-                              const array = [...columnPicker];
-                              array[index].visible = event.target.checked;
-                              setColumnPicker(array);
-                              console.log('debug:',columnPicker)
-                            }}
-                            checked={visible}
-                          />
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                    )
-                  })
-                }
-              </List>
-            </div>
-          </Popover>
           <div className={classes.search} key='SearchDiv' aria-label='Search Box'>
             <div className={classes.searchIcon}>
               <SearchIcon />
@@ -451,6 +416,48 @@ const TableComponentTile = props => {
     setSelectedId([]);
   };
 
+  const renderColumnPicker = () => {
+    const { left, top } = windowCoords;
+
+    return (
+      <Popover
+        className={classes.popover}
+        aria-label="Column Picker Selector"
+        anchorEl={anchorEl}
+        keepMounted
+        onClose={() => setOpenColumnSelector(false)}
+        open={openColumnSelector}
+        anchorPosition={{ left, top }}
+        anchorReference="anchorPosition"
+      >
+        <div className={classes.grid}>
+          <Typography color='inherit' variant='subtitle1'>Find Column</Typography>
+          <TextField />
+          <Typography color='inherit' variant='subtitle1' style={{marginTop: '10px'}}>Columns</Typography>
+          <List>
+            {columnPicker.map(({label, id, visible}, index) => {
+              return (
+                <ListItem>
+                  <ListItemText key={id} primary={label} className={classes.listItemText} />
+                  <ListItemSecondaryAction>
+                    <Switch
+                      edge="end"
+                      onChange={(event) => {
+                        const array = [...columnPicker];
+                        array[index].visible = event.target.checked;
+                        setColumnPicker(array);
+                      }}
+                      checked={visible}
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+              );
+            })}
+          </List>
+        </div>
+      </Popover>
+    );
+  };
 
   return (
     <div className={classes.root} style={{ padding: '0px' }}>
@@ -461,6 +468,7 @@ const TableComponentTile = props => {
         title={'Remove Element'}
         message={'Are you sure you want to remove this element?'}
       />
+      {renderColumnPicker()}
       <Paper className={classes.paper}>
         <EnhancedTableToolbar
           title={props.title}
