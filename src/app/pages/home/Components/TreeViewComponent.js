@@ -23,7 +23,7 @@ export default function RecursiveTreeView(props) {
         key={nodes.id}
         nodeId={nodes.id}
         label={nodes.name}
-        onClick={() => props.onClick(nodes.id, nodes.profileLevel, nodes.parent, nodes.name)}
+        onClick={() => props.onClick(nodes.id, nodes.profileLevel, nodes.parent, nodes.name, nodes.children)}
       >
         { Array.isArray(nodes.children) ? nodes.children.map((node) => renderTree(node)) : null }
       </TreeItem>
