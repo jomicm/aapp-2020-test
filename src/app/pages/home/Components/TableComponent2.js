@@ -372,7 +372,7 @@ const TableComponentTile = props => {
               inputProps={{ 'aria-label': 'Select all desserts' }}
             />
           </TableCell>
-          {columnPicker.map(row => (
+          {columnPicker.filter((column) => column.visible).map(row => (
             <TableCell
               key={row.id}
               align={row.numeric ? 'right' : 'left'}
@@ -519,7 +519,7 @@ const TableComponentTile = props => {
                               />
                             </TableCell>
 
-                            {columnPicker.map((header, ix) =>
+                            {columnPicker.filter((column) => column.visible).map((header, ix) =>
                               <TableCell
                                 key={`cell-row${index}-${ix}`}
                                 component='th'
