@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Label } from 'reactstrap';
-import SwipeableViews from "react-swipeable-views";
+import ImageMarker from 'react-image-marker';
+import SwipeableViews from 'react-swipeable-views';
 import {
-  AppBar, 
+  AppBar,
+  Badge,
   Button,
   Checkbox,
   Dialog,
@@ -18,21 +20,22 @@ import {
   Tabs, 
   TextField,
   Typography,
-} from "@material-ui/core";
+} from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
+import RoomIcon from '@material-ui/icons/Room';
 import {
   makeStyles,
   useTheme,
   withStyles
-} from "@material-ui/core/styles";
-import CloseIcon from "@material-ui/icons/Close";
+} from '@material-ui/core/styles';
+import CloseIcon from '@material-ui/icons/Close';
 import {
   Portlet,
   PortletBody,
   PortletFooter,
   PortletHeader,
   PortletHeaderToolbar
-} from "../../../../partials/content/Portlet";
+} from '../../../../partials/content/Portlet';
 import { getOneDB, postDB, updateDB } from '../../../../crud/api';
 import {
   Checkboxes,
@@ -50,7 +53,7 @@ import ImageUpload from '../../Components/ImageUpload';
 import { TabsTitles } from '../../Components/Translations/tabsTitles';
 import './ModalLocationList.scss';
 
-const localStorageActiveTabKey = "builderActiveTab";
+const localStorageActiveTabKey = 'builderActiveTab';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -86,10 +89,10 @@ const DialogTitle5 = withStyles(styles5)(props => {
       disableTypography 
       className={classes.root} 
       style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-        <Typography variant="h6">{children}</Typography>
+        <Typography variant='h6'>{children}</Typography>
         {onClose ? (
           <IconButton
-            aria-label="Close"
+            aria-label='Close'
             className={classes.closeButton}
             onClick={onClose}
           >
@@ -107,7 +110,7 @@ const styles5 = theme => ({
     padding: theme.spacing(2)
   },
   closeButton: {
-    position: "absolute",
+    position: 'absolute',
     right: theme.spacing(1),
     top: theme.spacing(1),
     color: theme.palette.grey[500]
@@ -117,7 +120,7 @@ const styles5 = theme => ({
 // Example 4 - Tabs
 const TabContainer4 = ({ children, dir }) => {
   return (
-    <Typography component="div" dir={dir} style={{ padding: 8 * 3 }}>
+    <Typography component='div' dir={dir} style={{ padding: 8 * 3 }}>
       {children}
     </Typography>
   );
@@ -126,8 +129,8 @@ const TabContainer4 = ({ children, dir }) => {
 // Example 1 - TextField
 const useStyles = makeStyles(theme => ({
   container: {
-    display: "flex",
-    flexWrap: "wrap"
+    display: 'flex',
+    flexWrap: 'wrap'
   },
   textField: {
     marginLeft: theme.spacing(1),
@@ -168,7 +171,7 @@ const useStyles5 = makeStyles({
   }
 });
 
-const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, reload, setParentSelected, setShowModal, showModal }) => {
+const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, realParent, reload, setParentSelected, setShowModal, showModal }) => {
 
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const classes = useStyles();
@@ -180,11 +183,13 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
     minHeight: '200px'
   }
   const [image, setImage] = useState(null);
-  const [mapCenter, setMapCenter] = useState(null)
-  const [modalCoords, setModalCoords] = useState([{lat: 19.432608, lng:  -99.133209}])
-  const [modalMapZoom, setModalMapZoom] = useState(12)
-  const [visiblePin, setVisiblePin] = useState(true)
+  const [mapCenter, setMapCenter] = useState(null);
+  const [markers, setMarkers] = useState([]);
+  const [modalCoords, setModalCoords] = useState([{lat: 19.432608, lng:  -99.133209}]);
+  const [modalMapZoom, setModalMapZoom] = useState(12);
+  const [pinMarker, setPinMarker] = useState([])
   const [profileLabel, setProfileLabel] = useState('');
+  const [showImage, setShowImage] = useState(null)
   const style = {
     border: '5px solid blue',
     minWidth: '200px',
@@ -199,12 +204,21 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
     categoryPicDefault: '/media/misc/placeholder-image.jpg',
     customFieldsTab: {},
     name: '',
-    // level: 0,
     profileName: '',
     profileId: '',
     profileLevel: '',
     parent: ''
   });
+
+  const addMarker = (marker) => {
+    setMarkers([marker]);
+  };
+
+  const CustomMarker = (MarkerComponentProps) => {
+    return (
+        <RoomIcon style={{color: 'red'}}/>
+    )
+  }
 
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value });
@@ -219,8 +233,14 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
   }
 
   const handleCloseModal = () => {
-    // setCustomFieldsTab({});
     setImage(null);
+    setMapCenter(null)
+    setMarkers([]);
+    setModalCoords([])
+    setModalMapZoom(12)
+    setParentSelected('root');
+    setShowModal(false);
+    setValue4(0);
     setValues({ 
       categoryPic: '/media/misc/placeholder-image.jpg',
       categoryPicDefault: '/media/misc/placeholder-image.jpg',
@@ -231,14 +251,6 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
       parent: '', 
       customFieldsTab: {} 
     });
-    setShowModal(false);
-    setValue4(0);
-    setParentSelected('root');
-    setModalCoords([])
-    setModalMapZoom(12)
-    setMapCenter(null)
-    setVisiblePin(true)
-    // setIsNew(false);
   };
 
   const handleSave = () => {
@@ -248,7 +260,8 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
       body = {
         ...values, 
         fileExt,
-        mapInfo: {lat: modalCoords[0].lat, lng: modalCoords[0].lng, zoom: modalMapZoom}
+        mapInfo: {lat: modalCoords[0].lat, lng: modalCoords[0].lng, zoom: modalMapZoom},
+        pinMarker: {top: markers[0].top, left: markers[0].left}
       };
     }else{
       body = {
@@ -260,23 +273,24 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
     if (editOrNew === 'new') {
       body.parent = parent;
       postDB('locationsReal', body)
-        .then(response => {
-          const { _id } = response.response[0];
-          saveAndReload('locationsReal', _id);
-          reload();
-        })
+      .then(response => response.json())
+      .then(data => {
+        const { _id } = data.response;
+        saveAndReload('locationsReal', _id);
+        reload()
+      })
         .catch(error => console.log(error));
       } else {
         body.parent = realParent;
         updateDB('locationsReal/', body, parent)
         .then(response => {
           saveAndReload('locationsReal', parent);
-          reload();
+          reload()
         })
         .catch(error => console.log(error));
       }
-      handleCloseModal();
       setModalMapZoom(modalMapZoom)
+      handleCloseModal();
     };
 
   const handlePinDelete = () => {
@@ -305,8 +319,6 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
         const { _id: profileId, name: profileName, level: profileLevel, customFieldsTab } = data.response;
         setValues({ ...values, name:'', profileName, profileId, profileLevel, customFieldsTab });
         setProfileLabel(profile.name);
-        // const tabs = Object.values(customFieldsTab).map(tab => tab.info);
-        // const tabs = Object.values(customFieldsTab).map(tab => ({ info: tab.info, content: [tab.left, tab.right] }));
         const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
         setTabs(tabs);
         setValue4(0);
@@ -319,15 +331,14 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
     getOneDB('locationsReal/', parent)
     .then(response => response.json())
     .then(data => { 
-      const { _id, name, profileId, profileLevel, profileName, customFieldsTab, mapInfo, fileExt } = data.response;      
-      const imageURL = getImageURL(parent, 'locationsReal', fileExt);
+      const { _id, name, pinMarker, profileId, profileLevel, profileName, customFieldsTab, mapInfo, fileExt } = data.response;      
+      const imageURL = getImageURL(realParent, 'locationsReal', parentExt);
       setValues({ ...values, name, profileId, profileLevel, profileName, customFieldsTab, imageURL });
+      setMarkers([{top: pinMarker.top, left: pinMarker.left}])
       setMapCenter({lat: mapInfo.lat, lng: mapInfo.lng})
       setModalCoords([{lat: mapInfo.lat, lng: mapInfo.lng}])
       setModalMapZoom(mapInfo.zoom)
       setProfileLabel(profileName);
-      // const tabs = Object.values(customFieldsTab).map(tab => tab.info);
-      // const tabs = Object.values(customFieldsTab).map(tab => ({ info: tab.info, content: [tab.left, tab.right] }));
       const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
       setTabs(tabs);
       setValue4(0);
@@ -338,25 +349,25 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
   return (
     <div style={{width:'1000px'}}>
       <Dialog
-        aria-labelledby="customized-dialog-title"
+        aria-labelledby='customized-dialog-title'
         onClose={handleCloseModal}
         open={showModal}
       >
         <DialogTitle5
-          id="customized-dialog-title"
+          id='customized-dialog-title'
           onClose={handleCloseModal}
         >
           {`${editOrNew === 'new' ? 'Add' : 'Edit'} Location`}
         </DialogTitle5>
         <DialogContent5 dividers>
-          <div className="kt-section__content" style={{margin:'-16px'}}>
+          <div className='kt-section__content' style={{margin:'-16px'}}>
             <div className={classes4.root}>
               <Paper className={classes4.root}>
                 <Tabs
-                  indicatorColor="primary"
+                  indicatorColor='primary'
                   onChange={handleChange4}
-                  textColor="primary"
-                  variant="fullWidth"
+                  textColor='primary'
+                  variant='fullWidth'
                   value={value4}
                 >
                   <Tab label={profileLabel} />
@@ -364,21 +375,21 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
                 </Tabs>
               </Paper>
               <SwipeableViews
-                axis={theme4.direction === "rtl" ? "x-reverse" : "x"}
+                axis={theme4.direction === 'rtl' ? 'x-reverse' : 'x'}
                 index={value4}
                 onChangeIndex={handleChangeIndex4}
                 style={{overflowY: 'hidden'}}
               >
                 <TabContainer4 dir={theme4.direction}>
-                  <div className="profile-tab-wrapper">
-                    <div className="profile-tab-wrapper__content">
+                  <div className='profile-tab-wrapper'>
+                    <div className='profile-tab-wrapper__content'>
                       <InputLabel>{`Selected Level: ${values.profileLevel}`}</InputLabel>
                       <TextField
                         className={classes.textField}
-                        id="standard-name"
-                        label="Name"
-                        margin="normal"
-                        onChange={handleChange("name")}
+                        id='standard-name'
+                        label='Name'
+                        margin='normal'
+                        onChange={handleChange('name')}
                         value={values.name}
                       />
                     </div>
@@ -388,9 +399,9 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
                       <PortletHeaderToolbar>
                         <Tabs
                           className='builder-tabs'
-                          indicatorColor="primary"
-                          textColor="primary"
-                          variant="fullWidth"
+                          indicatorColor='primary'
+                          textColor='primary'
+                          variant='fullWidth'
                           component='div'
                           onChange={(_, nextTab) => {
                             setTab(nextTab);
@@ -411,9 +422,9 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
                         <div className='container-delete-modal-location-list'>
                           <Button
                            className={classes.button}
-                           color="secondary"
+                           color='secondary'
                            onClick={() => handlePinDelete()} 
-                           variant="contained" 
+                           variant='contained' 
                            >
                             Delete PIN
                             <DeleteIcon className={classes.rightIcon} />
@@ -435,13 +446,24 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
                     </PortletBody>
                   )}
                   {tab === 1 && (
-                    <PortletBody>
-                      PIN LAYOUT
+                    <PortletBody style={{display: 'flex', justifyContent: 'center'}}>
+                      <div
+                        style={{paddingTop: '20px', width: '500px'}}
+                      >
+                        {values.imageURL &&
+                        <ImageMarker
+                          src={values.imageURL}
+                          markers={markers}
+                          onAddMarker={(marker) => addMarker(marker)}
+                          markerComponent={(MarkerComponentProps) => CustomMarker(MarkerComponentProps)}
+                        />
+                        }
+                      </div>
                     </PortletBody>
                   )}
                   {tab === 2 && (
                     <PortletBody style={{paddingTop: '20px'}}>
-                      <div className="profile-tab-wrapper">
+                      <div className='profile-tab-wrapper'>
                         <ImageUpload
                           image={values.imageURL}
                           setImage={setImage}
@@ -454,14 +476,14 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
                 </TabContainer4>
                 {tabs.map(tab => (
                   <TabContainer4 dir={theme4.direction}>
-                  <div className="modal-location">
+                  <div className='modal-location'>
                     {Array(tab.content[1].length === 0 ? 1 : 2).fill(0).map((col, colIndex) => (
-                      <div className="modal-location__list-field">
+                      <div className='modal-location__list-field'>
                         {tab.content[colIndex].map(customField => (
                           <CustomFieldsPreview 
                             columnIndex={colIndex}
                           // customFieldIndex={props.customFieldIndex}
-                            from="form"
+                            from='form'
                             id={customField.id}
                             onClick={() => alert(customField.content)}
                             onDelete={() => {}}
@@ -482,7 +504,7 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
           </div>
         </DialogContent5>
         <DialogActions5>
-          <Button onClick={handleSave} color="primary">
+          <Button onClick={handleSave} color='primary'>
             Save changes
           </Button>
         </DialogActions5>
@@ -490,7 +512,5 @@ const ModalLocationList = ({ editOrNew, modalId, parent, profile, realParent, re
     </div>
   )
 };
-
-
 
 export default ModalLocationList;
