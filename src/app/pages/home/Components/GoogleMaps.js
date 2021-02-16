@@ -31,7 +31,7 @@ const GoogleMaps = ({ center, coords, edit = false, google, setCoords, setZoom, 
         initialCenter={center || {lat: 19.432608, lng:  -99.133209}}
         google={google}
         onClick={(mapProps, map, clickEvent) => handleClick(mapProps, map, clickEvent)}
-        onMouseout={(mapProps, map, clickEvent) => handleMouse(mapProps, map, clickEvent)}
+        onZoomChanged={(mapProps, map, clickEvent) => handleMouse(mapProps, map, clickEvent)}
         style={styleMap}
         zoom={zoom}
         >
