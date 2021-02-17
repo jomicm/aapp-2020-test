@@ -142,10 +142,7 @@ const dataTableDefault = { header: [], tableRows: [], title: '' };
 const useStyles = makeStyles(theme => ({
   button: {
     margin: theme.spacing(1),
-  },
-  input: {
-    display: 'none',
-  },
+  }
 }));
 
 const TabGeneral = () => {
@@ -190,7 +187,7 @@ const TabGeneral = () => {
     <div>
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
         <h2>Generate Reports</h2>
-        <Button variant="contained" color="primary" className={classes.button}> Save </Button>
+        <Button variant="contained" size="large" color="primary" className={classes.button}> Save </Button>
       </div>
       <div name="Head Part" style={{ marginTop:'30px', display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap' }}>
         <FormControl style={{width: '200px'}}>

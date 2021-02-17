@@ -63,7 +63,8 @@ import ModalYesNo from '../Components/ModalYesNo';
 import TabGeneral from './TabGeneral';
 
 const localStorageActiveTabKey = "builderActiveTab";
-export default function Reports() {
+
+const Reports = () => {
 
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
@@ -444,3 +445,5 @@ export default function Reports() {
     </>
   );
 }
+
+export default Reports;
