@@ -1,13 +1,15 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import MUIDataTable from "mui-datatables";
 import {
-  Select,
-  MenuItem,
+  Button,
   FormControl,
   InputLabel,
+  MenuItem,
+  Select,
   TextField
 } from "@material-ui/core";
-import MUIDataTable from "mui-datatables";
+import { makeStyles } from '@material-ui/core/styles';
 import { getDB, deleteDB } from '../../../crud/api';
 import { formatCollection } from './reportsHelpers';
 
@@ -137,7 +139,17 @@ const options = {
 // --
 const dataTableDefault = { header: [], tableRows: [], title: '' };
 
+const useStyles = makeStyles(theme => ({
+  button: {
+    margin: theme.spacing(1),
+  },
+  input: {
+    display: 'none',
+  },
+}));
+
 const TabGeneral = () => {
+  const classes = useStyles();
   const [values, setValues] = useState({});
   const [reportIndex, setReportIndex] = useState(null);
   const [dataTable, setDataTable] = useState(dataTableDefault);
@@ -176,7 +188,10 @@ const TabGeneral = () => {
 
   return (
     <div>
-      <h2>Generate Reports</h2>
+      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+        <h2>Generate Reports</h2>
+        <Button variant="contained" color="primary" className={classes.button}> Save </Button>
+      </div>
       <div name="Head Part" style={{ marginTop:'30px', display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap' }}>
         <FormControl style={{width: '200px'}}>
           <InputLabel htmlFor="age-simple">Select Report</InputLabel>
