@@ -31,6 +31,7 @@ import './Assets.scss';
 //DB API methods
 import { getDB, deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
+import { LensTwoTone } from "@material-ui/icons";
 
 const localStorageActiveTabKey = "builderActiveTab";
 export default function Assets() {
@@ -174,7 +175,14 @@ export default function Assets() {
   };
 
   const getReferenceData = () => {
-    const queryLike = ['name', 'brand', 'model'].map(key => ({ key, value: referenceTableControl.search }))
+    let queryLike = ''
+    if(referenceTableControl.searchBy){
+      queryLike = [{key: referenceTableControl.searchBy, value: referenceTableControl.search }]
+    }
+    else{
+      queryLike = ['name', 'brand', 'model'].map(key => ({ key, value: referenceTableControl.search }))
+    }
+    
     //Get total elements in the collection
     getCountDB({ 
       collection: 'references', 
@@ -244,6 +252,7 @@ export default function Assets() {
     orderBy: 'name',
     order: 1,
     search: '',
+    searchBy: '',
   }); 
   const [referencesSelectedId, setReferencesSelectedId] = useState(null);
   const [selectReferenceConfirmation, setSelectReferenceConfirmation] = useState(false);
@@ -399,7 +408,7 @@ export default function Assets() {
                         <div className="kt-separator kt-separator--dashed" />
                         <div className="kt-section__content">
                           <TableComponent2
-                            defaultValues={referenceTableControl}
+                            controlValues={referenceTableControl}
                             sortByControl={({orderBy, order}) => {
                               setReferenceTableControl({
                                 ...referenceTableControl, 
@@ -414,10 +423,11 @@ export default function Assets() {
                                 page: page,
                               })
                             }
-                            searchControl={(value) => {
+                            searchControl={({value, field}) => {
                               setReferenceTableControl({
                                 ...referenceTableControl, 
                                 search: value,
+                                searchBy: field,
                               })
                             }}
                             title={'Asset References'}

@@ -117,7 +117,6 @@ const getDBComplex = ({
   }
   additionalParams = additionalParams ? `?${additionalParams}` : '';
   const reqURL = `${getAPIPath(collection)}${additionalParams}`;
-  console.log('reqURL:', reqURL)
 
   return fetch(reqURL, { method: 'GET', headers: getHeaders() });
 };
@@ -138,7 +137,6 @@ const getCountDB = ({
   }
   additionalParams = additionalParams ? `?${additionalParams}` : '';
   const reqURL = `${getAPIPath(collection, '', false, false, count)}${additionalParams}`;
-  console.log('reqURL:', reqURL)
 
   return fetch(reqURL, { method: 'GET', headers: getHeaders() });
 };
