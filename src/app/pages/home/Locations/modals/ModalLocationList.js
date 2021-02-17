@@ -210,15 +210,11 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
     parent: ''
   });
 
-  const addMarker = (marker) => {
-    setMarkers([marker]);
-  };
-
-  const CustomMarker = (MarkerComponentProps) => {
-    return (
-        <RoomIcon style={{color: 'red'}}/>
-    )
-  }
+  // const CustomMarker = (MarkerComponentProps) => {
+  //   return (
+  //       <RoomIcon style={{color: 'red'}}/>
+  //   )
+  // }
 
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value });
@@ -255,21 +251,27 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
 
   const handleSave = () => {
     const fileExt = getFileExtension(image);
-    let body;
-    if(modalMapZoom !== null){
-      body = {
-        ...values, 
-        fileExt,
-        mapInfo: {lat: modalCoords[0].lat, lng: modalCoords[0].lng, zoom: modalMapZoom},
-        pinMarker: {top: markers[0].top, left: markers[0].left}
-      };
-    }else{
-      body = {
-      ...values, 
-      fileExt,
-      mapInfo: null
-    };
-  }
+    // if(modalMapZoom !== null){
+    //   body = {
+    //     ...values, 
+    //     fileExt,
+    //     mapInfo: {lat: modalCoords[0].lat, lng: modalCoords[0].lng, zoom: modalMapZoom},
+    //     pinMarker: {top: markers[0].top, left: markers[0].left}
+    //   };
+    // }else{
+    //   body = {
+    //   ...values, 
+    //   fileExt,
+    //   mapInfo: null
+    // };
+  // }
+    debugger
+    const body = {
+          ...values, 
+          fileExt,
+          mapInfo: modalMapZoom !== null ? {lat: modalCoords[0].lat, lng: modalCoords[0].lng, zoom: modalMapZoom} : null,
+          imageInfo: markers.lenght ? {top: markers[0].top, left: markers[0].left} : null
+    }
     if (editOrNew === 'new') {
       body.parent = parent;
       postDB('locationsReal', body)
@@ -331,10 +333,10 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
     getOneDB('locationsReal/', parent)
     .then(response => response.json())
     .then(data => { 
-      const { _id, name, pinMarker, profileId, profileLevel, profileName, customFieldsTab, mapInfo, fileExt } = data.response;      
+      const { _id, name, imageInfo, profileId, profileLevel, profileName, customFieldsTab, mapInfo, fileExt } = data.response;      
       const imageURL = getImageURL(realParent, 'locationsReal', parentExt);
       setValues({ ...values, name, profileId, profileLevel, profileName, customFieldsTab, imageURL });
-      setMarkers([{top: pinMarker.top, left: pinMarker.left}])
+      setMarkers(imageInfo !== null ? [{top: imageInfo.top, left: imageInfo.left}] : [])
       setMapCenter({lat: mapInfo.lat, lng: mapInfo.lng})
       setModalCoords([{lat: mapInfo.lat, lng: mapInfo.lng}])
       setModalMapZoom(mapInfo.zoom)
@@ -450,13 +452,14 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
                       <div
                         style={{paddingTop: '20px', width: '500px'}}
                       >
-                        {values.imageURL &&
-                        <ImageMarker
-                          src={values.imageURL}
-                          markers={markers}
-                          onAddMarker={(marker) => addMarker(marker)}
-                          markerComponent={(MarkerComponentProps) => CustomMarker(MarkerComponentProps)}
-                        />
+                        {/* {/* {values.imageURL && */}
+                          <ImageMarker
+                            src={values.imageURL}
+                            markers={[]}
+                            onAddMarker={(marker) => setMarkers([marker])}
+                            // markerComponent={(MarkerComponentProps) => CustomMarker(MarkerComponentProps)}
+                            markerComponent={() => <RoomIcon style={{color: 'red'}}/>}
+                          />
                         }
                       </div>
                     </PortletBody>
