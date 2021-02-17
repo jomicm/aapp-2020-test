@@ -18,7 +18,6 @@ import CodeExample from '../../../partials/content/CodeExample';
 import Notice from '../../../partials/content/Notice';
 import { CodeBlock } from '../../../partials/content/CodeExample';
 import { getDB, deleteDB } from '../../../crud/api'; 
-// import { postDB } from '../../../crud/api';
 import {
   Badge,
   Button,
@@ -52,7 +51,6 @@ import {
   Tooltip,
   Typography
 } from '@material-ui/core';
-//Icons
 import AddIcon from '@material-ui/icons/Add';
 import CloseIcon from '@material-ui/icons/Close';
 import DeleteIcon from '@material-ui/icons/Delete';
@@ -71,7 +69,6 @@ import {
   useTheme,
   withStyles
 } from '@material-ui/core/styles';
-// AApp Components
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import GoogleMaps from '../Components/GoogleMaps';
 import TableComponent from '../Components/TableComponent';
@@ -79,7 +76,6 @@ import TreeView from '../Components/TreeViewComponent';
 import ModalLocationList from './modals/ModalLocationList';
 import ModalLocationProfiles from './modals/ModalLocationProfiles';
 import './Locations.scss';
-//Custom Fields Preview
 import {
   Checkboxes,
   CheckboxesSettings,
@@ -113,15 +109,12 @@ const locationsTreeData = {
   parent: null,
 };
 
-
 const Locations = () => {
-  
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const dispatch = useDispatch();
   const initialValues = useMemo(
     () =>
       merge(
-        // Fulfill changeable fields.
         LayoutConfig,
         layoutConfig
       ),
@@ -151,11 +144,10 @@ const Locations = () => {
     }
   };
   const theme4 = useTheme();
-  // Mini menu to add new location
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [coordinates, setCoordinates] = useState([]);
   const [editOrNew, setEditOrNew] = useState('new');
-  const [googleMapsZoom, setGoogleMapsZoom] = useState(12);
+  const [googleMapsZoom, setGoogleMapsZoom] = useState(6);
   const [id, setId] = useState(null);
   const [imageLayout, setImageLayout] = useState(null)
   const [loadingButtonPreviewStyle, setLoadingButtonPreviewStyle] = useState({
@@ -193,10 +185,10 @@ const Locations = () => {
 
   const CustomMarker = (MarkerComponentProps) => {
     if(imageLayout !== 'http://localhost:3000/media/misc/placeholder-image.jpg'){
-    return (
+      return (
         <RoomIcon style={{color: 'red'}}/>
-    )
-  }else return null
+      )
+    }else return null
   }
   
   const enableLoadingPreview = () => {
@@ -238,7 +230,6 @@ const Locations = () => {
     createLocationProfileRow('3', '2', 'Guadalajara', 'Admin', '11/03/2020'),
   ];
   
-  // Example 4 - Tabs
   const TabContainer4 = ({ children, dir }) => {
     return (
       <Typography component='div' dir={dir} style={{ padding: 8 * 3 }}>
@@ -312,7 +303,7 @@ const Locations = () => {
     }else{
       const result = locations.filter(location =>  location.parent === id)
       const latLng = result.map( (coordinate) => coordinate.mapInfo)
-      const pinMarker = result.map( (pin) => pin.pinMarker)
+      const pinMarker = result.map( (pin) => pin.imageInfo).filter(elem => elem !== null)
       setCoordinates(latLng)
       setMarkers(pinMarker)
     }
@@ -325,8 +316,7 @@ const Locations = () => {
       const result = locations.filter(location =>  location.id === id)
       const latLngZoom = result.map( (coordinate) => coordinate.mapInfo)
       if(latLngZoom[0] === null){
-        setMapCenter({lat: 19.432608, lng:  -99.133209})
-        setGoogleMapsZoom(12)
+        setGoogleMapsZoom(6)
       }else{
       setMapCenter({lat: latLngZoom[0].lat, lng: latLngZoom[0].lng})
       setGoogleMapsZoom(latLngZoom[0].zoom)

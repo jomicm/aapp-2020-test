@@ -144,23 +144,23 @@ const useStyles = makeStyles(theme => ({
     width: 200
   },
   button: {
-    margin: theme.spacing(1),
+    margin: theme.spacing(1)
   },
   leftIcon: {
-    marginRight: theme.spacing(1),
+    marginRight: theme.spacing(1)
   },
   rightIcon: {
-    marginLeft: theme.spacing(1),
+    marginLeft: theme.spacing(1)
   },
   iconSmall: {
-    fontSize: 20,
+    fontSize: 20
   },
 }));
 
 const useStyles4 = makeStyles(theme => ({
   root: {
     backgroundColor: theme.palette.background.paper,
-    minWidth: 1000,
+    minWidth: 1000
   }
 }));
 
@@ -185,11 +185,11 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
   const [image, setImage] = useState(null);
   const [mapCenter, setMapCenter] = useState(null);
   const [markers, setMarkers] = useState([]);
-  const [modalCoords, setModalCoords] = useState([{lat: 19.432608, lng:  -99.133209}]);
-  const [modalMapZoom, setModalMapZoom] = useState(12);
-  const [pinMarker, setPinMarker] = useState([])
+  const [modalCoords, setModalCoords] = useState([]);
+  const [modalMapZoom, setModalMapZoom] = useState(6);
+  const [pinMarker, setPinMarker] = useState([]);
   const [profileLabel, setProfileLabel] = useState('');
-  const [showImage, setShowImage] = useState(null)
+  const [showImage, setShowImage] = useState(null);
   const style = {
     border: '5px solid blue',
     minWidth: '200px',
@@ -210,12 +210,6 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
     parent: ''
   });
 
-  // const CustomMarker = (MarkerComponentProps) => {
-  //   return (
-  //       <RoomIcon style={{color: 'red'}}/>
-  //   )
-  // }
-
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value });
   };
@@ -230,10 +224,10 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
 
   const handleCloseModal = () => {
     setImage(null);
-    setMapCenter(null)
+    setMapCenter(null);
     setMarkers([]);
-    setModalCoords([])
-    setModalMapZoom(12)
+    setModalCoords([]);
+    setModalMapZoom(6);
     setParentSelected('root');
     setShowModal(false);
     setValue4(0);
@@ -251,27 +245,12 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
 
   const handleSave = () => {
     const fileExt = getFileExtension(image);
-    // if(modalMapZoom !== null){
-    //   body = {
-    //     ...values, 
-    //     fileExt,
-    //     mapInfo: {lat: modalCoords[0].lat, lng: modalCoords[0].lng, zoom: modalMapZoom},
-    //     pinMarker: {top: markers[0].top, left: markers[0].left}
-    //   };
-    // }else{
-    //   body = {
-    //   ...values, 
-    //   fileExt,
-    //   mapInfo: null
-    // };
-  // }
-    debugger
     const body = {
           ...values, 
           fileExt,
           mapInfo: modalMapZoom !== null ? {lat: modalCoords[0].lat, lng: modalCoords[0].lng, zoom: modalMapZoom} : null,
-          imageInfo: markers.lenght ? {top: markers[0].top, left: markers[0].left} : null
-    }
+          imageInfo: markers.length ? {top: markers[0].top, left: markers[0].left} : null
+    };
     if (editOrNew === 'new') {
       body.parent = parent;
       postDB('locationsReal', body)
@@ -279,7 +258,6 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
       .then(data => {
         const { _id } = data.response;
         saveAndReload('locationsReal', _id);
-        reload()
       })
         .catch(error => console.log(error));
       } else {
@@ -287,17 +265,16 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
         updateDB('locationsReal/', body, parent)
         .then(response => {
           saveAndReload('locationsReal', parent);
-          reload()
         })
         .catch(error => console.log(error));
       }
-      setModalMapZoom(modalMapZoom)
+      setModalMapZoom(modalMapZoom);
       handleCloseModal();
     };
 
   const handlePinDelete = () => {
-    setModalCoords([{}])
-    setModalMapZoom(null)
+    setModalCoords([{}]);
+    setModalMapZoom(null);
   }
     
     // Function to update customFields
@@ -311,6 +288,7 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
 
   const saveAndReload = (folderName, id) => {
     saveImage(image, folderName, id);
+    reload();
   };
 
   useEffect(() => {
@@ -336,17 +314,17 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
       const { _id, name, imageInfo, profileId, profileLevel, profileName, customFieldsTab, mapInfo, fileExt } = data.response;      
       const imageURL = getImageURL(realParent, 'locationsReal', parentExt);
       setValues({ ...values, name, profileId, profileLevel, profileName, customFieldsTab, imageURL });
-      setMarkers(imageInfo !== null ? [{top: imageInfo.top, left: imageInfo.left}] : [])
-      setMapCenter({lat: mapInfo.lat, lng: mapInfo.lng})
-      setModalCoords([{lat: mapInfo.lat, lng: mapInfo.lng}])
-      setModalMapZoom(mapInfo.zoom)
+      setMarkers(imageInfo !== null ? [{top: imageInfo.top, left: imageInfo.left}] : []);
+      setMapCenter({lat: mapInfo.lat, lng: mapInfo.lng});
+      setModalCoords([{lat: mapInfo.lat, lng: mapInfo.lng}]);
+      setModalMapZoom(mapInfo.zoom);
       setProfileLabel(profileName);
       const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
       setTabs(tabs);
       setValue4(0);
     })
     .catch(error => console.log(error));
-  }, [editOrNew, parent])
+  }, [editOrNew, parent]);
 
   return (
     <div style={{width:'1000px'}}>
@@ -401,15 +379,15 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
                       <PortletHeaderToolbar>
                         <Tabs
                           className='builder-tabs'
-                          indicatorColor='primary'
-                          textColor='primary'
-                          variant='fullWidth'
                           component='div'
+                          indicatorColor='primary'
                           onChange={(_, nextTab) => {
                             setTab(nextTab);
                             localStorage.setItem(localStorageActiveTabKey, nextTab);
                           }}
+                          textColor='primary'
                           value={tab}
+                          variant='fullWidth'
                         >
                           <Tab label='Pin Map' />
                           <Tab label='Pin Layout' />
@@ -452,13 +430,12 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
                       <div
                         style={{paddingTop: '20px', width: '500px'}}
                       >
-                        {/* {/* {values.imageURL && */}
+                        {values.imageURL &&
                           <ImageMarker
-                            src={values.imageURL}
-                            markers={[]}
-                            onAddMarker={(marker) => setMarkers([marker])}
-                            // markerComponent={(MarkerComponentProps) => CustomMarker(MarkerComponentProps)}
                             markerComponent={() => <RoomIcon style={{color: 'red'}}/>}
+                            markers={markers}
+                            onAddMarker={(marker) => {setMarkers([marker])}}
+                            src={ realParent !== 'root' ? values.imageURL : values.categoryPicDefault}
                           />
                         }
                       </div>
