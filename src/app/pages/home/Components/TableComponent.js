@@ -37,6 +37,7 @@ import FilterListIcon from "@material-ui/icons/FilterList";
 import AddIcon from '@material-ui/icons/Add';
 import CloseIcon from "@material-ui/icons/Close";
 import EditIcon from "@material-ui/icons/Edit";
+import RemoveRedEye from "@material-ui/icons/RemoveRedEye";
 
 const useToolbarStyles = makeStyles(theme => ({
   root: {
@@ -82,7 +83,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const TableComponent = props => {
-  const { headRows, rows = [], onAdd, onSelect, style = {}, noEdit = false } = props;
+  const { headRows, rows = [], onAdd, onSelect, style = {}, noEdit = false, showGenerateReport = false } = props;
   const [selected, setSelected] = useState([]);
   const [selectedId, setSelectedId] = useState([]);
   const [dense, setDense] = useState(false);
@@ -113,7 +114,7 @@ const TableComponent = props => {
   
   const EnhancedTableToolbar = props => {
     const classes = useToolbarStyles();
-    const { selected, onAdd, noEdit } = props;
+    const { selected, onAdd, noEdit, noGenerateReport } = props;
     const numSelected = selected.length;
 
     const onDelete = () => {
@@ -127,15 +128,43 @@ const TableComponent = props => {
     }, [numSelected]);
 
     const HeaderTools = () => {
+      // if (numSelected > 0) {
+      //   return (
+      //     <div style={{display:'flex'}}>
+      //       { numSelected === 1 && !noEdit &&
+      //       <>
+      //         <Tooltip title="Edit">
+      //           <IconButton aria-label="Edit" onClick={props.onEdit}>
+      //             <EditIcon />
+      //           </IconButton>
+      //         </Tooltip>
+      //       </>  
+      //       }
+      //       <Tooltip title="Delete">
+      //         <IconButton aria-label="Delete" onClick={onDelete}>
+      //           <DeleteIcon />
+      //         </IconButton>
+      //       </Tooltip>
+      //     </div>
+      //   )
+      // }
       if (numSelected > 0) {
         return (
           <div style={{display:'flex'}}>
+            { numSelected === 1 && !noEdit && showGenerateReport && 
+              <Tooltip title="Generate Reports">
+                <IconButton aria-label="Generate-Report" onClick={props.onGenerateReport}>
+                  <RemoveRedEye />
+                </IconButton>
+              </Tooltip>}
             { numSelected === 1 && !noEdit &&
+            <>
               <Tooltip title="Edit">
                 <IconButton aria-label="Edit" onClick={props.onEdit}>
                   <EditIcon />
                 </IconButton>
               </Tooltip>
+            </>  
             }
             <Tooltip title="Delete">
               <IconButton aria-label="Delete" onClick={onDelete}>
@@ -270,6 +299,7 @@ const TableComponent = props => {
       rowCount,
       onRequestSort
     } = props;
+
     const createSortHandler = property => event => {
       onRequestSort(event, property);
     };
@@ -320,6 +350,11 @@ const TableComponent = props => {
     setSelectedId([]);
   };
 
+  const onGenerateReport = () => {
+    props.onGenerateReport(selectedId);
+    setSelected([])
+    setSelectedId([])
+  }
 
   return (
     <div className={classes.root} style={{ padding: '0px' }}>
@@ -334,6 +369,7 @@ const TableComponent = props => {
         <EnhancedTableToolbar
           title={props.title}
           selected={selected}
+          onGenerateReport={onGenerateReport}
           onAdd={onAdd}
           onEdit={onEdit}
           onDelete={() => setOpenYesNoModal(true)}

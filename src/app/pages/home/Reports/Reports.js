@@ -259,6 +259,10 @@ const Reports = () => {
       onEdit(id) {
         setControl({ ...control, [collection.id]: id, [collection.modal]: true })
       },
+      onGenerateReport(id){
+        console.log('Hola desde onGenerateReport')
+        console.log(`id: ${id}`)
+      },
       onDelete(id) {
         if (!id || !Array.isArray(id)) return;
         id.forEach(_id => {
@@ -345,6 +349,7 @@ const Reports = () => {
                             /> */}
                             <div className="kt-separator kt-separator--dashed"/>
                             <div className="kt-section__content">
+                              HOLAAAAA
                               <TableComponent 
                                 title={'Asset References'}
                                 headRows={assetReferencesHeadRows}
@@ -353,6 +358,8 @@ const Reports = () => {
                                 onAdd={tableActions('references').onAdd}
                                 onDelete={tableActions('references').onDelete}
                                 onSelect={tableActions('references').onSelect}
+                                onGenerateReport={tableActions('references').onGenerateReport}
+                                showGenerateReport={true}
                               />
                             </div>
                         </div>
