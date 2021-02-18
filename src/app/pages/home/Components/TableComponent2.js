@@ -4,56 +4,43 @@ import clsx from 'clsx';
 import {
   makeStyles,
   lighten,
-  withStyles,
-  useTheme,
-  fade
 } from '@material-ui/core/styles';
 import {
-  Paper,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
   Checkbox,
-  Toolbar,
-  Typography,
-  Tooltip,
-  IconButton,
-  TableSortLabel,
-  TablePagination,
-  Switch,
-  FormControlLabel,
-  TableFooter,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  InputBase,
-  Popover,
-  Popper,
-  TextField,
   Grid,
+  IconButton,
   List,
   ListItem,
   ListItemSecondaryAction,
   ListItemText,
-  ListSubheader,
+  Paper,
+  Popover,
+  Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TextField,
+  TableHead,
+  TablePagination,
+  TableRow,
+  TableSortLabel,
+  Toolbar,
+  Tooltip,
+  Typography,
 } from '@material-ui/core';
 
-import { getDB } from '../../../crud/api';
-import DeleteIcon from '@material-ui/icons/Delete';
-import AddIcon from '@material-ui/icons/Add';
-import EditIcon from '@material-ui/icons/Edit';
 import AccountTreeRoundedIcon from '@material-ui/icons/AccountTreeRounded';
-import ViewModuleRoundedIcon from '@material-ui/icons/ViewModuleRounded';
+import AddIcon from '@material-ui/icons/Add';
+import DeleteIcon from '@material-ui/icons/Delete';
+import EditIcon from '@material-ui/icons/Edit';
 import ListRoundedIcon from '@material-ui/icons/ListRounded';
-import ViewColumnRoundedIcon from '@material-ui/icons/ViewColumnRounded';
 import SearchIcon from '@material-ui/icons/Search';
+import ViewColumnRoundedIcon from '@material-ui/icons/ViewColumnRounded';
+import ViewModuleRoundedIcon from '@material-ui/icons/ViewModuleRounded';
 
-import TileView from '../Components/TileView';
+import { getDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
+import TileView from '../Components/TileView';
 import TreeView from '../Components/TreeViewComponent';
 
 const useToolbarStyles = makeStyles(theme => ({
@@ -122,7 +109,7 @@ const useStyles = makeStyles(theme => ({
   },
   inputSearchBy: {
     marginTop: '16px',
-    width: '100px',
+    width: '100%',
     padding: '5px 10px',
     outline: 'none',
     border: 'none',
@@ -151,41 +138,59 @@ const useStyles = makeStyles(theme => ({
 const columnPickerControl = (headRows) => headRows.map((column) => ({ ...column, visible: true }));
 
 const TableComponentTile = props => {
-  const { headRows, rows = [], onAdd, onSelect, style = {}, noEdit = false, paginationControl, controlValues, sortByControl, searchControl } = props;
+  const { 
+    controlValues,
+    headRows,
+    locationControl,
+    noEdit = false,
+    onAdd,
+    onSelect,
+    paginationControl,
+    rows = [],
+    searchControl,
+    style = {},
+    sortByControl,
+    treeView = false,
+  } = props;
+  const classes = useStyles();
+
+  //Selected Rows
   const [selected, setSelected] = useState([]);
   const [selectedId, setSelectedId] = useState([]);
-  const [dense, setDense] = useState(false);
+  const isSelected = name => selected.indexOf(name) !== -1;
+  
+  //ExternalVariables
   const [order, setOrder] = useState(controlValues.order === 1 ? 'asc' : 'desc');
   const [orderBy, setOrderBy] = useState(controlValues.orderBy);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const classes = useStyles();
-  const isSelected = name => selected.indexOf(name) !== -1;
-  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(controlValues.rowsPerPage);
+  const [page, setPage] = useState(controlValues.page);
+
+  //Column Selector
   const [columnPicker, setColumnPicker] = useState(columnPickerControl(headRows));
   const [openColumnSelector, setOpenColumnSelector] = useState(false);
   const [anchorEl, setAnchorEl] = useState();
   const [windowCoords, setWindowCoords] = useState({ left: 0, top: 0 });
+
+  //Tree View
   const [findColumn, setFindColumn] = useState('');
   const [locationsTree, setLocationsTree] = useState({});
-  const [filteredRows, setFilteredRows] = useState(rows);
+  
 
   useEffect(() => {
     if (!paginationControl) return;
     paginationControl({ rowsPerPage, page });
-  }, [rowsPerPage, page])
+  }, [rowsPerPage, page]);
 
   useEffect(() => {
     sortByControl({ orderBy: orderBy, order: order === 'asc' ? 1 : -1 });
-  }, [order, orderBy])
+  }, [order, orderBy]);
 
   useEffect(() => {
-    setColumnPicker(columnPickerControl(headRows))
-  }, [headRows])
+    setColumnPicker(columnPickerControl(headRows));
+  }, [headRows]);
 
   useEffect(() => {
     loadLocationsData();
-    setFilteredRows(rows);
-    console.log('rows:', filteredRows )
   }, [rows]);
 
   const locationsTreeData = {
@@ -205,8 +210,8 @@ const TableComponentTile = props => {
         const children = constructLocationTreeRecursive(homeLocations);
         locationsTreeData.children = children;
         setLocationsTree(locationsTreeData);
-      })
-  }
+      });
+  };
 
   const constructLocationTreeRecursive = (locs) => {
     if (!locs || !Array.isArray(locs) || !locs.length) return [];
@@ -222,11 +227,9 @@ const TableComponentTile = props => {
 
   const selectLocation = (locationId, level, parent, locationName, children) => {
     let res = [];
-    let allchildren = locationsChildren(children, res)
-    allchildren.push(locationId)
-    let filtered = rows.filter((row) => allchildren.includes(row.location))
-    console.log('filtered: ', filtered)
-    setFilteredRows(filtered);
+    let allchildren = locationsChildren(children, res);
+    allchildren.push(locationId);
+    locationControl(allchildren);
   };
 
   const locationsChildren = (children, res) => {
@@ -246,7 +249,7 @@ const TableComponentTile = props => {
 
   const handleInputChange = (event, field) => {
     if (event) {
-      searchControl({ value: event.target.value, field: field })
+      searchControl({ value: event.target.value, field: field });
     }
   }
 
@@ -286,41 +289,45 @@ const TableComponentTile = props => {
       }
       return (
         <React.Fragment>
-          <div className={classes.search} key='SearchDiv' aria-label='Search Box'>
+          <div aria-label='Search Box' className={classes.search} key='SearchDiv'>
             <div className={classes.searchIcon}>
               <SearchIcon />
             </div>
             <input
-              key='SearchField'
               autoFocus={controlValues.searchBy === null}
+              className={classes.inputInput}
+              key='SearchField'
               onChange={event => handleInputChange(event, null)}
               placeholder='Search...'
               value={controlValues.searchBy ? null : controlValues.search}
-              className={classes.inputInput}
             />
           </div>
           <Tooltip title='Table View'>
-            <IconButton onClick={showTableView} aria-label='Table View'>
+            <IconButton aria-label='Table View' onClick={showTableView}>
               <ListRoundedIcon />
             </IconButton>
           </Tooltip>
           <Tooltip title='Tile View'>
-            <IconButton onClick={showTileView} aria-label='Tile view'>
+            <IconButton aria-label='Tile view' onClick={showTileView}>
               <ViewModuleRoundedIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title='Tree View'>
-            <IconButton onClick={showTreeView} aria-label='Tree view'>
-              <AccountTreeRoundedIcon />
-            </IconButton>
-          </Tooltip>
+          {
+            treeView && (
+              <Tooltip title='Tree View'>
+                <IconButton aria-label='Tree view' onClick={showTreeView}>
+                  <AccountTreeRoundedIcon />
+                </IconButton>
+              </Tooltip>
+            )
+          }
           <Tooltip title='Column Picker'>
-            <IconButton onClick={recordButtonPosition} aria-label='Column Picker'>
+            <IconButton aria-label='Column Picker' onClick={recordButtonPosition}>
               <ViewColumnRoundedIcon />
             </IconButton>
           </Tooltip>
           <Tooltip title='Add'>
-            <IconButton onClick={onAdd} aria-label='Add'>
+            <IconButton aria-label='Add' onClick={onAdd}>
               <AddIcon />
             </IconButton>
           </Tooltip>
@@ -339,7 +346,7 @@ const TableComponentTile = props => {
               {numSelected} selected
             </Typography>
           ) : (
-              <Typography variant='h6' id='tableTitle'>
+              <Typography variant='h6'>
                 {props.title}
               </Typography>
             )}
@@ -360,7 +367,7 @@ const TableComponentTile = props => {
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelecteds = filteredRows.map(n => n.name);
+      const newSelecteds = rows.map(n => n.name);
       setSelected(newSelecteds);
       return;
     }
@@ -403,11 +410,6 @@ const TableComponentTile = props => {
     setRowsPerPage(+event.target.value);
   }
 
-  const handleChangeDense = (event) => {
-    setDense(event.target.checked);
-  }
-
-
   const EnhancedTableHead = (props) => {
     const {
       onSelectAllClick,
@@ -426,16 +428,16 @@ const TableComponentTile = props => {
         <TableRow>
           <TableCell padding='checkbox'>
             <Checkbox
-              indeterminate={numSelected > 0 && numSelected < rowCount}
               checked={numSelected === rowCount}
-              onChange={onSelectAllClick}
+              indeterminate={numSelected > 0 && numSelected < rowCount}
               inputProps={{ 'aria-label': 'Select all desserts' }}
+              onChange={onSelectAllClick}
             />
           </TableCell>
           {columnPicker.filter((column) => column.visible).map(row => (
             <TableCell
-              key={row.id}
               align={'left'}
+              key={row.id}
               padding={row.disablePadding ? 'none' : 'default'}
               sortDirection={orderBy === row.id ? order : false}
             >
@@ -448,10 +450,10 @@ const TableComponentTile = props => {
               </TableSortLabel>
               <input
                 autoFocus={row.id === controlValues.searchBy}
+                className={classes.inputSearchBy}
+                onChange={(event) => handleInputChange(event, row.id)}
                 placeholder={`Search by...`}
                 value={row.id === controlValues.searchBy ? controlValues.search : null}
-                onChange={(event) => handleInputChange(event, row.id)}
-                className={classes.inputSearchBy}
               />
             </TableCell>
           ))}
@@ -466,11 +468,15 @@ const TableComponentTile = props => {
   });
 
   const showTableView = () => {
-    setFilteredRows(rows);
+    if(typeof locationControl === 'function'){
+      locationControl([]);
+    }
     setViewControl({ table: true, tile: false, tree: false, });
   };
   const showTileView = () => {
-    setFilteredRows(rows);
+    if(typeof locationControl === 'function'){
+      locationControl([]);
+    }
     setViewControl({ table: false, tile: true, tree: false, });
   };
   const showTreeView = () => setViewControl({ table: false, tile: false, tree: true, });
@@ -496,38 +502,38 @@ const TableComponentTile = props => {
 
     return (
       <Popover
-        className={classes.popover}
-        aria-label='Column Picker Selector'
         anchorEl={anchorEl}
+        aria-label='Column Picker Selector'
+        anchorPosition={{ left, top }}
+        anchorReference='anchorPosition'
+        className={classes.popover}        
         keepMounted
         onClose={() => setOpenColumnSelector(false)}
         open={openColumnSelector}
-        anchorPosition={{ left, top }}
-        anchorReference="anchorPosition"
       >
         <div className={classes.grid}>
           <Typography color='inherit' variant='subtitle1'> Find Column </Typography>
           <TextField
+            label={'Find Column...'}
             value={findColumn}
             onChange={(event) => setFindColumn(event.target.value)}
-            label={'Find Column...'}
           />
-          <Typography color='inherit' variant='subtitle1' style={{ marginTop: '10px' }}> Columns </Typography>
+          <Typography color='inherit' style={{ marginTop: '10px' }} variant='subtitle1'> Columns </Typography>
           <List className={classes.list}>
             {
               columnPicker.filter((column) => column.label.match(regex)).map(({ label, id, visible }, index) => {
                 return (
                   <ListItem>
-                    <ListItemText key={id} primary={label} className={classes.listItemText} />
+                    <ListItemText className={classes.listItemText} key={id} primary={label} />
                     <ListItemSecondaryAction>
                       <Switch
+                        checked={visible}
                         edge='end'
                         onChange={(event) => {
                           const array = [...columnPicker];
                           array[index].visible = event.target.checked;
                           setColumnPicker(array);
                         }}
-                        checked={visible}
                       />
                     </ListItemSecondaryAction>
                   </ListItem>
@@ -542,28 +548,27 @@ const TableComponentTile = props => {
   return (
     <div className={classes.root} style={{ padding: '0px' }}>
       <ModalYesNo
-        showModal={openYesNoModal}
+        message={'Are you sure you want to remove this element?'}
         onOK={onDelete}
         onCancel={() => setOpenYesNoModal(false)}
+        showModal={openYesNoModal}
         title={'Remove Element'}
-        message={'Are you sure you want to remove this element?'}
       />
       {renderColumnPicker()}
       <Paper className={classes.paper}>
         <EnhancedTableToolbar
-          title={props.title}
-          selected={selected}
-          onAdd={onAdd}
-          onEdit={onEdit}
-          onDelete={() => setOpenYesNoModal(true)}
-          onSelect={onSelect}
           noEdit={noEdit}
+          onAdd={onAdd}
+          onDelete={() => setOpenYesNoModal(true)}
+          onEdit={onEdit}
+          onSelect={onSelect}
+          selected={selected}
+          title={props.title}
         />
         <div className={classes.tableWrapper}>
           <Table
-            className={classes.table}
             aria-labelledby='tableTitle'
-            size={dense ? 'small' : 'medium'}
+            className={classes.table}
           >
             {
               (viewControl.table || viewControl.tree) && (
@@ -578,28 +583,28 @@ const TableComponentTile = props => {
                     }
                     <Grid item sm={12} md={12} lg={viewControl.tree ? 10 : 12} >
                       <EnhancedTableHead
+                        noEdit={noEdit}
                         numSelected={selected.length}
                         order={order}
                         orderBy={orderBy}
-                        onSelectAllClick={handleSelectAllClick}
                         onRequestSort={handleRequestSort}
-                        rowCount={filteredRows.length}
-                        noEdit={noEdit}
+                        onSelectAllClick={handleSelectAllClick}
+                        rowCount={rows.length}
                       />
                       <TableBody>
                         {
-                          filteredRows.map((row, index) => {
+                          rows.map((row, index) => {
                             const isItemSelected = isSelected(row.id);
                             const labelId = `enhanced-table-checkbox-\${index}`;
                             return (
                               <TableRow
+                                aria-checked={isItemSelected}
                                 hover
+                                key={`key-row-${row.id}`}
                                 onClick={event => handleClick(event, row.name, row.id)}
                                 role='checkbox'
-                                aria-checked={isItemSelected}
-                                tabIndex={-1}
-                                key={`key-row-${row.id}`}
                                 selected={isItemSelected}
+                                tabIndex={-1}
                               >
                                 <TableCell padding='checkbox'>
                                   <Checkbox
@@ -610,11 +615,11 @@ const TableComponentTile = props => {
 
                                 {columnPicker.filter((column) => column.visible).map((header, ix) =>
                                   <TableCell
-                                    key={`cell-row${index}-${ix}`}
+                                    align={'left'}
                                     component='th'
+                                    key={`cell-row${index}-${ix}`}
                                     padding={'default'}
                                     scope='row'
-                                    align={'left'}
                                   >
                                     {row[header.id]}
                                   </TableCell>
@@ -622,11 +627,6 @@ const TableComponentTile = props => {
                               </TableRow>
                             );
                           })}
-                        {/* {emptyRows > 0 && (
-                      <TableRow style={{ height: 49 * emptyRows }}>
-                        <TableCell colSpan={6} />
-                      </TableRow>
-                    )} */}
                       </TableBody>
                     </Grid>
                   </Grid>
@@ -637,12 +637,12 @@ const TableComponentTile = props => {
               viewControl.tile && (
                 <TableBody>
                   <TileView
-                    showTileView={true}
-                    tiles={filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)}
-                    collection='categories'
-                    onEdit={props.onEdit}
+                    collection={controlValues.collection}
                     onDelete={props.onDelete}
+                    onEdit={props.onEdit}
                     onReload={props.onReload}
+                    showTileView={true}
+                    tiles={rows}
                   />
                 </TableBody>
               )
@@ -650,19 +650,19 @@ const TableComponentTile = props => {
           </Table>
         </div>
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component='div'
-          count={controlValues.total}
-          rowsPerPage={rowsPerPage}
-          page={page}
           backIconButtonProps={{
             'aria-label': 'Previous Page'
           }}
+          component='div'
+          count={controlValues.total}
           nextIconButtonProps={{
             'aria-label': 'Next Page'
           }}
           onChangePage={handleChangePage}
           onChangeRowsPerPage={handleChangeRowsPerPage}
+          page={page}
+          rowsPerPageOptions={[5, 10, 25]}
+          rowsPerPage={rowsPerPage}         
         />
       </Paper>
     </div>

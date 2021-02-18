@@ -1,6 +1,6 @@
 // const host = 'http://localhost:3001/';
 const host = 'http://159.203.41.87:3001/';
-const version  = 'api/v1/';
+const version = 'api/v1/';
 const db = 'notes-db-app/';
 const collection = 'locations/';
 const publicReq = 'public/';
@@ -10,9 +10,9 @@ const getAPIPath = (
   _collection = collection,
   _id = '',
   isEncrypt = false,
-  isPublic =  false,
+  isPublic = false,
   isCount = false,
-) => `${host}${version}${isPublic ? publicReq : ''}${isCount? count : ''}${db}${_collection}${_id}${isEncrypt ? '/encrypt' : ''}`;
+) => `${host}${version}${isPublic ? publicReq : ''}${isCount ? count : ''}${db}${_collection}${_id}${isEncrypt ? '/encrypt' : ''}`;
 const getAPIFilePath = (foldername) => `${host}${version}upload/${foldername}`;
 
 
@@ -46,7 +46,7 @@ const deleteDB = (collection, id) => fetch(getAPIPath(collection, id), { method:
 const updateDB = (collection, body, id) => fetch(getAPIPath(collection, id), { method: 'PUT', headers: getHeaders(), body: JSON.stringify(body) });
 
 const postFILE = (foldername, filename, image) => {
-  const {type = '/jpg'} = image;
+  const { type = '/jpg' } = image;
   const fileName = `${filename}.${type.split('/')[1]}`
 
   const formData = new FormData();
@@ -75,49 +75,48 @@ const getDBComplex = ({
   if (queryLike) {
     const qLike = queryLike.map(({ key, value }) => {
       const res = {};
-      res[key] = { "$regex" : `(?i).*${value}.*` };
+      res[key] = { "$regex": `(?i).*${value}.*` };
       return res;
     });
     const queryString = JSON.stringify({ "$or": qLike });
     additionalParams += `query=${queryString}`;
+    count++;
   }
-  else {
-    if(typeof skip === 'number'){
-      count === 0 ? additionalParams += `skip=${skip}` : additionalParams += `&skip=${skip}`;
-      count++;
+  if (typeof skip === 'number') {
+    count === 0 ? additionalParams += `skip=${skip}` : additionalParams += `&skip=${skip}`;
+    count++;
+  };
+  if (typeof limit === 'number') {
+    count === 0 ? additionalParams += `limit=${limit}` : additionalParams += `&limit=${limit}`;
+    count++;
+  };
+  if (Array.isArray(fields)) {
+    let res = '{';
+    for (let i = 0; i < fields.length; i++) {
+      res += '"' + fields[i].key + '":' + fields[i].value;
+      if (i + 1 < fields.length) {
+        res += ',';
+      };
     };
-    if(typeof limit === 'number'){
-      count === 0 ? additionalParams += `limit=${limit}` :  additionalParams += `&limit=${limit}`;
-      count++;
+    res += '}';
+    count === 0 ? additionalParams += `fields=${res}` : additionalParams += `&fields=${res}`;
+    count++;
+  };
+  if (Array.isArray(sort)) {
+    let res = '{';
+    for (let i = 0; i < sort.length; i++) {
+      res += '"' + sort[i].key + '":' + sort[i].value;
+      if (i + 1 < sort.length) {
+        res += ',';
+      };
     };
-    if(Array.isArray(fields)){
-      let res = '{';
-      for(let i = 0; i< fields.length; i++){
-        res += '"'+ fields[i].key + '":' + fields[i].value; 
-        if(i+1 < fields.length){
-          res += ',';
-        };
-      }; 
-      res += '}';
-      count === 0 ? additionalParams += `fields=${res}` :  additionalParams += `&fields=${res}`;
-      count++;
-    };
-    if(Array.isArray(sort)){
-      let res = '{';
-      for(let i = 0; i< sort.length; i++){
-        res += '"'+ sort[i].key + '":' + sort[i].value; 
-        if(i+1 < sort.length){
-          res += ',';
-        };
-      }; 
-      res += '}';
-      count === 0 ? additionalParams += `sort=${res}` :  additionalParams += `&sort=${res}`;
-      count++;
-    }
+    res += '}';
+    count === 0 ? additionalParams += `sort=${res}` : additionalParams += `&sort=${res}`;
+    count++;
   }
+
   additionalParams = additionalParams ? `?${additionalParams}` : '';
   const reqURL = `${getAPIPath(collection)}${additionalParams}`;
-
   return fetch(reqURL, { method: 'GET', headers: getHeaders() });
 };
 
@@ -129,7 +128,7 @@ const getCountDB = ({
   if (queryLike) {
     const qLike = queryLike.map(({ key, value }) => {
       const res = {};
-      res[key] = { "$regex" : `(?i).*${value}.*` };
+      res[key] = { "$regex": `(?i).*${value}.*` };
       return res;
     });
     const queryString = JSON.stringify({ "$or": qLike });
@@ -137,7 +136,6 @@ const getCountDB = ({
   }
   additionalParams = additionalParams ? `?${additionalParams}` : '';
   const reqURL = `${getAPIPath(collection, '', false, false, count)}${additionalParams}`;
-
   return fetch(reqURL, { method: 'GET', headers: getHeaders() });
 };
 module.exports = {
