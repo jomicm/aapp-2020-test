@@ -10,7 +10,7 @@ import {
   TextField
 } from "@material-ui/core";
 import { makeStyles } from '@material-ui/core/styles';
-import { getDB, deleteDB } from '../../../crud/api';
+import { getDB, deleteDB, updateDB, postDB, getOneDB } from '../../../crud/api';
 import { formatCollection } from './reportsHelpers';
 
 const modules = [
@@ -145,25 +145,58 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const TabGeneral = () => {
+const TabGeneral = ({ id }) => {
   const classes = useStyles();
-  const [values, setValues] = useState({});
+  const [values, setValues] = useState({ selectReport: '', startDate: '', endDate: '', reportEnabled: false });
   const [reportIndex, setReportIndex] = useState(null);
+  const [generatedSaved, setGeneratedSaved] = useState([])
+  const [generatedSavedValue, setGeneratedSavedValue] = useState('')
   const [dataTable, setDataTable] = useState(dataTableDefault);
+  const [data, setData] = useState([])
+
+  // const handleChange = name => event => {
+  //   const value = event.target.value;
+  //   setValues(prev => ({ ...prev, [name]: value }));
+  //   switch (name) {
+  //     case 'selectReport':
+  //       setReportIndex(event.target.value);
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // };
 
   const handleChange = name => event => {
-    const value = event.target.value;
-    setValues(prev => ({ ...prev, [name]: value }));
-    switch (name) {
-      case 'selectReport':
-        setReportIndex(event.target.value);
-        break;
-      default:
-        break;
-    }
+    const {value} = event.target
+    setValues(({...values, [name]: value }));
+  };
+  
+  console.log('ID: ', id)
+
+  const loadInitData = (collectionNames = ['reports']) => {
+    collectionNames = !Array.isArray(collectionNames)
+      ? [collectionNames]
+      : collectionNames;
+    collectionNames.forEach((collectionName) => {
+      getDB(collectionName)
+        .then((response) => response.json())
+        .then((data) => {
+          const hola = data.response.map(ele => ele.selectReport)
+          const adios = data.response.map(ele => ele)
+          setData(adios)
+          setGeneratedSaved(hola)
+            data.response.map(ele => {
+              if(id[0] === ele._id){
+                setValues({...values, selectReport: ele.selectReport, startDate:ele.startDate, endDate:ele.endDate})
+              }
+            })
+        })
+        .catch((error) => console.log('error>', error));
+    });
   };
 
   useEffect(() => {
+    loadInitData();
     if (reportIndex === null || reportIndex ==='') {
       setDataTable(dataTableDefault);
       return;
@@ -183,24 +216,58 @@ const TabGeneral = () => {
       .catch(error => console.log('error>', error));
   }, [reportIndex]);
 
+  const handleSave = () => {
+    const { selectReport, startDate, endDate } = values;
+    if (!selectReport || !startDate || !endDate) {
+      alert('Select values before saving...');
+      return;
+    }
+    const body = {... values}
+      postDB('reports', body)
+        .then((data) => data.json())
+        .then((response) => {
+        })
+        .catch((error) => console.log('ERROR', error));
+        reset()
+  }
+
+  const reset = () => {
+    setValues({selectReport: '', startDate: '', endDate: ''})
+  }
+
+  const handleGeneratedSaved = (e) => {
+    // const options = [opt].map(el => el)
+    // setGeneratedSaved()
+    const {value} = e.target;
+    setGeneratedSavedValue(value);
+    console.log('dataNEW: ', data);
+    const fData = data.map((ele) => {
+      if (value === ele.selectReport) {
+        setValues({...values, selectReport: ele.selectReport, startDate: ele.startDate, endDate: ele.endDate})
+      }
+    })
+    console.log('fDATA: ', fData)
+  }
+
   return (
     <div>
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
         <h2>Generate Reports</h2>
-        <Button variant="contained" size="large" color="primary" className={classes.button}> Save </Button>
+        <Button variant="contained" size="large" color="primary" className={classes.button} onClick={handleSave}> Save </Button>
       </div>
       <div name="Head Part" style={{ marginTop:'30px', display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap' }}>
         <FormControl style={{width: '200px'}}>
           <InputLabel htmlFor="age-simple">Select Report</InputLabel>
           <Select
-            value={values.selectedProfile}
+            // value={generatedSaved}
+            value={values.selectReport}
             onChange={handleChange('selectReport')}
           >
             <MenuItem value="">
               <em>None</em>
             </MenuItem>
             {modules.map((opt, ix) => (
-              <MenuItem key={`opt-${ix}`} value={ix}>{opt.name}</MenuItem>
+              <MenuItem key={`opt-${ix}`} value={opt.name}>{opt.name}</MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -209,8 +276,8 @@ const TabGeneral = () => {
             // className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__date`}
             label="Start Date"
             type="date"
-            defaultValue={values.initialValue}
-            value={values.initialValue}
+            defaultValue={values.startDate}
+            value={values.startDate}
             onChange={handleChange('startDate')}
             InputLabelProps={{
               shrink: true,
@@ -222,9 +289,9 @@ const TabGeneral = () => {
             // className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__date`}
             label="End Date"
             type="date"
-            defaultValue={values.initialValue}
-            value={values.initialValue}
-            onChange={handleChange('startDate')}
+            defaultValue={values.endDate}
+            value={values.endDate}
+            onChange={handleChange('endDate')}
             InputLabelProps={{
               shrink: true,
             }}
@@ -233,19 +300,21 @@ const TabGeneral = () => {
         <FormControl style={{width: '200px'}}>
           <InputLabel htmlFor="age-simple">Generated Saved</InputLabel>
           <Select
-            value={values.selectedProfile}
+            value={generatedSavedValue}
             // onChange={e => setValues({...values, selectedProfile: e.target.value})}
             onChange={handleChange('selectedProfile')}
             inputProps={{
               name: 'age',
               id: 'age-simple',
             }}
+            onChange={handleGeneratedSaved}
+            // onClick={handleGeneratedSaved}
           >
             <MenuItem value="">
               <em>None</em>
             </MenuItem>
-            {savedReport.map((opt, ix) => (
-              <MenuItem key={`opt-${ix}`} value={ix}>{opt.name}</MenuItem>
+            {generatedSaved.map((opt, ix) => (
+              <MenuItem key={`opt-${ix}`} value={opt}>{opt}</MenuItem>
             ))}
           </Select>
         </FormControl>

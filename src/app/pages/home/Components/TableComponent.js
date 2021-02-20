@@ -83,7 +83,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const TableComponent = props => {
-  const { headRows, rows = [], onAdd, onSelect, style = {}, noEdit = false, showGenerateReport = false } = props;
+  const { headRows, rows = [], onAdd, onSelect, style = {}, noAdd = false, noEdit = false, showGenerateReport = false } = props;
   const [selected, setSelected] = useState([]);
   const [selectedId, setSelectedId] = useState([]);
   const [dense, setDense] = useState(false);
@@ -173,14 +173,19 @@ const TableComponent = props => {
             </Tooltip>
           </div>
         )
-      }
+      } else {
       return (
+        <>
+        {numSelected === 0 && !noAdd &&
         <Tooltip title="Add">
           <IconButton onClick={onAdd} aria-label="Filter list">
             <AddIcon />
           </IconButton>
         </Tooltip>
-      );
+      }
+        </>
+        )
+      }
     }
     return (
       <Toolbar

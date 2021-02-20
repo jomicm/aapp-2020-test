@@ -62,12 +62,15 @@ import { getDB, deleteDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 import TabGeneral from './TabGeneral';
 
+import ModalReportsSaved from './modals/ModalReportsSaved'
+
 const localStorageActiveTabKey = "builderActiveTab";
 
 const Reports = () => {
 
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [id, setId] = useState(null)
   const dispatch = useDispatch();
   const { layoutConfig } = useSelector(
     ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
@@ -106,96 +109,44 @@ const Reports = () => {
       ),
     [layoutConfig]
   );
-
-  const createAssetCategoryRow = (id, name, depreciation, creator, creation_date) => {
-    return { id, name, depreciation, creator, creation_date };
-  };
-
-  const assetCategoriesHeadRows = [
-    { id: "name", numeric: false, disablePadding: false, label: "Description" },
-    { id: "depreciation", numeric: true, disablePadding: false, label: "Depreciation" },
-    { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-    { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
-  ];
-
-  const assetCategoriesRows = [
-    createAssetCategoryRow('Laptop', '0.3', 'Admin', '11/03/2020'),
-    createAssetCategoryRow('Chair', '0.25', 'Admin', '11/03/2020'),
-    createAssetCategoryRow('Pump', '0.44', 'Admin', '11/03/2020'),
-  ];
-
-  const createAssetReferenceRow = (id, name, brand, model, category, creator, creation_date) => {
-    return { id, name, brand, model, category, creator, creation_date };
-  };
-
-  const assetReferencesHeadRows = [
-    { id: "name", numeric: false, disablePadding: false, label: "Name" },
-    { id: "brand", numeric: true, disablePadding: false, label: "Brand" },
-    { id: "model", numeric: true, disablePadding: false, label: "Model" },
-    { id: "category", numeric: true, disablePadding: false, label: "Category" },
-    { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-    { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
-  ];
-
-  const assetReferencesRows = [
-    createAssetReferenceRow('Laptop', 'Acer', 'vhrf12', 'Electronics', 'Admin', '11/03/2020'),
-    createAssetReferenceRow('Chair',  'PMP', 'derds25', 'Furniture', 'Admin', '11/03/2020'),
-    createAssetReferenceRow('Pump',  'CKT', 'wedsd52', 'Vehicles', 'Admin', '11/03/2020'),
-  ];
  
-  const createAssetListRow = (id, name, brand, model, category, serial, EPC, creator, creation_date) => {
-    return { id, name, brand, model, category, serial, EPC, creator, creation_date };
+  const createReportSavedRow = (id, name, creator, creationDate, autoMessage) => {
+    return { id, name, creator, creationDate, autoMessage };
   };
 
-  const assetListHeadRows = [
+  const assetSavedHeadRows = [
     { id: "name", numeric: false, disablePadding: false, label: "Name" },
-    { id: "brand", numeric: true, disablePadding: false, label: "Brand" },
-    { id: "model", numeric: true, disablePadding: false, label: "Model" },
-    { id: "category", numeric: true, disablePadding: false, label: "Category" },
-    { id: "serial", numeric: true, disablePadding: false, label: "Serial Number" },
-    { id: "EPC", numeric: true, disablePadding: false, label: "EPC" },
     { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-    { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
+    { id: "creationDate", numeric: false, disablePadding: false, label: "Creation Date" },
+    { id: "autoMessage", numeric: false, disablePadding: false, label: "Auto Message" }
   ];
 
-  const assetListRows = [
-    createAssetListRow('Laptop', 'Acer', 'vhrf12', 'Electronics', 'SN: 12131', 'ABCDEF123', 'Admin', '11/03/2020'),
-    createAssetListRow('Chair',  'PMP', 'derds25', 'Furniture', 'SN: 2343', 'ABCDEF124', 'Admin', '11/03/2020'),
-    createAssetListRow('Pump',  'CKT', 'wedsd52', 'Vehicles', 'SN: 435665', 'ABCDEF125', 'Admin', '11/03/2020'),
-  ];
+  // const assetSavedRows = [
+  //   createAssetSavedRow('Laptop', 'Acer', 'vhrf12', 'Electronics', 'SN: 12131', 'ABCDEF123', 'Admin', '11/03/2020'),
+  //   createAssetSavedRow('Chair',  'PMP', 'derds25', 'Furniture', 'SN: 2343', 'ABCDEF124', 'Admin', '11/03/2020'),
+  //   createAssetSavedRow('Pump',  'CKT', 'wedsd52', 'Vehicles', 'SN: 435665', 'ABCDEF125', 'Admin', '11/03/2020'),
+  // ];
   
-  const [openCategoriesModal, setOpenCategoriesModal] = useState(false);
-  const [openListModal, setOpenListModal] = useState(false);
-  const [openReferencesModal, setOpenReferencesModal] = useState(false);
+  const [openSavedModal, setOpenSavedModal] = useState(false);
 
   const [anchorEl, setAnchorEl] = React.useState(null);
 
-  const loadAssetsData = (collectionNames = ['assets', 'references', 'categories']) => {
+  const loadInitData = (collectionNames = ['reports']) => {
     collectionNames =  !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
       getDB(collectionName)
       .then(response => response.json())
       .then(data => {
-        if (collectionName === 'assets') {
-          console.log('d:', data)
-          const rows = data.response.map(row => {
-            console.log('row:', row)
-            return createAssetListRow(row._id, row.name, row.brand, row.model, row.category, row.serial, row.EPC, 'Admin', '11/03/2020');
+        if (collectionName === 'reports') {
+          // console.log('d:', data)
+          const rows = data.response.map((row) => {
+            const { _id, selectReport, reportEnabled } = row
+            const cast = reportEnabled ? 'Yes' : 'No'
+            // return createAssetSavedRow(row._id, row.name, row.brand, row.model, row.category, row.serial, row.EPC, 'Admin', '11/03/2020');
+            return createReportSavedRow(_id, selectReport, 'Admin', '11/03/2020', cast)
           });
-          setControl(prev => ({ ...prev, assetRows: rows, assetRowsSelected: [] }));
+          setControl((prev) => ({ ...prev, savedRows: rows, savedRowsSelected: [] }));
           console.log('inside assets', rows)
-        }
-        if (collectionName === 'references') {
-          const rows = data.response.map(row => {
-            return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.category, 'Admin', '11/03/2020');
-          });
-          setControl(prev => ({ ...prev, referenceRows: rows, referenceRowsSelected: [] }));
-        }
-        if (collectionName === 'categories') {
-          const rows = data.response.map(row => {
-            return createAssetCategoryRow(row._id, row.name, row.depreciation, 'Admin', '11/03/2020');
-          });
-          setControl(prev => ({ ...prev, categoryRows: rows, categoryRowsSelected: [] }));
         }
       })
       .catch(error => console.log('error>', error));
@@ -203,82 +154,105 @@ const Reports = () => {
   };
 
   useEffect(() => {
-    loadAssetsData();
+    loadInitData();
   }, []);
 
+  // const [control, setControl] = useState({
+  //   idReference: null,
+  //   openReferencesModal: false,
+  //   referenceRows: [],
+  //   referenceRowsSelected: [],
+  //   //
+  //   idCategory: null,
+  //   openCategoriesModal: false,
+  //   categoryRows: [],
+  //   categoryRowsSelected: [],
+  //   //
+  //   idAsset: null,
+  //   openAssetsModal: false,
+  //   assetRows: [],
+  //   assetRowsSelected: [],
+  // });
+
   const [control, setControl] = useState({
-    idReference: null,
-    openReferencesModal: false,
-    referenceRows: [],
-    referenceRowsSelected: [],
-    //
-    idCategory: null,
-    openCategoriesModal: false,
-    categoryRows: [],
-    categoryRowsSelected: [],
-    //
-    idAsset: null,
-    openAssetsModal: false,
-    assetRows: [],
-    assetRowsSelected: [],
-  });
+    idSaved: null,
+    openSavedModal: false,
+    savedRows: [],
+    savedRowsSelected: [],
+  })
 
   const [referencesSelectedId, setReferencesSelectedId] = useState(null);
   const [selectReferenceConfirmation, setSelectReferenceConfirmation] = useState(false);
 
+  // const collections = {
+  //   references: {
+  //     id: 'idReference',
+  //     modal: 'openReferencesModal',
+  //     name: 'references'
+  //   },
+  //   categories: {
+  //     id: 'idCategory',
+  //     modal: 'openCategoriesModal',
+  //     name: 'categories'
+  //   },
+  //   assets: {
+  //     id: 'idAsset',
+  //     modal: 'openAssetsModal',
+  //     name: 'assets'
+  //   },
+  // };
+
   const collections = {
-    references: {
-      id: 'idReference',
-      modal: 'openReferencesModal',
-      name: 'references'
-    },
-    categories: {
-      id: 'idCategory',
-      modal: 'openCategoriesModal',
-      name: 'categories'
-    },
-    assets: {
-      id: 'idAsset',
-      modal: 'openAssetsModal',
-      name: 'assets'
-    },
-  };
+    saved: {
+      id: 'idSaved',
+      modal: 'openSavedModal',
+      name: 'saved'
+    }
+  }
 
   const tableActions = (collectionName) => {
-    // return;
     const collection = collections[collectionName];
     return {
       onAdd() {
-        console.log('MAIN ON ADD>> ', referencesSelectedId);
-        if (!referencesSelectedId && collectionName === 'assets') {
-          setSelectReferenceConfirmation(true);
-          return;
-        }
-        setControl({ ...control, [collection.id]: null, [collection.modal]: true })
+        setControl({
+          ...control,
+          [collection.id]: null,
+          [collection.modal]: true,
+        });
       },
       onEdit(id) {
-        setControl({ ...control, [collection.id]: id, [collection.modal]: true })
+        setControl({
+          ...control,
+          [collection.id]: id,
+          [collection.modal]: true,
+        });
       },
-      onGenerateReport(id){
-        console.log('Hola desde onGenerateReport')
-        console.log(`id: ${id}`)
+      onGenerateReport(id) {
+        setControl({
+          ...control,
+          [collection.id]: id
+        });
+        setId(id)
+        setTab(0)
       },
       onDelete(id) {
         if (!id || !Array.isArray(id)) return;
-        id.forEach(_id => {
+        id.forEach((_id) => {
           deleteDB(`${collection.name}/`, _id)
-            .then(response => console.log('success', response))
-            .catch(error => console.log('Error', error));
+            .then((response) => loadInitData(collection.name))
+            .catch((error) => console.log('Error', error));
         });
-        loadAssetsData(collection.name);
       },
       onSelect(id) {
-        if (collectionName === 'references') {
-          setReferencesSelectedId(id);
+        if (collectionName === 'saved') {
         }
-      }
-    }
+      },
+    };
   };
+
+  const handleSave = () => {
+    alert('SAVED')
+  }
 
   return (
     <>
@@ -286,8 +260,18 @@ const Reports = () => {
         showModal={selectReferenceConfirmation}
         onOK={() => setSelectReferenceConfirmation(false)}
         onCancel={() => setSelectReferenceConfirmation(false)}
-        title={'Add New Asset'}
+        title={'Add New Report'}
         message={'Please first select a Reference from the next tab'}
+      />
+      <ModalReportsSaved
+        id={control.idSaved}
+        employeeProfileRows={[]}
+        module={module}
+        reloadTable={() => loadInitData('reports')}
+        setShowModal={(onOff) =>
+          setControl({ ...control, openSavedModal: onOff })
+        }
+        showModal={control.openSavedModal}
       />
       {/*Formic off site: https://jaredpalmer.com/formik/docs/overview*/}
       <Formik
@@ -326,7 +310,7 @@ const Reports = () => {
                 <PortletBody>
                   <div className="kt-section kt-margin-t-0">
                     <div className="kt-section__body">
-                        <TabGeneral />
+                        <TabGeneral id={id} saveData={handleSave}/>
                     </div>
                   </div>
                 </PortletBody>
@@ -338,7 +322,7 @@ const Reports = () => {
                     <div className="kt-section__body">
                       <div className="kt-section">
                           <span className="kt-section__sub">
-                            This section will integrate <code>Assets References</code>
+                            This section will integrate <code>Reports</code>
                           </span>
                             {/* <ModalAssetReferences
                               showModal={control.openReferencesModal}
@@ -349,67 +333,19 @@ const Reports = () => {
                             /> */}
                             <div className="kt-separator kt-separator--dashed"/>
                             <div className="kt-section__content">
-                              HOLAAAAA
                               <TableComponent 
-                                title={'Asset References'}
-                                headRows={assetReferencesHeadRows}
-                                rows={control.referenceRows}
-                                onEdit={tableActions('references').onEdit}
-                                onAdd={tableActions('references').onAdd}
-                                onDelete={tableActions('references').onDelete}
-                                onSelect={tableActions('references').onSelect}
-                                onGenerateReport={tableActions('references').onGenerateReport}
+                                title={'Reports'}
+                                headRows={assetSavedHeadRows}
+                                // rows={control.savedRows}
+                                rows={control.savedRows}
+                                onEdit={tableActions('saved').onEdit}
+                                noAdd
+                                onDelete={tableActions('saved').onDelete}
+                                onSelect={tableActions('saved').onSelect}
+                                onGenerateReport={tableActions('saved').onGenerateReport}
                                 showGenerateReport={true}
                               />
                             </div>
-                        </div>
-                    </div>
-                  </div>
-                </PortletBody>
-              )}
-
-              {tab === 2 && (
-                <PortletBody>
-                  <div className="kt-section kt-margin-t-0">
-                    <div className="kt-section__body">
-                      <div className="kt-section">
-                          <span className="kt-section__sub">
-                            This section will integrate <code>Assets Categories</code>
-                          </span>
-                          {/* <ModalAssetCategories
-                              showModal={control.openCategoriesModal}
-                              setShowModal={(onOff) => setControl({ ...control, openCategoriesModal: onOff })}
-                              reloadTable={() => loadAssetsData('categories')}
-                              id={control.idCategory}
-                          /> */}
-
-                          <div className="kt-separator kt-separator--dashed"/>
-                          <div className="kt-section__content">
-                            <TableComponent 
-                              title={'Asset Categories'}
-                              headRows={assetCategoriesHeadRows}
-                              rows={control.categoryRows}
-                              onEdit={tableActions('categories').onEdit}
-                              onAdd={tableActions('categories').onAdd}
-                              onDelete={tableActions('categories').onDelete}
-                              onSelect={tableActions('categories').onSelect}
-                            />
-                          </div>
-                        </div>
-                    </div>
-                  </div>
-                </PortletBody>
-              )}
-
-              {tab === 3 && (
-                <PortletBody>
-                  <div className="kt-section kt-margin-t-0">
-                    <div className="kt-section__body">
-                      <div className="kt-section">
-                          <span className="kt-section__sub">
-                            This section will integrate <code>Asset Policies</code>
-                          </span>
-                          <div className="kt-separator kt-separator--dashed"/>
                         </div>
                     </div>
                   </div>
