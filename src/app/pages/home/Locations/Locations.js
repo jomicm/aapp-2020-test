@@ -130,8 +130,8 @@ const Locations = () => {
     },
     removeLocation() {
       deleteDB('locationsReal/', parentSelected)
-      .then(response => handleLoadLocations())
-      .catch(error => console.log('Error', error));
+      .then((response) => handleLoadLocations())
+      .catch((error) => console.log('Error', error));
       setOpenYesNoModal(false);
     },
     openProfilesListBox(e) {
@@ -275,8 +275,8 @@ const Locations = () => {
     if (!id || !Array.isArray(id)) return;
     id.forEach(_id => {
       deleteDB('locations/', _id)
-        .then(response => console.log('success', response))
-        .catch(error => console.log('Error', error));
+        .then((response) => console.log('success', response))
+        .catch((error) => console.log('Error', error));
     });
     handleLoadLocationProfiles();
   };
@@ -295,8 +295,8 @@ const Locations = () => {
     if (id === 'root') { 
       return;
     } else {
-      const result = locations.filter(location =>  location._id === id);
-      const image = result.map( (coordinate) => coordinate.fileExt);
+      const result = locations.filter((location) =>  location._id === id);
+      const image = result.map((coordinate) => coordinate.fileExt);
       if (image[0]) {
         const imageURLLayout = getImageURL(id, 'locationsReal', image[0]);
         setImageLayout(imageURLLayout);
@@ -310,9 +310,9 @@ const Locations = () => {
     if (id === 'root') {
       setCoordinates([]);
     } else { 
-      const result = locations.filter(location =>  location.parent === id);
-      const latLng = result.map( (coordinate) => coordinate.mapInfo);
-      const pinMarker = result.map( (pin) => pin.imageInfo).filter(elem => elem !== null);
+      const result = locations.filter((location) =>  location.parent === id);
+      const latLng = result.map((coordinate) => coordinate.mapInfo);
+      const pinMarker = result.map((pin) => pin.imageInfo).filter((elem) => elem !== null);
       setCoordinates(latLng);
       setMarkers(pinMarker);
     }
@@ -322,8 +322,8 @@ const Locations = () => {
     if (id === 'root') {
       setCoordinates([]);
     } else {
-      const result = locations.filter(location =>  location.id === id);
-      const latLngZoom = result.map( (coordinate) => coordinate.mapInfo);
+      const result = locations.filter((location) =>  location.id === id);
+      const latLngZoom = result.map((coordinate) => coordinate.mapInfo);
       if (latLngZoom[0] === null) {
         setGoogleMapsZoom(6);
       } else {
@@ -335,7 +335,7 @@ const Locations = () => {
 
   const getParentExt = (idParent) => {
     if (idParent === 'root' || !idParent) return;
-    const result = locations.filter(location =>  location._id === idParent);
+    const result = locations.filter((location) =>  location._id === idParent);
     if (result[0].fileExt !== '') {
       const getExt = result[0].fileExt;
       setParentFileExt(getExt);
@@ -355,7 +355,7 @@ const Locations = () => {
         parent, 
         fileExt 
       }) => ({ id, name, profileLevel, parent, fileExt }))(location);
-      const children = locations.filter(loc => loc.parent === locObj.id);
+      const children = locations.filter((loc) => loc.parent === locObj.id);
       locObj.children = constructLocationTreeRecursive(children);
       res.push(locObj);
     });
@@ -365,15 +365,15 @@ const Locations = () => {
   const handleLoadLocations = () => {
     setLocationsTree({});
     getDB('locationsReal')
-      .then(response => response.json())
-      .then(async data => {
-        locations = data.response.map(res => ({ ...res, id: res._id }));
-        const homeLocations = data.response.filter(loc => loc.profileLevel === 0);
+      .then((response) => response.json())
+      .then(async (data) => {
+        locations = data.response.map((res) => ({ ...res, id: res._id }));
+        const homeLocations = data.response.filter((loc) => loc.profileLevel === 0);
         const children = constructLocationTreeRecursive(homeLocations);
         locationsTreeData.children = children;
         setLocationsTree(locationsTreeData);
       })
-      .catch(error => console.log('error>', error));
+      .catch((error) => console.log('error>', error));
         const selectedProfileTmp = profileSelected;
         setProfileSelected({});
         setProfileSelected(selectedProfileTmp);
@@ -381,16 +381,16 @@ const Locations = () => {
   
   const handleLoadLocationProfiles = () => {
     getDB('locations')
-      .then(response => response.json())
-      .then(data => {
-        const profileRows = data.response.map(row => {
+      .then((response) => response.json())
+      .then((data) => {
+        const profileRows = data.response.map((row) => {
           const { _id, level, name } = row;
           return createLocationProfileRow(_id, level, name, 'Admin', '11/03/2020');
         });
         setLocationProfileRows(profileRows);
         setSelectedLocationProfileRows([]);
       })
-      .catch(error => console.log('error>', error));
+      .catch((error) => console.log('error>', error));
   };
 
   const handleSetProfileLocationFilter = (parent, level, realParent) => {
@@ -402,7 +402,7 @@ const Locations = () => {
     getSelfCenter(parent);
     setParentSelected(parent);
     setRealParentSelected(realParent);
-    let locationProf = locationProfileRows.filter(row => row.level == lvl);
+    let locationProf = locationProfileRows.filter((row) => row.level == lvl);
     setSelectedLocationProfileRows(locationProf);
   };
   
@@ -483,7 +483,7 @@ const Locations = () => {
                                   onClose={handleClose}
                                   open={Boolean(anchorEl)}
                                 >
-                                  { selectedLocationProfileRows.map(locProfile => (
+                                  { selectedLocationProfileRows.map((locProfile) => (
                                     <MenuItem onClick={() => handleOpenLocationListModal(locProfile)}>{locProfile.name}</MenuItem>
                                   )) }
                                 </Menu>
