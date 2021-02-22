@@ -15,7 +15,7 @@ const GoogleMaps = ({
     if (edit) {
       const lat = latLng.lat();
       const lng = latLng.lng();
-      setCoords([{lat, lng}]);
+      setCoords([{ lat, lng }]);
     }
   }
 
@@ -23,7 +23,7 @@ const GoogleMaps = ({
     if (edit) {
       const lat = latLng.lat();
       const lng = latLng.lng();
-      setCoords([{lat, lng}]);
+      setCoords([{ lat, lng }]);
     }
   }
 
@@ -35,7 +35,7 @@ const GoogleMaps = ({
 
   return (
       <Map
-        initialCenter={center || {lat: 19.432608, lng:  -99.133209}}
+        initialCenter={center || { lat: 19.432608, lng:  -99.133209 }}
         google={google}
         onClick={handleClick}
         onZoomChanged={handleZoomChanged}
