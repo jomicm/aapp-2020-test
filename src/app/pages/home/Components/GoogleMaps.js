@@ -11,26 +11,25 @@ const GoogleMaps = ({
   styleMap, 
   zoom }) => {
 
-  const handleClick = (mapProps, map, clickEvent) => {
-    if(edit){
-      const newLat = clickEvent.latLng.lat();
-      const newLng = clickEvent.latLng.lng();
-      setCoords([{lat: newLat, lng: newLng}]);
+  const handleClick = (mapProps, map, { latLng }) => {
+    if (edit) {
+      const lat = latLng.lat();
+      const lng = latLng.lng();
+      setCoords([{lat, lng}]);
     }
   }
 
-  const handleDragend = (mapProps, map, clickEvent) => {
-    if(edit){
-      const newLat = clickEvent.latLng.lat();
-      const newLng = clickEvent.latLng.lng();
-      setCoords([{lat: newLat, lng: newLng}]);
+  const handleDragEnd = (mapProps, map, { latLng }) => {
+    if (edit) {
+      const lat = latLng.lat();
+      const lng = latLng.lng();
+      setCoords([{lat, lng}]);
     }
   }
 
-  const handleMouse = (mapProps, map, clickEvent) => {
-    if(edit){
-      const newZoom = map.zoom;
-      setZoom(newZoom)
+  const handleZoomChanged = (mapProps, { zoom }, clickEvent) => {
+    if (edit) {
+      setZoom(zoom)
     }
   }
 
@@ -38,15 +37,15 @@ const GoogleMaps = ({
       <Map
         initialCenter={center || {lat: 19.432608, lng:  -99.133209}}
         google={google}
-        onClick={(mapProps, map, clickEvent) => handleClick(mapProps, map, clickEvent)}
-        onZoomChanged={(mapProps, map, clickEvent) => handleMouse(mapProps, map, clickEvent)}
+        onClick={handleClick}
+        onZoomChanged={handleZoomChanged}
         style={styleMap}
         zoom={zoom}
         >
-        {coords.map(coord => (  
+        {coords.map((coord) => (  
           <Marker
             draggable={edit}
-            onDragend={(mapProps, map, clickEvent) => handleDragend(mapProps, map, clickEvent)}
+            onDragend={handleDragEnd}
             position={coord}
           />
           ))}
