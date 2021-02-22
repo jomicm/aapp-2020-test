@@ -1,7 +1,15 @@
 import React from 'react';
 import { GoogleApiWrapper, InfoWindow, Map, Marker } from 'google-maps-react';
 
-const GoogleMaps = ({ center, coords, edit = false, google, setCoords, setZoom, styleMap, zoom }) => {
+const GoogleMaps = ({ 
+  center, 
+  coords, 
+  edit = false, 
+  google, 
+  setCoords, 
+  setZoom, 
+  styleMap, 
+  zoom }) => {
 
   const handleClick = (mapProps, map, clickEvent) => {
     if(edit){
