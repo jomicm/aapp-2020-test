@@ -92,12 +92,12 @@ import {
   RadioButtons,
   RadioButtonsSettings,
   SingleLine,
-  SingleLineSettings,
+  SingleLineSettings
 } from '../Components/CustomFields/CustomFieldsPreview';
 import ModalYesNo from '../Components/ModalYesNo';
 import { getFileExtension, getImageURL, saveImage } from '../utils';
 
-const Divider = () => <div style={{width: '100%', height: '3px', backgroundColor: 'black'}}></div>;
+const Divider = () => <div style={{ width: '100%', height: '3px', backgroundColor: 'black' }}></div>;
 
 let locations;
 const localStorageActiveTabKey = 'builderActiveTab';
@@ -106,7 +106,7 @@ const locationsTreeData = {
   id: 'root',
   name: 'Locations',
   profileLevel: -1,
-  parent: null,
+  parent: null
 };
 
 const Locations = () => {
@@ -149,7 +149,7 @@ const Locations = () => {
   const [editOrNew, setEditOrNew] = useState('new');
   const [googleMapsZoom, setGoogleMapsZoom] = useState(6);
   const [id, setId] = useState(null);
-  const [imageLayout, setImageLayout] = useState(null)
+  const [imageLayout, setImageLayout] = useState(null);
   const [loadingButtonPreviewStyle, setLoadingButtonPreviewStyle] = useState({
     paddingRight: '2.5rem'
   });
@@ -163,8 +163,8 @@ const Locations = () => {
   const [locationsTree, setLocationsTree] = useState({});
   const [mapCenter, setMapCenter] = useState(null);
   const [markers, setMarkers] = useState([]);
-  const [modalId, setModalId] = useState(null)
-  const [parentFileExt, setParentFileExt] = useState(null)
+  const [modalId, setModalId] = useState(null);
+  const [parentFileExt, setParentFileExt] = useState(null);
   const [parentSelected, setParentSelected] = useState(null);
   const [profileSelected, setProfileSelected] = useState({});
   const [openListModal, setOpenListModal] = useState(false);
@@ -179,16 +179,24 @@ const Locations = () => {
     shallowEqual
   );
 
-  const createLocationProfileRow = (id, level, name, creator, creation_date) => {
+  const createLocationProfileRow = (
+    id, 
+    level, 
+    name, 
+    creator, 
+    creation_date
+    ) => {
     return { id, level, name, creator, creation_date };
   };
 
   const CustomMarker = (MarkerComponentProps) => {
-    if(imageLayout !== 'http://localhost:3000/media/misc/placeholder-image.jpg'){
+    if (imageLayout !== 'http://localhost:3000/media/misc/placeholder-image.jpg') {
       return (
-        <RoomIcon style={{color: 'red'}}/>
+        <RoomIcon style={{ color: 'red' }}/>
       )
-    }else return null
+    }else {
+      return null;
+    }
   }
   
   const enableLoadingPreview = () => {
@@ -284,60 +292,69 @@ const Locations = () => {
   };
 
   const getImageLayout = (id) => {
-    if(id === 'root') return
-    else{
-      const result = locations.filter(location =>  location._id === id)
-      const image = result.map( (coordinate) => coordinate.fileExt)
-      if(image[0]){
-        const imageURLLayout = getImageURL(id, 'locationsReal', image[0])
-        setImageLayout(imageURLLayout)
-      }else {
-        setImageLayout('http://localhost:3000/media/misc/placeholder-image.jpg')
+    if (id === 'root') { 
+      return;
+    } else {
+      const result = locations.filter(location =>  location._id === id);
+      const image = result.map( (coordinate) => coordinate.fileExt);
+      if (image[0]) {
+        const imageURLLayout = getImageURL(id, 'locationsReal', image[0]);
+        setImageLayout(imageURLLayout);
+      } else {
+        setImageLayout('http://localhost:3000/media/misc/placeholder-image.jpg');
       }
     }
   }
 
   const getChildren = (id) => {
-    if(id === 'root'){
-      setCoordinates([])
-    }else{
-      const result = locations.filter(location =>  location.parent === id)
-      const latLng = result.map( (coordinate) => coordinate.mapInfo)
-      const pinMarker = result.map( (pin) => pin.imageInfo).filter(elem => elem !== null)
-      setCoordinates(latLng)
-      setMarkers(pinMarker)
+    if (id === 'root') {
+      setCoordinates([]);
+    } else { 
+      const result = locations.filter(location =>  location.parent === id);
+      const latLng = result.map( (coordinate) => coordinate.mapInfo);
+      const pinMarker = result.map( (pin) => pin.imageInfo).filter(elem => elem !== null);
+      setCoordinates(latLng);
+      setMarkers(pinMarker);
     }
   }
 
   const getSelfCenter = (id) => {
-    if(id === 'root'){
-      setCoordinates([])
-    }else{
-      const result = locations.filter(location =>  location.id === id)
-      const latLngZoom = result.map( (coordinate) => coordinate.mapInfo)
-      if(latLngZoom[0] === null){
-        setGoogleMapsZoom(6)
-      }else{
-      setMapCenter({lat: latLngZoom[0].lat, lng: latLngZoom[0].lng})
-      setGoogleMapsZoom(latLngZoom[0].zoom)
+    if (id === 'root') {
+      setCoordinates([]);
+    } else {
+      const result = locations.filter(location =>  location.id === id);
+      const latLngZoom = result.map( (coordinate) => coordinate.mapInfo);
+      if (latLngZoom[0] === null) {
+        setGoogleMapsZoom(6);
+      } else {
+      setMapCenter({ lat: latLngZoom[0].lat, lng: latLngZoom[0].lng });
+      setGoogleMapsZoom(latLngZoom[0].zoom);
       }
     }
   }
 
   const getParentExt = (idParent) => {
-    if(idParent === 'root' || !idParent) return
-    const result = locations.filter(location =>  location._id === idParent)
-    if(result[0].fileExt !== ''){
+    if (idParent === 'root' || !idParent) return;
+    const result = locations.filter(location =>  location._id === idParent);
+    if (result[0].fileExt !== '') {
       const getExt = result[0].fileExt;
-      setParentFileExt(getExt)
-    }else return 
+      setParentFileExt(getExt);
+    } else { 
+      return;
+    } 
   }
 
   const constructLocationTreeRecursive = (locs) => {
     if (!locs || !Array.isArray(locs) || !locs.length) return [];
     let res = [];
     locs.forEach((location) => {
-      const locObj = (({_id: id, name, profileLevel, parent, fileExt}) => ({id, name, profileLevel, parent, fileExt}))(location);
+      const locObj = (({ 
+        _id: id, 
+        name, 
+        profileLevel, 
+        parent, 
+        fileExt 
+      }) => ({ id, name, profileLevel, parent, fileExt }))(location);
       const children = locations.filter(loc => loc.parent === locObj.id);
       locObj.children = constructLocationTreeRecursive(children);
       res.push(locObj);
@@ -348,18 +365,18 @@ const Locations = () => {
   const handleLoadLocations = () => {
     setLocationsTree({});
     getDB('locationsReal')
-    .then(response => response.json())
-    .then(async data => {
-      locations = data.response.map(res => ({ ...res, id: res._id }));
-      const homeLocations = data.response.filter(loc => loc.profileLevel === 0);
-      const children = constructLocationTreeRecursive(homeLocations);
-      locationsTreeData.children = children;
-      setLocationsTree(locationsTreeData);
-    })
+      .then(response => response.json())
+      .then(async data => {
+        locations = data.response.map(res => ({ ...res, id: res._id }));
+        const homeLocations = data.response.filter(loc => loc.profileLevel === 0);
+        const children = constructLocationTreeRecursive(homeLocations);
+        locationsTreeData.children = children;
+        setLocationsTree(locationsTreeData);
+      })
       .catch(error => console.log('error>', error));
-      const selectedProfileTmp = profileSelected;
-    setProfileSelected({});
-    setProfileSelected(selectedProfileTmp);
+        const selectedProfileTmp = profileSelected;
+        setProfileSelected({});
+        setProfileSelected(selectedProfileTmp);
   };
   
   const handleLoadLocationProfiles = () => {
@@ -367,7 +384,8 @@ const Locations = () => {
       .then(response => response.json())
       .then(data => {
         const profileRows = data.response.map(row => {
-          return createLocationProfileRow(row._id, row.level, row.name, 'Admin', '11/03/2020');
+          const { _id, level, name } = row;
+          return createLocationProfileRow(_id, level, name, 'Admin', '11/03/2020');
         });
         setLocationProfileRows(profileRows);
         setSelectedLocationProfileRows([]);
@@ -377,11 +395,11 @@ const Locations = () => {
 
   const handleSetProfileLocationFilter = (parent, level, realParent) => {
     const lvl = Number(level) + 1;
-    setModalId(parent)
-    getChildren(parent)
-    getImageLayout(parent)
-    getParentExt(realParent)
-    getSelfCenter(parent)
+    setModalId(parent);
+    getChildren(parent);
+    getImageLayout(parent);
+    getParentExt(realParent);
+    getSelfCenter(parent);
     setParentSelected(parent);
     setRealParentSelected(realParent);
     let locationProf = locationProfileRows.filter(row => row.level == lvl);
@@ -518,11 +536,11 @@ const Locations = () => {
                                         <GoogleMaps 
                                           center={mapCenter}
                                           coords={coordinates}
-                                          setCoords={(newCoords) =>
-                                            setCoordinates({lat: newCoords.lat, lng: newCoords.lng})
+                                          setCoords={({lat, lng}) =>
+                                            setCoordinates({ lat, lng })
                                           } 
-                                          setZoom={(newZoom) => setGoogleMapsZoom(newZoom)}
-                                          style={{width: '100%', height: '500px', position: 'relative'}}
+                                          setZoom={setGoogleMapsZoom}
+                                          style={{ width: '100%', height: '500px', position: 'relative' }}
                                           zoom={googleMapsZoom}
                                         />
                                       </div>
@@ -530,12 +548,12 @@ const Locations = () => {
                                     <TabContainer4 
                                       dir={theme4.direction}
                                     >
-                                      <div style={{display: 'flex', justifyContent: 'center'}}>
-                                        <div style={{height: '500px', width: '500px'}}>
+                                      <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                        <div style={{ height: '480px', width: '600px' }}>
                                           <ImageMarker
                                             src={imageLayout}
                                             markers={markers}
-                                            markerComponent={(MarkerComponentProps) => CustomMarker(MarkerComponentProps)}
+                                            markerComponent={CustomMarker}
                                           />
                                         </div>
                                       </div>
@@ -736,7 +754,7 @@ const Locations = () => {
                       </FormControl>
                       <DeleteIcon className='custom-field-preview-wrapper__delete-icon'/>
                     </div>
-                    <div style={{width: '500px', height: '2px', backgroundColor: 'black'}} />
+                    <div style={{ width: '500px', height: '2px', backgroundColor: 'black' }} />
                     {/* Custom Fileds Preview Functional */}
                     <SingleLine />
                     <MultiLine />
