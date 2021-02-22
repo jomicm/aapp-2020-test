@@ -19,7 +19,7 @@ import {
   Tab, 
   Tabs, 
   TextField,
-  Typography,
+  Typography
 } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
 import RoomIcon from '@material-ui/icons/Room';
@@ -154,7 +154,7 @@ const useStyles = makeStyles(theme => ({
   },
   iconSmall: {
     fontSize: 20
-  },
+  }
 }));
 
 const useStyles4 = makeStyles(theme => ({
@@ -171,7 +171,18 @@ const useStyles5 = makeStyles({
   }
 });
 
-const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, realParent, reload, setParentSelected, setShowModal, showModal }) => {
+const ModalLocationList = ({ 
+  editOrNew, 
+  modalId, 
+  parent, 
+  parentExt, 
+  profile, 
+  realParent, 
+  reload, 
+  setParentSelected, 
+  setShowModal, 
+  showModal 
+}) => {
 
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const classes = useStyles();
@@ -246,27 +257,27 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
   const handleSave = () => {
     const fileExt = getFileExtension(image);
     const body = {
-          ...values, 
-          fileExt,
-          mapInfo: modalMapZoom !== null ? {lat: modalCoords[0].lat, lng: modalCoords[0].lng, zoom: modalMapZoom} : null,
-          imageInfo: markers.length ? {top: markers[0].top, left: markers[0].left} : null
+      ...values, 
+      fileExt,
+      mapInfo: modalMapZoom !== null ? {lat: modalCoords[0].lat, lng: modalCoords[0].lng, zoom: modalMapZoom} : null,
+      imageInfo: markers.length ? {top: markers[0].top, left: markers[0].left} : null
     };
     if (editOrNew === 'new') {
       body.parent = parent;
       postDB('locationsReal', body)
-      .then(response => response.json())
-      .then(data => {
-        const { _id } = data.response;
-        saveAndReload('locationsReal', _id);
+        .then((response) => response.json())
+        .then((data) => {
+          const { _id } = data.response;
+          saveAndReload('locationsReal', _id);
       })
-        .catch(error => console.log(error));
+        .catch((error) => console.log(error));
       } else {
         body.parent = realParent;
         updateDB('locationsReal/', body, parent)
-        .then(response => {
-          saveAndReload('locationsReal', parent);
+          .then((response) => {
+            saveAndReload('locationsReal', parent);
         })
-        .catch(error => console.log(error));
+          .catch((error) => console.log(error));
       }
       setModalMapZoom(modalMapZoom);
       handleCloseModal();
@@ -282,7 +293,7 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
     const colValue = ['left', 'right'];
     const customFieldsTabTmp = { ...values.customFieldsTab };
     const field = customFieldsTabTmp[tab][colValue[colIndex]]
-    .find(cf => cf.id === id);
+    .find((cf) => cf.id === id);
     field.values = CFValues;
   };
 
@@ -294,40 +305,63 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
   useEffect(() => {
     if(!profile || !profile.id || editOrNew === 'edit') return;
     getOneDB('locations/', profile.id)
-      .then(response => response.json())
-      .then(data => { 
-        const { _id: profileId, name: profileName, level: profileLevel, customFieldsTab } = data.response;
+      .then((response) => response.json())
+      .then((data) => { 
+        const { 
+          _id: profileId, 
+          name: profileName, 
+          level: profileLevel, 
+          customFieldsTab 
+        } = data.response;
         setValues({ ...values, name:'', profileName, profileId, profileLevel, customFieldsTab });
         setProfileLabel(profile.name);
-        const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
+        const tabs = Object.keys(customFieldsTab).map((key) => ({ 
+          key, 
+          info: customFieldsTab[key].info, 
+          content: [customFieldsTab[key].left, customFieldsTab[key].right] 
+        }));
         setTabs(tabs);
         setValue4(0);
       })
-      .catch(error => console.log(error));
+      .catch((error) => console.log(error));
   }, [profile.id, editOrNew]);
 
   useEffect(() => {
     if(editOrNew !== 'edit') return;
     getOneDB('locationsReal/', parent)
-    .then(response => response.json())
-    .then(data => { 
-      const { _id, name, imageInfo, profileId, profileLevel, profileName, customFieldsTab, mapInfo, fileExt } = data.response;      
+    .then((response) => response.json())
+    .then((data) => { 
+      const { 
+        _id, 
+        customFieldsTab, 
+        fileExt, 
+        imageInfo, 
+        mapInfo, 
+        name, 
+        profileId, 
+        profileLevel, 
+        profileName 
+      } = data.response;      
       const imageURL = getImageURL(realParent, 'locationsReal', parentExt);
       setValues({ ...values, name, profileId, profileLevel, profileName, customFieldsTab, imageURL });
-      setMarkers(imageInfo !== null ? [{top: imageInfo.top, left: imageInfo.left}] : []);
-      setMapCenter({lat: mapInfo.lat, lng: mapInfo.lng});
-      setModalCoords([{lat: mapInfo.lat, lng: mapInfo.lng}]);
+      setMarkers(imageInfo !== null ? [{ top: imageInfo.top, left: imageInfo.left }] : []);
+      setMapCenter({ lat: mapInfo.lat, lng: mapInfo.lng });
+      setModalCoords([{ lat: mapInfo.lat, lng: mapInfo.lng }]);
       setModalMapZoom(mapInfo.zoom);
       setProfileLabel(profileName);
-      const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
+      const tabs = Object.keys(customFieldsTab).map((key) => ({ 
+        key, 
+        info: customFieldsTab[key].info, 
+        content: [customFieldsTab[key].left, customFieldsTab[key].right] 
+      }));
       setTabs(tabs);
       setValue4(0);
     })
-    .catch(error => console.log(error));
+    .catch((error) => console.log(error));
   }, [editOrNew, parent]);
 
   return (
-    <div style={{width:'1000px'}}>
+    <div style={{ width:'1000px' }}>
       <Dialog
         aria-labelledby='customized-dialog-title'
         onClose={handleCloseModal}
@@ -340,7 +374,7 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
           {`${editOrNew === 'new' ? 'Add' : 'Edit'} Location`}
         </DialogTitle5>
         <DialogContent5 dividers>
-          <div className='kt-section__content' style={{margin:'-16px'}}>
+          <div className='kt-section__content' style={{ margin:'-16px' }}>
             <div className={classes4.root}>
               <Paper className={classes4.root}>
                 <Tabs
@@ -351,14 +385,14 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
                   value={value4}
                 >
                   <Tab label={profileLabel} />
-                  {tabs.map(tab => <Tab label={tab.info.name} />)}
+                  {tabs.map((tab) => <Tab label={tab.info.name} />)}
                 </Tabs>
               </Paper>
               <SwipeableViews
                 axis={theme4.direction === 'rtl' ? 'x-reverse' : 'x'}
                 index={value4}
                 onChangeIndex={handleChangeIndex4}
-                style={{overflowY: 'hidden'}}
+                style={{ overflowY: 'hidden' }}
               >
                 <TabContainer4 dir={theme4.direction}>
                   <div className='profile-tab-wrapper'>
@@ -416,8 +450,8 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
                             coords={modalCoords}
                             edit
                             setCoords={setModalCoords}                
-                            setZoom={(newZoom) => setModalMapZoom(newZoom)}
-                            styleMap={{marginRight: '20px', width: '95%', height: '63%'}}
+                            setZoom={setModalMapZoom}
+                            styleMap={{ marginRight: '20px', width: '95%', height: '63%' }}
                             zoom={modalMapZoom}
                           >
                           </GoogleMaps>
@@ -426,9 +460,9 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
                     </PortletBody>
                   )}
                   {tab === 1 && (
-                    <PortletBody style={{display: 'flex', justifyContent: 'center'}}>
+                    <PortletBody style={{ display: 'flex', justifyContent: 'center' }}>
                       <div
-                        style={{paddingTop: '20px', width: '500px'}}
+                        style={{ paddingTop: '20px', width: '500px' }}
                       >
                         {values.imageURL &&
                           <ImageMarker
@@ -442,7 +476,7 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
                     </PortletBody>
                   )}
                   {tab === 2 && (
-                    <PortletBody style={{paddingTop: '20px'}}>
+                    <PortletBody style={{ paddingTop: '20px' }}>
                       <div className='profile-tab-wrapper'>
                         <ImageUpload
                           image={values.imageURL}
@@ -454,15 +488,14 @@ const ModalLocationList = ({ editOrNew, modalId, parent, parentExt, profile, rea
                     </PortletBody>
                   )}
                 </TabContainer4>
-                {tabs.map(tab => (
+                {tabs.map((tab) => (
                   <TabContainer4 dir={theme4.direction}>
                   <div className='modal-location'>
                     {Array(tab.content[1].length === 0 ? 1 : 2).fill(0).map((col, colIndex) => (
                       <div className='modal-location__list-field'>
-                        {tab.content[colIndex].map(customField => (
+                        {tab.content[colIndex].map((customField) => (
                           <CustomFieldsPreview 
                             columnIndex={colIndex}
-                          // customFieldIndex={props.customFieldIndex}
                             from='form'
                             id={customField.id}
                             onClick={() => alert(customField.content)}
