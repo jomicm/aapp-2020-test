@@ -1,22 +1,20 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { Formik } from "formik";
 import { get, merge } from "lodash";
-import { FormHelperText, Switch, Tab, Tabs } from "@material-ui/core";
-import clsx from "clsx";
+import { FormHelperText, Switch, Tab, Tabs, TextField } from "@material-ui/core";
 import { metronic, initLayoutConfig, LayoutConfig } from "../../../_metronic";
 import {
   Portlet,
   PortletBody,
-  PortletFooter,
   PortletHeader,
   PortletHeaderToolbar
 } from "../../partials/content/Portlet";
-import { CodeBlock } from "../../partials/content/CodeExample";
-import Notice from "../../partials/content/Notice";
+
+import ImageUpload from '../home/Components/ImageUpload';
 
 const localStorageActiveTabKey = "builderActiveTab";
-export default function Builder() {
+const Builder = forwardRef(({ onChange, logoImage, setLogoImage, sideTitleValue, updateValues }, ref) => {
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const dispatch = useDispatch();
@@ -24,28 +22,11 @@ export default function Builder() {
     ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
     shallowEqual
   );
-  const [loadingPreview, setLoadingPreview] = useState(false);
-  const [loadingButtonPreviewStyle, setLoadingButtonPreviewStyle] = useState({
-    paddingRight: "2.5rem"
-  });
-  const [loadingReset, setLoadingReset] = useState(false);
-  const [loadingButtonResetStyle, setLoadingButtonResetStyle] = useState({
-    paddingRight: "2.5rem"
-  });
-
-  const enableLoadingPreview = () => {
-    setLoadingPreview(true);
-    setLoadingButtonPreviewStyle({ paddingRight: "3.5rem" });
-  };
-  const enableLoadingReset = () => {
-    setLoadingReset(true);
-    setLoadingButtonResetStyle({ paddingRight: "3.5rem" });
-  };
   const updateLayoutConfig = _config => {
     dispatch(metronic.builder.actions.setLayoutConfigs(_config));
     setTimeout(() => {
       window.location.reload();
-    }, 100);
+    }, 900);
   };
 
   const initialValues = useMemo(
@@ -58,50 +39,55 @@ export default function Builder() {
     [layoutConfig]
   );
 
+  const [layoutValues, setLayoutValues] = useState(initialValues);
+
+  useEffect(() => {
+    updateValues(layoutValues)
+  }, [layoutValues])
+
+  const formRef = useRef();
+
+  useImperativeHandle(ref, () => ({
+    values: formRef.current.values,
+    update: (values) => updateLayoutConfig(values)
+  }));
+
   return (
     <>
-      <Notice icon="flaticon-warning kt-font-primary">
-        The layout builder helps to configure the layout with preferred options
-        and preview it in real time. The configured layout options will be saved
-        until you change or reset them. To use the layout builder choose the
-        layout options and click the <code>Preview</code> button to preview the
-        changes.
-      </Notice>
-      {/*Formic off site: https://jaredpalmer.com/formik/docs/overview*/}
       <Formik
+        innerRef={formRef}
         initialValues={initialValues}
         onSubmit={values => {
-          enableLoadingPreview();
           updateLayoutConfig(values);
         }}
         onReset={() => {
-          enableLoadingReset();
           updateLayoutConfig(initLayoutConfig);
         }}
       >
-        {({ values, handleReset, handleSubmit, handleChange, handleBlur }) => (
+        {({ values, handleChange, handleBlur }) => (
           <div className="kt-form kt-form--label-right">
             <Portlet>
               <PortletHeader
                 toolbar={
-                  <PortletHeaderToolbar>
-                    <Tabs
-                      component="div"
-                      className="builder-tabs"
-                      value={tab}
-                      onChange={(_, nextTab) => {
-                        setTab(nextTab);
-                        localStorage.setItem(localStorageActiveTabKey, nextTab);
-                      }}
-                    >
-                      <Tab label="Skins" />
-                      {/* <Tab label="Page" /> */}
-                      <Tab label="Header" />
-                      <Tab label="Subheader" />
-                      <Tab label="Content" />
-                      <Tab label="Aside" />
-                      <Tab label="Footer" />
-                    </Tabs>
+                  <PortletHeaderToolbar className="PortletHeaderToolbar-Settings-Design-MainApp">
+                    <div>
+                      <Tabs
+                        component="div"
+                        className="builder-tabs"
+                        value={tab}
+                        onChange={(_, nextTab) => {
+                          setTab(nextTab);
+                          localStorage.setItem(localStorageActiveTabKey, nextTab);
+                        }}
+                      >
+                        <Tab label="Skins" />
+                        <Tab label="Header" />
+                        <Tab label="Subheader" />
+                        <Tab label="Content" />
+                        <Tab label="Aside" />
+                        <Tab label="Footer" />
+                      </Tabs>
+                    </div>
                   </PortletHeaderToolbar>
                 }
               />
@@ -120,7 +106,19 @@ export default function Builder() {
                             name="header.self.skin"
                             onBlur={handleBlur}
                             value={get(values, "header.self.skin")}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                header: {
+                                  ...prev.header,
+                                  self: {
+                                    ...prev.header.self,
+                                    skin: event.target.value
+                                  }
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                           >
                             <option value="light">Light (Default)</option>
                             <option value="dark">Dark</option>
@@ -141,7 +139,25 @@ export default function Builder() {
                               values,
                               "header.menu.desktop.submenu.skin"
                             )}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                header: {
+                                  ...prev.header,
+                                  menu: {
+                                    ...prev.header.menu,
+                                    desktop: {
+                                      ...prev.header.menu.desktop,
+                                      submenu: {
+                                        ...prev.header.menu.desktop.submenu,
+                                        skin: event.target.value
+                                      }
+                                    }
+                                  }
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                           >
                             <option value="light">Light (Default)</option>
                             <option value="dark">Dark</option>
@@ -161,7 +177,19 @@ export default function Builder() {
                             name="brand.self.skin"
                             onBlur={handleBlur}
                             value={get(values, "brand.self.skin")}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                brand: {
+                                  ...prev.brand,
+                                  self: {
+                                    ...prev.header.self,
+                                    skin: event.target.value
+                                  }
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                           >
                             <option value="dark">Dark (Default)</option>
                             <option value="light">Light</option>
@@ -179,7 +207,19 @@ export default function Builder() {
                             name="aside.self.skin"
                             onBlur={handleBlur}
                             value={get(values, "aside.self.skin")}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                aside: {
+                                  ...prev.aside,
+                                  self: {
+                                    ...prev.aside.self,
+                                    skin: event.target.value
+                                  }
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                           >
                             <option value="dark">Dark (Default)</option>
                             <option value="light">Light</option>
@@ -203,7 +243,22 @@ export default function Builder() {
                         <div className="col-lg-9 col-xl-4">
                           <Switch
                             onBlur={handleBlur}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                header: {
+                                  ...prev.header,
+                                  self: {
+                                    ...prev.header.self,
+                                    fixed: {
+                                      ...prev.header.self.fixed,
+                                      desktop: event.target.checked
+                                    }
+                                  }
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                             name="header.self.fixed.desktop"
                             checked={get(values, "header.self.fixed.desktop")}
                           />
@@ -220,7 +275,22 @@ export default function Builder() {
                         <div className="col-lg-9 col-xl-4">
                           <Switch
                             onBlur={handleBlur}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                header: {
+                                  ...prev.header,
+                                  self: {
+                                    ...prev.header.self,
+                                    fixed: {
+                                      ...prev.header.self.fixed,
+                                      mobile: event.target.checked
+                                    }
+                                  }
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                             name="header.self.fixed.mobile"
                             checked={get(values, "header.self.fixed.mobile")}
                           />
@@ -239,7 +309,22 @@ export default function Builder() {
                         <div className="col-lg-9 col-xl-4">
                           <Switch
                             onBlur={handleBlur}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                header: {
+                                  ...prev.header,
+                                  menu: {
+                                    ...prev.header.menu,
+                                    self: {
+                                      ...prev.header.menu.self,
+                                      display: event.target.checked
+                                    }
+                                  }
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                             name="header.menu.self.display"
                             checked={get(values, "header.menu.self.display")}
                           />
@@ -257,7 +342,22 @@ export default function Builder() {
                             name="header.menu.self.layout"
                             onBlur={handleBlur}
                             value={get(values, "header.menu.self.layout")}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                header: {
+                                  ...prev.header,
+                                  menu: {
+                                    ...prev.header.menu,
+                                    self: {
+                                      ...prev.header.menu.self,
+                                      layout: event.target.value
+                                    }
+                                  }
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                           >
                             <option value="default">Default</option>
                             <option value="tab">Tab</option>
@@ -277,7 +377,22 @@ export default function Builder() {
                         <div className="col-lg-9 col-xl-4">
                           <Switch
                             onBlur={handleBlur}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                header: {
+                                  ...prev.header,
+                                  menu: {
+                                    ...prev.header.menu,
+                                    self: {
+                                      ...prev.header.menu.self,
+                                      ["root-arrow"]: event.target.checked
+                                    }
+                                  }
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                             name="header.menu.self.root-arrow"
                             checked={get(values, "header.menu.self.root-arrow")}
                           />
@@ -302,7 +417,16 @@ export default function Builder() {
                         <div className="col-lg-9 col-xl-4">
                           <Switch
                             onBlur={handleBlur}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                subheader: {
+                                  ...prev.subheader,
+                                  display: event.target.checked
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                             name="subheader.display"
                             checked={get(values, "subheader.display")}
                           />
@@ -319,7 +443,16 @@ export default function Builder() {
                         <div className="col-lg-9 col-xl-4">
                           <Switch
                             onBlur={handleBlur}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                subheader: {
+                                  ...prev.subheader,
+                                  fixed: event.target.checked
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                             name="subheader.fixed"
                             checked={get(values, "subheader.fixed")}
                           />
@@ -340,7 +473,16 @@ export default function Builder() {
                             name="subheader.width"
                             onBlur={handleBlur}
                             value={get(values, "subheader.width")}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                subheader: {
+                                  ...prev.subheader,
+                                  width: event.target.value
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                           >
                             <option value="fluid">Fluid</option>
                             <option value="fixed">Fixed</option>
@@ -361,7 +503,16 @@ export default function Builder() {
                             name="subheader.style"
                             onBlur={handleBlur}
                             value={get(values, "subheader.style")}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                subheader: {
+                                  ...prev.subheader,
+                                  style: event.target.value
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                           >
                             <option value="transparent">Transparent</option>
                             <option value="solid">Solid</option>
@@ -371,27 +522,6 @@ export default function Builder() {
                           </FormHelperText>
                         </div>
                       </div>
-
-                      {/*    <div className="row">*/}
-                      {/*      <div className="col-md-6">*/}
-                      {/*       */}
-
-                      {/*        /!* <TextField*/}
-                      {/*  select={true}*/}
-                      {/*  margin="normal"*/}
-                      {/*  label="Subheader Layout"*/}
-                      {/*  helperText="Select subheader layout"*/}
-                      {/*  name="subheader.layout"*/}
-                      {/*  onBlur={handleBlur}*/}
-                      {/*  onChange={handleChange}*/}
-                      {/*  value={get(values, "subheader.layout")}*/}
-                      {/*>*/}
-                      {/*  <MenuItem value="subheader-v1">Subheader 1</MenuItem>*/}
-                      {/*  <MenuItem value="subheader-v2">Subheader 2</MenuItem>*/}
-                      {/*  <MenuItem value="subheader-v3">Subheader 3</MenuItem>*/}
-                      {/*</TextField> *!/*/}
-                      {/*      </div>*/}
-                      {/*    </div>*/}
                     </div>
                   </div>
                 </PortletBody>
@@ -411,7 +541,16 @@ export default function Builder() {
                             name="content.width"
                             onBlur={handleBlur}
                             value={get(values, "content.width")}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                content: {
+                                  ...prev.content,
+                                  width: event.target.value
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                           >
                             <option value="fluid">Fluid</option>
                             <option value="fixed">Fixed</option>
@@ -437,7 +576,19 @@ export default function Builder() {
                         <div className="col-lg-9 col-xl-4">
                           <Switch
                             onBlur={handleBlur}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                aside: {
+                                  ...prev.aside,
+                                  self: {
+                                    ...prev.aside.self,
+                                    display: event.target.checked
+                                  }
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                             name="aside.self.display"
                             checked={get(values, "aside.self.display")}
                           />
@@ -452,7 +603,19 @@ export default function Builder() {
                         <div className="col-lg-9 col-xl-4">
                           <Switch
                             onBlur={handleBlur}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                aside: {
+                                  ...prev.aside,
+                                  self: {
+                                    ...prev.aside.self,
+                                    fixed: event.target.checked
+                                  }
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                             name="aside.self.fixed"
                             checked={get(values, "aside.self.fixed")}
                           />
@@ -468,7 +631,22 @@ export default function Builder() {
                         <div className="col-lg-9 col-xl-4">
                           <Switch
                             onBlur={handleBlur}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                aside: {
+                                  ...prev.aside,
+                                  self: {
+                                    ...prev.aside.self,
+                                    minimize: {
+                                      ...prev.aside.self.minimize,
+                                      toggle: event.target.checked
+                                    }
+                                  }
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                             name="aside.self.minimize.toggle"
                             checked={get(values, "aside.self.minimize.toggle")}
                           />
@@ -485,7 +663,22 @@ export default function Builder() {
                         <div className="col-lg-9 col-xl-4">
                           <Switch
                             onBlur={handleBlur}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                aside: {
+                                  ...prev.aside,
+                                  self: {
+                                    ...prev.aside.self,
+                                    minimize: {
+                                      ...prev.aside.self.minimize,
+                                      default: event.target.checked
+                                    }
+                                  }
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                             name="aside.self.minimize.default"
                             checked={get(values, "aside.self.minimize.default")}
                           />
@@ -509,7 +702,19 @@ export default function Builder() {
                               values,
                               "aside.menu.dropdown"
                             ).toString()}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                aside: {
+                                  ...prev.aside,
+                                  menu: {
+                                    ...prev.aside.menu,
+                                    dropdown: event.target.value
+                                  }
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                           >
                             <option value="true">Dropdown</option>
                             <option value="false">Accordion</option>
@@ -520,8 +725,24 @@ export default function Builder() {
                           </FormHelperText>
                         </div>
                       </div>
+                      <div className="form-group row">
+                        <label className="col-lg-3 col-form-label pt-4">
+                          Side Title:
+                          </label>
+                        <div className="col-lg-9 col-xl-4">
+                          <TextField
+                            style={{ width: '200px', alignSelf: 'centered' }}
+                            value={sideTitleValue}
+                            onChange={e => onChange(e.target.value)}
+                            margin="normal"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
+                  <ImageUpload setImage={setLogoImage} image={logoImage}>
+                    Logo SideBar Image
+                  </ImageUpload>
                 </PortletBody>
               )}
 
@@ -536,7 +757,19 @@ export default function Builder() {
                         <div className="col-lg-9 col-xl-4">
                           <Switch
                             onBlur={handleBlur}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                footer: {
+                                  ...prev.footer,
+                                  self: {
+                                    ...prev.footer.self,
+                                    fixed: event.target.checked
+                                  }
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                             name="footer.self.fixed"
                             checked={get(values, "footer.self.fixed")}
                           />
@@ -555,7 +788,19 @@ export default function Builder() {
                             name="footer.self.width"
                             onBlur={handleBlur}
                             value={get(values, "footer.self.width")}
-                            onChange={handleChange}
+                            onChange={(event) => {
+                              setLayoutValues(prev => ({
+                                ...prev,
+                                footer: {
+                                  ...prev.footer,
+                                  self: {
+                                    ...prev.footer.self,
+                                    width: event.target.value
+                                  }
+                                }
+                              }))
+                              handleChange(event)
+                            }}
                           >
                             <option value="fluid">Fluid</option>
                             <option value="fixed">Fixed</option>
@@ -569,61 +814,12 @@ export default function Builder() {
                   </div>
                 </PortletBody>
               )}
-
-              <PortletFooter>
-                <div className="kt-padding-30 text-center">
-                  <button
-                    type="button"
-                    onClick={handleSubmit}
-                    style={loadingButtonPreviewStyle}
-                    className={`btn btn-primary btn-elevate kt-login__btn-primary ${clsx(
-                      {
-                        "kt-spinner kt-spinner--right kt-spinner--md kt-spinner--light": loadingPreview
-                      }
-                    )}`}
-                  >
-                    <i className="la la-eye" /> Preview
-                  </button>{" "}
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    style={loadingButtonResetStyle}
-                    className={`btn btn-secondary btn-elevate kt-login__btn-primary ${clsx(
-                      {
-                        "kt-spinner kt-spinner--right kt-spinner--md kt-spinner--dark": loadingReset
-                      }
-                    )}`}
-                  >
-                    <i className="la la-recycle" /> Reset
-                  </button>
-                </div>
-              </PortletFooter>
-            </Portlet>
-
-            <Portlet>
-              <PortletHeader
-                title={
-                  <>
-                    Generated Config{" "}
-                    <small>
-                      can be used for layout config in{" "}
-                      <code>/src/_metronic/layouts/demo1/LayoutConfig.js</code>
-                    </small>
-                  </>
-                }
-              />
-
-              <PortletBody>
-                <CodeBlock
-                  disableCopy="true"
-                  language="json"
-                  code={JSON.stringify(values, null, 2)}
-                />
-              </PortletBody>
             </Portlet>
           </div>
         )}
       </Formik>
     </>
   );
-}
+});
+
+export default Builder;
