@@ -128,31 +128,11 @@ const TableComponent = props => {
     }, [numSelected]);
 
     const HeaderTools = () => {
-      // if (numSelected > 0) {
-      //   return (
-      //     <div style={{display:'flex'}}>
-      //       { numSelected === 1 && !noEdit &&
-      //       <>
-      //         <Tooltip title="Edit">
-      //           <IconButton aria-label="Edit" onClick={props.onEdit}>
-      //             <EditIcon />
-      //           </IconButton>
-      //         </Tooltip>
-      //       </>  
-      //       }
-      //       <Tooltip title="Delete">
-      //         <IconButton aria-label="Delete" onClick={onDelete}>
-      //           <DeleteIcon />
-      //         </IconButton>
-      //       </Tooltip>
-      //     </div>
-      //   )
-      // }
       if (numSelected > 0) {
         return (
           <div style={{display:'flex'}}>
             { numSelected === 1 && !noEdit && showGenerateReport && 
-              <Tooltip title="Generate Reports">
+              <Tooltip title="Generate Report">
                 <IconButton aria-label="Generate-Report" onClick={props.onGenerateReport}>
                   <RemoveRedEye />
                 </IconButton>

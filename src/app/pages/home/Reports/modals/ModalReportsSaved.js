@@ -1,69 +1,37 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import Select from 'react-select';
-import ToggleButton from '@material-ui/lab/ToggleButton';
-import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import {
   Button,
-  Checkbox,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   IconButton,
-  ExpansionPanel,
-  ExpansionPanelSummary,
-  ExpansionPanelDetails,
-  FormControl,
   FormControlLabel,
   FormGroup,
   FormLabel,
-  InputLabel,
-  MenuItem,
-  Paper,
   Switch,
-  Tab,
-  Tabs,
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-  TextareaAutosize,
   TextField,
   Typography
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { withStyles, useTheme, makeStyles } from '@material-ui/core/styles';
 import { pick } from 'lodash';
 import {
   EditorState,
   ContentState,
-  convertToRaw,
-  convertFromHTML,
-  Modifier
+  convertToRaw
 } from 'draft-js';
 import { Editor } from 'react-draft-wysiwyg';
-import SwipeableViews from 'react-swipeable-views';
 import {
-  Portlet,
-  PortletBody,
-  PortletFooter,
-  PortletHeader,
-  PortletHeaderToolbar
+  PortletBody
 } from '../../../../../app/partials/content/Portlet';
 import {
-  postDBEncryptPassword,
   getDB,
   getOneDB,
-  updateDB,
-  postDB
+  updateDB
 } from '../../../../crud/api';
-// import CustomFields from '../../../Components/CustomFields/CustomFields';
-import TreeView from '../../Components/TreeViewComponent';
-import ImageUpload from '../../Components/ImageUpload';
-import ModalYesNo from '../../Components/ModalYesNo';
-import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import {
   SingleLine,
   MultiLine,
@@ -74,12 +42,9 @@ import {
   FileUpload,
   Checkboxes
 } from '../../Components/CustomFields/CustomFieldsPreview';
-// import BaseFieldAccordion from '../components/BaseFieldsAccordion';
-// import CustomFieldAccordion from '../components/CustomFieldsAccordion';
 import './ModalReportsSaved.scss';
 import draftToHtml from 'draftjs-to-html';
 import htmlToDraft from 'html-to-draftjs';
-import { Formik } from 'formik';
 
 const localStorageActiveTabKey = 'builderActiveTab';
 
@@ -92,7 +57,7 @@ const CustomFieldsPreview = (props) => {
     dropDown: <DropDown {...props} />,
     radioButtons: <RadioButtons {...props} />,
     checkboxes: <Checkboxes {...props} />,
-    fileUpload: <FileUpload {...props} />,
+    fileUpload: <FileUpload {...props} />
   };
   return customFieldsPreviewObj[props.type];
 };
@@ -129,15 +94,15 @@ const DialogTitle5 = withStyles(styles5)(({ children, classes, onClose }) => {
 
 const DialogContent5 = withStyles((theme) => ({
   root: {
-    padding: theme.spacing(2),
-  },
+    padding: theme.spacing(2)
+  }
 }))(DialogContent);
 
 const DialogActions5 = withStyles((theme) => ({
   root: {
     margin: 0,
     padding: theme.spacing(1)
-  },
+  }
 }))(DialogActions);
 
 const TabContainer4 = ({ children, dir }) => {
@@ -147,6 +112,7 @@ const TabContainer4 = ({ children, dir }) => {
     </Typography>
   );
 };
+
 const useStyles4 = makeStyles((theme) => ({
   root: {
     backgroundColor: theme.palette.background.paper,
@@ -183,41 +149,25 @@ const useStyles = makeStyles((theme) => ({
 const ModalReportsSaved = ({
   employeeProfileRows,
   id,
-//   module,
   reloadTable,
   setShowModal,
   showModal
 }) => {
-  const [alignment, setAlignment] = useState('');
+
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const classes = useStyles();
   const classes4 = useStyles4();
   const [editor, setEditor] = useState(EditorState.createEmpty());
   const [daysToSent, setDaysToSent] = useState([])
-  const [reportFrom, setReportFrom] = useState([]);
-  const [reportTo, setReportTo] = useState([]);
-  const [profileSelected, setProfileSelected] = useState(0);
+  const [from, setFrom] = useState([]);
   const [selectedControl, setSelectedControl] = useState(null);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
-  const theme4 = useTheme();
+  const [to, setTo] = useState([]);
   const [users, setUsers] = useState([]);
   const [value4, setValue4] = useState(0);
   const [values, setValues] = useState({
-    reportEnabled: false,
-    subjectReport: '',
-    reportDays: null
+    enabled: false,
+    subject: ''
   });
-
-  const handleAlignment = (event, newAlignment) => {
-    setAlignment(newAlignment);
-  };
-
-  const handleChange4 = (event, newValue) => {
-    setValue4(newValue);
-  };
-  const handleChangeIndex4 = (index) => {
-    setValue4(index);
-  };
 
   const handleChangeCheck = (name) => (event) => {
     setValues({ ...values, [name]: event.target.checked });
@@ -226,7 +176,6 @@ const ModalReportsSaved = ({
   const handleChangeName = (name) => (event) => {
     const text = event.target.value;
     setValues({ ...values, [name]: text });
-
     setSelectedControlAndIndexes(event);
   };
 
@@ -234,70 +183,43 @@ const ModalReportsSaved = ({
     reset();
     setShowModal(false);
     setValue4(0);
-    reloadTable()
-  };
-
-  const handleOnChangeValue = (name) => (event) => {
-    const { target: { value } } = event;
-    setValues({ ...values, [name]: value });
+    reloadTable();
   };
 
   const handleSave = () => {
-    // const { selectedAction, selectedCatalogue } = values;
-    // if (!selectedAction || !selectedCatalogue) {
-    //   alert('Select values before saving...');
-    //   return;
-    // }
     const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
     const body = {
       ...values,
-      reportFrom,
-      reportTo,
+      from,
+      to,
       layout,
       selectedDaysToSent: daysToSent
-    //   module
     };
-    // if (!id) {
-    //   postDB('reports', body)
-    //     .then((data) => data.json())
-    //     .then((response) => {
-    //       const { _id } = response.response[0];
-    //       saveAndReload('reports', _id);
-    //     })
-    //     .catch((error) => console.log('ERROR', error));
-    // } else {
-      updateDB('reports/', body, id[0])
-        .then((response) => {
+    updateDB('reports/', body, id[0])
+      .then((response) => {
           saveAndReload('reports', id[0]);
         })
-        .catch((error) => console.log(error));
-    // }
+      .catch((error) => console.log(error));
     handleCloseModal();
   };
 
   const onChangeReportFromTo = (name) => (event, values) => {
     if (name === 'From') {
-      setReportFrom(values);
-    } else if (name === 'To') setReportTo(values);
+      setFrom(values);
+    } else if (name === 'To') { 
+      setTo(values)
+    };
   };
-
-//   const handleOptionsDays = (name) => (event) => {
-//     setValues({...values, [name]: })
-// }
 
   const reset = () => {
     setValues({
-      reportEnabled: false,
-      policyName: '',
-      selectedAction: '',
-      selectedCatalogue: '',
-      selectedIcon: '',
-      subjectReport: '',
+      enabled: false,
+      subject: ''
     });
-    setReportFrom([]);
-    setReportTo([]);
+    setFrom([]);
+    setTo([]);
     setEditor(EditorState.createEmpty());
-    setDaysToSent([])
+    setDaysToSent([]);
   };
 
   const saveAndReload = (folderName, id) => {
@@ -306,18 +228,21 @@ const ModalReportsSaved = ({
 
   const setSelectedControlAndIndexes = (event) => {
     const {
-      target: { selectionStart, selectionEnd, name },
+      target: { selectionStart, selectionEnd, name }
     } = event;
     setSelectedControl(name);
   };
-
-  console.log('Users: ', users)
 
   useEffect(() => {
     getDB('user')
       .then((response) => response.json())
       .then((data) => {
-        const users = data.response.map(({ _id, email, lastName, name }) => ({ _id, email, lastName, name }));
+        const users = data.response.map(({ 
+          _id, 
+          email, 
+          lastName, 
+          name 
+        }) => ({ _id, email, lastName, name }));
         setUsers(users);
       })
       .catch((error) => console.log(error));
@@ -331,42 +256,29 @@ const ModalReportsSaved = ({
       .then((data) => {
         const {
           layout,
-          reportFrom,
-          reportTo,
+          from,
+          to,
           selectedDaysToSent
         } = data.response;
         const obj = pick(data.response, [
-          'reportEnabled',
+          'enabled',
           'messageMail',
-          'subjectReport',
+          'subject'
         ]);
         const contentBlock = htmlToDraft(layout);
         const contentState = ContentState.createFromBlockArray(
           contentBlock.contentBlocks
         );
         setValues(obj);
-        setReportFrom(reportFrom);
-        setReportTo(reportTo);
-        setDaysToSent(selectedDaysToSent)
+        setFrom(from);
+        setTo(to);
+        setDaysToSent(selectedDaysToSent);
         setEditor(EditorState.createWithContent(contentState));
       })
       .catch((error) => console.log(error));
   }, [id, employeeProfileRows]);
 
-  // const daysOptions = [
-  //   { value: '1', label: '1' },
-  //   { value: '2', label: '2' },
-  //   { value: '3', label: '3' },
-  // ];
-
-// const daysOptions = []
-// for (let i = 1 ; i < 32; i++){
-//  daysOptions.push({ value: i, label: i})
-// }
-
   const daysOptions = Array(31).fill().map((_, ix) => ({ value: ix + 1, label: ix + 1}))
-
-  console.log('daysToSent: ', daysToSent)
 
   return (
     <div style={{ width: '1000px' }}>
@@ -394,7 +306,7 @@ const ModalReportsSaved = ({
                               <div className='__container-reports-form'>
                                 <Autocomplete
                                   className={classes.textField}
-                                  defaultValue={reportFrom}
+                                  defaultValue={from}
                                   id='tags-report-from'
                                   getOptionLabel={(option) => option.email}
                                   multiple
@@ -407,11 +319,11 @@ const ModalReportsSaved = ({
                                       variant='standard'
                                     />
                                   )}
-                                  value={reportFrom}
+                                  value={from}
                                 />
                                 <Autocomplete
                                   className={classes.textField}
-                                  defaultValue={reportTo}
+                                  defaultValue={to}
                                   getOptionLabel={(option) => option.email}
                                   id='tags-report-to'
                                   multiple
@@ -424,27 +336,27 @@ const ModalReportsSaved = ({
                                       variant='standard'
                                     />
                                   )}
-                                  value={reportTo}
+                                  value={to}
                                 />
                                 <TextField
                                   className={classes.textField}
-                                  id='standard-subjectReport'
+                                  id='standard-subject'
                                   label='Subject'
                                   margin='normal'
-                                  name='subjectReport'
-                                  onChange={handleChangeName('subjectReport')}
+                                  name='subject'
+                                  onChange={handleChangeName('subject')}
                                   onClick={setSelectedControlAndIndexes}
-                                  value={values.subjectReport}
+                                  value={values.subject}
                                 />
                               </div>
                               <div className='__container-checkbox-days'>
                                 <FormControlLabel
                                   control={
                                     <Switch
-                                      checked={values.reportEnabled}
+                                      checked={values.enabled}
                                       color='primary'
                                       onChange={handleChangeCheck(
-                                        'reportEnabled'
+                                        'enabled'
                                       )}
                                     />
                                   }
@@ -453,7 +365,7 @@ const ModalReportsSaved = ({
                                   value='start'
                                 />
                                 <div className="">
-                                  <FormLabel style={{marginTop: '25px'}} component="legend">Days</FormLabel>
+                                  <FormLabel style={{ marginTop: '25px' }} component="legend">Days</FormLabel>
                                   <FormGroup className='reports-days'>
                                       <Select
                                         isMulti
@@ -463,7 +375,6 @@ const ModalReportsSaved = ({
                                         onChange={(e) => setDaysToSent(e)}
                                         value={daysToSent}
                                         options={daysOptions}
-                                        // options={handleOptionsDays('reportDays')}
                                       />
                                   </FormGroup>
                                 </div>
@@ -473,7 +384,7 @@ const ModalReportsSaved = ({
                               className='__container-reports-message'
                               onClick={() => setSelectedControl('htmlMessage')}
                             >
-                              <FormLabel style={{}} component="legend">Message Body</FormLabel>
+                              <FormLabel style={{ paddingBottom: '15px' }} component="legend">Message Body</FormLabel>
                               <Editor
                                 editorClassName='editorClassName'
                                 editorState={editor}

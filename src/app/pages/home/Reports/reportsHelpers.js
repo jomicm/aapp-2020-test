@@ -10,8 +10,8 @@ const _types = {
 
 const _generalFields = {
   user: ['name', 'lastName', 'email', 'boss', 'groups'],
-  employees: [],
-  locations: ['name'],
+  employees: ['name', 'lastName', 'email'],
+  locations: ['name', 'level'],
   categories: ['name', 'depreciation'],
   references: ['name', 'brand', 'model', 'price'],
   assets: ['name', 'brand', 'model', 'category', 'status', 'serial', 'responsible', 'notes', 'quantity', 'purchase_date', 'purchase_price', 'price', 'total_price','EPC', 'location', 'creator', 'creation_date', 'labeling_user', 'labeling_date'],
@@ -54,7 +54,6 @@ const extractCustomField = field => {
   if (isEmpty(values)) {
     return { [content]: '' };
   } 
-  console.log('values:', values)
   const { fieldName, initialValue, options, selectedItem } = values;
   if (_types['simpleType'].includes(content)) {
     return { [fieldName]: initialValue || '' };
