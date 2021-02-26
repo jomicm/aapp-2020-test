@@ -83,35 +83,21 @@ const getDBComplex = ({
     count++;
   }
   if (typeof skip === 'number') {
-    count === 0 ? additionalParams += `skip=${skip}` : additionalParams += `&skip=${skip}`;
+    additionalParams += `${count? '&' : '' }skip=${skip}`;
     count++;
   };
   if (typeof limit === 'number') {
-    count === 0 ? additionalParams += `limit=${limit}` : additionalParams += `&limit=${limit}`;
+    additionalParams += `${count? '&' : '' }limit=${limit}`;
     count++;
   };
   if (Array.isArray(fields)) {
-    let res = '{';
-    for (let i = 0; i < fields.length; i++) {
-      res += '"' + fields[i].key + '":' + fields[i].value;
-      if (i + 1 < fields.length) {
-        res += ',';
-      };
-    };
-    res += '}';
-    count === 0 ? additionalParams += `fields=${res}` : additionalParams += `&fields=${res}`;
+    const res = fields.map(({key, value}) => `"${key}":${value}`).join(',');
+    additionalParams += `${count? '&' : '' }fields={${res}}`;
     count++;
   };
   if (Array.isArray(sort)) {
-    let res = '{';
-    for (let i = 0; i < sort.length; i++) {
-      res += '"' + sort[i].key + '":' + sort[i].value;
-      if (i + 1 < sort.length) {
-        res += ',';
-      };
-    };
-    res += '}';
-    count === 0 ? additionalParams += `sort=${res}` : additionalParams += `&sort=${res}`;
+    const res = sort.map(({key, value}) => `"${key}":${value}`).join(',');
+    additionalParams += `${count? '&' : '' }sort={${res}}`;
     count++;
   }
 
