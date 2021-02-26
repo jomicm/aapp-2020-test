@@ -1,42 +1,42 @@
 /* eslint-disable no-restricted-imports */
-import React, { useState, useEffect } from 'react';
-import clsx from "clsx";
+import React, { useEffect, useState } from 'react';
+import clsx from 'clsx';
 import {
-  makeStyles,
   lighten,
-  withStyles,
-  useTheme
-} from "@material-ui/core/styles";
-import {
-  Paper,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Checkbox,
-  Toolbar,
-  Typography,
-  Tooltip,
-  IconButton,
-  TableSortLabel,
-  TablePagination,
-  Switch,
-  FormControlLabel,
-  TableFooter,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions
-} from "@material-ui/core";
-
-import ModalYesNo from '../Components/ModalYesNo';
-import DeleteIcon from "@material-ui/icons/Delete";
-import FilterListIcon from "@material-ui/icons/FilterList";
+  makeStyles,
+  useTheme,
+  withStyles
+} from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
-import CloseIcon from "@material-ui/icons/Close";
-import EditIcon from "@material-ui/icons/Edit";
+import CloseIcon from '@material-ui/icons/Close';
+import DeleteIcon from '@material-ui/icons/Delete';
+import EditIcon from '@material-ui/icons/Edit';
+import FilterListIcon from '@material-ui/icons/FilterList';
+import RemoveRedEye from '@material-ui/icons/RemoveRedEye';
+import {
+  Button,
+  Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  IconButton,
+  Paper,
+  Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TablePagination,
+  TableRow,
+  TableSortLabel,
+  Toolbar,
+  Tooltip,
+  Typography
+} from '@material-ui/core';
+import ModalYesNo from '../Components/ModalYesNo';
 
 const useToolbarStyles = makeStyles(theme => ({
   root: {
@@ -44,7 +44,7 @@ const useToolbarStyles = makeStyles(theme => ({
     paddingRight: theme.spacing(1)
   },
   highlight:
-    theme.palette.type === "light"
+    theme.palette.type === 'light'
       ? {
           color: theme.palette.secondary.main,
           backgroundColor: lighten(theme.palette.secondary.light, 0.85)
@@ -54,55 +54,65 @@ const useToolbarStyles = makeStyles(theme => ({
           backgroundColor: theme.palette.secondary.dark
         },
   spacer: {
-    flex: "1 1 100%"
+    flex: '1 1 100%'
   },
   actions: {
     color: theme.palette.text.secondary
   },
   title: {
-    flex: "0 0 auto"
+    flex: '0 0 auto'
   }
 }));
 
 const useStyles = makeStyles(theme => ({
   root: {
-    width: "100%",
+    width: '100%',
     marginTop: theme.spacing(3)
   },
   paper: {
-    width: "100%",
+    width: '100%',
     marginBottom: theme.spacing(2)
   },
   table: {
     minWidth: 750
   },
   tableWrapper: {
-    overflowX: "auto"
+    overflowX: 'auto'
   }
 }));
 
 const TableComponent = props => {
-  const { headRows, rows = [], onAdd, onSelect, style = {}, noEdit = false } = props;
+
+  const { 
+    headRows, 
+    noAdd = false, 
+    noEdit = false, 
+    onAdd, 
+    onSelect, 
+    rows = [], 
+    showView = false, 
+    style = {}
+  } = props;
+  const [dense, setDense] = useState(false);
+  const [order, setOrder] = useState('asc');
+  const [orderBy, setOrderBy] = useState('name');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [selected, setSelected] = useState([]);
   const [selectedId, setSelectedId] = useState([]);
-  const [dense, setDense] = useState(false);
-  const [order, setOrder] = useState("asc");
-  const [orderBy, setOrderBy] = useState("name");
-  const [rowsPerPage, setRowsPerPage] = useState(5);
   const classes = useStyles();
   const isSelected = name => selected.indexOf(name) !== -1;
-  const [page, setPage] = useState(0);
 
   // const createRow = (id, level, name, creator, creation_date) => {
   //   return { id, level, name, creator, creation_date };
   // };
 
   // const headRows = [
-  //   { id: "id", numeric: false, disablePadding: true, label: "ID" },
-  //   { id: "level", numeric: true, disablePadding: false, label: "Level" },
-  //   { id: "name", numeric: true, disablePadding: false, label: "Description" },
-  //   { id: "creator", numeric: true, disablePadding: false, label: "Creator" },
-  //   { id: "creation_date", numeric: true, disablePadding: false, label: "Creation Date" }
+  //   { id: 'id', numeric: false, disablePadding: true, label: 'ID' },
+  //   { id: 'level', numeric: true, disablePadding: false, label: 'Level' },
+  //   { id: 'name', numeric: true, disablePadding: false, label: 'Description' },
+  //   { id: 'creator', numeric: true, disablePadding: false, label: 'Creator' },
+  //   { id: 'creation_date', numeric: true, disablePadding: false, label: 'Creation Date' }
   // ];
 
   // const rows = [
@@ -113,7 +123,7 @@ const TableComponent = props => {
   
   const EnhancedTableToolbar = props => {
     const classes = useToolbarStyles();
-    const { selected, onAdd, noEdit } = props;
+    const { selected, onAdd, noEdit, noView } = props;
     const numSelected = selected.length;
 
     const onDelete = () => {
@@ -130,28 +140,40 @@ const TableComponent = props => {
       if (numSelected > 0) {
         return (
           <div style={{display:'flex'}}>
-            { numSelected === 1 && !noEdit &&
-              <Tooltip title="Edit">
-                <IconButton aria-label="Edit" onClick={props.onEdit}>
+            {numSelected === 1 && !noEdit && showView && 
+              <Tooltip title='View'>
+                <IconButton aria-label='View' onClick={props.onView}>
+                  <RemoveRedEye />
+                </IconButton>
+              </Tooltip>
+            }
+            {numSelected === 1 && !noEdit &&
+              <Tooltip title='Edit'>
+                <IconButton aria-label='Edit' onClick={props.onEdit}>
                   <EditIcon />
                 </IconButton>
               </Tooltip>
             }
-            <Tooltip title="Delete">
-              <IconButton aria-label="Delete" onClick={onDelete}>
+            <Tooltip title='Delete'>
+              <IconButton aria-label='Delete' onClick={onDelete}>
                 <DeleteIcon />
               </IconButton>
             </Tooltip>
           </div>
         )
+      } else {
+        return (
+          <>
+          {numSelected === 0 && !noAdd &&
+            <Tooltip title='Add'>
+              <IconButton aria-label='Filter list' onClick={onAdd}>
+                <AddIcon />
+              </IconButton>
+            </Tooltip>
+          }
+          </>
+        );
       }
-      return (
-        <Tooltip title="Add">
-          <IconButton onClick={onAdd} aria-label="Filter list">
-            <AddIcon />
-          </IconButton>
-        </Tooltip>
-      );
     }
     return (
       <Toolbar
@@ -161,11 +183,11 @@ const TableComponent = props => {
       >
         <div className={classes.title}>
           {numSelected > 0 ? (
-            <Typography color="inherit" variant="subtitle1">
+            <Typography color='inherit' variant='subtitle1'>
               {numSelected} selected
             </Typography>
           ) : (
-            <Typography variant="h6" id="tableTitle">
+            <Typography variant='h6' id='tableTitle'>
               {props.title}
             </Typography>
           )}
@@ -181,8 +203,8 @@ const TableComponent = props => {
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage);
   
   function handleRequestSort(event, property) {
-    const isDesc = orderBy === property && order === "desc";
-    setOrder(isDesc ? "asc" : "desc");
+    const isDesc = orderBy === property && order === 'desc';
+    setOrder(isDesc ? 'asc' : 'desc');
     setOrderBy(property);
   }
   
@@ -246,7 +268,7 @@ const TableComponent = props => {
   }
   
   function getSorting(order, orderBy) {
-    return order === "desc"
+    return order === 'desc'
       ? (a, b) => desc(a, b, orderBy)
       : (a, b) => -desc(a, b, orderBy);
   }
@@ -263,13 +285,14 @@ const TableComponent = props => {
 
   function EnhancedTableHead(props) {
     const {
+      numSelected,
+      onRequestSort,
       onSelectAllClick,
       order,
       orderBy,
-      numSelected,
-      rowCount,
-      onRequestSort
+      rowCount
     } = props;
+
     const createSortHandler = property => event => {
       onRequestSort(event, property);
     };
@@ -277,19 +300,19 @@ const TableComponent = props => {
     return (
       <TableHead>
         <TableRow>
-          <TableCell padding="checkbox">
+          <TableCell padding='checkbox'>
             <Checkbox
-              indeterminate={numSelected > 0 && numSelected < rowCount}
               checked={numSelected === rowCount}
+              indeterminate={numSelected > 0 && numSelected < rowCount}
+              inputProps={{ 'aria-label': 'Select all desserts' }}
               onChange={onSelectAllClick}
-              inputProps={{ "aria-label": "Select all desserts" }}
             />
           </TableCell>
           {headRows.map(row => (
             <TableCell
+              align={row.numeric ? 'right' : 'left'}
               key={row.id}
-              align={row.numeric ? "right" : "left"}
-              padding={row.disablePadding ? "none" : "default"}
+              padding={row.disablePadding ? 'none' : 'default'}
               sortDirection={orderBy === row.id ? order : false}
             >
               <TableSortLabel
@@ -320,40 +343,46 @@ const TableComponent = props => {
     setSelectedId([]);
   };
 
+  const onView = () => {
+    props.onView(selectedId);
+    setSelected([])
+    setSelectedId([])
+  }
 
   return (
     <div className={classes.root} style={{ padding: '0px' }}>
       <ModalYesNo
-        showModal={openYesNoModal}
-        onOK={onDelete}
-        onCancel={() => setOpenYesNoModal(false)}
-        title={'Remove Element'}
         message={'Are you sure you want to remove this element?'}
+        onCancel={() => setOpenYesNoModal(false)}
+        onOK={onDelete}
+        showModal={openYesNoModal}
+        title={'Remove Element'}
       />
       <Paper className={classes.paper}>
         <EnhancedTableToolbar
-          title={props.title}
-          selected={selected}
+          noEdit={noEdit}
           onAdd={onAdd}
           onEdit={onEdit}
           onDelete={() => setOpenYesNoModal(true)}
           onSelect={onSelect}
-          noEdit={noEdit}
+          onView={onView}
+          selected={selected}
+          title={props.title}
         />
         <div className={classes.tableWrapper}>
           <Table
+            aria-labelledby='tableTitle'
             className={classes.table}
-            aria-labelledby="tableTitle"
-            size={dense ? "small" : "medium"}
+            size={dense ? 'small' : 'medium'}
           >
             <EnhancedTableHead
+              noEdit={noEdit}
               numSelected={selected.length}
+              onRequestSort={handleRequestSort}
+              onSelectAllClick={handleSelectAllClick}
               order={order}
               orderBy={orderBy}
-              onSelectAllClick={handleSelectAllClick}
-              onRequestSort={handleRequestSort}
               rowCount={rows.length}
-              noEdit={noEdit}
             />
             <TableBody>
               {stableSort(rows, getSorting(order, orderBy))
@@ -363,16 +392,16 @@ const TableComponent = props => {
                   const labelId = `enhanced-table-checkbox-\${index}`;
                   return (
                     <TableRow
-                      hover
-                      onClick={event => handleClick(event, row.name, row.id)}
-                      role="checkbox"
                       aria-checked={isItemSelected}
-                      tabIndex={-1}
+                      hover
                       key={`key-row-${row.id}`}
                       //key={headRows[0].id}
+                      onClick={event => handleClick(event, row.name, row.id)}
+                      role='checkbox'
                       selected={isItemSelected}
+                      tabIndex={-1}
                     >
-                      <TableCell padding="checkbox">
+                      <TableCell padding='checkbox'>
                         <Checkbox
                           checked={isItemSelected}
                           inputProps={{ 'aria-labelledby': labelId }}
@@ -381,24 +410,24 @@ const TableComponent = props => {
 
                       {headRows.map((header, ix) =>
                         <TableCell
-                          key={`cell-row${index}-${ix}`}
-                          component="th"
-                          padding={!ix ? 'none' : 'default'}
-                          scope="row"
                           align={!ix ? 'inherit' : 'right'}
+                          component='th'
+                          key={`cell-row${index}-${ix}`}
+                          padding={!ix ? 'none' : 'default'}
+                          scope='row'
                           >
                           {row[header.id]}
                         </TableCell>
                       )}
                       
                       {/* 
-                      <TableCell component="th" id={labelId} scope="row" padding="none">
+                      <TableCell component='th' id={labelId} scope='row' padding='none'>
                         {row.id}
                       </TableCell>
-                      <TableCell align="right">{row.level}</TableCell>
-                      <TableCell align="right">{row.name}</TableCell>
-                      <TableCell align="right">{row.creator}</TableCell>
-                      <TableCell align="right">{row.creation_date}</TableCell> */}
+                      <TableCell align='right'>{row.level}</TableCell>
+                      <TableCell align='right'>{row.name}</TableCell>
+                      <TableCell align='right'>{row.creator}</TableCell>
+                      <TableCell align='right'>{row.creation_date}</TableCell> */}
                     </TableRow>
                   );
                 })}
@@ -411,26 +440,26 @@ const TableComponent = props => {
           </Table>
         </div>
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={rows.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
           backIconButtonProps={{
-            "aria-label": "Previous Page"
+            'aria-label': 'Previous Page'
           }}
+          component='div'
+          count={rows.length}
           nextIconButtonProps={{
-            "aria-label": "Next Page"
+            'aria-label': 'Next Page'
           }}
           onChangePage={handleChangePage}
           onChangeRowsPerPage={handleChangeRowsPerPage}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          rowsPerPageOptions={[5, 10, 25]}
         />
       </Paper>
       {/* <FormControlLabel
         control={
           <Switch checked={dense} onChange={handleChangeDense} />
         }
-        label="Dense padding"
+        label='Dense padding'
       /> */}
     </div>
   );
