@@ -41,14 +41,14 @@ const GoogleMaps = ({
         onZoomChanged={handleZoomChanged}
         style={styleMap}
         zoom={zoom}
-        >
-        {coords.map((coord) => (  
-          <Marker
-            draggable={edit}
-            onDragend={handleDragEnd}
-            position={coord}
-          />
-          ))}
+      >
+      {coords.map((coord) => (  
+        <Marker
+          draggable={edit}
+          onDragend={handleDragEnd}
+          position={coord}
+        />
+        ))}
       </Map>
   );
 }
