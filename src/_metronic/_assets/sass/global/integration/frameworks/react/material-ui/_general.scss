@@ -34,6 +34,12 @@ a {
   }
 }
 
+.PortletHeaderToolbar-Settings-Design-MainApp {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
 .MuiFormControl-marginNormal { width: 100%; }
 
 .MuiSwitch-colorSecondary.Mui-checked {

@@ -1,14 +1,11 @@
 /* eslint-disable no-script-url,jsx-a11y/anchor-is-valid */
 import React from "react";
-import { Link } from "react-router-dom";
 import { connect } from "react-redux";
 import objectPath from "object-path";
 import KTToggle from "../../_assets/js/toggle";
 import * as builder from "../../ducks/builder";
 import { ReactComponent as AngleDoubleLeftIcon } from "../assets/layout-svg-icons/Angle-double-left.svg";
 import { ReactComponent as AngleDoubleRightIcon } from "../assets/layout-svg-icons/Angle-double-right.svg";
-
-
 class Brand extends React.Component {
   ktToggleRef = React.createRef();
 
@@ -23,13 +20,6 @@ class Brand extends React.Component {
         className={`kt-aside__brand kt-grid__item ${this.props.brandClasses}`}
         id="kt_aside_brand"
       >
-        <div className="kt-aside__brand-logo">
-          <Link to="">
-            {/* <img alt="logo" src={this.props.headerLogo} /> */}
-            <h3>AApp 2020</h3>
-          </Link>
-        </div>
-
         {this.props.asideSelfMinimizeToggle && (
           <div className="kt-aside__brand-tools">
             <button
