@@ -1,36 +1,33 @@
 /* eslint-disable no-restricted-imports */
-import React, { useMemo, useState, useEffect } from "react";
-import { shallowEqual, useDispatch, useSelector } from "react-redux";
-import { Formik, setNestedObjectValues } from "formik";
-import { get, merge } from "lodash";
-import { FormHelperText, Switch, Tab, Tabs, Styles, Button, Grid, responsiveFontSizes } from "@material-ui/core";
-import clsx from "clsx";
-import { metronic, initLayoutConfig, LayoutConfig } from "../../../../_metronic";
+import React, { useEffect, useMemo, useState } from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
+import { Formik } from 'formik';
+import { merge } from 'lodash';
+import { Tabs } from '@material-ui/core';
+import clsx from 'clsx';
+import { initLayoutConfig, LayoutConfig, metronic } from '../../../../_metronic';
 import {
   Portlet,
   PortletBody,
   PortletFooter,
   PortletHeader,
   PortletHeaderToolbar
-} from "../../../partials/content/Portlet";
+} from '../../../partials/content/Portlet';
 
 // AApp Components
 import { TabsTitles } from '../Components/Translations/tabsTitles';
-import TableComponent from '../Components/TableComponent';
-import TileView from '../Components/TileView';
+import TableComponent2 from '../Components/TableComponent2';
 import ModalAssetCategories from './modals/ModalAssetCategories';
 import ModalAssetReferences from './modals/ModalAssetReferences';
 import ModalAssetList from './modals/ModalAssetList';
 
-import TreeView from '../Components/TreeViewComponent';
-import GoogleMaps from '../Components/GoogleMaps';
 import './Assets.scss';
 
 //DB API methods
-import { getDB, deleteDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 
-const localStorageActiveTabKey = "builderActiveTab";
+const localStorageActiveTabKey = 'builderActiveTab';
 export default function Assets() {
 
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
@@ -42,20 +39,20 @@ export default function Assets() {
   );
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [loadingButtonPreviewStyle, setLoadingButtonPreviewStyle] = useState({
-    paddingRight: "2.5rem"
+    paddingRight: '2.5rem'
   });
   const [loadingReset, setLoadingReset] = useState(false);
   const [loadingButtonResetStyle, setLoadingButtonResetStyle] = useState({
-    paddingRight: "2.5rem"
+    paddingRight: '2.5rem'
   });
 
   const enableLoadingPreview = () => {
     setLoadingPreview(true);
-    setLoadingButtonPreviewStyle({ paddingRight: "3.5rem" });
+    setLoadingButtonPreviewStyle({ paddingRight: '3.5rem' });
   };
   const enableLoadingReset = () => {
     setLoadingReset(true);
-    setLoadingButtonResetStyle({ paddingRight: "3.5rem" });
+    setLoadingButtonResetStyle({ paddingRight: '3.5rem' });
   };
   const updateLayoutConfig = _config => {
     dispatch(metronic.builder.actions.setLayoutConfigs(_config));
@@ -74,40 +71,29 @@ export default function Assets() {
     [layoutConfig]
   );
 
-  const createAssetCategoryRow = (id, name, depreciation, creator, creation_date) => {
-    return { id, name, depreciation, creator, creation_date };
+  const createAssetCategoryRow = (id, name, depreciation, creator, creation_date, fileExt) => {
+    return { id, name, depreciation, creator, creation_date, fileExt };
   };
 
   const assetCategoriesHeadRows = [
-    { id: "name", numeric: false, disablePadding: false, label: "Description" },
-    { id: "depreciation", numeric: true, disablePadding: false, label: "Depreciation" },
-    { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-    { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
+    { id: 'name', numeric: false, disablePadding: false, label: 'Description' },
+    { id: 'depreciation', numeric: true, disablePadding: false, label: 'Depreciation' },
+    { id: 'creator', numeric: false, disablePadding: false, label: 'Creator' },
+    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date' }
   ];
 
-  const assetCategoriesRows = [
-    createAssetCategoryRow('Laptop', '0.3', 'Admin', '11/03/2020'),
-    createAssetCategoryRow('Chair', '0.25', 'Admin', '11/03/2020'),
-    createAssetCategoryRow('Pump', '0.44', 'Admin', '11/03/2020'),
-  ];
-
-  const createAssetReferenceRow = (id, name, brand, model, category, creator, creation_date) => {
-    return { id, name, brand, model, category, creator, creation_date };
+  const createAssetReferenceRow = (id, name, brand, model, category, creator, creation_date, price) => {
+    return { id, name, brand, model, category, creator, creation_date, price };
   };
 
   const assetReferencesHeadRows = [
-    { id: "name", numeric: false, disablePadding: false, label: "Name" },
-    { id: "brand", numeric: true, disablePadding: false, label: "Brand" },
-    { id: "model", numeric: true, disablePadding: false, label: "Model" },
-    { id: "category", numeric: true, disablePadding: false, label: "Category" },
-    { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-    { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
-  ];
-
-  const assetReferencesRows = [
-    createAssetReferenceRow('Laptop', 'Acer', 'vhrf12', 'Electronics', 'Admin', '11/03/2020'),
-    createAssetReferenceRow('Chair', 'PMP', 'derds25', 'Furniture', 'Admin', '11/03/2020'),
-    createAssetReferenceRow('Pump', 'CKT', 'wedsd52', 'Vehicles', 'Admin', '11/03/2020'),
+    { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
+    { id: 'brand', numeric: true, disablePadding: false, label: 'Brand' },
+    { id: 'model', numeric: true, disablePadding: false, label: 'Model' },
+    { id: 'category', numeric: true, disablePadding: false, label: 'Category' },
+    { id: 'creator', numeric: false, disablePadding: false, label: 'Creator' },
+    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date' },
+    { id: 'price', numeric: false, disablePadding: false, label: 'Price' }
   ];
 
   const createAssetListRow = (id, name, brand, model, category, serial, EPC, creator, creation_date, location) => {
@@ -115,125 +101,146 @@ export default function Assets() {
   };
 
   const assetListHeadRows = [
-    { id: "name", numeric: false, disablePadding: false, label: "Name" },
-    { id: "brand", numeric: true, disablePadding: false, label: "Brand" },
-    { id: "model", numeric: true, disablePadding: false, label: "Model" },
-    { id: "category", numeric: true, disablePadding: false, label: "Category" },
-    { id: "serial", numeric: true, disablePadding: false, label: "Serial Number" },
-    { id: "EPC", numeric: true, disablePadding: false, label: "EPC" },
-    { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-    { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
+    { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
+    { id: 'brand', numeric: true, disablePadding: false, label: 'Brand' },
+    { id: 'model', numeric: true, disablePadding: false, label: 'Model' },
+    { id: 'category', numeric: true, disablePadding: false, label: 'Category' },
+    { id: 'serial', numeric: true, disablePadding: false, label: 'Serial Number' },
+    { id: 'EPC', numeric: true, disablePadding: false, label: 'EPC' },
+    { id: 'creator', numeric: false, disablePadding: false, label: 'Creator' },
+    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date' }
   ];
 
-  const assetListRows = [
-    createAssetListRow('Laptop', 'Acer', 'vhrf12', 'Electronics', 'SN: 12131', 'ABCDEF123', 'Admin', '11/03/2020'),
-    createAssetListRow('Chair', 'PMP', 'derds25', 'Furniture', 'SN: 2343', 'ABCDEF124', 'Admin', '11/03/2020'),
-    createAssetListRow('Pump', 'CKT', 'wedsd52', 'Vehicles', 'SN: 435665', 'ABCDEF125', 'Admin', '11/03/2020'),
-  ];
-
-  const [openCategoriesModal, setOpenCategoriesModal] = useState(false);
-  const [openListModal, setOpenListModal] = useState(false);
-  const [openReferencesModal, setOpenReferencesModal] = useState(false);
-
-  const [anchorEl, setAnchorEl] = React.useState(null);
-
-  let locations;
-  const [locationsTree, setLocationsTree] = useState({});
-  const loadAssetsData = (collectionNames = ['assets', 'references', 'categories', 'locationsReal']) => {
+  const loadAssetsData = (collectionNames = ['assets', 'categories', 'references']) => {
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
-      getDB(collectionName)
+      let queryLike = '';
+      if (collectionName === 'assets') {
+        if(tableControl.assets.locationsFilter.length){
+          queryLike = tableControl.assets.locationsFilter.map(locationID => ({ key: 'location', value: locationID }))
+        }
+        else {
+          queryLike = tableControl.assets.searchBy ? (
+            [{ key: tableControl.assets.searchBy, value: tableControl.assets.search }]
+          ) : (
+              ['name', 'brand', 'model'].map(key => ({ key, value: tableControl.assets.search }))
+            )
+        }
+      }
+      if (collectionName === 'references') {
+        queryLike = tableControl.references.searchBy ? (
+          [{ key: tableControl.references.searchBy, value: tableControl.references.search }]
+        ) : (
+            ['name', 'brand', 'model'].map(key => ({ key, value: tableControl.references.search }))
+          )
+      }
+      if (collectionName === 'categories') {
+        queryLike = tableControl.categories.searchBy ? (
+          [{ key: tableControl.categories.searchBy, value: tableControl.categories.search }]
+        ) : (
+            ['description', 'depreciation'].map(key => ({ key, value: tableControl.categories.search }))
+          )
+      }
+
+      getCountDB({
+        collection: collectionName,
+        queryLike: tableControl[collectionName].search || tableControl['assets'].locationsFilter.length ? queryLike : null
+      })
+        .then(response => response.json())
+        .then(data => {
+          setTableControl( prev => ({
+          ...prev,
+          [collectionName]: {
+            ...prev[collectionName],
+            total: data.response.count
+          }
+        }))
+      });
+
+      getDBComplex({
+        collection: collectionName,
+        limit: tableControl[collectionName].rowsPerPage,
+        skip: tableControl[collectionName].rowsPerPage * tableControl[collectionName].page,
+        sort: [{ key: tableControl[collectionName].orderBy, value: tableControl[collectionName].order }],
+        queryLike: tableControl[collectionName].search || tableControl['assets'].locationsFilter.length ? queryLike : null
+      })
         .then(response => response.json())
         .then(data => {
           if (collectionName === 'assets') {
-            console.log('d:', data)
             const rows = data.response.map(row => {
-              console.log('row:', row)
               return createAssetListRow(row._id, row.name, row.brand, row.model, row.category, row.serial, row.EPC, 'Admin', '11/03/2020', row.location);
             });
             setControl(prev => ({ ...prev, assetRows: rows, assetRowsSelected: [] }));
-            console.log('inside assets', rows)
           }
           if (collectionName === 'references') {
             const rows = data.response.map(row => {
-              return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.category, 'Admin', '11/03/2020');
+              return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.category, 'Admin', '11/03/2020', row.price);
             });
             setControl(prev => ({ ...prev, referenceRows: rows, referenceRowsSelected: [] }));
           }
           if (collectionName === 'categories') {
-            const categoriesInfo = data.response
             const rows = data.response.map(row => {
-              return createAssetCategoryRow(row._id, row.name, row.depreciation, 'Admin', '11/03/2020');
+              return createAssetCategoryRow(row._id, row.name, row.depreciation, 'Admin', '11/03/2020', row.fileExt);
             });
-            setControl(prev => ({ ...prev, categoryRows: rows, categoryRowsSelected: [], categories: categoriesInfo }));
-          }
-          if (collectionName === 'locationsReal') {
-            locations = data.response.map(res => ({ ...res, id: res._id }));
-            const homeLocations = data.response.filter(loc => loc.profileLevel === 0);
-            const children = constructLocationTreeRecursive(homeLocations);
-            locationsTreeData.children = children;
-            setLocationsTree(locationsTreeData);
+            setControl(prev => ({ ...prev, categoryRows: rows, categoryRowsSelected: [] }));
           }
         })
         .catch(error => console.log('error>', error));
     });
   };
-  const locationsTreeData = {
-    id: 'root',
-    name: 'Locations',
-    profileLevel: -1,
-    parent: null
-  };
-  const constructLocationTreeRecursive = (locs) => {
-    if (!locs || !Array.isArray(locs) || !locs.length) return [];
-    let res = [];
-    locs.forEach((location) => {
-      const locObj = (({ _id: id, name, profileLevel, parent }) => ({ id, name, profileLevel, parent }))(location);
-      const children = locations.filter(loc => loc.parent === locObj.id);
-      locObj.children = constructLocationTreeRecursive(children);
-      res.push(locObj);
-    });
-    return res;
-  };
-  const locationsChildren = (children, res) => {
-    if (!children || !Array.isArray(children) || !children.length) return [];
-    children.map((child) => {
-      locationsChildren(child.children, res);
-      res.push(child.id);
-    })
-    return res;
-  }
-  const selectLocation = (locationId, level, parent, locationName, children) => {
-    let res = [];
-    let allchildren = locationsChildren(children, res)
-    allchildren.push(locationId)
-    let filtered = control.assetRows.filter((row) => allchildren.includes(row.location))
-    console.log('filtered: ', filtered)
-    setControl({ ...control, treeViewFiltering: filtered })
-  };
-  useEffect(() => {
-    loadAssetsData();
-  }, []);
 
   const [control, setControl] = useState({
     idReference: null,
     openReferencesModal: false,
     referenceRows: [],
     referenceRowsSelected: [],
-    //
+    
     idCategory: null,
     openCategoriesModal: false,
     openTileView: false,
     categoryRows: [],
-    categories: [],
     categoryRowsSelected: [],
-    //
+    
     idAsset: null,
     openAssetsModal: false,
     openTreeView: false,
     treeViewFiltering: [],
     assetRows: [],
     assetRowsSelected: [],
+  });
+
+  const [tableControl, setTableControl] = useState({
+    references: {
+      collection: 'references',
+      total: 0,
+      page: 0,
+      rowsPerPage: 5,
+      orderBy: 'name',
+      order: 1,
+      search: '',
+      searchBy: '',
+    },
+    assets: {
+      collection: 'assets',
+      total: 0,
+      page: 0,
+      rowsPerPage: 5,
+      orderBy: 'name',
+      order: 1,
+      search: '',
+      searchBy: '',
+      locationsFilter: [],
+    },
+    categories: {
+      collection: 'categories',
+      total: 0,
+      page: 0,
+      rowsPerPage: 5,
+      orderBy: 'name',
+      order: 1,
+      search: '',
+      searchBy: '',
+    }
   });
 
   const [referencesSelectedId, setReferencesSelectedId] = useState(null);
@@ -258,7 +265,6 @@ export default function Assets() {
   };
 
   const tableActions = (collectionName) => {
-    // return;
     const collection = collections[collectionName];
     return {
       onAdd() {
@@ -289,9 +295,17 @@ export default function Assets() {
     }
   };
 
-  const toggleTreeView = () => {
-    control.openTreeView ? setControl({ ...control, openTreeView: false }) : setControl({ ...control, openTreeView: true })
-  };
+  useEffect(() => {
+    loadAssetsData('assets');
+  }, [ tableControl.assets.page, tableControl.assets.rowsPerPage, tableControl.assets.order, tableControl.assets.orderBy, tableControl.assets.search, tableControl.assets.locationsFilter ]);
+
+  useEffect(() => {
+    loadAssetsData('references');
+  }, [ tableControl.references.page, tableControl.references.rowsPerPage, tableControl.references.order, tableControl.references.orderBy, tableControl.references.search ]);
+
+  useEffect(() => {
+    loadAssetsData('categories');
+  }, [ tableControl.categories.page, tableControl.categories.rowsPerPage, tableControl.categories.order, tableControl.categories.orderBy, tableControl.categories.search ]);
 
   return (
     <>
@@ -314,14 +328,14 @@ export default function Assets() {
         }}
       >
         {({ values, handleReset, handleSubmit, handleChange, handleBlur }) => (
-          <div className="kt-form kt-form--label-right">
+          <div className='kt-form kt-form--label-right'>
             <Portlet>
               <PortletHeader
                 toolbar={
                   <PortletHeaderToolbar>
                     <Tabs
-                      component="div"
-                      className="builder-tabs"
+                      component='div'
+                      className='builder-tabs'
                       value={tab}
                       onChange={(_, nextTab) => {
                         setTab(nextTab);
@@ -336,18 +350,12 @@ export default function Assets() {
 
               {tab === 0 && (
                 <PortletBody>
-                  <div className="kt-section kt-margin-t-0">
-                    <div className="kt-section__body">
-                      <div className="kt-section">
-                        <span className="kt-section__sub">
+                  <div className='kt-section kt-margin-t-0'>
+                    <div className='kt-section__body'>
+                      <div className='kt-section'>
+                        <span className='kt-section__sub'>
                           This section will integrate <code>Assets List</code>
                         </span>
-                        <Button
-                          variant="contained"
-                          onClick={() => toggleTreeView()}
-                        >
-                          Tree View
-                        </Button>
                         <ModalAssetList
                           showModal={control.openAssetsModal}
                           setShowModal={(onOff) => setControl({ ...control, openAssetsModal: onOff })}
@@ -356,30 +364,58 @@ export default function Assets() {
                           categoryRows={control.categoryRows}
                           referencesSelectedId={referencesSelectedId}
                         />
-                        <div className="kt-separator kt-separator--dashed" />
-                        <div className="kt-section__content">
-                          {
-                            <Grid container>
-                              {
-                                control.openTreeView && (
-                                  <Grid item sm={12} md={2} lg={2}>
-                                    <TreeView data={locationsTree} onClick={selectLocation} />
-                                  </Grid>
-                                )
-                              }
-                              <Grid item sm={12} md={12} lg={control.openTreeView ? 10 : 12} >
-                                <TableComponent
-                                  title={'Asset List'}
-                                  headRows={assetListHeadRows}
-                                  rows={control.openTreeView ? control.treeViewFiltering : control.assetRows}
-                                  onEdit={tableActions('assets').onEdit}
-                                  onAdd={tableActions('assets').onAdd}
-                                  onDelete={tableActions('assets').onDelete}
-                                  onSelect={tableActions('assets').onSelect}
-                                />
-                              </Grid>
-                            </Grid>
-                          }
+                        <div className='kt-separator kt-separator--dashed' />
+                        <div className='kt-section__content'>
+                          <TableComponent2
+                            controlValues={tableControl.assets}
+                            headRows={assetListHeadRows}
+                            locationControl = {(locations) => {
+                              setTableControl(prev => ({
+                                ...prev,
+                                assets: {
+                                  ...prev.assets,
+                                  locationsFilter: locations
+                                }
+                              }))
+                            }}
+                            onAdd={tableActions('assets').onAdd}
+                            onDelete={tableActions('assets').onDelete}
+                            onEdit={tableActions('assets').onEdit}
+                            onSelect={tableActions('assets').onSelect}
+                            paginationControl={({ rowsPerPage, page }) =>
+                              setTableControl( prev => ({
+                                ...prev,
+                                assets: {
+                                  ...prev.assets,
+                                  rowsPerPage: rowsPerPage,
+                                  page: page,
+                                }
+                              }))
+                            }
+                            rows={control.assetRows}
+                            searchControl={({ value, field }) => {
+                              setTableControl( prev => ({
+                                ...prev,
+                                assets: {
+                                  ...prev.assets,
+                                  search: value,
+                                  searchBy: field,
+                                }
+                              }))
+                            }}
+                            sortByControl={({ orderBy, order }) => {
+                              setTableControl( prev => ({
+                                ...prev,
+                                assets: {
+                                  ...prev.assets,
+                                  orderBy: orderBy,
+                                  order: order,
+                                }
+                              }))
+                            }}      
+                            title={'Asset List'}                      
+                            treeView
+                          />
                         </div>
                       </div>
                     </div>
@@ -389,10 +425,10 @@ export default function Assets() {
 
               {tab === 1 && (
                 <PortletBody>
-                  <div className="kt-section kt-margin-t-0">
-                    <div className="kt-section__body">
-                      <div className="kt-section">
-                        <span className="kt-section__sub">
+                  <div className='kt-section kt-margin-t-0'>
+                    <div className='kt-section__body'>
+                      <div className='kt-section'>
+                        <span className='kt-section__sub'>
                           This section will integrate <code>Assets References</code>
                         </span>
                         <ModalAssetReferences
@@ -402,16 +438,47 @@ export default function Assets() {
                           id={control.idReference}
                           categoryRows={control.categoryRows}
                         />
-                        <div className="kt-separator kt-separator--dashed" />
-                        <div className="kt-section__content">
-                          <TableComponent
-                            title={'Asset References'}
+                        <div className='kt-separator kt-separator--dashed' />
+                        <div className='kt-section__content'>
+                          <TableComponent2
+                            controlValues={tableControl.references}
                             headRows={assetReferencesHeadRows}
-                            rows={control.referenceRows}
-                            onEdit={tableActions('references').onEdit}
                             onAdd={tableActions('references').onAdd}
                             onDelete={tableActions('references').onDelete}
+                            onEdit={tableActions('references').onEdit}                           
                             onSelect={tableActions('references').onSelect}
+                            paginationControl={({ rowsPerPage, page }) =>
+                              setTableControl( prev => ({
+                                ...prev,
+                                references: {
+                                  ...prev.references,
+                                  rowsPerPage: rowsPerPage,
+                                  page: page,
+                                }
+                              }))
+                            }
+                            rows={control.referenceRows}
+                            searchControl={({ value, field }) => {
+                              setTableControl( prev => ({
+                                ...prev,
+                                references: {
+                                  ...prev.references,
+                                  search: value,
+                                searchBy: field,
+                                }
+                              }))
+                            }}
+                            sortByControl={({ orderBy, order }) => {
+                              setTableControl( prev => ({
+                                ...prev,
+                                references: {
+                                  ...prev.references,
+                                  orderBy: orderBy,
+                                  order: order,
+                                }
+                              }))
+                            }}
+                            title={'Asset References'}
                           />
                         </div>
                       </div>
@@ -422,48 +489,59 @@ export default function Assets() {
 
               {tab === 2 && (
                 <PortletBody>
-                  <div className="kt-section kt-margin-t-0">
-                    <div className="kt-section__body">
-                      <div className="kt-section">
-                        <span className="kt-section__sub">
+                  <div className='kt-section kt-margin-t-0'>
+                    <div className='kt-section__body'>
+                      <div className='kt-section'>
+                        <span className='kt-section__sub'>
                           This section will integrate <code>Assets Categories</code>
                         </span>
-                        <Button variant='contained' onClick={() => control.openTileView ? setControl({ ...control, openTileView: false }) : setControl({ ...control, openTileView: true })} >Tile View</Button>
-                        <div className="kt-separator kt-separator--dashed" />
-                        <TileView
-                          showTileView={control.openTileView}
-                          tiles={control.categories}
-                          collection='categories'
-                          onEdit={tableActions('categories').onEdit}
-                          onDelete={tableActions('categories').onDelete}
-                          onReload={() => loadAssetsData('categories')}
-                        />
-                        { /* <TileView /> */}
+                        <div className='kt-separator kt-separator--dashed' />
                         <ModalAssetCategories
-                          // showModal={openCategoriesModal}
-                          // setShowModal={setOpenCategoriesModal}
-                          // reloadTable={loadAssetsData.categories}
-                          // id={idCategory}
                           showModal={control.openCategoriesModal}
                           setShowModal={(onOff) => setControl({ ...control, openCategoriesModal: onOff })}
                           reloadTable={() => loadAssetsData('categories')}
                           id={control.idCategory}
                         />
-
-                        <div className="kt-separator kt-separator--dashed" />
-                        <div className="kt-section__content">
-                          <TableComponent
-                            title={'Asset Categories'}
+                        <div className='kt-section__content'>
+                        <TableComponent2
+                            controlValues={tableControl.categories}
                             headRows={assetCategoriesHeadRows}
-                            rows={control.categoryRows}
-                            onEdit={tableActions('categories').onEdit}
                             onAdd={tableActions('categories').onAdd}
                             onDelete={tableActions('categories').onDelete}
+                            onEdit={tableActions('categories').onEdit}                           
                             onSelect={tableActions('categories').onSelect}
-                          // rows={categoryRows.rows}
-                          // onEdit={categoriesTableActions.onEditProfileLocation}
-                          // onAdd={categoriesTableActions.onAddProfileLocation}
-                          // onDelete={categoriesTableActions.onDeleteProfileLocation}
+                            paginationControl={({ rowsPerPage, page }) =>
+                              setTableControl( prev => ({
+                                ...prev,
+                                categories: {
+                                  ...prev.categories,
+                                  rowsPerPage: rowsPerPage,
+                                  page: page,
+                                }
+                              }))
+                            }
+                            rows={control.categoryRows}
+                            searchControl={({ value, field }) => {
+                              setTableControl( prev => ({
+                                ...prev,
+                                categories: {
+                                  ...prev.categories,
+                                  search: value,
+                                searchBy: field,
+                                }
+                              }))
+                            }}
+                            sortByControl={({ orderBy, order }) => {
+                              setTableControl( prev => ({
+                                ...prev,
+                                categories: {
+                                  ...prev.categories,
+                                  orderBy: orderBy,
+                                  order: order,
+                                }
+                              }))
+                            }}
+                            title={'Asset Categories'}
                           />
                         </div>
                       </div>
@@ -474,13 +552,13 @@ export default function Assets() {
 
               {tab === 3 && (
                 <PortletBody>
-                  <div className="kt-section kt-margin-t-0">
-                    <div className="kt-section__body">
-                      <div className="kt-section">
-                        <span className="kt-section__sub">
+                  <div className='kt-section kt-margin-t-0'>
+                    <div className='kt-section__body'>
+                      <div className='kt-section'>
+                        <span className='kt-section__sub'>
                           This section will integrate <code>Asset Policies</code>
                         </span>
-                        <div className="kt-separator kt-separator--dashed" />
+                        <div className='kt-separator kt-separator--dashed' />
                       </div>
                     </div>
                   </div>
@@ -488,30 +566,30 @@ export default function Assets() {
               )}
 
               <PortletFooter>
-                <div className="kt-padding-30 text-center">
+                <div className='kt-padding-30 text-center'>
                   <button
-                    type="button"
+                    type='button'
                     onClick={handleSubmit}
                     style={loadingButtonPreviewStyle}
                     className={`btn btn-primary btn-elevate kt-login__btn-primary ${clsx(
                       {
-                        "kt-spinner kt-spinner--right kt-spinner--md kt-spinner--light": loadingPreview
+                        'kt-spinner kt-spinner--right kt-spinner--md kt-spinner--light': loadingPreview
                       }
                     )}`}
                   >
-                    <i className="la la-eye" /> Preview
-                  </button>{" "}
+                    <i className='la la-eye' /> Preview
+                  </button>{' '}
                   <button
-                    type="button"
+                    type='button'
                     onClick={handleReset}
                     style={loadingButtonResetStyle}
                     className={`btn btn-secondary btn-elevate kt-login__btn-primary ${clsx(
                       {
-                        "kt-spinner kt-spinner--right kt-spinner--md kt-spinner--dark": loadingReset
+                        'kt-spinner kt-spinner--right kt-spinner--md kt-spinner--dark': loadingReset
                       }
                     )}`}
                   >
-                    <i className="la la-recycle" /> Reset
+                    <i className='la la-recycle' /> Reset
                   </button>
                 </div>
               </PortletFooter>
