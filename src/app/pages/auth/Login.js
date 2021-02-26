@@ -6,7 +6,7 @@ import { FormattedMessage, injectIntl } from "react-intl";
 import { TextField } from "@material-ui/core";
 import clsx from "clsx";
 import * as auth from "../../store/ducks/auth.duck";
-import { login, loginReal } from "../../crud/auth.crud";
+import { loginReal } from "../../crud/auth.crud";
 
 function Login(props) {
   const { intl } = props;
@@ -82,13 +82,13 @@ function Login(props) {
                     // console.log('data:', data)
                     console.log('accessToken:', response)
                     disableLoading();
-                    const { email, accessToken, id, fileExt } = response;
+                    const { email, accessToken, id, fileExt, profilePermissions } = response;
                     // global.token = accessToken;
                     const pic = fileExt ?
                       `http://159.203.41.87:3001/uploads/user/${id}.${fileExt}` :
                       'http://localhost:3000/media/misc/placeholder-image.jpg';
                     // const pic = 'https://i2.wp.com/float8ion.com/wp-content/uploads/2015/12/random-user-31.jpg';
-                    const user = {id, fullname: `${response.name} ${response.lastName}`, email, accessToken, pic };
+                    const user = {id, fullname: `${response.name} ${response.lastName}`, email, accessToken, pic, profilePermissions };
                     props.fulfillUser(user);
                   })
                   .catch((err) => {

@@ -1,26 +1,21 @@
-import React, { useState } from 'react'
-import clsx from "clsx";
+import React from 'react'
+import clsx from 'clsx';
 
-const SaveButton = ({ handleOnClick }) => {
-  const [loadingButtonPreviewStyle, setLoadingButtonPreviewStyle] = useState({
-    paddingRight: "2.5rem"
-  });
-  const [loadingPreview, setLoadingPreview] = useState(false);
-
+const SaveButton = ({ handleOnClick, loading }) => {
   return (
     <div>
       <button
-        type="button"
+        type='button'
         onClick={handleOnClick}
-        style={loadingButtonPreviewStyle}
+        style={loading ? { paddingRight: '3.5rem' } : { paddingRight: '2.5rem' }}
         className={`btn btn-primary btn-elevate kt-login__btn-primary ${clsx(
           {
-            "kt-spinner kt-spinner--right kt-spinner--md kt-spinner--light": loadingPreview
+            'kt-spinner kt-spinner--right kt-spinner--md kt-spinner--light': loading
           }
         )}`}
       >
-        <i className="la la-eye" /> Save
-      </button>{" "}
+        <i className='la la-eye' /> Save
+      </button>{' '}
     </div>
   )
 }
