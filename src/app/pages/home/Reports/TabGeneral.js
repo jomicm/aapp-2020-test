@@ -46,7 +46,6 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
-
   const classes = useStyles();
   const [control, setControl] = useState(false);
   const [collectionName, setCollectionName] = useState(null);
@@ -59,10 +58,13 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
     reportName: '' 
   });
 
-
   const handleChange = (name) => (event) => {
-    const {value} = event.target;
-    setValues(({...values, [name]: value }));
+    const { value } = event.target;
+    if (value) {
+      setValues({ ...values, [name]: value });
+    } else {
+      setValues({ ...values, selectedReport: '', startDate: '', endDate: '' });
+    }
   };
 
   const handleChangeReportName = () => {
@@ -82,15 +84,15 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
   }
   
   const handleGenerateReport = (id) => {
-    savedReports.map((ele) => {
-      if (ele._id === id) {
+    savedReports.map(({ _id, endDate, selectedReport, startDate }) => {
+      if (_id === id) {
         setValues({ 
           ...values, 
-          selectedReport: ele.selectedReport, 
-          startDate: ele.startDate, 
-          endDate: ele.endDate
+          selectedReport, 
+          startDate, 
+          endDate
         })
-        setCollectionName(ele.selectedReport);
+        setCollectionName(selectedReport);
       }
     })
   }
@@ -122,7 +124,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
       setDataTable(dataTableDefault);
       return;
     }
-    const collection = modules.find((mod) => mod.name === collectionName);
+    const collection = modules.find(({ id }) => id === collectionName);
     if (!collection) {
       setDataTable(dataTableDefault);
       return;
@@ -155,7 +157,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
             onClick={handleClickCollectionName}
             size="large" 
             variant="contained" 
-            > 
+          > 
             Generate Report 
           </Button>
           <Button 
@@ -164,7 +166,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
             onClick={handleChangeReportName}
             size="large" 
             variant="contained" 
-            > 
+          > 
             Save 
           </Button>
         </div>
@@ -183,7 +185,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
               <em>None</em>
             </MenuItem>
             {modules.map((opt, ix) => (
-              <MenuItem key={`opt-${ix}`} value={opt.name}>{opt.name}</MenuItem>
+              <MenuItem key={`opt-${ix}`} value={opt.id}>{opt.name}</MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -224,9 +226,9 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
             <MenuItem value="">
               <em>None</em>
             </MenuItem>
-            {savedReports.map((opt, ix) => {
+            {savedReports.map(({ _id, reportName }, ix) => {
               return(
-              <MenuItem key={`opt-${ix}`} value={opt._id}>{opt.reportName}</MenuItem>
+              <MenuItem key={`opt-${ix}`} value={_id}>{reportName}</MenuItem>
             )})}
           </Select>
         </FormControl>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
 import draftToHtml from 'draftjs-to-html';
 import htmlToDraft from 'html-to-draftjs';
@@ -34,33 +34,9 @@ import {
   getOneDB,
   updateDB
 } from '../../../../crud/api';
-import {
-  SingleLine,
-  MultiLine,
-  Date,
-  DateTime,
-  DropDown,
-  RadioButtons,
-  FileUpload,
-  Checkboxes
-} from '../../Components/CustomFields/CustomFieldsPreview';
 import './ModalReportsSaved.scss';
 
 const localStorageActiveTabKey = 'builderActiveTab';
-
-const CustomFieldsPreview = (props) => {
-  const customFieldsPreviewObj = {
-    singleLine: <SingleLine {...props} />,
-    multiLine: <MultiLine {...props} />,
-    date: <Date {...props} />,
-    dateTime: <DateTime {...props} />,
-    dropDown: <DropDown {...props} />,
-    radioButtons: <RadioButtons {...props} />,
-    checkboxes: <Checkboxes {...props} />,
-    fileUpload: <FileUpload {...props} />
-  };
-  return customFieldsPreviewObj[props.type];
-};
 
 const styles5 = (theme) => ({
   root: {
@@ -144,7 +120,6 @@ const ModalReportsSaved = ({
   setShowModal,
   showModal
 }) => {
-
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const classes = useStyles();
   const classes4 = useStyles4();

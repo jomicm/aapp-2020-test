@@ -22,7 +22,6 @@ import ModalReportsSaved from './modals/ModalReportsSaved'
 const localStorageActiveTabKey = "builderActiveTab";
 
 const Reports = () => {
-
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [control, setControl] = useState({
     idReports: null,
@@ -220,10 +219,10 @@ const Reports = () => {
                                 headRows={assetSavedHeadRows}
                                 noAdd
                                 onEdit={tableActions('reports').onEdit}
-                                onGenerateReport={tableActions('reports').onGenerateReport}
+                                onView={tableActions('reports').onGenerateReport}
                                 onDelete={tableActions('reports').onDelete}
                                 rows={control.reportsRows}
-                                showGenerateReport={true}
+                                showView={true}
                                 title={'Reports'}
                               />
                             </div>

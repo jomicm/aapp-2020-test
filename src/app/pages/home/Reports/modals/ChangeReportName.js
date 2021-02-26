@@ -99,31 +99,29 @@ const ChangeReportName = ({
     setShowModal,
     showModal
     }) => {
+  const [renameReport, setRenameReport] = useState('');
 
-    const [renameReport, setRenameReport] = useState('');
+  const handleChangeName = (e) => {
+      const { value } = e.target;
+      setRenameReport(value);
+  }
 
-    const handleChangeName = (e) => {
-        const { value } = e.target;
-        setRenameReport(value);
+  const handleCloseModal = () => {
+    reset();
+    setShowModal(false);
+    };
+
+  const handleSave = () => {
+    if (renameReport.trim() === '') {
+        alert('Please enter a valid name...');
+    } else {
+        saveData(renameReport);
+        handleCloseModal();
     }
+  }
 
-    const handleCloseModal = () => {
-      reset();
-      setShowModal(false);
-      };
-
-    const handleSave = () => {
-      debugger
-        if (renameReport.trim() === '') {
-            alert('Please enter a valid name...');
-          } else {
-            saveData(renameReport);
-            handleCloseModal();
-          }
-    }
-
-    return (
-        <div style={{ width: '100px' }}>
+  return (
+    <div style={{ width: '100px' }}>
       <Dialog
         aria-labelledby='customized-dialog-title'
         onClose={handleCloseModal}
@@ -134,11 +132,11 @@ const ChangeReportName = ({
         </DialogTitle5>
         <DialogContent5 dividers>
           <PortletBody>
-              <TextField
-                onChange={handleChangeName}
-                placeholder='New name'
-                style={{ width: '200px' }}
-              />
+            <TextField
+              onChange={handleChangeName}
+              placeholder='New name'
+              style={{ width: '200px' }}
+            />
           </PortletBody>
         </DialogContent5>
         <DialogActions5>
@@ -148,7 +146,7 @@ const ChangeReportName = ({
         </DialogActions5>
       </Dialog>
     </div>
-    )
+  )
 }
 
 export default ChangeReportName;
