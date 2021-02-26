@@ -16,7 +16,7 @@ const LogoAndTitle = () => {
 
   useEffect(() => {
     loadData();
-  }, [])
+  }, []);
 
   return (
     <div className='ket-aside-LogoAndTitle'>
@@ -33,7 +33,7 @@ const LogoAndTitle = () => {
         {values.sideBarTitle}
       </span>
     </div>
-  )
+  );
 }
 
 export default (LogoAndTitle)

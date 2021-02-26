@@ -16,9 +16,7 @@ class MenuList extends React.Component {
   componentDidMount() {
     if (this.props.user.profilePermissions) {
       const tabs = Object.keys(filterObject(this.props.user.profilePermissions, (element) => element.length > 1))
-      this.setState({
-        Tabs: tabs,
-      })
+      this.setState({ Tabs: tabs })
     }
   }
 
