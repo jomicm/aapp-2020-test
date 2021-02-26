@@ -184,8 +184,8 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
             <MenuItem value="">
               <em>None</em>
             </MenuItem>
-            {modules.map((opt, ix) => (
-              <MenuItem key={`opt-${ix}`} value={opt.id}>{opt.name}</MenuItem>
+            {modules.map(({ id, name }, ix) => (
+              <MenuItem key={`opt-${ix}`} value={id}>{name}</MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -226,10 +226,9 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
             <MenuItem value="">
               <em>None</em>
             </MenuItem>
-            {savedReports.map(({ _id, reportName }, ix) => {
-              return(
+            {savedReports.map(({ _id, reportName }, ix) => (
               <MenuItem key={`opt-${ix}`} value={_id}>{reportName}</MenuItem>
-            )})}
+            ))}
           </Select>
         </FormControl>
       </div>
