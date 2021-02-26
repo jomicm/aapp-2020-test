@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import Autocomplete from '@material-ui/lab/Autocomplete';
 import Select from 'react-select';
+import draftToHtml from 'draftjs-to-html';
+import htmlToDraft from 'html-to-draftjs';
+import { Editor } from 'react-draft-wysiwyg';
+import {
+  EditorState,
+  ContentState,
+  convertToRaw,
+  Modifier
+} from 'draft-js';
+import Autocomplete from '@material-ui/lab/Autocomplete';
 import {
   Button,
   Dialog,
@@ -17,13 +26,6 @@ import {
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import { withStyles, useTheme, makeStyles } from '@material-ui/core/styles';
-import { pick } from 'lodash';
-import {
-  EditorState,
-  ContentState,
-  convertToRaw
-} from 'draft-js';
-import { Editor } from 'react-draft-wysiwyg';
 import {
   PortletBody
 } from '../../../../../app/partials/content/Portlet';
@@ -43,8 +45,6 @@ import {
   Checkboxes
 } from '../../Components/CustomFields/CustomFieldsPreview';
 import './ModalReportsSaved.scss';
-import draftToHtml from 'draftjs-to-html';
-import htmlToDraft from 'html-to-draftjs';
 
 const localStorageActiveTabKey = 'builderActiveTab';
 
@@ -105,14 +105,6 @@ const DialogActions5 = withStyles((theme) => ({
   }
 }))(DialogActions);
 
-const TabContainer4 = ({ children, dir }) => {
-  return (
-    <Typography component='div' dir={dir} style={{ padding: 8 * 3 }}>
-      {children}
-    </Typography>
-  );
-};
-
 const useStyles4 = makeStyles((theme) => ({
   root: {
     backgroundColor: theme.palette.background.paper,
@@ -147,8 +139,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const ModalReportsSaved = ({
-  employeeProfileRows,
-  id,
+  data,
   reloadTable,
   setShowModal,
   showModal
@@ -195,9 +186,8 @@ const ModalReportsSaved = ({
       layout,
       selectedDaysToSent: daysToSent
     };
-    updateDB('reports/', body, id[0])
+    updateDB('reports/', body, data._id)
       .then((response) => {
-          saveAndReload('reports', id[0]);
         })
       .catch((error) => console.log(error));
     handleCloseModal();
@@ -212,18 +202,14 @@ const ModalReportsSaved = ({
   };
 
   const reset = () => {
+    setEditor(EditorState.createEmpty());
     setValues({
       enabled: false,
       subject: ''
     });
     setFrom([]);
     setTo([]);
-    setEditor(EditorState.createEmpty());
     setDaysToSent([]);
-  };
-
-  const saveAndReload = (folderName, id) => {
-    reloadTable();
   };
 
   const setSelectedControlAndIndexes = (event) => {
@@ -247,36 +233,23 @@ const ModalReportsSaved = ({
       })
       .catch((error) => console.log(error));
 
-    if (!id || !Array.isArray(id)) {
-      return;
-    }
-
-    getOneDB('reports/', id[0])
-      .then((response) => response.json())
-      .then((data) => {
-        const {
-          layout,
-          from,
-          to,
-          selectedDaysToSent
-        } = data.response;
-        const obj = pick(data.response, [
-          'enabled',
-          'messageMail',
-          'subject'
-        ]);
-        const contentBlock = htmlToDraft(layout);
-        const contentState = ContentState.createFromBlockArray(
-          contentBlock.contentBlocks
-        );
-        setValues(obj);
-        setFrom(from);
-        setTo(to);
-        setDaysToSent(selectedDaysToSent);
-        setEditor(EditorState.createWithContent(contentState));
-      })
-      .catch((error) => console.log(error));
-  }, [id, employeeProfileRows]);
+      if (Object.keys(data).length > 0) {
+        const { enabled, subject, from, selectedDaysToSent, layout, to } = data
+        if (layout) {
+          const contentBlock = htmlToDraft(layout);
+          const contentState = ContentState.createFromBlockArray(
+            contentBlock.contentBlocks
+            );
+          setEditor(EditorState.createWithContent(contentState));
+        } else {
+          setEditor(EditorState.createEmpty());
+        }
+        setValues({ enabled, subject })
+        setFrom(from)
+        setTo(to)
+        setDaysToSent(selectedDaysToSent)
+      }
+  }, [data]);
 
   const daysOptions = Array(31).fill().map((_, ix) => ({ value: ix + 1, label: ix + 1}))
 
@@ -288,7 +261,7 @@ const ModalReportsSaved = ({
         open={showModal}
       >
         <DialogTitle5 id='customized-dialog-title' onClose={handleCloseModal}>
-          {`${id ? 'Edit' : 'Add'} Reports`}
+          Edit Reports
         </DialogTitle5>
         <DialogContent5 dividers>
           <div className='kt-section__content ' style={{ margin: '-16px' }}>
@@ -372,7 +345,7 @@ const ModalReportsSaved = ({
                                         classNamePrefix="select"
                                         isClearable={true}
                                         name="days"
-                                        onChange={(e) => setDaysToSent(e)}
+                                        onChange={setDaysToSent}
                                         value={daysToSent}
                                         options={daysOptions}
                                       />
@@ -389,9 +362,9 @@ const ModalReportsSaved = ({
                                 editorClassName='editorClassName'
                                 editorState={editor}
                                 onEditorStateChange={(ed) => setEditor(ed)}
+                                placeholder='Start wirtting your message here...'
                                 toolbarClassName='toolbarClassName'
                                 wrapperClassName='wrapperClassName'
-                                placeholder='Start wirtting your message here...'
                               />
                             </div>
                           </div>
@@ -404,7 +377,7 @@ const ModalReportsSaved = ({
           </div>
         </DialogContent5>
         <DialogActions5>
-          <Button onClick={handleSave} color='primary'>
+          <Button color='primary' onClick={handleSave}>
             Save changes
           </Button>
         </DialogActions5>

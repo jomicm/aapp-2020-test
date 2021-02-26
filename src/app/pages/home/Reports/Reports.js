@@ -31,6 +31,7 @@ const Reports = () => {
     reportsRowsSelected: []
   });
   const [data, setData] = useState([]);
+  const [dataModal, setDataModal] = useState({});
   const [loadingButtonResetStyle, setLoadingButtonResetStyle] = useState({
     paddingRight: "2.5rem"
   });
@@ -114,9 +115,10 @@ const Reports = () => {
     const collection = collections[collectionName];
     return {
       onEdit(id) {
+        setDataModal(data.filter((ele) => ele._id === id[0])[0])
         setControl({
           ...control,
-          [collection.id]: id,
+          [collection.idReports]: id[0],
           [collection.modal]: true
         });
       },
@@ -125,7 +127,9 @@ const Reports = () => {
         setTab(0);
       },
       onDelete(id) {
-        if (!id || !Array.isArray(id)) return;
+        if (!id || !Array.isArray(id)) { 
+          return;
+        }
         id.forEach((_id) => {
           deleteDB(`${collection.name}/`, _id)
             .then((response) => loadInitData(collection.name))
@@ -149,8 +153,7 @@ const Reports = () => {
         title={'Add New Report'}
       />
       <ModalReportsSaved
-        employeeProfileRows={[]}
-        id={control.idReports}
+        data={dataModal}
         module={module}
         reloadTable={() => loadInitData('reports')}
         setShowModal={(onOff) =>
@@ -196,7 +199,8 @@ const Reports = () => {
                         <TabGeneral 
                           id={reportToGenerate} 
                           savedReports={data}
-                          setId={setReportToGenerate} 
+                          setId={setReportToGenerate}
+                          reloadData={loadInitData}
                         />
                     </div>
                   </div>
@@ -240,7 +244,7 @@ const Reports = () => {
                     style={loadingButtonPreviewStyle}
                     type="button"
                   >
-                    <i className="la la-eye" /> Preview
+                    <i className="la la-eye"/> Preview
                   </button>{" "}
                   <button
                     className={`btn btn-secondary btn-elevate kt-login__btn-primary ${clsx(
@@ -252,7 +256,7 @@ const Reports = () => {
                     style={loadingButtonResetStyle}
                     type="button"
                       >
-                    <i className="la la-recycle" /> Reset
+                    <i className="la la-recycle"/> Reset
                   </button>
                 </div>
               </PortletFooter>

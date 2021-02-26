@@ -45,13 +45,12 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const TabGeneral = ({ id, savedReports, setId }) => {
+const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
 
   const classes = useStyles();
   const [control, setControl] = useState(false);
-  const [data, setData] = useState([]);
-  const [dataTable, setDataTable] = useState(dataTableDefault);
   const [collectionName, setCollectionName] = useState(null);
+  const [dataTable, setDataTable] = useState(dataTableDefault);
   const [values, setValues] = useState({ 
     selectedReport: '', 
     startDate: '', 
@@ -59,6 +58,7 @@ const TabGeneral = ({ id, savedReports, setId }) => {
     enabled: false, 
     reportName: '' 
   });
+
 
   const handleChange = (name) => (event) => {
     const {value} = event.target;
@@ -112,24 +112,9 @@ const TabGeneral = ({ id, savedReports, setId }) => {
         .catch((error) => console.log('ERROR', error));
   }
 
-  const loadInitData = () => {
-      getDB('reports')
-        .then((response) => response.json())
-        .then((data) => {
-          const reports = data.response.map(({ 
-            _id, 
-            selectedReport, 
-            reportName, 
-            startDate, 
-            endDate 
-          }) => ({ _id, selectedReport, reportName, startDate, endDate }))
-          setData(reports);
-        })
-        .catch((error) => console.log('error>', error));
-  };
-
   const reset = () => {
-    setValues({selectedReport: '', startDate: '', endDate: ''});
+    setValues({ ...values, selectedReport: '', startDate: '', endDate: '' });
+    reloadData()
   }
 
   useEffect(() => {
@@ -152,14 +137,9 @@ const TabGeneral = ({ id, savedReports, setId }) => {
       .catch(error => console.log('error>', error));
   }, [collectionName]);
 
-  useEffect(() => {
-    loadInitData();
-  }, []);
-
   return (
     <div>
       <ChangeReportName
-        reload={loadInitData}
         reset={reset}
         saveData={handleSave}
         setShowModal={setControl}
@@ -264,4 +244,4 @@ const TabGeneral = ({ id, savedReports, setId }) => {
   )
 }
 
-export default TabGeneral
+export default TabGeneral;

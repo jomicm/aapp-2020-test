@@ -60,13 +60,6 @@ import {
     }
   });
 
-  const useStyles4 = makeStyles((theme) => ({
-    root: {
-      backgroundColor: theme.palette.background.paper,
-      minWidth: 1000
-    }
-  }));
-
   const DialogActions5 = withStyles((theme) => ({
     root: {
       margin: 0,
@@ -101,7 +94,6 @@ import {
   }));
 
 const ChangeReportName = ({
-    reload,
     reset,
     saveData,
     setShowModal,
@@ -116,7 +108,8 @@ const ChangeReportName = ({
     }
 
     const handleCloseModal = () => {
-        setShowModal(false);
+      reset();
+      setShowModal(false);
       };
 
     const handleSave = () => {
@@ -125,10 +118,8 @@ const ChangeReportName = ({
             alert('Please enter a valid name...');
           } else {
             saveData(renameReport);
-            reset();
-            reload();
             handleCloseModal();
-        }
+          }
     }
 
     return (
