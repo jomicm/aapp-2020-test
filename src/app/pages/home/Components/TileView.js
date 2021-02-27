@@ -118,7 +118,7 @@ const TileView = ({ tiles, collection, tailWidth = '120px', tailHeight = '120px'
         />
           <div className={classes.container}>
             {tiles.map((tile) => {
-              const imageURL = getImageURL(tile._id, collection, tile.fileExt)
+              const imageURL = getImageURL(tile.id, collection, tile.fileExt)
               return (
                 <div 
                   className={classes.tile} 

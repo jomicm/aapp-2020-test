@@ -7,6 +7,12 @@ export function addCSSClass(ele, cls) {
   ele.classList.add(cls);
 }
 
+export function filterObject(obj, predicate) {
+  return Object.keys(obj)
+    .filter((key) => predicate(obj[key]))
+    .reduce((res, key) => ((res[key] = obj[key]), res), {});
+}
+
 export const toAbsoluteUrl = pathname => process.env.PUBLIC_URL + pathname;
 
 export function setupAxios(axios, store) {
@@ -39,9 +45,9 @@ export function removeStorage(key) {
   } catch (e) {
     console.log(
       "removeStorage: Error removing key [" +
-        key +
-        "] from localStorage: " +
-        JSON.stringify(e)
+      key +
+      "] from localStorage: " +
+      JSON.stringify(e)
     );
     return false;
   }
@@ -75,9 +81,9 @@ export function getStorage(key) {
     } catch (e) {
       console.log(
         "getStorage: Error reading key [" +
-          key +
-          "] from localStorage: " +
-          JSON.stringify(e)
+        key +
+        "] from localStorage: " +
+        JSON.stringify(e)
       );
       return null;
     }
@@ -104,9 +110,9 @@ export function setStorage(key, value, expires) {
   } catch (e) {
     console.log(
       "setStorage: Error setting key [" +
-        key +
-        "] in localStorage: " +
-        JSON.stringify(e)
+      key +
+      "] in localStorage: " +
+      JSON.stringify(e)
     );
     return false;
   }

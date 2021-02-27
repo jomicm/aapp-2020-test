@@ -1,7 +1,33 @@
 //
 // Aside Brand
 //
+.ket-aside-LogoAndTitle {
+	margin-top: 10px;
+	width: 100%;
+	padding: 0 kt-get($kt-page-padding, desktop);
 
+	img {
+		display: block;
+		margin-left: auto;
+		margin-right: auto;
+		object-fit: cover;
+		width: 150px;
+		.kt-aside--minimize & {
+			display: none;
+		}
+	}
+	span{
+		margin-top: 5px;
+		color: gray;
+		font-size: 160%;
+		display: flex;
+		justify-content: center;
+		width: 100%;
+		.kt-aside--minimize & {
+			display: none;
+		}
+	}
+}
 
 
 .kt-aside__brand {
@@ -17,6 +43,11 @@
 		justify-content: flex-begin;
 
 		img {
+			.kt-aside--minimize & {
+				display: none;
+			}
+		}
+		span{
 			.kt-aside--minimize & {
 				display: none;
 			}

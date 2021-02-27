@@ -394,37 +394,7 @@ export default function Settings() {
                   </div>
                 </PortletBody>
               )}
-
-              <PortletFooter>
-                <div className="kt-padding-30 text-center">
-                  <button
-                    type="button"
-                    onClick={handleSubmit}
-                    style={loadingButtonPreviewStyle}
-                    className={`btn btn-primary btn-elevate kt-login__btn-primary ${clsx(
-                      {
-                        "kt-spinner kt-spinner--right kt-spinner--md kt-spinner--light": loadingPreview
-                      }
-                    )}`}
-                  >
-                    <i className="la la-eye" /> Preview
-                  </button>{" "}
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    style={loadingButtonResetStyle}
-                    className={`btn btn-secondary btn-elevate kt-login__btn-primary ${clsx(
-                      {
-                        "kt-spinner kt-spinner--right kt-spinner--md kt-spinner--dark": loadingReset
-                      }
-                    )}`}
-                  >
-                    <i className="la la-recycle" /> Reset
-                  </button>
-                </div>
-              </PortletFooter>
             </Portlet>
-
           </div>
         )}
       </Formik>

@@ -5,6 +5,7 @@ import Brand from "../brand/Brand";
 import PerfectScrollbar from "react-perfect-scrollbar";
 import Menu from "./Menu";
 import KTOffcanvas from "../../_assets/js/offcanvas";
+import LogoAndTitle from '../aside/LogoAndTitle';
 
 class AsideLeft extends React.Component {
   asideOffCanvasRef = React.createRef();
@@ -33,6 +34,7 @@ class AsideLeft extends React.Component {
             id="kt_aside_menu_wrapper"
             className="kt-aside-menu-wrapper kt-grid__item kt-grid__item--fluid"
           >
+            <LogoAndTitle />
             {this.props.disableScroll && (
               <Menu htmlClassService={this.props.htmlClassService} />
             )}

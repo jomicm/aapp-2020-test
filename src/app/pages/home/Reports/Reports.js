@@ -1,10 +1,9 @@
-/* eslint-disable no-restricted-imports */
-import React, { useMemo, useState, useEffect } from "react";
-import { shallowEqual, useDispatch, useSelector } from "react-redux";
+import React, { useEffect, useMemo, useState } from "react";
 import { Formik, setNestedObjectValues } from "formik";
 import { get, merge } from "lodash";
-import { FormHelperText, Switch, Tab, Tabs, Styles } from "@material-ui/core";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import clsx from "clsx";
+import { FormHelperText, Switch, Tab, Tabs, Styles } from "@material-ui/core";
 import { metronic, initLayoutConfig, LayoutConfig } from "../../../../_metronic";
 import {
   Portlet,
@@ -13,73 +12,61 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from "../../../partials/content/Portlet";
-
-// AApp Components
+import { getDB, deleteDB } from '../../../crud/api';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import TableComponent from '../Components/TableComponent';
-// import ModalAssetCategories from './modals/ModalAssetCategories';
-// import ModalAssetReferences from './modals/ModalAssetReferences';
-// import ModalAssetList from './modals/ModalAssetList';
-
-import TreeView from '../Components/TreeViewComponent';
-import GoogleMaps from '../Components/GoogleMaps';
-// import './Assets.scss';
-
-//Icons
-import CloseIcon from "@material-ui/icons/Close";
-import DeleteIcon from '@material-ui/icons/Delete';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
-import DraftsIcon from '@material-ui/icons/Drafts';
-import SendIcon from '@material-ui/icons/Send';
-import ExpandLess from '@material-ui/icons/ExpandLess';
-import ExpandMore from '@material-ui/icons/ExpandMore';
-import StarBorder from '@material-ui/icons/StarBorder';
-
-
-//Custom Fields Preview
-import {
-  SingleLine,
-  MultiLine,
-  Date,
-  DateTime,
-  DropDown,
-  RadioButtons,
-  Checkboxes,
-  FileUpload,
-  SingleLineSettings,
-  MultiLineSettings,
-  DateSettings,
-  DateTimeSettings,
-  DropDownSettings,
-  RadioButtonsSettings,
-  CheckboxesSettings,
-  FileUploadSettings
-} from '../Components/CustomFields/CustomFieldsPreview';
-import SwipeableViews from "react-swipeable-views";
-
-//DB API methods
-import { getDB, deleteDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 import TabGeneral from './TabGeneral';
+import ModalReportsSaved from './modals/ModalReportsSaved'
 
 const localStorageActiveTabKey = "builderActiveTab";
-export default function Reports() {
 
+const Reports = () => {
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
+  const [control, setControl] = useState({
+    idReports: null,
+    openReportsModal: false,
+    reportsRows: [],
+    reportsRowsSelected: []
+  });
+  const [data, setData] = useState([]);
+  const [dataModal, setDataModal] = useState({});
+  const [loadingButtonResetStyle, setLoadingButtonResetStyle] = useState({
+    paddingRight: "2.5rem"
+  });
+  const [loadingButtonPreviewStyle, setLoadingButtonPreviewStyle] = useState({
+    paddingRight: "2.5rem"
+  });
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [loadingReset, setLoadingReset] = useState(false);
+  const [reportToGenerate, setReportToGenerate] = useState([]);
+  const [selectReferenceConfirmation, setSelectReferenceConfirmation] = useState(false);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
-  const dispatch = useDispatch();
   const { layoutConfig } = useSelector(
     ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
     shallowEqual
   );
-  const [loadingPreview, setLoadingPreview] = useState(false);
-  const [loadingButtonPreviewStyle, setLoadingButtonPreviewStyle] = useState({
-    paddingRight: "2.5rem"
-  });
-  const [loadingReset, setLoadingReset] = useState(false);
-  const [loadingButtonResetStyle, setLoadingButtonResetStyle] = useState({
-    paddingRight: "2.5rem"
-  });
+
+  const assetSavedHeadRows = [
+    { id: "name", numeric: false, disablePadding: false, label: "Name" },
+    { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
+    { id: "creationDate", numeric: false, disablePadding: false, label: "Creation Date" },
+    { id: "autoMessage", numeric: false, disablePadding: false, label: "Auto Message" }
+  ];
+
+  const collections = {
+    reports: {
+      id: 'idReports',
+      modal: 'openReportsModal',
+      name: 'reports'
+    }
+  }
+
+  const createReportSavedRow = (id, name, creator, creationDate, autoMessage) => {
+    return { id, name, creator, creationDate, autoMessage };
+  };
+
+  const dispatch = useDispatch();
 
   const enableLoadingPreview = () => {
     setLoadingPreview(true);
@@ -99,201 +86,89 @@ export default function Reports() {
   const initialValues = useMemo(
     () =>
       merge(
-        // Fulfill changeable fields.
         LayoutConfig,
         layoutConfig
       ),
     [layoutConfig]
   );
 
-  const createAssetCategoryRow = (id, name, depreciation, creator, creation_date) => {
-    return { id, name, depreciation, creator, creation_date };
-  };
-
-  const assetCategoriesHeadRows = [
-    { id: "name", numeric: false, disablePadding: false, label: "Description" },
-    { id: "depreciation", numeric: true, disablePadding: false, label: "Depreciation" },
-    { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-    { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
-  ];
-
-  const assetCategoriesRows = [
-    createAssetCategoryRow('Laptop', '0.3', 'Admin', '11/03/2020'),
-    createAssetCategoryRow('Chair', '0.25', 'Admin', '11/03/2020'),
-    createAssetCategoryRow('Pump', '0.44', 'Admin', '11/03/2020'),
-  ];
-
-  const createAssetReferenceRow = (id, name, brand, model, category, creator, creation_date) => {
-    return { id, name, brand, model, category, creator, creation_date };
-  };
-
-  const assetReferencesHeadRows = [
-    { id: "name", numeric: false, disablePadding: false, label: "Name" },
-    { id: "brand", numeric: true, disablePadding: false, label: "Brand" },
-    { id: "model", numeric: true, disablePadding: false, label: "Model" },
-    { id: "category", numeric: true, disablePadding: false, label: "Category" },
-    { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-    { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
-  ];
-
-  const assetReferencesRows = [
-    createAssetReferenceRow('Laptop', 'Acer', 'vhrf12', 'Electronics', 'Admin', '11/03/2020'),
-    createAssetReferenceRow('Chair',  'PMP', 'derds25', 'Furniture', 'Admin', '11/03/2020'),
-    createAssetReferenceRow('Pump',  'CKT', 'wedsd52', 'Vehicles', 'Admin', '11/03/2020'),
-  ];
- 
-  const createAssetListRow = (id, name, brand, model, category, serial, EPC, creator, creation_date) => {
-    return { id, name, brand, model, category, serial, EPC, creator, creation_date };
-  };
-
-  const assetListHeadRows = [
-    { id: "name", numeric: false, disablePadding: false, label: "Name" },
-    { id: "brand", numeric: true, disablePadding: false, label: "Brand" },
-    { id: "model", numeric: true, disablePadding: false, label: "Model" },
-    { id: "category", numeric: true, disablePadding: false, label: "Category" },
-    { id: "serial", numeric: true, disablePadding: false, label: "Serial Number" },
-    { id: "EPC", numeric: true, disablePadding: false, label: "EPC" },
-    { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-    { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
-  ];
-
-  const assetListRows = [
-    createAssetListRow('Laptop', 'Acer', 'vhrf12', 'Electronics', 'SN: 12131', 'ABCDEF123', 'Admin', '11/03/2020'),
-    createAssetListRow('Chair',  'PMP', 'derds25', 'Furniture', 'SN: 2343', 'ABCDEF124', 'Admin', '11/03/2020'),
-    createAssetListRow('Pump',  'CKT', 'wedsd52', 'Vehicles', 'SN: 435665', 'ABCDEF125', 'Admin', '11/03/2020'),
-  ];
-  
-  const [openCategoriesModal, setOpenCategoriesModal] = useState(false);
-  const [openListModal, setOpenListModal] = useState(false);
-  const [openReferencesModal, setOpenReferencesModal] = useState(false);
-
-  const [anchorEl, setAnchorEl] = React.useState(null);
-
-  const loadAssetsData = (collectionNames = ['assets', 'references', 'categories']) => {
+  const loadInitData = (collectionNames = ['reports']) => {
     collectionNames =  !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
       getDB(collectionName)
-      .then(response => response.json())
-      .then(data => {
-        if (collectionName === 'assets') {
-          console.log('d:', data)
-          const rows = data.response.map(row => {
-            console.log('row:', row)
-            return createAssetListRow(row._id, row.name, row.brand, row.model, row.category, row.serial, row.EPC, 'Admin', '11/03/2020');
+        .then((response) => response.json())
+        .then((data) => {
+          setData(data.response);
+            const rows = data.response.map((row) => {
+              const { _id, selectReport, reportName, enabled } = row;
+              const cast = enabled ? 'Yes' : 'No';
+              return createReportSavedRow(_id, reportName, 'Admin', '11/03/2020', cast);
           });
-          setControl(prev => ({ ...prev, assetRows: rows, assetRowsSelected: [] }));
-          console.log('inside assets', rows)
-        }
-        if (collectionName === 'references') {
-          const rows = data.response.map(row => {
-            return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.category, 'Admin', '11/03/2020');
-          });
-          setControl(prev => ({ ...prev, referenceRows: rows, referenceRowsSelected: [] }));
-        }
-        if (collectionName === 'categories') {
-          const rows = data.response.map(row => {
-            return createAssetCategoryRow(row._id, row.name, row.depreciation, 'Admin', '11/03/2020');
-          });
-          setControl(prev => ({ ...prev, categoryRows: rows, categoryRowsSelected: [] }));
-        }
+          setControl((prev) => ({ ...prev, reportsRows: rows, reportsRowsSelected: [] }));
       })
-      .catch(error => console.log('error>', error));
+        .catch(error => console.log('error>', error));
     });
   };
 
-  useEffect(() => {
-    loadAssetsData();
-  }, []);
-
-  const [control, setControl] = useState({
-    idReference: null,
-    openReferencesModal: false,
-    referenceRows: [],
-    referenceRowsSelected: [],
-    //
-    idCategory: null,
-    openCategoriesModal: false,
-    categoryRows: [],
-    categoryRowsSelected: [],
-    //
-    idAsset: null,
-    openAssetsModal: false,
-    assetRows: [],
-    assetRowsSelected: [],
-  });
-
-  const [referencesSelectedId, setReferencesSelectedId] = useState(null);
-  const [selectReferenceConfirmation, setSelectReferenceConfirmation] = useState(false);
-
-  const collections = {
-    references: {
-      id: 'idReference',
-      modal: 'openReferencesModal',
-      name: 'references'
-    },
-    categories: {
-      id: 'idCategory',
-      modal: 'openCategoriesModal',
-      name: 'categories'
-    },
-    assets: {
-      id: 'idAsset',
-      modal: 'openAssetsModal',
-      name: 'assets'
-    },
-  };
-
   const tableActions = (collectionName) => {
-    // return;
     const collection = collections[collectionName];
     return {
-      onAdd() {
-        console.log('MAIN ON ADD>> ', referencesSelectedId);
-        if (!referencesSelectedId && collectionName === 'assets') {
-          setSelectReferenceConfirmation(true);
-          return;
-        }
-        setControl({ ...control, [collection.id]: null, [collection.modal]: true })
-      },
       onEdit(id) {
-        setControl({ ...control, [collection.id]: id, [collection.modal]: true })
+        setDataModal(data.filter((ele) => ele._id === id[0])[0])
+        setControl({
+          ...control,
+          [collection.idReports]: id[0],
+          [collection.modal]: true
+        });
+      },
+      onGenerateReport(id) {
+        setReportToGenerate(id[0]);
+        setTab(0);
       },
       onDelete(id) {
-        if (!id || !Array.isArray(id)) return;
-        id.forEach(_id => {
-          deleteDB(`${collection.name}/`, _id)
-            .then(response => console.log('success', response))
-            .catch(error => console.log('Error', error));
-        });
-        loadAssetsData(collection.name);
-      },
-      onSelect(id) {
-        if (collectionName === 'references') {
-          setReferencesSelectedId(id);
+        if (!id || !Array.isArray(id)) { 
+          return;
         }
+        id.forEach((_id) => {
+          deleteDB(`${collection.name}/`, _id)
+            .then((response) => loadInitData(collection.name))
+            .catch((error) => console.log('Error', error));
+        });
       }
-    }
+    };
   };
+
+  useEffect(() => {
+    loadInitData();
+  }, []);
 
   return (
     <>
       <ModalYesNo
-        showModal={selectReferenceConfirmation}
-        onOK={() => setSelectReferenceConfirmation(false)}
-        onCancel={() => setSelectReferenceConfirmation(false)}
-        title={'Add New Asset'}
         message={'Please first select a Reference from the next tab'}
+        onCancel={() => setSelectReferenceConfirmation(false)}
+        onOK={() => setSelectReferenceConfirmation(false)}
+        showModal={selectReferenceConfirmation}
+        title={'Add New Report'}
       />
-      {/*Formic off site: https://jaredpalmer.com/formik/docs/overview*/}
+      <ModalReportsSaved
+        data={dataModal}
+        module={module}
+        reloadTable={() => loadInitData('reports')}
+        setShowModal={(onOff) =>
+          setControl({ ...control, openReportsModal: onOff })
+        }
+        showModal={control.openReportsModal}
+      />
       <Formik
         initialValues={initialValues}
-        onSubmit={values => {
-          enableLoadingPreview();
-          updateLayoutConfig(values);
-        }}
         onReset={() => {
           enableLoadingReset();
           updateLayoutConfig(initLayoutConfig);
+        }}
+        onSubmit={values => {
+          enableLoadingPreview();
+          updateLayoutConfig(values);
         }}
       >
         {({ values, handleReset, handleSubmit, handleChange, handleBlur }) => (
@@ -303,55 +178,52 @@ export default function Reports() {
                 toolbar={
                   <PortletHeaderToolbar>
                     <Tabs
-                      component="div"
                       className="builder-tabs"
-                      value={tab}
+                      component="div"
                       onChange={(_, nextTab) => {
                         setTab(nextTab);
                         localStorage.setItem(localStorageActiveTabKey, nextTab);
                       }}
+                      value={tab}
                     >
                      {TabsTitles('reports')}
                     </Tabs>
                   </PortletHeaderToolbar>
                 }
               />
-
               {tab === 0 && (
                 <PortletBody>
                   <div className="kt-section kt-margin-t-0">
                     <div className="kt-section__body">
-                        <TabGeneral />
+                        <TabGeneral 
+                          id={reportToGenerate} 
+                          savedReports={data}
+                          setId={setReportToGenerate}
+                          reloadData={loadInitData}
+                        />
                     </div>
                   </div>
                 </PortletBody>
               )}
-
               {tab === 1 && (
                 <PortletBody>
                   <div className="kt-section kt-margin-t-0">
                     <div className="kt-section__body">
                       <div className="kt-section">
                           <span className="kt-section__sub">
-                            This section will integrate <code>Assets References</code>
+                            This section will integrate <code>Reports</code>
                           </span>
-                            {/* <ModalAssetReferences
-                              showModal={control.openReferencesModal}
-                              setShowModal={(onOff) => setControl({ ...control, openReferencesModal: onOff })}
-                              reloadTable={() => loadAssetsData('references')}
-                              id={control.idReference}
-                              categoryRows={control.categoryRows}
-                            /> */}
                             <div className="kt-separator kt-separator--dashed"/>
                             <div className="kt-section__content">
                               <TableComponent 
-                                title={'Asset References'}
-                                headRows={assetReferencesHeadRows}
-                                rows={control.referenceRows}
-                                onEdit={tableActions('references').onEdit}
-                                onAdd={tableActions('references').onAdd}
-                                onDelete={tableActions('references').onDelete}
-                                onSelect={tableActions('references').onSelect}
+                                headRows={assetSavedHeadRows}
+                                noAdd
+                                onEdit={tableActions('reports').onEdit}
+                                onView={tableActions('reports').onGenerateReport}
+                                onDelete={tableActions('reports').onDelete}
+                                rows={control.reportsRows}
+                                showView={true}
+                                title={'Reports'}
                               />
                             </div>
                         </div>
@@ -359,88 +231,40 @@ export default function Reports() {
                   </div>
                 </PortletBody>
               )}
-
-              {tab === 2 && (
-                <PortletBody>
-                  <div className="kt-section kt-margin-t-0">
-                    <div className="kt-section__body">
-                      <div className="kt-section">
-                          <span className="kt-section__sub">
-                            This section will integrate <code>Assets Categories</code>
-                          </span>
-                          {/* <ModalAssetCategories
-                              showModal={control.openCategoriesModal}
-                              setShowModal={(onOff) => setControl({ ...control, openCategoriesModal: onOff })}
-                              reloadTable={() => loadAssetsData('categories')}
-                              id={control.idCategory}
-                          /> */}
-
-                          <div className="kt-separator kt-separator--dashed"/>
-                          <div className="kt-section__content">
-                            <TableComponent 
-                              title={'Asset Categories'}
-                              headRows={assetCategoriesHeadRows}
-                              rows={control.categoryRows}
-                              onEdit={tableActions('categories').onEdit}
-                              onAdd={tableActions('categories').onAdd}
-                              onDelete={tableActions('categories').onDelete}
-                              onSelect={tableActions('categories').onSelect}
-                            />
-                          </div>
-                        </div>
-                    </div>
-                  </div>
-                </PortletBody>
-              )}
-
-              {tab === 3 && (
-                <PortletBody>
-                  <div className="kt-section kt-margin-t-0">
-                    <div className="kt-section__body">
-                      <div className="kt-section">
-                          <span className="kt-section__sub">
-                            This section will integrate <code>Asset Policies</code>
-                          </span>
-                          <div className="kt-separator kt-separator--dashed"/>
-                        </div>
-                    </div>
-                  </div>
-                </PortletBody>
-              )}
-
               <PortletFooter>
                 <div className="kt-padding-30 text-center">
                   <button
-                    type="button"
-                    onClick={handleSubmit}
-                    style={loadingButtonPreviewStyle}
                     className={`btn btn-primary btn-elevate kt-login__btn-primary ${clsx(
                       {
                         "kt-spinner kt-spinner--right kt-spinner--md kt-spinner--light": loadingPreview
                       }
-                    )}`}
+                      )}`}
+                    onClick={handleSubmit}
+                    style={loadingButtonPreviewStyle}
+                    type="button"
                   >
-                    <i className="la la-eye" /> Preview
+                    <i className="la la-eye"/> Preview
                   </button>{" "}
                   <button
-                    type="button"
-                    onClick={handleReset}
-                    style={loadingButtonResetStyle}
                     className={`btn btn-secondary btn-elevate kt-login__btn-primary ${clsx(
                       {
                         "kt-spinner kt-spinner--right kt-spinner--md kt-spinner--dark": loadingReset
                       }
-                    )}`}
-                  >
-                    <i className="la la-recycle" /> Reset
+                      )}`}
+                    onClick={handleReset}
+                    style={loadingButtonResetStyle}
+                    type="button"
+                      >
+                    <i className="la la-recycle"/> Reset
                   </button>
                 </div>
               </PortletFooter>
             </Portlet>
-
           </div>
         )}
       </Formik>
     </>
   );
 }
+
+export default Reports;
