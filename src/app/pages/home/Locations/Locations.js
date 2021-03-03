@@ -110,6 +110,44 @@ const locationsTreeData = {
 };
 
 const Locations = () => {
+
+  const theme4 = useTheme();
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [coordinates, setCoordinates] = useState([]);
+  const [modalData, setModalData] = useState([])
+  const [editOrNew, setEditOrNew] = useState('new');
+  const [googleMapsZoom, setGoogleMapsZoom] = useState(6);
+  const [id, setId] = useState(null);
+  const [imageLayout, setImageLayout] = useState(null);
+  const [loadingButtonPreviewStyle, setLoadingButtonPreviewStyle] = useState({
+    paddingRight: '2.5rem'
+  });
+  const [loadingButtonResetStyle, setLoadingButtonResetStyle] = useState({
+    paddingRight: '2.5rem'
+  });
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [loadingReset, setLoadingReset] = useState(false);
+  const [locationsList, setLocationsList] = useState([]);
+  const [locationProfileRows, setLocationProfileRows] = useState([]);
+  const [locationsTree, setLocationsTree] = useState({});
+  const [mapCenter, setMapCenter] = useState(null);
+  const [markers, setMarkers] = useState([]);
+  const [modalId, setModalId] = useState(null);
+  const [parentFileExt, setParentFileExt] = useState(null);
+  const [parentSelected, setParentSelected] = useState(null);
+  const [profileSelected, setProfileSelected] = useState({});
+  const [openListModal, setOpenListModal] = useState(false);
+  const [openProfileModal, setOpenProfileModal] = useState(false);
+  const [openYesNoModal, setOpenYesNoModal] = useState(false);
+  const [realParentSelected, setRealParentSelected] = useState(null);
+  const [selectedLocationProfileRows, setSelectedLocationProfileRows] = useState([]);
+  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [value4, setValue4] = useState(0);
+  const { layoutConfig } = useSelector(
+    ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
+    shallowEqual
+  );
+
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const dispatch = useDispatch();
   const initialValues = useMemo(
@@ -143,41 +181,6 @@ const Locations = () => {
       setOpenListModal(true);
     }
   };
-  const theme4 = useTheme();
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const [coordinates, setCoordinates] = useState([]);
-  const [editOrNew, setEditOrNew] = useState('new');
-  const [googleMapsZoom, setGoogleMapsZoom] = useState(6);
-  const [id, setId] = useState(null);
-  const [imageLayout, setImageLayout] = useState(null);
-  const [loadingButtonPreviewStyle, setLoadingButtonPreviewStyle] = useState({
-    paddingRight: '2.5rem'
-  });
-  const [loadingButtonResetStyle, setLoadingButtonResetStyle] = useState({
-    paddingRight: '2.5rem'
-  });
-  const [loadingPreview, setLoadingPreview] = useState(false);
-  const [loadingReset, setLoadingReset] = useState(false);
-  const [locationsList, setLocationsList] = useState([]);
-  const [locationProfileRows, setLocationProfileRows] = useState([]);
-  const [locationsTree, setLocationsTree] = useState({});
-  const [mapCenter, setMapCenter] = useState(null);
-  const [markers, setMarkers] = useState([]);
-  const [modalId, setModalId] = useState(null);
-  const [parentFileExt, setParentFileExt] = useState(null);
-  const [parentSelected, setParentSelected] = useState(null);
-  const [profileSelected, setProfileSelected] = useState({});
-  const [openListModal, setOpenListModal] = useState(false);
-  const [openProfileModal, setOpenProfileModal] = useState(false);
-  const [openYesNoModal, setOpenYesNoModal] = useState(false);
-  const [realParentSelected, setRealParentSelected] = useState(null);
-  const [selectedLocationProfileRows, setSelectedLocationProfileRows] = useState([]);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
-  const [value4, setValue4] = useState(0);
-  const { layoutConfig } = useSelector(
-    ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
-    shallowEqual
-  );
 
   const createLocationProfileRow = (
     id, 
@@ -367,6 +370,7 @@ const Locations = () => {
     getDB('locationsReal')
       .then((response) => response.json())
       .then(async (data) => {
+        setModalData(data)
         locations = data.response.map((res) => ({ ...res, id: res._id }));
         const homeLocations = data.response.filter((loc) => loc.profileLevel === 0);
         const children = constructLocationTreeRecursive(homeLocations);
@@ -454,7 +458,9 @@ const Locations = () => {
                           </span>
                           <ModalLocationList
                             editOrNew={editOrNew}
+                            imageLayout={imageLayout}
                             modalId={modalId}
+                            dataFromParent={modalData}
                             parent={parentSelected}
                             parentExt={parentFileExt}
                             profile={profileSelected}

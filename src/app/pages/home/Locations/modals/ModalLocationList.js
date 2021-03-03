@@ -172,7 +172,9 @@ const useStyles5 = makeStyles({
 });
 
 const ModalLocationList = ({ 
-  editOrNew, 
+  dataFromParent,
+  editOrNew,
+  imageLayout,
   modalId, 
   parent, 
   parentExt, 
@@ -183,16 +185,6 @@ const ModalLocationList = ({
   setShowModal, 
   showModal 
 }) => {
-
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
-  const classes = useStyles();
-  const classes4 = useStyles4();
-  const containerStyle = {
-    border: '5px dashed green',
-    position: 'relative',  
-    minWidth: '200px',
-    minHeight: '200px'
-  }
   const [image, setImage] = useState(null);
   const [mapCenter, setMapCenter] = useState(null);
   const [markers, setMarkers] = useState([]);
@@ -221,6 +213,16 @@ const ModalLocationList = ({
     parent: ''
   });
 
+  const activeTab = localStorage.getItem(localStorageActiveTabKey);
+  const classes = useStyles();
+  const classes4 = useStyles4();
+  const containerStyle = {
+    border: '5px dashed green',
+    position: 'relative',  
+    minWidth: '200px',
+    minHeight: '200px'
+  }
+
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value });
   };
@@ -245,6 +247,7 @@ const ModalLocationList = ({
     setValues({ 
       categoryPic: '/media/misc/placeholder-image.jpg',
       categoryPicDefault: '/media/misc/placeholder-image.jpg',
+      imageURL: '',
       name: '', 
       profileId: '', 
       profileLevel: '', 
@@ -259,7 +262,7 @@ const ModalLocationList = ({
     const body = {
       ...values, 
       fileExt,
-      mapInfo: modalMapZoom !== null ? {lat: modalCoords[0].lat, lng: modalCoords[0].lng, zoom: modalMapZoom} : null,
+      mapInfo: (Object.keys(modalCoords).length > 0) ? {lat: modalCoords[0].lat, lng: modalCoords[0].lng, zoom: modalMapZoom} : null,
       imageInfo: markers.length ? {top: markers[0].top, left: markers[0].left} : null
     };
     if (editOrNew === 'new') {
@@ -267,7 +270,7 @@ const ModalLocationList = ({
       postDB('locationsReal', body)
         .then((response) => response.json())
         .then((data) => {
-          const { _id } = data.response;
+          const { _id } = data.response[0];
           saveAndReload('locationsReal', _id);
       })
         .catch((error) => console.log(error));
@@ -358,7 +361,7 @@ const ModalLocationList = ({
       setValue4(0);
     })
     .catch((error) => console.log(error));
-  }, [editOrNew, parent]);
+  }, [editOrNew, parent, showModal]);
 
   return (
     <div style={{ width:'1000px' }}>
@@ -464,26 +467,27 @@ const ModalLocationList = ({
                       <div
                         style={{ paddingTop: '20px', width: '500px' }}
                       >
-                        {values.imageURL &&
                           <ImageMarker
                             markerComponent={() => <RoomIcon style={{color: 'red'}}/>}
                             markers={markers}
                             onAddMarker={(marker) => {setMarkers([marker])}}
-                            src={ realParent !== 'root' ? values.imageURL : values.categoryPicDefault}
+                            // src={ realParent !== 'root' ? values.imageURL : values.categoryPicDefault}
+                            src={ values.imageURL === '' || !values.imageURL ? values.categoryPicDefault : values.imageURL}
+                            // src={getImageURLFromData}
                           />
-                        }
                       </div>
                     </PortletBody>
                   )}
                   {tab === 2 && (
                     <PortletBody style={{ paddingTop: '20px' }}>
                       <div className='profile-tab-wrapper'>
-                        <ImageUpload
-                          image={values.imageURL}
-                          setImage={setImage}
-                          >
-                           Sketch Layout
-                        </ImageUpload>
+                          <ImageUpload
+                            // image={values.imageURL}
+                            image={editOrNew === 'edit' ? imageLayout : ''}
+                            setImage={setImage}
+                            >
+                            Sketch Layout
+                          </ImageUpload>   
                       </div>
                     </PortletBody>
                   )}
