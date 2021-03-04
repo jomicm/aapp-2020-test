@@ -173,6 +173,7 @@ const Locations = () => {
       setOpenYesNoModal(false);
     },
     openProfilesListBox(e) {
+      setEditOrNew('new');
       setAnchorEl(e.currentTarget);
     },
     editLocation() {
@@ -269,7 +270,6 @@ const Locations = () => {
 
   const handleOpenLocationListModal = (profile) => {
     handleClose();
-    setEditOrNew('new');
     setOpenListModal(true);
     setProfileSelected(profile);
   };
