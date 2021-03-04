@@ -1,35 +1,13 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import clsx from 'clsx';
+import React, { useEffect, useMemo, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { Formik, setNestedObjectValues } from 'formik';
 import { get, merge } from 'lodash';
 import { FormHelperText, Switch, Tab, Tabs, Styles } from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import DraftsIcon from '@material-ui/icons/Drafts';
-import DeleteIcon from '@material-ui/icons/Delete';
-import ExpandLess from '@material-ui/icons/ExpandLess';
-import ExpandMore from '@material-ui/icons/ExpandMore';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
-import SendIcon from '@material-ui/icons/Send';
-import StarBorder from '@material-ui/icons/StarBorder';
 import {
-  makeStyles,
-  lighten,
-  withStyles,
-  useTheme
-} from '@material-ui/core';
-import {
-  Checkbox,
-  Card,
-  CardHeader,
-  Grid,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Button,
-  Divider
-} from '@material-ui/core';
+  initLayoutConfig,
+  LayoutConfig,
+  metronic
+} from '../../../../_metronic';
 import {
   Portlet,
   PortletBody,
@@ -37,34 +15,24 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
-import { CodeBlock } from '../../../partials/content/CodeExample';
-import Notice from '../../../partials/content/Notice';
-import CodeExample from '../../../partials/content/CodeExample';
-import {
-  metronic,
-  initLayoutConfig,
-  LayoutConfig
-} from '../../../../_metronic';
-
-// AApp Components
-import TableComponent from '../Components/TableComponent';
-import ModalEmployeeProfiles from './modals/ModalEmployeeProfiles';
-import Autocomplete from '../Components/Inputs/Autocomplete';
-import ModalEmployees from './modals/ModalEmployees';
-import TreeView from '../Components/TreeViewComponent';
+import { getDB, deleteDB } from '../../../crud/api';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
-// import GoogleMaps from '../Components/GoogleMaps';
-// import './Assets.scss';
-
-//DB API methods
 import ModalYesNo from '../Components/ModalYesNo';
 import Policies from '../Components/Policies/Policies';
-import { getDB, deleteDB } from '../../../crud/api';
+import TableComponent from '../Components/TableComponent';
+import ModalEmployees from './modals/ModalEmployees';
+import ModalEmployeeProfiles from './modals/ModalEmployeeProfiles';
 
 const localStorageActiveTabKey = 'builderActiveTab';
 
 const Employees = () => {
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
+  const [policies, setPolicies] = useState(['']); 
+  const [referencesSelectedId, setReferencesSelectedId] = useState(null);
+  const [
+    selectReferenceConfirmation, 
+    setSelectReferenceConfirmation
+  ] = useState(false);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const dispatch = useDispatch();
   const { layoutConfig } = useSelector(
@@ -161,9 +129,10 @@ const Employees = () => {
         .then((data) => {
           if (collectionName === 'employeeProfiles') {
             const rows = data.response.map((row) => {
+              const { _id, name } = row;
               return createUserProfilesRow(
-                row._id,
-                row.name,
+                _id,
+                name,
                 'Admin',
                 '11/03/2020'
               );
@@ -176,13 +145,14 @@ const Employees = () => {
           }
           if (collectionName === 'employees') {
             const rows = data.response.map((row) => {
+              const { _id, name, lastName, email, designation, manager } = row;
               return createEmployeeRow(
-                row._id,
-                row.name,
-                row.lastName,
-                row.email,
-                row.designation,
-                row.manager,
+                _id,
+                name,
+                lastName,
+                email,
+                designation,
+                manager,
                 'Admin',
                 '11/03/2020'
               );
@@ -198,15 +168,13 @@ const Employees = () => {
     });
   };
 
-  const [policies, setPolicies] = useState(['']);
-
   useEffect(() => {
     getDB('policies')
-      .then((response) => response.json())
-      .then((data) => {
-        setPolicies(data.response);
-      })
-      .catch((error) => console.log('error>', error));
+    .then((response) => response.json())
+    .then((data) => {
+      setPolicies(data.response);
+    })
+    .catch((error) => console.log('error>', error));
     loadEmployeesData();
   }, []);
 
@@ -220,12 +188,6 @@ const Employees = () => {
     usersRows: [],
     usersRowsSelected: []
   });
-
-  const [referencesSelectedId, setReferencesSelectedId] = useState(null);
-  const [
-    selectReferenceConfirmation, 
-    setSelectReferenceConfirmation
-  ] = useState(false);
 
   const collections = {
     employeeProfiles: {
@@ -279,7 +241,7 @@ const Employees = () => {
 
   const executePolicies = (catalogueName) => {
     const filteredPolicies = policies.filter(
-      (policy) => policy.selectedAction === catalogueName
+      ({ selectedAction }) => selectedAction === catalogueName
     );
     filteredPolicies.forEach(
       ({ policyName, selectedAction, selectedCatalogue }) =>

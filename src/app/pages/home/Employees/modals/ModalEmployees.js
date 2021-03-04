@@ -7,6 +7,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Divider,
   Typography,
   IconButton,
   Tab,
@@ -42,7 +43,7 @@ import {
   postDB,
   getDB
 } from '../../../../crud/api';
-import { getHours } from 'date-fns';
+import ModalPdfAssignement from './ModalPdfAssignement'
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -141,6 +142,7 @@ const collections = {
 };
 
 const ModalEmployees = ({
+  htmlData,
   showModal,
   setShowModal,
   reloadTable,
@@ -150,6 +152,7 @@ const ModalEmployees = ({
   const [assetRows, setAssetRows] = useState([]);
   const classes = useStyles();
   const classes4 = useStyles4();
+  const [control, setControl] = useState(false);
   const [customFieldsTab, setCustomFieldsTab] = useState({});
   const [employeeProfilesFiltered, setEmployeeProfilesFiltered] = useState([]);
   const [idUserProfile, setIdUserProfile] = useState('');
@@ -298,12 +301,10 @@ const ModalEmployees = ({
       setTabs([]);
       return;
     }
-    console.log('onChangeEmployeeProfile>>>', e);
     setProfileSelected(e);
     getOneDB('employeeProfiles/', e.value)
       .then((response) => response.json())
       .then((data) => {
-        console.log(data.response);
         const { customFieldsTab, profilePermissions } = data.response;
         const tabs = Object.keys(customFieldsTab).map((key) => ({
           key,
@@ -365,9 +366,7 @@ const ModalEmployees = ({
   // Function to update customFields
   const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
     const colValue = ['left', 'right'];
-    console.log('Looking for you', tab, id, colIndex, values);
     const customFieldsTabTmp = { ...customFieldsTab };
-
     const field = customFieldsTabTmp[tab][colValue[colIndex]].find(
       (cf) => cf.id === id
     );
@@ -455,7 +454,6 @@ const ModalEmployees = ({
           imageURL: getImageURL(id, 'employees', fileExt)
         });
         setAssetRows(assetsAssigned);
-        //
         const tabs = Object.keys(customFieldsTab).map((key) => ({
           key,
           info: customFieldsTab[key].info,
@@ -468,8 +466,24 @@ const ModalEmployees = ({
       .catch((error) => console.log(error));
   }, [id, employeeProfileRows]);
 
+  const openModalPdfAssignement = () => {
+    if (layoutSelected === null) {
+      alert('Please select a Responsibility Layout first')
+    } else {
+      setControl(true);
+    }
+  }
+
+  console.log('assetRows: ', assetRows)
+
   return (
     <div style={{ width: '1000px' }}>
+        <ModalPdfAssignement 
+          htmlData={htmlData}
+          layoutSelected={layoutSelected}
+          setShowModal={setControl}
+          showModal={control}
+        />
       <Dialog
         aria-labelledby='customized-dialog-title'
         onClose={handleCloseModal}
@@ -516,7 +530,6 @@ const ModalEmployees = ({
                         </FormLabel>
                         <FormGroup>
                           <Select
-                            // defaultValue={!id ? null : profileSelected }
                             classNamePrefix='select'
                             isClearable={true}
                             isDisabled={values.isDisableUserProfile}
@@ -573,6 +586,17 @@ const ModalEmployees = ({
                   </div>
                 </TabContainer4>
                 <TabContainer4 dir={theme4.direction}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button 
+                      color="primary" 
+                      onClick={openModalPdfAssignement}
+                      size="large"
+                      style={{ marginBottom: '20px' }}
+                      variant="contained" 
+                    > 
+                      Generate Report 
+                    </Button>
+                  </div>
                   <div className='profile-tab-wrapper'>
                     <AssetTable
                       assetRows={assetRows}
