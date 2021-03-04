@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getHours } from 'date-fns';
 import Select from 'react-select';
 import SwipeableViews from 'react-swipeable-views';
 import {
@@ -42,7 +43,6 @@ import {
   postDB,
   getDB
 } from '../../../../crud/api';
-import { getHours } from 'date-fns';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -135,7 +135,7 @@ const useStyles = makeStyles((theme) => ({
 
 const collections = {
   messages: {
-    id: 'idMessages',
+    id: 'idMessage',
     name: 'messages'
   },
 };
@@ -174,18 +174,16 @@ const ModalEmployees = ({
   });
 
   const executePolicies = (catalogueName) => {
-    const formatDate = new Date()
-    const dformat = `${('0' + formatDate.getDate()).slice(-2)}/${('0' + formatDate.getMonth()+1).slice(-2)}/${formatDate.getFullYear()}`
-    const tformat = `${formatDate.getHours()}:${formatDate.getMinutes()}:${formatDate.getSeconds()}`
-    const timeStamp = dformat + ' ' + tformat
+    const formatDate = new Date();
+    const dformat = formatDate.toDateString();
+    const tformat = formatDate.toLocaleTimeString();
+    const timeStamp = `${dformat} ${tformat}`;
     const read = false;
-    const status = 'new'
+    const status = 'new';
     const filteredPolicies = policies.filter(
       (policy) => policy.selectedAction === catalogueName);
       filteredPolicies.forEach(({ 
-        _id,
         apiDisabled,
-        selectedIcon,
         layout,
         messageDisabled,
         messageFrom,
@@ -197,16 +195,15 @@ const ModalEmployees = ({
         policyName,
         selectedAction,
         selectedCatalogue,
+        selectedIcon,
         subjectMessage,
         subjectNotification
          }) => {
           if(!messageDisabled){
-            return(
             alert(
               `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`
-              ),
+              );
               postDB('messages', {
-                _id,
                 from: messageFrom,
                 html: layout,
                 read: read,
@@ -219,14 +216,12 @@ const ModalEmployees = ({
               .then((response) => {
                  const { } = response.response[0];
               })
-              .catch((error) => console.log('ERROR', error))
-            )} else if(!notificationDisabled){
-            return(
+              .catch((error) => console.log('ERROR', error));
+          } if(!notificationDisabled){
             alert(
               `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`
-              ),
+              );
               postDB('notifications', {
-                _id,
                 formatDate: formatDate,
                 from: notificationFrom,
                 icon: selectedIcon,
@@ -242,8 +237,8 @@ const ModalEmployees = ({
                  const { } = response.response[0];
               })
               .catch((error) => console.log('ERROR', error))
-            )}
-        })
+            }
+        });
   }
 
   const handleChange = (name) => (event) => {
@@ -298,12 +293,10 @@ const ModalEmployees = ({
       setTabs([]);
       return;
     }
-    console.log('onChangeEmployeeProfile>>>', e);
     setProfileSelected(e);
     getOneDB('employeeProfiles/', e.value)
       .then((response) => response.json())
       .then((data) => {
-        console.log(data.response);
         const { customFieldsTab, profilePermissions } = data.response;
         const tabs = Object.keys(customFieldsTab).map((key) => ({
           key,
@@ -365,7 +358,6 @@ const ModalEmployees = ({
   // Function to update customFields
   const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
     const colValue = ['left', 'right'];
-    console.log('Looking for you', tab, id, colIndex, values);
     const customFieldsTabTmp = { ...customFieldsTab };
 
     const field = customFieldsTabTmp[tab][colValue[colIndex]].find(
@@ -393,6 +385,15 @@ const ModalEmployees = ({
     });
   };
 
+  const loadPoliciesData = () => {
+    getDB('policies')
+      .then((response) => response.json())
+      .then((data) => {
+        setPolicies(data.response);
+      })
+      .catch((error) => console.log('error>', error));
+  }
+
   useEffect(() => {
     const userProfiles = employeeProfileRows.map((profile, ix) => ({
       value: profile.id,
@@ -410,12 +411,7 @@ const ModalEmployees = ({
       })
       .catch((error) => console.log('error>', error));
 
-    getDB('policies')
-      .then((response) => response.json())
-      .then((data) => {
-        setPolicies(data.response);
-      })
-      .catch((error) => console.log('error>', error));
+    loadPoliciesData()
 
     if (!id || !Array.isArray(id)) {
       return;
@@ -425,16 +421,16 @@ const ModalEmployees = ({
       .then((response) => response.json())
       .then((data) => {
         const {
-          name,
-          lastName,
-          email,
+          assetsAssigned,
           customFieldsTab,
-          profilePermissions,
-          idUserProfile,
-          locationsTable,
-          layoutSelected,
+          email,
           fileExt,
-          assetsAssigned = []
+          idUserProfile,
+          lastName,
+          layoutSelected,
+          locationsTable,
+          name,
+          profilePermissions = []
         } = data.response;
         executePolicies('OnLoad');
         setCustomFieldsTab(customFieldsTab);
