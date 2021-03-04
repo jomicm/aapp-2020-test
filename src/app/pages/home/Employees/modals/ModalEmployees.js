@@ -587,11 +587,11 @@ const ModalEmployees = ({
                 <TabContainer4 dir={theme4.direction}>
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                     <Button 
-                      color="primary" 
+                      color='primary' 
                       onClick={openModalPdfAssignement}
-                      size="large"
+                      size='large'
                       style={{ marginBottom: '20px' }}
-                      variant="contained" 
+                      variant='contained' 
                     > 
                       Generate Report 
                     </Button>

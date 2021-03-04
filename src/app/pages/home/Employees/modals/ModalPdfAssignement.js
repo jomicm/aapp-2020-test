@@ -21,6 +21,99 @@ import {
   import { getDB, deleteDB } from '../../../../crud/api';
   import './ModalPdfAssignement.scss';
 
+  const dataMock = [
+      {name: 'lavadora', brand: 'LG', model: 'Reciente'},
+      {name: 'Licuadora', brand: 'Tfal', model: 'Reciente'},
+      {name: 'TV', brand: 'Samsung', model: 'Reciente'},
+      {name: 'MP3', brand: 'wav', model: 'Reciente'},
+      {name: 'MP4', brand: 'wav', model: 'Reciente'},
+      {name: 'Silla', brand: 'RTX', model: 'Reciente'},
+      {name: 'Mesa', brand: 'MBE', model: 'Reciente'},
+      {name: 'Lamapara', brand: 'MSO', model: 'Reciente'},
+      {name: 'Carro', brand: 'Nissan', model: 'Reciente'},
+      {name: 'Camioneta', brand: 'Nissan', model: 'Reciente'},
+      {name: 'Xbox', brand: 'Microsoft', model: 'Reciente'},
+      {name: 'PlayStation', brand: 'Sony', model: 'Reciente'},
+      {name: 'Nintendo', brand: 'Nintendo', model: 'Reciente'},
+      {name: 'Computadora', brand: 'HP', model: 'Reciente'},
+      {name: 'Laptop', brand: 'HP', model: 'Reciente'},
+      {name: 'lavadora', brand: 'LG', model: 'Reciente'},
+      {name: 'Licuadora', brand: 'Tfal', model: 'Reciente'},
+      {name: 'TV', brand: 'Samsung', model: 'Reciente'},
+      {name: 'MP3', brand: 'wav', model: 'Reciente'},
+      {name: 'MP4', brand: 'wav', model: 'Reciente'},
+      {name: 'Silla', brand: 'RTX', model: 'Reciente'},
+      {name: 'Mesa', brand: 'MBE', model: 'Reciente'},
+      {name: 'Lamapara', brand: 'MSO', model: 'Reciente'},
+      {name: 'Carro', brand: 'Nissan', model: 'Reciente'},
+      {name: 'Camioneta', brand: 'Nissan', model: 'Reciente'},
+      {name: 'Xbox', brand: 'Microsoft', model: 'Reciente'},
+      {name: 'PlayStation', brand: 'Sony', model: 'Reciente'},
+      {name: 'Nintendo', brand: 'Nintendo', model: 'Reciente'},
+      {name: 'Computadora', brand: 'HP', model: 'Reciente'},
+      {name: 'Laptop', brand: 'HP', model: 'Reciente'},
+      {name: 'lavadora', brand: 'LG', model: 'Reciente'},
+      {name: 'Licuadora', brand: 'Tfal', model: 'Reciente'},
+      {name: 'TV', brand: 'Samsung', model: 'Reciente'},
+      {name: 'MP3', brand: 'wav', model: 'Reciente'},
+      {name: 'MP4', brand: 'wav', model: 'Reciente'},
+      {name: 'Silla', brand: 'RTX', model: 'Reciente'},
+      {name: 'Mesa', brand: 'MBE', model: 'Reciente'},
+      {name: 'Lamapara', brand: 'MSO', model: 'Reciente'},
+      {name: 'Carro', brand: 'Nissan', model: 'Reciente'},
+      {name: 'Camioneta', brand: 'Nissan', model: 'Reciente'},
+      {name: 'Xbox', brand: 'Microsoft', model: 'Reciente'},
+      {name: 'PlayStation', brand: 'Sony', model: 'Reciente'},
+      {name: 'Nintendo', brand: 'Nintendo', model: 'Reciente'},
+      {name: 'Computadora', brand: 'HP', model: 'Reciente'},
+      {name: 'Laptop', brand: 'HP', model: 'Reciente'},
+      {name: 'lavadora', brand: 'LG', model: 'Reciente'},
+      {name: 'Licuadora', brand: 'Tfal', model: 'Reciente'},
+      {name: 'TV', brand: 'Samsung', model: 'Reciente'},
+      {name: 'MP3', brand: 'wav', model: 'Reciente'},
+      {name: 'MP4', brand: 'wav', model: 'Reciente'},
+      {name: 'Silla', brand: 'RTX', model: 'Reciente'},
+      {name: 'Mesa', brand: 'MBE', model: 'Reciente'},
+      {name: 'Lamapara', brand: 'MSO', model: 'Reciente'},
+      {name: 'Carro', brand: 'Nissan', model: 'Reciente'},
+      {name: 'Camioneta', brand: 'Nissan', model: 'Reciente'},
+      {name: 'Xbox', brand: 'Microsoft', model: 'Reciente'},
+      {name: 'PlayStation', brand: 'Sony', model: 'Reciente'},
+      {name: 'Nintendo', brand: 'Nintendo', model: 'Reciente'},
+      {name: 'Computadora', brand: 'HP', model: 'Reciente'},
+      {name: 'Laptop', brand: 'HP', model: 'Reciente'},
+      {name: 'lavadora', brand: 'LG', model: 'Reciente'},
+      {name: 'Licuadora', brand: 'Tfal', model: 'Reciente'},
+      {name: 'TV', brand: 'Samsung', model: 'Reciente'},
+      {name: 'MP3', brand: 'wav', model: 'Reciente'},
+      {name: 'MP4', brand: 'wav', model: 'Reciente'},
+      {name: 'Silla', brand: 'RTX', model: 'Reciente'},
+      {name: 'Mesa', brand: 'MBE', model: 'Reciente'},
+      {name: 'Lamapara', brand: 'MSO', model: 'Reciente'},
+      {name: 'Carro', brand: 'Nissan', model: 'Reciente'},
+      {name: 'Camioneta', brand: 'Nissan', model: 'Reciente'},
+      {name: 'Xbox', brand: 'Microsoft', model: 'Reciente'},
+      {name: 'PlayStation', brand: 'Sony', model: 'Reciente'},
+      {name: 'Nintendo', brand: 'Nintendo', model: 'Reciente'},
+      {name: 'Computadora', brand: 'HP', model: 'Reciente'},
+      {name: 'Laptop', brand: 'HP', model: 'Reciente'},
+      {name: 'lavadora', brand: 'LG', model: 'Reciente'},
+      {name: 'Licuadora', brand: 'Tfal', model: 'Reciente'},
+      {name: 'TV', brand: 'Samsung', model: 'Reciente'},
+      {name: 'MP3', brand: 'wav', model: 'Reciente'},
+      {name: 'MP4', brand: 'wav', model: 'Reciente'},
+      {name: 'Silla', brand: 'RTX', model: 'Reciente'},
+      {name: 'Mesa', brand: 'MBE', model: 'Reciente'},
+      {name: 'Lamapara', brand: 'MSO', model: 'Reciente'},
+      {name: 'Carro', brand: 'Nissan', model: 'Reciente'},
+      {name: 'Camioneta', brand: 'Nissan', model: 'Reciente'},
+      {name: 'Xbox', brand: 'Microsoft', model: 'Reciente'},
+      {name: 'PlayStation', brand: 'Sony', model: 'Reciente'},
+      {name: 'Nintendo', brand: 'Nintendo', model: 'Reciente'},
+      {name: 'Computadora', brand: 'HP', model: 'Reciente'},
+      {name: 'Laptop', brand: 'HP', model: 'Reciente'},
+    ]
+
 const ModalPdfAssignement = ({
     assetRows,
     layoutSelected,
@@ -52,12 +145,24 @@ const ModalPdfAssignement = ({
     }, [layoutSelected])
 
     const previewPDF = () => {
-        setDisabledButton(true)
-        setTimeout(() => {
-            window.print()
-            setDisabledButton(false)
-        },250)
+        // setDisabledButton(true)
+        // setTimeout(() => {
+        //     window.print()
+        //     setDisabledButton(false)
+        // },250)
+        let htmlToPrint = document.getElementsByClassName('modal-pdf-content')
+        let windowToPrint = window.open('', 'Generate Report');
+        windowToPrint.document.open() 
+        windowToPrint.document.write(`<html><head><title>Generate Report</title></head>`)
+        windowToPrint.document.write(htmlToPrint[0].innerHTML)
+        windowToPrint.document.write(`</html>`)
+        windowToPrint.document.close()
+        windowToPrint.print();
     }
+
+    const tableGeneratePdfRows = (ix) => (
+     (ix % 2 === 0) ? {backgroundColor: 'white'} : {backgroundColor: '#CCD1D1'}
+    )
 
   return (
     <div style={{ width: '100%' }}>
@@ -65,6 +170,7 @@ const ModalPdfAssignement = ({
         aria-labelledby='customized-dialog'
         onClose={handleCloseModal}
         open={showModal}
+        className='modal-pdf'
       >
         <div className='modal-pdf-size'>
             <div style={disabledButton ? { display: 'none' } : { display: 'block' }}>
@@ -94,16 +200,16 @@ const ModalPdfAssignement = ({
                 <PortletBody>
                     <div>
                         <table className='table-generate-pdf' style={{ width: '100%' }}>
-                            <tr className='table-generate-pdf-headers'>
+                            <tr className='table-generate-pdf-headers' style={{ color: 'white', backgroundColor: '#154360'}}>
                                 <th>Name</th>
                                 <th>Brand</th>
                                 <th>Model</th>
                             </tr>
-                            {assetRows.map((ele, ix) => (    
-                            <tr className='table-generate-pdf-rows'>
-                                <td>{ele.name}</td>
-                                <td>{ele.brand}</td>
-                                <td>{ele.model}</td>
+                            {dataMock.map(({ name, brand, model }, ix) => (    
+                            <tr className='table-generate-pdf-rows' style={tableGeneratePdfRows(ix)}>
+                                <td>{name}</td>
+                                <td>{brand}</td>
+                                <td>{model}</td>
                             </tr>
                         ))
                     }
