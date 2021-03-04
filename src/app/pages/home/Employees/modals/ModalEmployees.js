@@ -474,11 +474,10 @@ const ModalEmployees = ({
     }
   }
 
-  console.log('assetRows: ', assetRows)
-
   return (
     <div style={{ width: '1000px' }}>
-        <ModalPdfAssignement 
+        <ModalPdfAssignement
+          assetRows={assetRows}
           htmlData={htmlData}
           layoutSelected={layoutSelected}
           setShowModal={setControl}

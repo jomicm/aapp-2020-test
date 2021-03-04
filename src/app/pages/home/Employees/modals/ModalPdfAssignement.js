@@ -22,6 +22,7 @@ import {
   import './ModalPdfAssignement.scss';
 
 const ModalPdfAssignement = ({
+    assetRows,
     layoutSelected,
     setShowModal,
     showModal
@@ -92,6 +93,21 @@ const ModalPdfAssignement = ({
             <div className='modal-pdf-content'>
                 <PortletBody>
                     <div>
+                        <table className='table-generate-pdf' style={{ width: '100%' }}>
+                            <tr className='table-generate-pdf-headers'>
+                                <th>Name</th>
+                                <th>Brand</th>
+                                <th>Model</th>
+                            </tr>
+                            {assetRows.map((ele, ix) => (    
+                            <tr className='table-generate-pdf-rows'>
+                                <td>{ele.name}</td>
+                                <td>{ele.brand}</td>
+                                <td>{ele.model}</td>
+                            </tr>
+                        ))
+                    }
+                        </table>
                         <Editor editorState={editorState} toolbarHidden={true} readOnly={true} />
                     </div>
                 </PortletBody>
