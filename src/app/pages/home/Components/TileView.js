@@ -84,7 +84,7 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const TileView = ({ tiles, collection, tailWidth = '120px', tailHeight = '120px', onEdit, onDelete, onReload, showTileView }) => {
+const TileView = ({ tiles, collection, tailWidth = '120px', tailHeight = '120px', onEdit, onDelete, showTileView }) => {
   const classes = useStyles();
   const [selectedId, setSelectedId] = useState([])
   const [openYesNoModal, setOpenYesNoModal] = useState([false, []]);
@@ -101,7 +101,6 @@ const TileView = ({ tiles, collection, tailWidth = '120px', tailHeight = '120px'
   const confirmDelete = () => {
     onDelete(openYesNoModal[1])
     setOpenYesNoModal([false, []])
-    onReload()
     setSelectedId([])
   }
   
@@ -123,9 +122,9 @@ const TileView = ({ tiles, collection, tailWidth = '120px', tailHeight = '120px'
                 <div 
                   className={classes.tile} 
                   style={{ width: tailWidth, height: tailHeight }} 
-                  onMouseEnter={() => onTileHover(tile._id)} 
+                  onMouseEnter={() => onTileHover(tile.id)} 
                   onMouseLeave={() => onTileHover(null)} 
-                  key={tile._id}
+                  key={tile.id}
                 >
                   <img 
                     src={imageURL ? `${imageURL}?${new Date()}` : 'http://localhost:3000/media/misc/placeholder-image.jpg'} 
@@ -135,7 +134,7 @@ const TileView = ({ tiles, collection, tailWidth = '120px', tailHeight = '120px'
                     alt='Categories' 
                   />
                   {
-                    tile._id === selectedId[0] ?
+                    tile.id === selectedId[0] ?
                       <div className={classes.optionsShow}>
                         <div className={classes.buttonsContainer}>
                           <IconButton size='small' className={classes.iconButton} onClick={() => onEdit(selectedId)}>

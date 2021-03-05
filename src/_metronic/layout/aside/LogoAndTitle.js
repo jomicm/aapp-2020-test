@@ -19,7 +19,7 @@ const LogoAndTitle = () => {
   }, []);
 
   return (
-    <div className='ket-aside-LogoAndTitle'>
+    <div className='kt-aside-LogoAndTitle'>
       <img
         src={
           values.logoSideBarExt ? (
