@@ -1,7 +1,6 @@
 import Messages from '../pages/home/Messages/Messages';
 import Help from '../pages/home/Help/Help';
 
-
 export const nonProtectedRoutes = [
     {
       name: 'messages',
@@ -14,3 +13,4 @@ export const nonProtectedRoutes = [
       component: Help,
     },
   ];
+  
