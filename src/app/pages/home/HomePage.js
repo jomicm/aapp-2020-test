@@ -8,21 +8,7 @@ import { protectedRoutes } from '../../router/protectedRoutes';
 import { nonProtectedRoutes } from '../../router/nonProtectedRoutes';
 
 function HomePage({ user }) {
-  // if (!user || !user.profilePermissions) {
-  //   return (
-  //     <Suspense fallback={<LayoutSplashScreen />}>
-  //     <Switch>
-  //       <Redirect to='/auth/login' />
-  //     </Switch>
-  //   </Suspense>
-  //   );
-  // }
-  debugger
-
   const userRoutes = Object.keys(filterObject(user?.profilePermissions, (element) => element.length > 1));
-  if (!userRoutes) {
-    return <Redirect to='/auth/login' />
-  }
   return (
     <Suspense fallback={<LayoutSplashScreen />}>
       <Switch>
