@@ -305,7 +305,9 @@ const ModalLocationList = ({
   };
 
   useEffect(() => {
-    if (!profile || !profile.id || editOrNew === 'edit' || !showModal) return;
+    if (!profile || !profile.id || editOrNew === 'edit' || !showModal) {
+      return;
+    }
     getOneDB('locations/', profile.id)
       .then((response) => response.json())
       .then((data) => {
@@ -329,9 +331,7 @@ const ModalLocationList = ({
     getOneDB('locationsReal/', parent)
       .then((response) => response.json())
       .then((data) => {
-        const {
-          fileExt,
-        } = data.response;
+        const { fileExt } = data.response;
         const imageURL = parent !== "root" ? getImageURL(parent, 'locationsReal', fileExt) : '';
         setValues((prev) => ({ ...prev, imageURL }));
       })
@@ -339,7 +339,9 @@ const ModalLocationList = ({
   }, [showModal]);
 
   useEffect(() => {
-    if (editOrNew !== 'edit' || !showModal) return;
+    if (editOrNew !== 'edit' || !showModal) {
+      return;
+    }
     getOneDB('locationsReal/', parent)
       .then((response) => response.json())
       .then((data) => {
@@ -480,9 +482,7 @@ const ModalLocationList = ({
                           markerComponent={() => <RoomIcon style={{ color: 'red' }} />}
                           markers={markers}
                           onAddMarker={(marker) => { setMarkers([marker]) }}
-                          // src={ realParent !== 'root' ? values.imageURL : values.categoryPicDefault}
                           src={values.imageURL === '' || !values.imageURL ? values.categoryPicDefault : values.imageURL}
-                        // src={getImageURLFromData}
                         />
                       </div>
                     </PortletBody>
@@ -491,7 +491,6 @@ const ModalLocationList = ({
                     <PortletBody style={{ paddingTop: '20px' }}>
                       <div className='profile-tab-wrapper'>
                         <ImageUpload
-                          // image={values.imageURL}
                           image={editOrNew === 'edit' ? imageLayout : ''}
                           setImage={setImage}
                         >
