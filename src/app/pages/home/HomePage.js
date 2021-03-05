@@ -8,7 +8,21 @@ import { protectedRoutes } from '../../router/protectedRoutes';
 import { nonProtectedRoutes } from '../../router/nonProtectedRoutes';
 
 function HomePage({ user }) {
-  const userRoutes = Object.keys(filterObject(user.profilePermissions, (element) => element.length > 1))
+  // if (!user || !user.profilePermissions) {
+  //   return (
+  //     <Suspense fallback={<LayoutSplashScreen />}>
+  //     <Switch>
+  //       <Redirect to='/auth/login' />
+  //     </Switch>
+  //   </Suspense>
+  //   );
+  // }
+  debugger
+
+  const userRoutes = Object.keys(filterObject(user?.profilePermissions, (element) => element.length > 1));
+  if (!userRoutes) {
+    return <Redirect to='/auth/login' />
+  }
   return (
     <Suspense fallback={<LayoutSplashScreen />}>
       <Switch>
@@ -26,7 +40,8 @@ function HomePage({ user }) {
             <Route path={path} component={component} />
           ))
         }
-        <Redirect to='/error/error-v1' />
+        {/* <Redirect to='/error/error-v1' /> */}
+        <Redirect to='/logout' />
       </Switch>
     </Suspense>
   );
