@@ -296,7 +296,7 @@ const Locations = () => {
 
   const getImageLayout = (id) => {
     if (id === 'root') { 
-      return;
+      setImageLayout('http://localhost:3000/media/misc/placeholder-image.jpg')
     } else {
       const result = locations.filter((location) =>  location._id === id);
       const image = result.map((coordinate) => coordinate.fileExt);
@@ -557,7 +557,7 @@ const Locations = () => {
                                       <div style={{ display: 'flex', justifyContent: 'center' }}>
                                         <div style={{ height: '480px', width: '600px' }}>
                                           <ImageMarker
-                                            src={imageLayout}
+                                            src={imageLayout ? imageLayout : 'http://localhost:3000/media/misc/placeholder-image.jpg'}
                                             markers={markers}
                                             markerComponent={CustomMarker}
                                           />
