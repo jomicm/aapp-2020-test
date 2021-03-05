@@ -34,3 +34,27 @@ export const getImageURL = (id, folder, fileExt = '') => {
     `http://159.203.41.87:3001/uploads/${folder}/${id}.${fileExt}` :
     '';
 };
+
+const findOccurrences = (strFull, strToSearch) => {
+  const regex = new RegExp(strToSearch, 'g');
+  let result;
+  const foundIndexes = [];
+  while ((result = regex.exec(strFull))) {
+    foundIndexes.push(result.index);
+  }
+  return foundIndexes;
+};
+
+const getVariables = (html) => {
+	const startVar = findOccurrences(html, '%{');
+    return startVar.reduce((acu, curr, ix, all) => {
+      const subStr = html.slice(curr, all[ix + 1]);
+      const endVar = subStr.indexOf('}');
+      if (endVar >= 0) {
+    	const varName = subStr.slice(2, endVar);
+        return [...acu, { varName, start: curr, end: curr + endVar }];
+      } else {
+      	return acu;
+      }
+  }, []);
+};
