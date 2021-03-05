@@ -110,42 +110,11 @@ const locationsTreeData = {
 };
 
 const Locations = () => {
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
-  const dispatch = useDispatch();
-  const initialValues = useMemo(
-    () =>
-      merge(
-        LayoutConfig,
-        layoutConfig
-      ),
-    [layoutConfig]
-  );
-  const locationActions = {
-    openYesNoModal() {
-      if (!parentSelected || parentSelected === 'root') return;
-      setOpenYesNoModal(true);
-    },
-    closeYesNoModal() {
-      setOpenYesNoModal(false);
-    },
-    removeLocation() {
-      deleteDB('locationsReal/', parentSelected)
-      .then((response) => handleLoadLocations())
-      .catch((error) => console.log('Error', error));
-      setOpenYesNoModal(false);
-    },
-    openProfilesListBox(e) {
-      setAnchorEl(e.currentTarget);
-    },
-    editLocation() {
-      if (!parentSelected || parentSelected === 'root') return;
-      setEditOrNew('edit');
-      setOpenListModal(true);
-    }
-  };
+
   const theme4 = useTheme();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [coordinates, setCoordinates] = useState([]);
+  const [modalData, setModalData] = useState([])
   const [editOrNew, setEditOrNew] = useState('new');
   const [googleMapsZoom, setGoogleMapsZoom] = useState(6);
   const [id, setId] = useState(null);
@@ -178,6 +147,41 @@ const Locations = () => {
     ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
     shallowEqual
   );
+
+  const activeTab = localStorage.getItem(localStorageActiveTabKey);
+  const dispatch = useDispatch();
+  const initialValues = useMemo(
+    () =>
+      merge(
+        LayoutConfig,
+        layoutConfig
+      ),
+    [layoutConfig]
+  );
+  const locationActions = {
+    openYesNoModal() {
+      if (!parentSelected || parentSelected === 'root') return;
+      setOpenYesNoModal(true);
+    },
+    closeYesNoModal() {
+      setOpenYesNoModal(false);
+    },
+    removeLocation() {
+      deleteDB('locationsReal/', parentSelected)
+      .then((response) => handleLoadLocations())
+      .catch((error) => console.log('Error', error));
+      setOpenYesNoModal(false);
+    },
+    openProfilesListBox(e) {
+      setEditOrNew('new');
+      setAnchorEl(e.currentTarget);
+    },
+    editLocation() {
+      if (!parentSelected || parentSelected === 'root') return;
+      setEditOrNew('edit');
+      setOpenListModal(true);
+    }
+  };
 
   const createLocationProfileRow = (
     id, 
@@ -266,7 +270,6 @@ const Locations = () => {
 
   const handleOpenLocationListModal = (profile) => {
     handleClose();
-    setEditOrNew('new');
     setOpenListModal(true);
     setProfileSelected(profile);
   };
@@ -293,7 +296,7 @@ const Locations = () => {
 
   const getImageLayout = (id) => {
     if (id === 'root') { 
-      return;
+      setImageLayout('http://localhost:3000/media/misc/placeholder-image.jpg')
     } else {
       const result = locations.filter((location) =>  location._id === id);
       const image = result.map((coordinate) => coordinate.fileExt);
@@ -367,6 +370,7 @@ const Locations = () => {
     getDB('locationsReal')
       .then((response) => response.json())
       .then(async (data) => {
+        setModalData(data)
         locations = data.response.map((res) => ({ ...res, id: res._id }));
         const homeLocations = data.response.filter((loc) => loc.profileLevel === 0);
         const children = constructLocationTreeRecursive(homeLocations);
@@ -454,7 +458,9 @@ const Locations = () => {
                           </span>
                           <ModalLocationList
                             editOrNew={editOrNew}
+                            imageLayout={imageLayout}
                             modalId={modalId}
+                            dataFromParent={modalData}
                             parent={parentSelected}
                             parentExt={parentFileExt}
                             profile={profileSelected}
@@ -551,7 +557,7 @@ const Locations = () => {
                                       <div style={{ display: 'flex', justifyContent: 'center' }}>
                                         <div style={{ height: '480px', width: '600px' }}>
                                           <ImageMarker
-                                            src={imageLayout}
+                                            src={imageLayout ? imageLayout : 'http://localhost:3000/media/misc/placeholder-image.jpg'}
                                             markers={markers}
                                             markerComponent={CustomMarker}
                                           />
