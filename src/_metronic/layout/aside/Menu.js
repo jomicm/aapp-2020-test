@@ -3,11 +3,9 @@ import { connect } from "react-redux";
 import objectPath from "object-path";
 import { Link, withRouter } from "react-router-dom";
 import clsx from "clsx";
-import { removeCSSClass } from "../../utils/utils";
 import * as builder from "../../ducks/builder";
 import MenuList from "./MenuList";
 import KTMenu from "../../_assets/js/menu";
-import KTUtil from "../../_assets/js/util";
 
 class AsideLeft extends React.Component {
   asideMenuRef = React.createRef();
@@ -78,63 +76,6 @@ class AsideLeft extends React.Component {
   get currentUrl() {
     return this.props.location.pathname.split(/[?#]/)[0];
   }
-
-  /**
-   * Use for fixed left aside menu, to show menu on mouseenter event.
-   * @param e Event
-   */
-  mouseEnter = e => {
-    // check if the left aside menu is fixed
-    if (document.body.classList.contains("kt-aside--fixed")) {
-      if (this.outsideTm) {
-        clearTimeout(this.outsideTm);
-        this.outsideTm = null;
-      }
-
-      this.insideTm = setTimeout(() => {
-        // if the left aside menu is minimized
-        if (
-          document.body.classList.contains("kt-aside--minimize") &&
-          // eslint-disable-next-line no-undef
-          KTUtil.isInResponsiveRange("desktop")
-        ) {
-          removeCSSClass(document.body, "kt-aside--minimize");
-          document.body.classList.add("kt-aside--minimize-hover");
-        }
-      }, 50);
-    }
-  };
-
-  /**
-   * Use for fixed left aside menu, to show menu on mouseenter event.
-   * @param e Event
-   */
-  mouseLeave = e => {
-    if (document.body.classList.contains("kt-aside--fixed")) {
-      if (this.insideTm) {
-        clearTimeout(this.insideTm);
-        this.insideTm = null;
-      }
-
-      this.outsideTm = setTimeout(() => {
-        // if the left aside menu is expand
-        /* eslint-disable-next-line  */
-        const kUtilIsResponsiveRange = KTUtil.isInResponsiveRange("desktop");
-        const hasMinimizeHover = document.body.classList.contains(
-          "kt-aside--minimize-hover"
-        );
-        if (
-          hasMinimizeHover &&
-          // eslint-disable-next-line no-undef
-          kUtilIsResponsiveRange
-        ) {
-          // hide back the left aside menu
-          removeCSSClass(document.body, "kt-aside--minimize-hover");
-          document.body.classList.add("kt-aside--minimize");
-        }
-      }, 100);
-    }
-  };
 
   render() {
     const {
