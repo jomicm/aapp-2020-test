@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { connect } from "react-redux";
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import {
   Button,
@@ -111,7 +112,8 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ModalProcessLive = ({ showModal, setShowModal, reloadTable, id }) => {
+const ModalProcessLive = (props) => {
+  const { showModal, setShowModal, reloadTable, id, user } = props;
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -151,8 +153,12 @@ const ModalProcessLive = ({ showModal, setShowModal, reloadTable, id }) => {
 
   const handleSave = () => {
     // const fileExt = getFileExtension(image);
-    debugger
-    const body = { ...values, cartRows };
+    const body = {
+      ...values,
+      cartRows,
+      processData: processes.find(process => process.id === values.selectedProcess),
+      requestUser: pick(user, ['email', 'fullName', 'id'])
+    };
     if (!id) {
       postDB('processLive', body)
         .then(data => data.json())
@@ -250,12 +256,14 @@ const ModalProcessLive = ({ showModal, setShowModal, reloadTable, id }) => {
       setApprovals(values);
   }
   const onSelectionChange = (selection) => {
+    console.log('selection:', selection)
+    
     setAssetsSelected(selection.rows || []);
   };
   const onAddAssetToCart = () => {
-    debugger
-    const convertAssets = assetsSelected.map(({ name, brand, model }, ix) => createAssetReferenceCartRow('id' + ix, name, brand, model));
-    setCartRows([ ...cartRows, ...convertAssets ]);
+    // const convertAssets = assetsSelected.map(({ name, brand, model }, ix) => createAssetReferenceCartRow('id' + ix, name, brand, model));
+    // setCartRows([ ...cartRows, ...convertAssets ]);
+    setCartRows([...cartRows, ...assetsSelected]);
     setAssetsSelected([]);
   };
 
@@ -300,37 +308,27 @@ const ModalProcessLive = ({ showModal, setShowModal, reloadTable, id }) => {
                         <Select
                           value={values.selectedProcess}
                           // onChange={handleChange('selectedProcess')}
-                          onChange={event => setValues(prev => ({ ...prev, selectedProcess: event.target.value }))}
+                          onChange={event => setValues((prev) => ({ ...prev, selectedProcess: event.target.value }))}
                         >
-                          {(processes || []).map((opt, ix) => (
-                            <MenuItem key={`opt-name-${ix}`} value={opt.id}>{opt.name}</MenuItem>
+                          {(processes || []).map(({ id, name }, ix) => (
+                            <MenuItem key={`opt-name-${ix}`} value={id}>{name}</MenuItem>
                           ))}
                         </Select>
                       </FormControl>
-                      <button
-                        type="button"
-                        onClick={onAddAssetToCart}
-                        className='btn btn-primary btn-elevate kt-login__btn-primary'
-                      >
+                      <button type="button" onClick={onAddAssetToCart} className='btn btn-primary btn-elevate kt-login__btn-primary'>
                         <i className="la la-plus" /> Add Assets
                       </button>
                     </div>
-                    <div style={{ alignItems: 'flex-end', paddingTop: '30px' }}>
-                      <AssetFinderPreview isAssetReference={true} onSelectionChange={onSelectionChange}/>
-                    </div>
+                    <AssetFinderPreview isAssetReference={true} onSelectionChange={onSelectionChange}/>
                   </div>
                 </TabContainer4>
                 <TabContainer4 dir={theme4.direction}>
-                  <TableComponent
-                    title={'Assets Cart'}
-                    headRows={getColumns()}
+                  <AssetFinderPreview
+                    isAssetReference={true}
+                    isSelectionTable={true}
+                    onSelectionChange={onSelectionChange}
                     rows={cartRows}
-                    // rows={test}
-                    noEdit={true}
-                    // onAdd={tableActions('processStages').onAdd}
-                    // onDelete={tableActions('processStages').onDelete}
-                    // onEdit={tableActions('processStages').onEdit}
-                    // onSelect={tableActions('processStages').onSelect}
+                    onSetRows={setCartRows}
                   />
                 </TabContainer4>
               </SwipeableViews>
@@ -391,4 +389,9 @@ const processesHeadRows = [
   { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
 ];
 
-export default ModalProcessLive;
+const mapStateToProps = ({ auth: { user } }) => ({
+  user
+});
+
+export default connect(mapStateToProps)(ModalProcessLive);
+// export default connect(mapStateToProps)(UserProfile);

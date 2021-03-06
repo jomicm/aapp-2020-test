@@ -13,29 +13,6 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from "../../../partials/content/Portlet";
-import { CodeBlock } from "../../../partials/content/CodeExample";
-import Notice from "../../../partials/content/Notice";
-
-import CodeExample from '../../../partials/content/CodeExample';
-
-import {
-  makeStyles,
-  lighten,
-  withStyles,
-  useTheme
-} from "@material-ui/core/styles";
-import {
-  Checkbox,
-  Card,
-  CardHeader,
-  Grid,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Button,
-  Divider,
-} from "@material-ui/core";
 
 // AApp Components
 import TableComponent from '../Components/TableComponent';

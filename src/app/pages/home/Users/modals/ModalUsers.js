@@ -25,7 +25,9 @@ import {
 } from "@material-ui/core/styles";
 import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
+import { isEmpty, isNil, falsy } from 'lodash';
 import CustomFields from '../../Components/CustomFields/CustomFields';
+import FieldValidator from '../../Components/FieldValidator/FieldValidator';
 
 // import './ModalAssetCategories.scss';
 import ImageUpload from '../../Components/ImageUpload';
@@ -34,6 +36,7 @@ import ModalYesNo from '../../Components/ModalYesNo';
 import Permission from '../components/Permission';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import * as auth from "../../../../store/ducks/auth.duck";
+import { modules } from '../../constants';
 
 import {
   SingleLine,
@@ -47,6 +50,9 @@ import {
 } from '../../Components/CustomFields/CustomFieldsPreview';
 
 import LocationAssignment from '../components/LocationAssignment';
+
+// Hooks
+import { useFieldValidator } from '../../Components/FieldValidator/hooks';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -171,6 +177,12 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   };
 
   const handleSave = () => {
+    setFormValidation({ ...formValidation, enabled: true });
+    if (!isEmpty(formValidation.isValidForm)) {
+      alert('Please fill out missing fields')
+      return;
+    }
+
     const fileExt = getFileExtension(image);
     const body = { ...values, customFieldsTab, profilePermissions, locationsTable, fileExt };
     if (!id) {
@@ -234,7 +246,11 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     setShowModal(false);
     setValue4(0);
     //
-    const a = user;
+    setFormValidation({
+      enabled: false,
+      isValidForm: false
+    });
+    
   };
 
   const [userProfilesFiltered, setUserProfilesFiltered] = useState([]);
@@ -242,7 +258,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   useEffect(() => {
     const userProfiles = userProfileRows.map((profile, ix) => ({ value: profile.id, label: profile.name }));
     setUserProfilesFiltered(userProfiles);
-    if(!id || !Array.isArray(id)) {
+    if (!id || !Array.isArray(id)) {
       return;
     }
 
@@ -275,18 +291,6 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   const [profilePermissions, setProfilePermissions] = useState({});
   const [tabs, setTabs] = useState([]);
   const [locationsTable, setLocationsTable] = useState([]);
-
-
-  const modules = [
-    { key:'dashboard', name: 'Dashboard' },
-    { key:'assets', name: 'Assets' },
-    { key:'processes', name: 'Processes' },
-    { key:'users', name: 'Users' },
-    { key:'employees', name: 'Employees' },
-    { key:'locations', name: 'Locations' },
-    { key:'reports', name: 'Reports' },
-    { key:'settings', name: 'Settings' },
-  ];
 
   const handleSetPermissions = (key, checked) => {
     setProfilePermissions(prev => ({ ...prev, [key]: checked }));
@@ -334,6 +338,79 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     field.values = CFValues;
   };
 
+  const { fields, fieldsToValidate } = useFieldValidator('user');
+  const [formValidation, setFormValidation] = useState({
+    enabled: false,
+    isValidForm: {}
+  });
+
+  const getBaseFields = () => {
+    const baseFields = [
+      { 
+        component: 'dropSelect',
+        id: 'userProfile',
+        ownValidFn: () => !!idUserProfile,
+        validationId: 'selectedUserProfile',
+        componentProps: {
+          isClearable: true,
+          isDisabled: values.isDisableUserProfile,
+          label: 'Profile Selected',
+          onChange: onChangeUserProfile,
+          options: userProfilesFiltered,
+          value: profileSelected
+        }
+      },
+      { id: 'name', validationId: 'name', component: 'textField', componentProps: { label: 'Name' } },
+      { id: 'lastName', validationId: 'lastName', component: 'textField', componentProps: { label: 'Last Name' } },
+      { id: 'email', validationId: 'email', component: 'textField', componentProps: { label: 'Email' } },
+      { id: 'password', validationId: 'email', component: 'textField', componentProps: { label: 'Password' } },
+    ];
+    const baseProps = {
+      // id: 'standard-name',
+      className: classes.textField,
+      margin: 'normal'
+    }
+    const baseComponents = {
+      dropSelect: (props) => {
+        return (
+          <div className={props.className}>
+            <FormLabel component="legend">{props.componentProps.label}</FormLabel>
+            <FormGroup>
+              <Select {...props.componentProps} />
+            </FormGroup>
+          </div>
+        );},
+      textField: (props) => {
+        const componentProps = {...props, ...props.componentProps};
+
+        return <TextField {...componentProps} />
+      }
+    };
+
+    return baseFields.map(({ id, ownValidFn, component, componentProps, validationId }) => {
+      const label = (fields || {})[id]?.caption || componentProps.label;
+      const localComponentProps = { ...componentProps, label };
+      const props = {...baseProps, value: values[id], onChange: handleChange(id), componentProps: localComponentProps };
+      debugger
+      const defaultVoidValidation = !!values[validationId];
+      const isValid = (fieldsToValidate || []).includes(id) && (ownValidFn ? ownValidFn() : defaultVoidValidation);
+
+      return (
+        <FieldValidator
+          formValidationState={[formValidation, setFormValidation]}
+          // fieldsToValidate={fieldsToValidate}
+          isValid={isValid}
+          // validateField={fieldsToValidate).includes(id)}
+          fieldName={id}
+          // validationId={validationId}
+          // values={values}
+        >
+          {baseComponents[component](props)}
+        </FieldValidator>
+      );
+    });
+  };
+
   return (
     <div style={{width:'1000px'}}>
       <Dialog
@@ -375,7 +452,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
                       User Profile Photo
                     </ImageUpload>
                     <div className="profile-tab-wrapper__content">
-                      <FormControl component="fieldset" className={classes.textField}>
+                      {/* <FormControl component="fieldset" className={classes.textField}>
                         <FormLabel component="legend">User Profile</FormLabel>
                         <FormGroup>
                           <Select
@@ -389,40 +466,9 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
                             isDisabled={values.isDisableUserProfile}
                           />
                         </FormGroup>
-                      </FormControl>
-                      <TextField
-                        id="standard-name"
-                        label="Name"
-                        className={classes.textField}
-                        value={values.name}
-                        onChange={handleChange("name")}
-                        margin="normal"
-                      />
-                      <TextField
-                        id="standard-name"
-                        label="Last Name"
-                        className={classes.textField}
-                        value={values.lastName}
-                        onChange={handleChange("lastName")}
-                        margin="normal"
-                      />
-                      <TextField
-                        id="standard-name"
-                        label="Email"
-                        className={classes.textField}
-                        value={values.email}
-                        onChange={handleChange("email")}
-                        margin="normal"
-                      />
-                      <TextField
-                        id="standard-name"
-                        label="Password"
-                        className={classes.textField}
-                        value={values.password}
-                        onChange={handleChange("password")}
-                        type="password"
-                        margin="normal"
-                      />
+                      </FormControl> */}
+
+                      {getBaseFields()}
                       <div className={classes.textField}>
                         <FormLabel style={{marginTop: '25px'}} component="legend">Boss</FormLabel>
                         <FormGroup>
@@ -451,13 +497,15 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
                 <TabContainer4 dir={theme4.direction}>
                   <div style={{ display:'flex', flexWrap:'wrap', justifyContent: 'space-around', padding: '0 20px' }}>
                     {modules.map((module, index) => {
-                      return <Permission
-                                originalChecked={profilePermissions}
-                                key={module.key}
-                                id={module.key}
-                                title={module.name}
-                                setPermissions={handleSetPermissions}
-                              />
+                      return (
+                        <Permission
+                          id={module.key}
+                          key={module.key}
+                          originalChecked={profilePermissions}
+                          setPermissions={handleSetPermissions}
+                          title={module.name}
+                        />
+                      );
                     })}
                   </div>
                 </TabContainer4>
