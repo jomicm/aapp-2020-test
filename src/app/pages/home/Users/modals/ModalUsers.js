@@ -12,8 +12,6 @@ import {
   Tab,
   Tabs,
   Paper,
-  TextField,
-  FormControl,
   FormLabel,
   FormGroup
 } from "@material-ui/core";
@@ -25,13 +23,11 @@ import {
 } from "@material-ui/core/styles";
 import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
-import { isEmpty, isNil, falsy } from 'lodash';
-import CustomFields from '../../Components/CustomFields/CustomFields';
-import FieldValidator from '../../Components/FieldValidator/FieldValidator';
+import { isEmpty } from 'lodash';
 
 // import './ModalAssetCategories.scss';
 import ImageUpload from '../../Components/ImageUpload';
-import { postDBEncryptPassword, getOneDB, updateDB } from '../../../../crud/api';
+import { postDBEncryptPassword, getOneDB, getDB, updateDB } from '../../../../crud/api';
 import ModalYesNo from '../../Components/ModalYesNo';
 import Permission from '../components/Permission';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
@@ -49,10 +45,8 @@ import {
   FileUpload
 } from '../../Components/CustomFields/CustomFieldsPreview';
 
+import BaseFields from '../../Components/BaseFields/BaseFields';
 import LocationAssignment from '../components/LocationAssignment';
-
-// Hooks
-import { useFieldValidator } from '../../Components/FieldValidator/hooks';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -165,6 +159,8 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     lastName: '',
     email: '',
     password: '',
+    users: [],
+    selectedBoss: {},
     isDisableUserProfile: false,
     selectedUserProfile: null,
     categoryPic: '/media/misc/placeholder-image.jpg',
@@ -254,10 +250,12 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   };
 
   const [userProfilesFiltered, setUserProfilesFiltered] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
 
   useEffect(() => {
     const userProfiles = userProfileRows.map((profile, ix) => ({ value: profile.id, label: profile.name }));
     setUserProfilesFiltered(userProfiles);
+    loadInit();
     if (!id || !Array.isArray(id)) {
       return;
     }
@@ -265,7 +263,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     getOneDB('user/', id[0])
       .then(response => response.json())
       .then(data => { 
-        const { name, lastName, email, customFieldsTab, profilePermissions, idUserProfile, locationsTable, fileExt } = data.response;
+        const { name, lastName, email, customFieldsTab, profilePermissions, idUserProfile, locationsTable, fileExt, selectedBoss } = data.response;
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
         setProfileSelected(userProfilesFiltered.filter(profile => profile.value === idUserProfile));
@@ -276,7 +274,8 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
           lastName,
           email,
           isDisableUserProfile: true,
-          imageURL: getImageURL(id, 'user', fileExt)
+          imageURL: getImageURL(id, 'user', fileExt),
+          selectedBoss
         });
         //
         const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
@@ -286,6 +285,16 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       })
       .catch(error => console.log(error));
   }, [id, userProfileRows]);
+
+  const loadInit = () => {
+    getDB('user')
+      .then(response => response.json())
+      .then(data => {
+        const users = data.response.map(({ _id: value, email: label }) => ({ value, label }));
+        setAllUsers(users);
+      })
+      .catch(error => console.log('error>', error));
+  };
 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
   const [profilePermissions, setProfilePermissions] = useState({});
@@ -330,7 +339,6 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   // Function to update customFields
   const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
     const colValue = ['left', 'right'];
-    console.log('Looking for you', tab, id, colIndex, values);
     const customFieldsTabTmp = { ...customFieldsTab };
 
     const field = customFieldsTabTmp[tab][colValue[colIndex]]
@@ -338,77 +346,59 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     field.values = CFValues;
   };
 
-  const { fields, fieldsToValidate } = useFieldValidator('user');
   const [formValidation, setFormValidation] = useState({
     enabled: false,
     isValidForm: {}
   });
 
-  const getBaseFields = () => {
-    const baseFields = [
-      { 
-        component: 'dropSelect',
-        id: 'userProfile',
-        ownValidFn: () => !!idUserProfile,
-        validationId: 'selectedUserProfile',
-        componentProps: {
-          isClearable: true,
-          isDisabled: values.isDisableUserProfile,
-          label: 'Profile Selected',
-          onChange: onChangeUserProfile,
-          options: userProfilesFiltered,
-          value: profileSelected
-        }
-      },
-      { id: 'name', validationId: 'name', component: 'textField', componentProps: { label: 'Name' } },
-      { id: 'lastName', validationId: 'lastName', component: 'textField', componentProps: { label: 'Last Name' } },
-      { id: 'email', validationId: 'email', component: 'textField', componentProps: { label: 'Email' } },
-      { id: 'password', validationId: 'email', component: 'textField', componentProps: { label: 'Password' } },
-    ];
-    const baseProps = {
-      // id: 'standard-name',
-      className: classes.textField,
-      margin: 'normal'
-    }
-    const baseComponents = {
-      dropSelect: (props) => {
-        return (
-          <div className={props.className}>
-            <FormLabel component="legend">{props.componentProps.label}</FormLabel>
-            <FormGroup>
-              <Select {...props.componentProps} />
-            </FormGroup>
-          </div>
-        );},
-      textField: (props) => {
-        const componentProps = {...props, ...props.componentProps};
-
-        return <TextField {...componentProps} />
+  const baseFieldsLocalProps = {
+    userProfile: {
+      ownValidFn: () => !!idUserProfile,
+      componentProps: {
+        isClearable: true,
+        isDisabled: values.isDisableUserProfile,
+        onChange: onChangeUserProfile,
+        options: userProfilesFiltered,
+        value: profileSelected
       }
-    };
-
-    return baseFields.map(({ id, ownValidFn, component, componentProps, validationId }) => {
-      const label = (fields || {})[id]?.caption || componentProps.label;
-      const localComponentProps = { ...componentProps, label };
-      const props = {...baseProps, value: values[id], onChange: handleChange(id), componentProps: localComponentProps };
-      debugger
-      const defaultVoidValidation = !!values[validationId];
-      const isValid = (fieldsToValidate || []).includes(id) && (ownValidFn ? ownValidFn() : defaultVoidValidation);
-
-      return (
-        <FieldValidator
-          formValidationState={[formValidation, setFormValidation]}
-          // fieldsToValidate={fieldsToValidate}
-          isValid={isValid}
-          // validateField={fieldsToValidate).includes(id)}
-          fieldName={id}
-          // validationId={validationId}
-          // values={values}
-        >
-          {baseComponents[component](props)}
-        </FieldValidator>
-      );
-    });
+    },
+    name: {
+      componentProps: {
+        onChange: handleChange('name')
+      }
+    },
+    lastName: {
+      componentProps: {
+        onChange: handleChange('lastName')
+      }
+    },
+    email: {
+      componentProps: {
+        onChange: handleChange('email')
+      }
+    },
+    password: {
+      componentProps: {
+        onChange: handleChange('password')
+      }
+    },
+    userGroups: {
+      ownValidFn: () => true,
+      componentProps: {
+        isClearable: true,
+        label: 'Groups',
+        options: colourOptions
+      }
+    },
+    boss: {
+      ownValidFn: () => !!values.selectedBoss,
+      componentProps: {
+        isClearable: true,
+        onChange: (selectedBoss) => setValues(prev => ({ ...prev, selectedBoss })),
+        value: values.selectedBoss,
+        options: allUsers
+      }
+    }
   };
 
   return (
@@ -452,44 +442,12 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
                       User Profile Photo
                     </ImageUpload>
                     <div className="profile-tab-wrapper__content">
-                      {/* <FormControl component="fieldset" className={classes.textField}>
-                        <FormLabel component="legend">User Profile</FormLabel>
-                        <FormGroup>
-                          <Select
-                            // defaultValue={!id ? null : profileSelected }
-                            value={profileSelected}
-                            classNamePrefix="select"
-                            isClearable={true}
-                            name="color"
-                            onChange={onChangeUserProfile}
-                            options={userProfilesFiltered}
-                            isDisabled={values.isDisableUserProfile}
-                          />
-                        </FormGroup>
-                      </FormControl> */}
-
-                      {getBaseFields()}
-                      <div className={classes.textField}>
-                        <FormLabel style={{marginTop: '25px'}} component="legend">Boss</FormLabel>
-                        <FormGroup>
-                          <Select
-                            classNamePrefix="select"
-                            isClearable={true}
-                            name="color"
-                            options={colourOptions}
-                          />
-                        </FormGroup>
-                        <FormLabel style={{marginTop: '25px'}} component="legend">Groups</FormLabel>
-                        <FormGroup>
-                          <Select
-                            isMulti
-                            classNamePrefix="select"
-                            isClearable={true}
-                            name="color"
-                            options={colourOptions}
-                          />
-                        </FormGroup>
-                      </div>
+                      <BaseFields
+                        catalogue={'userList'}
+                        formState={[formValidation, setFormValidation]}
+                        localProps={baseFieldsLocalProps}
+                        values={values}
+                      />
                     </div>
                   </div>
                 </TabContainer4>

@@ -116,7 +116,6 @@ const LiveProcesses = (props) => {
       getDB(collectionName)
       .then(response => response.json())
       .then(data => {
-        debugger
         const rows = data.response.map(row => {
           const { _id: id, processData: { name, processStages } } = row;
           return createLiveProcessesHeadRows(id, id.slice(-6), name, 'Type', '12/12/12', 'Approvals', processStages.length, 'Admin', '11/03/2020');

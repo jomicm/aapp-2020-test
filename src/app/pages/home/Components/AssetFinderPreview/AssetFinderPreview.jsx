@@ -51,7 +51,6 @@ const AssetFinder = ({
   };
 
   const handleSelectionChange = (selection) => {
-    debugger
     onSelectionChange(selection);
     if (selection.rows.length) {
       setSelectedRows(selection.rows);

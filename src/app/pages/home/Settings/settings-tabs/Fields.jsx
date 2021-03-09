@@ -33,13 +33,11 @@ const Fields = props => {
     setValues({ ...values, [name]: event.target.value });
   };
   const handleUpdateCaptionLists = (selectedModule, id) => event => {
-    debugger
     const fields = values.fields;
     fields[selectedModule][id].caption = event.target.value;
     setValues(prev => ({ ...prev, fields }));
   };
   const handleUpdateRegExLists = (selectedModule, id) => event => {
-    debugger
     const fields = values.fields;
     fields[selectedModule][id].regex = event.target.value;
     setValues(prev => ({ ...prev, fields }));
