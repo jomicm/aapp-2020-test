@@ -29,14 +29,14 @@ import {
   Typography,
 } from '@material-ui/core';
 
-import AccountTreeRoundedIcon from '@material-ui/icons/AccountTreeRounded';
 import AddIcon from '@material-ui/icons/Add';
+import CloudDownloadIcon from '@material-ui/icons/CloudDownload';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
-import ListRoundedIcon from '@material-ui/icons/ListRounded';
+import FilterListIcon from '@material-ui/icons/FilterList';
 import SearchIcon from '@material-ui/icons/Search';
 import ViewColumnRoundedIcon from '@material-ui/icons/ViewColumnRounded';
-import ViewModuleRoundedIcon from '@material-ui/icons/ViewModuleRounded';
+import PrintIcon from '@material-ui/icons/Print';
 import RemoveRedEye from '@material-ui/icons/RemoveRedEye';
 
 import { getDB } from '../../../crud/api';
@@ -144,7 +144,7 @@ const useStyles = makeStyles(theme => ({
 
 const columnPickerControl = (headRows) => headRows.map((column) => ({ ...column, visible: true }));
 
-const TableComponentTile = props => {
+const TableReportsGeneral = props => {
   const {
     controlValues,
     headRows,
@@ -319,34 +319,27 @@ const TableComponentTile = props => {
               value={controlValues.searchBy ? null : controlValues.search}
             />
           </div>
-          <Tooltip title='Table View'>
-            <IconButton aria-label='Table View' onClick={showTableView}>
-              <ListRoundedIcon />
+          <Tooltip title='Download CSV'>
+            <IconButton aria-label='Download CSV' onClick={() => { }}>
+              <CloudDownloadIcon />
             </IconButton>
           </Tooltip>
-          {
-            tileView && (
-              <Tooltip title='Tile View'>
-                <IconButton aria-label='Tile view' onClick={showTileView}>
-                  <ViewModuleRoundedIcon />
-                </IconButton>
-              </Tooltip>
-            )
-          }
-          {
-            treeView && (
-              <Tooltip title='Tree View'>
-                <IconButton aria-label='Tree view' onClick={showTreeView}>
-                  <AccountTreeRoundedIcon />
-                </IconButton>
-              </Tooltip>
-            )
-          }
+          <Tooltip title='Print'>
+            <IconButton aria-label='Print' onClick={() => { }}>
+              <PrintIcon />
+            </IconButton>
+          </Tooltip>
           <Tooltip title='Column Picker'>
             <IconButton aria-label='Column Picker' onClick={recordButtonPosition}>
               <ViewColumnRoundedIcon />
             </IconButton>
           </Tooltip>
+          {/* <Tooltip title='Filter Table'>
+            <IconButton aria-label='Filter Table' onClick={() => {}}>
+              <FilterListIcon />
+            </IconButton>
+          </Tooltip> */}
+
           {
             typeof onAdd == 'function' && (
               <Tooltip title='Add'>
@@ -451,14 +444,14 @@ const TableComponentTile = props => {
     return (
       <TableHead>
         <TableRow>
-          <TableCell padding='checkbox'>
+          {/* <TableCell padding='checkbox'>
             <Checkbox
               checked={numSelected === rowCount}
               indeterminate={numSelected > 0 && numSelected < rowCount}
               inputProps={{ 'aria-label': 'Select all desserts' }}
               onChange={onSelectAllClick}
             />
-          </TableCell>
+          </TableCell> */}
           {columnPicker.filter((column) => column.visible).map(row => (
             <TableCell
               align={'left'}
@@ -481,6 +474,7 @@ const TableComponentTile = props => {
                     onChange={(event) => handleInputChange(event, row.id)}
                     placeholder={`Search by...`}
                     value={row.id === controlValues.searchBy ? controlValues.search : null}
+                    disabled={row.searchByDisabled ? true : false}
                   />
                 )
               }
@@ -602,119 +596,113 @@ const TableComponentTile = props => {
           title={props.title}
         />
         <div className={classes.tableWrapper}>
-          <Grid container>
+          <Table
+            aria-labelledby='tableTitle'
+            className={classes.table}
+          >
             {
-              viewControl.tree && (
-                <Grid item sm={12} md={2} lg={2}>
-                  <TreeView data={locationsTree} onClick={selectLocation} />
-                </Grid>
-              )
-            }
-            <Grid item sm={12} md={12} lg={viewControl.tree ? 10 : 12} >
-              <Table
-                aria-labelledby='tableTitle'
-                className={classes.table}
-              >
-                {
-                  (viewControl.table || viewControl.tree) && (
-                    <React.Fragment>
-                      <EnhancedTableHead
-                        noEdit={noEdit}
-                        numSelected={selected.length}
-                        order={order}
-                        orderBy={orderBy}
-                        onRequestSort={handleRequestSort}
-                        onSelectAllClick={handleSelectAllClick}
-                        rowCount={rows.length}
-                      />
-                      <TableBody>
-                        {
-                          rows.length <= 0 && (
-                            <TableRow
-                              hover
-                              key={`No info`}
-                              // onClick={event => handleClick(event, row.name, row.id)}
-                              role='checkbox'
-                              tabIndex={-1}
-                            >
-                              <TableCell
-                                align={'center'}
-                                component='th'
-                                key={`NoData`}
-                                padding={'default'}
-                                scope='row'
-                                colSpan={100}
-                              >
-                                <Typography variant='h5'>
-                                  Sorry, no matching records found
+              (viewControl.table || viewControl.tree) && (
+                <React.Fragment>
+                  {
+                    viewControl.tree && (
+                      <Grid item sm={12} md={2} lg={2}>
+                        <TreeView data={locationsTree} onClick={selectLocation} />
+                      </Grid>
+                    )
+                  }
+                  <EnhancedTableHead
+                    noEdit={noEdit}
+                    numSelected={selected.length}
+                    order={order}
+                    orderBy={orderBy}
+                    onRequestSort={handleRequestSort}
+                    onSelectAllClick={handleSelectAllClick}
+                    rowCount={rows.length}
+                  />
+                  <TableBody>
+                    {
+                      rows.length <= 0 && (
+                        <TableRow
+                          hover
+                          key={`No info`}
+                          // onClick={event => handleClick(event, row.name, row.id)}
+                          role='checkbox'
+                          tabIndex={-1}
+                        >
+                          <TableCell
+                            align={'center'}
+                            component='th'
+                            key={`NoData`}
+                            padding={'default'}
+                            scope='row'
+                          >
+                            <Typography variant='h5'>
+                              Sorry, no matching records found
                             </Typography>
-                              </TableCell>
-                            </TableRow>
-                          )
-                        }
-                        {
-                          rows.map((row, index) => {
-                            const isItemSelected = isSelected(row.id);
-                            const labelId = `enhanced-table-checkbox-\${index}`;
-                            return (
-                              <TableRow
-                                aria-checked={isItemSelected}
-                                hover
-                                key={`key-row-${row.id}`}
-                                onClick={event => handleClick(event, row.name, row.id)}
-                                role='checkbox'
-                                selected={isItemSelected}
-                                tabIndex={-1}
-                              >
-                                <TableCell padding='checkbox'>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    }
+                    {
+                      rows.map((row, index) => {
+                        const isItemSelected = isSelected(row.id);
+                        const labelId = `enhanced-table-checkbox-\${index}`;
+                        return (
+                          <TableRow
+                            aria-checked={isItemSelected}
+                            hover
+                            key={`key-row-${row.id}`}
+                            // onClick={event => handleClick(event, row.name, row.id)}
+                            role='checkbox'
+                            selected={isItemSelected}
+                            tabIndex={-1}
+                          >
+                            {/* <TableCell padding='checkbox'>
                                   <Checkbox
                                     checked={isItemSelected}
                                     inputProps={{ 'aria-labelledby': labelId }}
                                   />
-                                </TableCell>
-
-                                {columnPicker.filter((column) => column.visible).map((header, ix) =>
-                                  <TableCell
-                                    align={'left'}
-                                    component='th'
-                                    key={`cell-row${index}-${ix}`}
-                                    padding={'default'}
-                                    scope='row'
-                                  >
-                                    {row[header.id]}
-                                  </TableCell>
-                                )}
-                              </TableRow>
-                            );
-                          })}
-                        {
-                          rowsPerPage - rows.length > 0 && (
-                            <TableRow style={{ height: 49 * (rowsPerPage - rows.length), width: '100%' }}>
-                              <TableCell colSpan={100} />
-                            </TableRow>
-                          )
-                        }
-                      </TableBody>
-                    </React.Fragment>
-                  )
-                }
-                {
-                  viewControl.tile && (
-                    <TableBody>
-                      <TileView
-                        collection={controlValues.collection}
-                        onDelete={props.onDelete}
-                        onEdit={props.onEdit}
-                        onReload={props.onReload}
-                        showTileView={true}
-                        tiles={rows}
-                      />
-                    </TableBody>
-                  )
-                }
-              </Table>
-            </Grid>
-          </Grid>
+                                </TableCell> */}
+                            {columnPicker.filter((column) => column.visible).map((header, ix) =>
+                              <TableCell
+                                align={'left'}
+                                component='th'
+                                key={`cell-row${index}-${ix}`}
+                                padding={'default'}
+                                scope='row'
+                              >
+                                {row[header.id]}
+                              </TableCell>
+                            )}
+                          </TableRow>
+                        );
+                      })}
+                    {
+                      rowsPerPage - rows.length > 0 && (
+                        <TableRow style={{ height: 49 * (rowsPerPage - rows.length), width: '100%' }}>
+                          <TableCell colSpan={100} />
+                        </TableRow>
+                      )
+                    }
+                  </TableBody>
+                </React.Fragment>
+              )
+            }
+            {
+              viewControl.tile && (
+                <TableBody>
+                  <TileView
+                    collection={controlValues.collection}
+                    onDelete={props.onDelete}
+                    onEdit={props.onEdit}
+                    onReload={props.onReload}
+                    showTileView={true}
+                    tiles={rows}
+                  />
+                </TableBody>
+              )
+            }
+          </Table>
         </div>
         <TablePagination
           backIconButtonProps={{
@@ -736,4 +724,4 @@ const TableComponentTile = props => {
   );
 };
 
-export default TableComponentTile;
+export default TableReportsGeneral;

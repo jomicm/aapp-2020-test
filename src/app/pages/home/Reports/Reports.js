@@ -1,20 +1,15 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Formik, setNestedObjectValues } from "formik";
-import { get, merge } from "lodash";
-import { shallowEqual, useDispatch, useSelector } from "react-redux";
-import clsx from "clsx";
-import { FormHelperText, Switch, Tab, Tabs, Styles } from "@material-ui/core";
-import { metronic, initLayoutConfig, LayoutConfig } from "../../../../_metronic";
+import React, { useEffect, useState } from "react";
+import { shallowEqual, useSelector } from "react-redux";
+import { Tabs } from "@material-ui/core";
 import {
   Portlet,
   PortletBody,
-  PortletFooter,
   PortletHeader,
   PortletHeaderToolbar
 } from "../../../partials/content/Portlet";
-import { getDB, deleteDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
-import TableComponent from '../Components/TableComponent';
+import TableComponent2 from '../Components/TableComponent2';
 import ModalYesNo from '../Components/ModalYesNo';
 import TabGeneral from './TabGeneral';
 import ModalReportsSaved from './modals/ModalReportsSaved'
@@ -31,14 +26,6 @@ const Reports = () => {
   });
   const [data, setData] = useState([]);
   const [dataModal, setDataModal] = useState({});
-  const [loadingButtonResetStyle, setLoadingButtonResetStyle] = useState({
-    paddingRight: "2.5rem"
-  });
-  const [loadingButtonPreviewStyle, setLoadingButtonPreviewStyle] = useState({
-    paddingRight: "2.5rem"
-  });
-  const [loadingPreview, setLoadingPreview] = useState(false);
-  const [loadingReset, setLoadingReset] = useState(false);
   const [reportToGenerate, setReportToGenerate] = useState([]);
   const [selectReferenceConfirmation, setSelectReferenceConfirmation] = useState(false);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
@@ -49,8 +36,8 @@ const Reports = () => {
 
   const assetSavedHeadRows = [
     { id: "name", numeric: false, disablePadding: false, label: "Name" },
-    { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-    { id: "creationDate", numeric: false, disablePadding: false, label: "Creation Date" },
+    { id: "creator", numeric: false, disablePadding: false, label: "Creator", searchByDisabled: true },
+    { id: "creationDate", numeric: false, disablePadding: false, label: "Creation Date", searchByDisabled: true },
     { id: "autoMessage", numeric: false, disablePadding: false, label: "Auto Message" }
   ];
 
@@ -66,46 +53,96 @@ const Reports = () => {
     return { id, name, creator, creationDate, autoMessage };
   };
 
-  const dispatch = useDispatch();
+  const [tableControl, setTableControl] = useState({
+    reports: {
+      collection: 'reports',
+      total: 0,
+      page: 0,
+      rowsPerPage: 5,
+      orderBy: 'name',
+      order: 1,
+      search: '',
+      searchBy: '',
+    },
+  });
 
-  const enableLoadingPreview = () => {
-    setLoadingPreview(true);
-    setLoadingButtonPreviewStyle({ paddingRight: "3.5rem" });
-  };
-  const enableLoadingReset = () => {
-    setLoadingReset(true);
-    setLoadingButtonResetStyle({ paddingRight: "3.5rem" });
-  };
-  const updateLayoutConfig = _config => {
-    dispatch(metronic.builder.actions.setLayoutConfigs(_config));
-    setTimeout(() => {
-      window.location.reload();
-    }, 1000);
-  };
-
-  const initialValues = useMemo(
-    () =>
-      merge(
-        LayoutConfig,
-        layoutConfig
-      ),
-    [layoutConfig]
-  );
-
-  const loadInitData = (collectionNames = ['reports']) => {
-    collectionNames =  !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
+  const loadReportsData = (collectionNames = ['reports']) => {
+    collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
-      getDB(collectionName)
-        .then((response) => response.json())
-        .then((data) => {
-          setData(data.response);
-            const rows = data.response.map((row) => {
-              const { _id, selectReport, reportName, enabled } = row;
-              const cast = enabled ? 'Yes' : 'No';
-              return createReportSavedRow(_id, reportName, 'Admin', '11/03/2020', cast);
+      let queryLike = '';
+      let searchByFiltered = tableControl.reports.searchBy;
+      let valueFiltered = tableControl.reports.search;
+      let trueValues = ['y', 'ye', 'yes']
+      let falseValues = ['n', 'no']
+      if (trueValues.includes(valueFiltered)) {
+        valueFiltered = true;
+      }
+      else if (falseValues.includes(valueFiltered)) {
+        valueFiltered = false;
+      }
+      switch (tableControl.reports.searchBy) {
+        case "name":
+          searchByFiltered = 'reportName'
+          break;
+        case "autoMessage":
+          searchByFiltered = 'enabled'
+          break;
+        default:
+          searchByFiltered = searchByFiltered
+          break;
+      }
+      if (collectionName === 'reports') {
+        queryLike = tableControl.reports.searchBy ? (
+          [{ key: searchByFiltered, value: valueFiltered }]
+        ) : (
+          ['reportName'].map(key => ({ key, value: valueFiltered }))
+        )
+      }
+
+      getCountDB({
+        collection: collectionName,
+        queryLike: tableControl[collectionName].search ? queryLike : null
+      })
+        .then(response => response.json())
+        .then(data => {
+          setTableControl(prev => ({
+            ...prev,
+            [collectionName]: {
+              ...prev[collectionName],
+              total: data.response.count
+            }
+          }))
+        });
+
+      let orderByFiltered = tableControl[collectionName].orderBy;
+      switch (tableControl.reports.orderBy) {
+        case "name":
+          orderByFiltered = 'reportName'
+          break;
+        case "autoMessage":
+          orderByFiltered = 'enabled'
+          break;
+        default:
+          orderByFiltered = orderByFiltered
+          break;
+      }
+
+      getDBComplex({
+        collection: collectionName,
+        limit: tableControl[collectionName].rowsPerPage,
+        skip: tableControl[collectionName].rowsPerPage * tableControl[collectionName].page,
+        sort: [{ key: orderByFiltered, value: tableControl[collectionName].order }],
+        queryLike: tableControl[collectionName].search ? queryLike : null
+      })
+        .then(response => response.json())
+        .then(data => {
+          const rows = data.response.map((row) => {
+            const { _id, selectReport, reportName, enabled } = row;
+            const cast = enabled ? 'Yes' : 'No';
+            return createReportSavedRow(_id, reportName, 'Admin', '11/03/2020', cast);
           });
           setControl((prev) => ({ ...prev, reportsRows: rows, reportsRowsSelected: [] }));
-      })
+        })
         .catch(error => console.log('error>', error));
     });
   };
@@ -126,12 +163,12 @@ const Reports = () => {
         setTab(0);
       },
       onDelete(id) {
-        if (!id || !Array.isArray(id)) { 
+        if (!id || !Array.isArray(id)) {
           return;
         }
         id.forEach((_id) => {
           deleteDB(`${collection.name}/`, _id)
-            .then((response) => loadInitData(collection.name))
+            .then((response) => loadReportsData(collection.name))
             .catch((error) => console.log('Error', error));
         });
       }
@@ -139,8 +176,12 @@ const Reports = () => {
   };
 
   useEffect(() => {
-    loadInitData();
+    loadReportsData();
   }, []);
+
+  useEffect(() => {
+    loadReportsData();
+  }, [tableControl.reports.page, tableControl.reports.rowsPerPage, tableControl.reports.order, tableControl.reports.orderBy, tableControl.reports.search, tableControl.reports.locationsFilter]);
 
   return (
     <>
@@ -154,115 +195,103 @@ const Reports = () => {
       <ModalReportsSaved
         data={dataModal}
         module={module}
-        reloadTable={() => loadInitData('reports')}
+        reloadTable={() => loadReportsData('reports')}
         setShowModal={(onOff) =>
           setControl({ ...control, openReportsModal: onOff })
         }
         showModal={control.openReportsModal}
       />
-      <Formik
-        initialValues={initialValues}
-        onReset={() => {
-          enableLoadingReset();
-          updateLayoutConfig(initLayoutConfig);
-        }}
-        onSubmit={values => {
-          enableLoadingPreview();
-          updateLayoutConfig(values);
-        }}
-      >
-        {({ values, handleReset, handleSubmit, handleChange, handleBlur }) => (
-          <div className="kt-form kt-form--label-right">
-            <Portlet>
-              <PortletHeader
-                toolbar={
-                  <PortletHeaderToolbar>
-                    <Tabs
-                      className="builder-tabs"
-                      component="div"
-                      onChange={(_, nextTab) => {
-                        setTab(nextTab);
-                        localStorage.setItem(localStorageActiveTabKey, nextTab);
-                      }}
-                      value={tab}
-                    >
-                     {TabsTitles('reports')}
-                    </Tabs>
-                  </PortletHeaderToolbar>
-                }
-              />
-              {tab === 0 && (
-                <PortletBody>
-                  <div className="kt-section kt-margin-t-0">
-                    <div className="kt-section__body">
-                        <TabGeneral 
-                          id={reportToGenerate} 
-                          savedReports={data}
-                          setId={setReportToGenerate}
-                          reloadData={loadInitData}
-                        />
-                    </div>
-                  </div>
-                </PortletBody>
-              )}
-              {tab === 1 && (
-                <PortletBody>
-                  <div className="kt-section kt-margin-t-0">
-                    <div className="kt-section__body">
-                      <div className="kt-section">
-                          <span className="kt-section__sub">
-                            This section will integrate <code>Reports</code>
-                          </span>
-                            <div className="kt-separator kt-separator--dashed"/>
-                            <div className="kt-section__content">
-                              <TableComponent 
-                                headRows={assetSavedHeadRows}
-                                noAdd
-                                onEdit={tableActions('reports').onEdit}
-                                onView={tableActions('reports').onGenerateReport}
-                                onDelete={tableActions('reports').onDelete}
-                                rows={control.reportsRows}
-                                showView={true}
-                                title={'Reports'}
-                              />
-                            </div>
-                        </div>
-                    </div>
-                  </div>
-                </PortletBody>
-              )}
-              <PortletFooter>
-                <div className="kt-padding-30 text-center">
-                  <button
-                    className={`btn btn-primary btn-elevate kt-login__btn-primary ${clsx(
-                      {
-                        "kt-spinner kt-spinner--right kt-spinner--md kt-spinner--light": loadingPreview
-                      }
-                      )}`}
-                    onClick={handleSubmit}
-                    style={loadingButtonPreviewStyle}
-                    type="button"
-                  >
-                    <i className="la la-eye"/> Preview
-                  </button>{" "}
-                  <button
-                    className={`btn btn-secondary btn-elevate kt-login__btn-primary ${clsx(
-                      {
-                        "kt-spinner kt-spinner--right kt-spinner--md kt-spinner--dark": loadingReset
-                      }
-                      )}`}
-                    onClick={handleReset}
-                    style={loadingButtonResetStyle}
-                    type="button"
-                      >
-                    <i className="la la-recycle"/> Reset
-                  </button>
+      <div className="kt-form kt-form--label-right">
+        <Portlet>
+          <PortletHeader
+            toolbar={
+              <PortletHeaderToolbar>
+                <Tabs
+                  className="builder-tabs"
+                  component="div"
+                  onChange={(_, nextTab) => {
+                    setTab(nextTab);
+                    localStorage.setItem(localStorageActiveTabKey, nextTab);
+                  }}
+                  value={tab}
+                >
+                  {TabsTitles('reports')}
+                </Tabs>
+              </PortletHeaderToolbar>
+            }
+          />
+          {tab === 0 && (
+            <PortletBody>
+              <div className="kt-section kt-margin-t-0">
+                <div className="kt-section__body">
+                  <TabGeneral
+                    id={reportToGenerate}
+                    savedReports={data}
+                    setId={setReportToGenerate}
+                    reloadData={loadReportsData}
+                  />
                 </div>
-              </PortletFooter>
-            </Portlet>
-          </div>
-        )}
-      </Formik>
+              </div>
+            </PortletBody>
+          )}
+          {tab === 1 && (
+            <PortletBody>
+              <div className="kt-section kt-margin-t-0">
+                <div className="kt-section__body">
+                  <div className="kt-section">
+                    <span className="kt-section__sub">
+                      This section will integrate <code>Reports</code>
+                    </span>
+                    <div className="kt-separator kt-separator--dashed" />
+                    <div className="kt-section__content">
+                      <TableComponent2
+                        controlValues={tableControl.reports}
+                        headRows={assetSavedHeadRows}
+                        onDelete={tableActions('reports').onDelete}
+                        onEdit={tableActions('reports').onEdit}
+                        onView={tableActions('reports').onGenerateReport}
+                        onSelect={tableActions('reports').onSelect}
+                        paginationControl={({ rowsPerPage, page }) =>
+                          setTableControl(prev => ({
+                            ...prev,
+                            reports: {
+                              ...prev.reports,
+                              rowsPerPage: rowsPerPage,
+                              page: page,
+                            }
+                          }))
+                        }
+                        rows={control.reportsRows}
+                        searchControl={({ value, field }) => {
+                          setTableControl(prev => ({
+                            ...prev,
+                            reports: {
+                              ...prev.reports,
+                              search: value,
+                              searchBy: field,
+                            }
+                          }))
+                        }}
+                        sortByControl={({ orderBy, order }) => {
+                          setTableControl(prev => ({
+                            ...prev,
+                            reports: {
+                              ...prev.reports,
+                              orderBy: orderBy,
+                              order: order,
+                            }
+                          }))
+                        }}
+                        title={'Reports'}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </PortletBody>
+          )}
+        </Portlet>
+      </div>
     </>
   );
 }

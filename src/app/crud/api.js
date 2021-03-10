@@ -75,7 +75,8 @@ const getDBComplex = ({
   if (queryLike) {
     const qLike = queryLike.map(({ key, value }) => {
       const res = {};
-      res[key] = { "$regex": `(?i).*${value}.*` };
+      const isValueBool = typeof value === 'boolean';
+      res[key] = isValueBool ? value : { "$regex": `(?i).*${value}.*` };
       return res;
     });
     const queryString = JSON.stringify({ "$or": qLike });
