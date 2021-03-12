@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { Formik, setNestedObjectValues } from 'formik';
 import { get, merge } from 'lodash';
-import { FormHelperText, Switch, Tab, Tabs, Styles } from '@material-ui/core';
+import { FormHelperText, Styles, Switch, Tab, Tabs } from '@material-ui/core';
 import {
   initLayoutConfig,
   LayoutConfig,
@@ -27,10 +27,11 @@ const localStorageActiveTabKey = 'builderActiveTab';
 
 const Employees = () => {
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
-  const [policies, setPolicies] = useState(['']); 
+  const [employeeLayoutSelected, setEmployeeLayoutSelected] = useState({});
+  const [policies, setPolicies] = useState(['']);
   const [referencesSelectedId, setReferencesSelectedId] = useState(null);
   const [
-    selectReferenceConfirmation, 
+    selectReferenceConfirmation,
     setSelectReferenceConfirmation
   ] = useState(false);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
@@ -170,11 +171,11 @@ const Employees = () => {
 
   useEffect(() => {
     getDB('policies')
-    .then((response) => response.json())
-    .then((data) => {
-      setPolicies(data.response);
-    })
-    .catch((error) => console.log('error>', error));
+      .then((response) => response.json())
+      .then((data) => {
+        setPolicies(data.response);
+      })
+      .catch((error) => console.log('error>', error));
     loadEmployeesData();
   }, []);
 
@@ -235,7 +236,7 @@ const Employees = () => {
         if (collectionName === 'references') {
           setReferencesSelectedId(id);
         }
-      },
+      }
     };
   };
 
@@ -302,16 +303,16 @@ const Employees = () => {
                           <code>Employees List</code>
                         </span>
                         <ModalEmployees
-                        employeeProfileRows={control.employeeProfilesRows}
-                        id={control.idEmployee}
-                        reloadTable={() => loadEmployeesData('employees')}
-                        setShowModal={(onOff) =>
-                          setControl({
-                            ...control,
-                            openEmployeesModal: onOff,
-                          })
-                        }
-                        showModal={control.openEmployeesModal}
+                          employeeProfileRows={control.employeeProfilesRows}
+                          id={control.idEmployee}
+                          reloadTable={() => loadEmployeesData('employees')}
+                          setShowModal={(onOff) =>
+                            setControl({
+                              ...control,
+                              openEmployeesModal: onOff
+                            })
+                          }
+                          showModal={control.openEmployeesModal}
                         />
                         <div className='kt-separator kt-separator--dashed' />
                         <div className='kt-section__content'>
@@ -340,9 +341,9 @@ const Employees = () => {
                           This section will integrate <code>User Profiles</code>
                         </span>
                         <ModalEmployeeProfiles
-                            reloadTable={() =>
-                              loadEmployeesData('employeeProfiles')
-                            }
+                          reloadTable={() =>
+                            loadEmployeesData('employeeProfiles')
+                          }
                           setShowModal={(onOff) =>
                             setControl({
                               ...control,

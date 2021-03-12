@@ -24,14 +24,14 @@ import Permission from '../components/Permission';
 import AssetTable from '../components/AssetTable';
 import CustomFields from '../../Components/CustomFields/CustomFields';
 import {
-  SingleLine,
+  Checkboxes,
   MultiLine,
   Date as DateField,
   DateTime,
   DropDown,
   RadioButtons,
-  Checkboxes,
-  FileUpload 
+  SingleLine,
+  FileUpload
 } from '../../Components/CustomFields/CustomFieldsPreview';
 import ImageUpload from '../../Components/ImageUpload';
 import ModalYesNo from '../../Components/ModalYesNo';
@@ -43,7 +43,7 @@ import {
   postDB,
   getDB
 } from '../../../../crud/api';
-import ModalPdfAssignement from './ModalPdfAssignement'
+import ModalAssignmentReport from './ModalAssignmentReport';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -142,18 +142,18 @@ const collections = {
 };
 
 const ModalEmployees = ({
-  htmlData,
-  showModal,
-  setShowModal,
-  reloadTable,
   id,
-  employeeProfileRows
+  employeeProfileRows,
+  reloadTable,
+  showModal,
+  setShowModal
 }) => {
   const [assetRows, setAssetRows] = useState([]);
   const classes = useStyles();
   const classes4 = useStyles4();
   const [control, setControl] = useState(false);
   const [customFieldsTab, setCustomFieldsTab] = useState({});
+  const [htmlPreview, setHtmlPreview] = useState([])
   const [employeeProfilesFiltered, setEmployeeProfilesFiltered] = useState([]);
   const [idUserProfile, setIdUserProfile] = useState('');
   const [image, setImage] = useState(null);
@@ -178,75 +178,77 @@ const ModalEmployees = ({
 
   const executePolicies = (catalogueName) => {
     const formatDate = new Date()
-    const dformat = `${('0' + formatDate.getDate()).slice(-2)}/${('0' + formatDate.getMonth()+1).slice(-2)}/${formatDate.getFullYear()}`
+    const dformat = `${('0' + formatDate.getDate()).slice(-2)}/${('0' + formatDate.getMonth() + 1).slice(-2)}/${formatDate.getFullYear()}`
     const tformat = `${formatDate.getHours()}:${formatDate.getMinutes()}:${formatDate.getSeconds()}`
     const timeStamp = dformat + ' ' + tformat
     const read = false;
     const status = 'new'
     const filteredPolicies = policies.filter(
       (policy) => policy.selectedAction === catalogueName);
-      filteredPolicies.forEach(({ 
-        _id,
-        apiDisabled,
-        selectedIcon,
-        layout,
-        messageDisabled,
-        messageFrom,
-        messageNotification,
-        messageTo,
-        notificationDisabled,
-        notificationFrom,
-        notificationTo,
-        policyName,
-        selectedAction,
-        selectedCatalogue,
-        subjectMessage,
-        subjectNotification
-         }) => {
-          if(!messageDisabled){
-            return(
-            alert(
-              `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`
-              ),
-              postDB('messages', {
-                _id,
-                from: messageFrom,
-                html: layout,
-                read: read,
-                status: status,
-                subject: subjectMessage,
-                timeStamp: timeStamp,
-                to: messageTo
-              })
-              .then(data => data.json())
-              .then((response) => {
-                 const { } = response.response[0];
-              })
-              .catch((error) => console.log('ERROR', error))
-            )} else if(!notificationDisabled){
-            return(
-            alert(
-              `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`
-              ),
-              postDB('notifications', {
-                _id,
-                formatDate: formatDate,
-                from: notificationFrom,
-                icon: selectedIcon,
-                message: messageNotification,
-                read: read,
-                status: status,
-                subject: subjectNotification,
-                timeStamp: timeStamp,
-                to: notificationTo
-              })
-              .then(data => data.json())
-              .then((response) => {
-                 const { } = response.response[0];
-              })
-              .catch((error) => console.log('ERROR', error))
-            )}
-        })
+    filteredPolicies.forEach(({
+      _id,
+      apiDisabled,
+      selectedIcon,
+      layout,
+      messageDisabled,
+      messageFrom,
+      messageNotification,
+      messageTo,
+      notificationDisabled,
+      notificationFrom,
+      notificationTo,
+      policyName,
+      selectedAction,
+      selectedCatalogue,
+      subjectMessage,
+      subjectNotification
+    }) => {
+      if (!messageDisabled) {
+        return (
+          alert(
+            `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`
+          ),
+          postDB('messages', {
+            _id,
+            from: messageFrom,
+            html: layout,
+            read: read,
+            status: status,
+            subject: subjectMessage,
+            timeStamp: timeStamp,
+            to: messageTo
+          })
+            .then(data => data.json())
+            .then((response) => {
+              const { } = response.response[0];
+            })
+            .catch((error) => console.log('ERROR', error))
+        )
+      } else if (!notificationDisabled) {
+        return (
+          alert(
+            `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`
+          ),
+          postDB('notifications', {
+            _id,
+            formatDate: formatDate,
+            from: notificationFrom,
+            icon: selectedIcon,
+            message: messageNotification,
+            read: read,
+            status: status,
+            subject: subjectNotification,
+            timeStamp: timeStamp,
+            to: notificationTo
+          })
+            .then(data => data.json())
+            .then((response) => {
+              const { } = response.response[0];
+            })
+            .catch((error) => console.log('ERROR', error))
+        )
+      }
+    })
   }
 
   const handleChange = (name) => (event) => {
@@ -324,7 +326,7 @@ const ModalEmployees = ({
     const restRows = assetRows.filter((row) => row.id !== id);
     setAssetRows(restRows);
     updateDB('assets/', { assigned: null }, id)
-      .then((response) => {})
+      .then((response) => { })
       .catch((error) => console.log(error));
   };
 
@@ -385,7 +387,7 @@ const ModalEmployees = ({
         .then((data) => {
           const body = { ...data.response, assigned: _id };
           updateDB('assets/', { assigned: _id }, asset.id)
-            .then((response) => {})
+            .then((response) => { })
             .catch((error) => console.log(error));
         })
         .catch((error) => console.log(error));
@@ -393,21 +395,25 @@ const ModalEmployees = ({
   };
 
   useEffect(() => {
-    const userProfiles = employeeProfileRows.map((profile, ix) => ({
-      value: profile.id,
-      label: profile.name
-    }));
-    setEmployeeProfilesFiltered(userProfiles);
-
     getDB('settingsLayoutsEmployees')
       .then((response) => response.json())
       .then((data) => {
         const layoutOptions = data.response.map(
           ({ _id: value, name: label }) => ({ value, label })
         );
+        const employeeLayoutSelected = data.response.filter(({ _id }) => _id === layoutSelected.value)
+        setHtmlPreview(employeeLayoutSelected)
         setLayoutOptions(layoutOptions);
       })
       .catch((error) => console.log('error>', error));
+  }, [layoutSelected])
+
+  useEffect(() => {
+    const userProfiles = employeeProfileRows.map((profile, ix) => ({
+      value: profile.id,
+      label: profile.name
+    }));
+    setEmployeeProfilesFiltered(userProfiles);
 
     getDB('policies')
       .then((response) => response.json())
@@ -466,7 +472,7 @@ const ModalEmployees = ({
       .catch((error) => console.log(error));
   }, [id, employeeProfileRows]);
 
-  const openModalPdfAssignement = () => {
+  const openModalAssignementReport = () => {
     if (layoutSelected === null) {
       alert('Please select a Responsibility Layout first')
     } else {
@@ -476,13 +482,14 @@ const ModalEmployees = ({
 
   return (
     <div style={{ width: '1000px' }}>
-        <ModalPdfAssignement
-          assetRows={assetRows}
-          htmlData={htmlData}
-          layoutSelected={layoutSelected}
-          setShowModal={setControl}
-          showModal={control}
-        />
+      <ModalAssignmentReport
+        assetRows={assetRows}
+        htmlPreview={htmlPreview}
+        layoutSelected={layoutSelected}
+        setShowModal={setControl}
+        showModal={control}
+        values={values}
+      />
       <Dialog
         aria-labelledby='customized-dialog-title'
         onClose={handleCloseModal}
@@ -586,14 +593,14 @@ const ModalEmployees = ({
                 </TabContainer4>
                 <TabContainer4 dir={theme4.direction}>
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button 
-                      color='primary' 
-                      onClick={openModalPdfAssignement}
+                    <Button
+                      color='primary'
+                      onClick={openModalAssignementReport}
                       size='large'
                       style={{ marginBottom: '20px' }}
-                      variant='contained' 
-                    > 
-                      Generate Report 
+                      variant='contained'
+                    >
+                      Generate Report
                     </Button>
                   </div>
                   <div className='profile-tab-wrapper'>
@@ -617,8 +624,8 @@ const ModalEmployees = ({
                                 from='form'
                                 id={customField.id}
                                 onClick={() => alert(customField.content)}
-                                onDelete={() => {}}
-                                onSelect={() => {}}
+                                onDelete={() => { }}
+                                onSelect={() => { }}
                                 onUpdateCustomField={handleUpdateCustomFields}
                                 tab={tab}
                                 type={customField.content}
