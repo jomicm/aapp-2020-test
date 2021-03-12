@@ -71,34 +71,34 @@ const ModalPdfAssignement = ({
         EPC
       }
     ))
-    setAssignmentReportRows(filteredData)
+    setAssignmentReportRows(filteredData);
   }, [assetRows])
 
   useEffect(() => {
     let html = htmlPreview.length ? htmlPreview[0].layout : [];
-    const variables = getVariables(html)
+    const variables = getVariables(html);
     let offsetVar = 0;
     variables.forEach(({ varName, start, end }) => {
-      let htmlArr = html.split('')
-      const variableContent = mapVariables[varName]
-      const result = isNil(result)
+      let htmlArr = html.split('');
+      const variableContent = mapVariables[varName];
+      const result = isNil(result);
       if (result) {
         htmlArr.splice(start - offsetVar, (end - start) + 1, variableContent);
         offsetVar += varName.length - 2;
       }
       html = htmlArr.join('');
-      setFirstChunk(html)
+      setFirstChunk(html);
     })
   }, [htmlPreview])
 
   const previewPDF = () => {
-    let htmlToPrint = document.getElementsByClassName('modal-assignment-content')
+    let htmlToPrint = document.getElementsByClassName('modal-assignment-content');
     let windowToPrint = window.open('', 'Generate Report');
-    windowToPrint.document.open()
-    windowToPrint.document.write(`<html><head><title>Generate Report</title></head>`)
-    windowToPrint.document.write(htmlToPrint[0].innerHTML)
-    windowToPrint.document.write(`</html>`)
-    windowToPrint.document.close()
+    windowToPrint.document.open();
+    windowToPrint.document.write(`<html><head><title>Generate Report</title></head>`);
+    windowToPrint.document.write(htmlToPrint[0].innerHTML);
+    windowToPrint.document.write(`</html>`);
+    windowToPrint.document.close();
     windowToPrint.print();
   }
 
