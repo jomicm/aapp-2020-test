@@ -151,7 +151,7 @@ const ModalEmployees = ({
   const [assetRows, setAssetRows] = useState([]);
   const classes = useStyles();
   const classes4 = useStyles4();
-  const [control, setControl] = useState(false);
+  const [showModalReports, setShowModalReports] = useState(false);
   const [customFieldsTab, setCustomFieldsTab] = useState({});
   const [htmlPreview, setHtmlPreview] = useState([])
   const [employeeProfilesFiltered, setEmployeeProfilesFiltered] = useState([]);
@@ -279,7 +279,7 @@ const ModalEmployees = ({
     });
     setShowModal(false);
     setValue4(0);
-    setLayoutOptions([]);
+    // setLayoutOptions([]);
     setLayoutSelected(null);
     setAssetRows([]);
   };
@@ -402,11 +402,11 @@ const ModalEmployees = ({
           ({ _id: value, name: label }) => ({ value, label })
         );
         const employeeLayoutSelected = data.response.filter(({ _id }) => _id === layoutSelected.value)
-        setHtmlPreview(employeeLayoutSelected)
+        setHtmlPreview(employeeLayoutSelected);
         setLayoutOptions(layoutOptions);
       })
       .catch((error) => console.log('error>', error));
-  }, [layoutSelected])
+  }, [layoutSelected]);
 
   useEffect(() => {
     const userProfiles = employeeProfileRows.map((profile, ix) => ({
@@ -471,12 +471,11 @@ const ModalEmployees = ({
       })
       .catch((error) => console.log(error));
   }, [id, employeeProfileRows]);
-
-  const openModalAssignementReport = () => {
+  const openModalAssignmentReport = () => {
     if (layoutSelected === null) {
       alert('Please select a Responsibility Layout first')
     } else {
-      setControl(true);
+      setShowModalReports(true);
     }
   }
 
@@ -486,8 +485,8 @@ const ModalEmployees = ({
         assetRows={assetRows}
         htmlPreview={htmlPreview}
         layoutSelected={layoutSelected}
-        setShowModal={setControl}
-        showModal={control}
+        setShowModal={setShowModalReports}
+        showModal={showModalReports}
         values={values}
       />
       <Dialog
@@ -595,7 +594,7 @@ const ModalEmployees = ({
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                     <Button
                       color='primary'
-                      onClick={openModalAssignementReport}
+                      onClick={openModalAssignmentReport}
                       size='large'
                       style={{ marginBottom: '20px' }}
                       variant='contained'

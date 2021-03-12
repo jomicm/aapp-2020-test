@@ -1,18 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import ReactDOMServer from 'react-dom/server';
-import { EditorState, ContentState } from 'draft-js';
-import { Editor } from 'react-draft-wysiwyg';
-import htmlToDraft from 'html-to-draftjs';
-import isNil from 'lodash/isNil';
+import { pick } from 'lodash';
 import {
   Button,
   Dialog,
   DialogTitle,
-  DialogContent,
-  DialogActions,
   Divider,
   IconButton,
-  TextField,
   Typography
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
@@ -33,7 +26,7 @@ const AssignmentReportHeadRows = [
   { id: 'epc', label: 'EPC' }
 ];
 
-const ModalPdfAssignement = ({
+const ModalAssignmentReport = ({
   assetRows,
   htmlPreview,
   setShowModal,
@@ -41,57 +34,52 @@ const ModalPdfAssignement = ({
   values
 }) => {
   const [assignmentReportRows, setAssignmentReportRows] = useState([]);
-  const [disabledButton, setDisabledButton] = useState(false);
-  const [firstChunk, setFirstChunk] = useState('');
-  const [secondChunk, setSecondChunk] = useState('');
-  const { name, lastName } = values;
+  const [htmlTransformed, setHtmlTransformed] = useState({});
   const formatDate = new Date();
-  const dformat = `${('0' + formatDate.getDate()).slice(-2)}/${('0' + formatDate.getMonth() + 1).slice(-2)}/${formatDate.getFullYear()}`;
-  const tformat = `${formatDate.getHours()}:${formatDate.getMinutes()}:${formatDate.getSeconds()}`;
+  const currentDate = `${(`0${formatDate.getDate()}`).slice(-2)}/${(`0${formatDate.getMonth() + 1}`).slice(-2)}/${formatDate.getFullYear()}`;
+  const currentTime = `${formatDate.getHours()}:${formatDate.getMinutes()}:${formatDate.getSeconds()}`;
 
   const mapVariables = {
-    employeeName: `${name} ${lastName}`,
+    employeeName: `${values.name} ${values.lastName}`,
     employeeAssets: '',
-    currentDate: dformat,
-    currentTime: tformat
-  }
+    currentDate,
+    currentTime
+  };
 
   const handleCloseModal = () => {
     setShowModal(false);
   };
 
   useEffect(() => {
-    const filteredData = assetRows.map(({ name, brand, model, serial, EPC }, ix) => (
-      {
-        no: ix + 1,
-        name,
-        brand,
-        model,
-        serial,
-        EPC
-      }
-    ))
-    setAssignmentReportRows(filteredData);
-  }, [assetRows])
+    const filteredAssets = assetRows.map(
+      (asset, ix) => ({ no: ix + 1, ...pick(asset, ['name', 'brand', 'model', 'serial', 'EPC']) })
+    );
+    setAssignmentReportRows(filteredAssets);
+  }, [assetRows]);
 
   useEffect(() => {
-    let html = htmlPreview.length ? htmlPreview[0].layout : [];
+    let html = htmlPreview.length ? htmlPreview[0].layout : '';
     const variables = getVariables(html);
     let offsetVar = 0;
+
     variables.forEach(({ varName, start, end }) => {
       let htmlArr = html.split('');
       const variableContent = mapVariables[varName];
-      const result = isNil(result);
-      if (result) {
+      if (variableContent) {
         htmlArr.splice(start - offsetVar, (end - start) + 1, variableContent);
-        offsetVar += varName.length - 2;
+        offsetVar += varName.length - variableContent.length + 3;
       }
       html = htmlArr.join('');
-      setFirstChunk(html);
-    })
+    });
+    const assetTableIndex = html.indexOf('%{employeeAssets}');
+    html = html.replace(/%{employeeAssets}/g, '');
+    setHtmlTransformed({
+        firsPart: assetTableIndex >= 0 ? html.substr(0, assetTableIndex) : html,
+        secondPart: assetTableIndex >= 0 ? html.substr(assetTableIndex, html.length - 1) : ''
+      });
   }, [htmlPreview])
 
-  const previewPDF = () => {
+  const previewPdf = () => {
     let htmlToPrint = document.getElementsByClassName('modal-assignment-content');
     let windowToPrint = window.open('', 'Generate Report');
     windowToPrint.document.open();
@@ -111,7 +99,7 @@ const ModalPdfAssignement = ({
         className='modal-pdf'
       >
         <div className='modal-pdf-size'>
-          <div style={disabledButton ? { display: 'none' } : { display: 'block' }}>
+          <div>
             <DialogTitle disableTypography id='customized-dialog-title' className='title-pdf-bar' onClose={handleCloseModal}>
               <Typography variant='h6'> Generate Report </Typography>
               <IconButton
@@ -126,9 +114,8 @@ const ModalPdfAssignement = ({
           <div className='button-print-pdf'>
             <Button
               color='primary'
-              onClick={previewPDF}
+              onClick={previewPdf}
               size='large'
-              style={disabledButton ? { display: 'none' } : { display: 'block' }}
               variant='contained'
             >
               Print / PDF
@@ -138,14 +125,14 @@ const ModalPdfAssignement = ({
             <PortletBody>
               <div>
                 <WrapperEditor
-                  html={firstChunk}
+                  html={htmlTransformed.firsPart}
                 />
                 <SimpleTable
                   headRows={AssignmentReportHeadRows}
                   rows={assignmentReportRows}
                 />
                 <WrapperEditor
-                  html={secondChunk}
+                  html={htmlTransformed.secondPart}
                 />
               </div>
             </PortletBody>
@@ -156,4 +143,4 @@ const ModalPdfAssignement = ({
   )
 }
 
-export default ModalPdfAssignement;
+export default ModalAssignmentReport;
