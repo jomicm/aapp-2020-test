@@ -175,11 +175,11 @@ const ModalEmployees = ({
 
   const executePolicies = (catalogueName) => {
     const formatDate = new Date()
-    const dformat = `${(`0${formatDate.getDate()}`).slice(-2)}/${(`0${formatDate.getMonth() + 1}`).slice(-2)}/${formatDate.getFullYear()}`;
-    const tformat = `${formatDate.getHours()}:${formatDate.getMinutes()}:${formatDate.getSeconds()}`
-    const timeStamp = dformat + ' ' + tformat
+    const currentDate = `${(`0${formatDate.getDate()}`).slice(-2)}/${(`0${formatDate.getMonth() + 1}`).slice(-2)}/${formatDate.getFullYear()}`;
+    const currentTime = `${formatDate.getHours()}:${formatDate.getMinutes()}:${formatDate.getSeconds()}`;
+    const timeStamp = currentDate + ' ' + currentTime;
     const read = false;
-    const status = 'new'
+    const status = 'new';
     const filteredPolicies = policies.filter(
       (policy) => policy.selectedAction === catalogueName);
       filteredPolicies.forEach(({ 
