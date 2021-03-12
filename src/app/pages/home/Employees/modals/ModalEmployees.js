@@ -175,7 +175,7 @@ const ModalEmployees = ({
 
   const executePolicies = (catalogueName) => {
     const formatDate = new Date()
-    const dformat = `${('0' + formatDate.getDate()).slice(-2)}/${('0' + formatDate.getMonth()+1).slice(-2)}/${formatDate.getFullYear()}`
+    const dformat = `${(`0${formatDate.getDate()}`).slice(-2)}/${(`0${formatDate.getMonth() + 1}`).slice(-2)}/${formatDate.getFullYear()}`;
     const tformat = `${formatDate.getHours()}:${formatDate.getMinutes()}:${formatDate.getSeconds()}`
     const timeStamp = dformat + ' ' + tformat
     const read = false;
