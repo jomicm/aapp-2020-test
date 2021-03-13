@@ -19,9 +19,9 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const BaseFields = ({ formState, localProps, values, catalogue }) => {
+const BaseFields = ({ formState, localProps, values, catalogue, collection }) => {
   const [formValidation, setFormValidation] = formState;
-  const { fields, fieldsToValidate } = useFieldValidator('user');
+  const { fields, fieldsToValidate } = useFieldValidator(collection);
   const classes = useStyles();
   const baseFields = allBaseFields[catalogue] || {};
 
@@ -54,7 +54,7 @@ const BaseFields = ({ formState, localProps, values, catalogue }) => {
       const componentProps = {...props, ...props.componentProps};
 
       return <TextField {...componentProps} />
-    }
+    },
   };
 
   const renderBaseFields = () => Object.entries(completeBaseFields).map(([key, val]) => {
@@ -67,7 +67,6 @@ const BaseFields = ({ formState, localProps, values, catalogue }) => {
     const isValidVoid = !(fieldsToValidate || []).includes(key) ? true :
       (ownValidFn ? ownValidFn() : defaultVoidValidation);
     const isValidRegEx = regEx ? (new RegExp(regEx)).test(values[validationId]) : true;
-
     if (baseComponents[component]) {
       return (
         <FieldValidator

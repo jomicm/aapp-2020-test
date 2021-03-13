@@ -22,13 +22,12 @@ import {
 } from "@material-ui/core/styles";
 import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
-import CustomFields from '../../Components/CustomFields/CustomFields';
+import { isEmpty } from 'lodash';
 
-// import './ModalAssetCategories.scss';
+import BaseFields from '../../Components/BaseFields/BaseFields';
+import CustomFields from '../../Components/CustomFields/CustomFields';
 import ImageUpload from '../../Components/ImageUpload';
 import { postDB, getOneDB, updateDB, postFILE } from '../../../../crud/api';
-import ModalYesNo from '../../Components/ModalYesNo';
-import Permission from '../components/Permission';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 
 // Example 5 - Modal
@@ -121,6 +120,11 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
     setValue4(index);
   }
 
+  const [formValidation, setFormValidation] = useState({
+    enabled: false,
+    isValidForm: {}
+  });
+
   // Example 1 - TextField
   const classes = useStyles();
   const [values, setValues] = useState({
@@ -136,7 +140,21 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
     setValues({ ...values, [name]: event.target.value });
   };
 
+  const baseFieldsLocalProps = {
+    name: {
+      componentProps: {
+        onChange: handleChange('name')
+      }
+    },
+  };
+
   const handleSave = () => {
+    setFormValidation({ ...formValidation, enabled: true });
+    if (!isEmpty(formValidation.isValidForm)) {
+      alert('Please fill out missing fields')
+      return;
+    }
+
     const fileExt = getFileExtension(image);
     const body = { ...values, customFieldsTab, isAssetRepository, fileExt };
     if (!id) {
@@ -168,7 +186,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   const handleCloseModal = () => {
     setCustomFieldsTab({});
     setProfilePermissions([]);
-    setValues({ 
+    setValues({
       name: "",
       categoryPic: '/media/misc/placeholder-image.jpg',
       categoryPicDefault: '/media/misc/placeholder-image.jpg',
@@ -177,16 +195,20 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
     setShowModal(false);
     setValue4(0);
     setIsAssetRepository(false);
+    setFormValidation({
+      enabled: false,
+      isValidForm: false
+    });
   };
 
   useEffect(() => {
-    if(!id || !Array.isArray(id)) {
+    if (!id || !Array.isArray(id)) {
       return;
     }
-      
+
     getOneDB('employeeProfiles/', id[0])
       .then(response => response.json())
-      .then(data => { 
+      .then(data => {
         const { _id, name, depreciation, customFieldsTab, profilePermissions, isAssetRepository, fileExt } = data.response;
         const imageURL = getImageURL(id, 'employeeProfiles', fileExt);
         const obj = { name, depreciation, imageURL };
@@ -198,17 +220,21 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
       .catch(error => console.log(error));
   }, [id]);
 
+  useEffect(() => {
+    setFormValidation({ ...formValidation, enabled: true });
+  }, [values])
+
   const [customFieldsTab, setCustomFieldsTab] = useState({});
 
   const modules = [
-    {key:'dashboard', name: 'Dashboard'},
-    {key:'assets', name: 'Assets'},
-    {key:'processes', name: 'Processes'},
-    {key:'users', name: 'Users'},
-    {key:'employees', name: 'Employees'},
-    {key:'locations', name: 'Locations'},
-    {key:'reports', name: 'Reports'},
-    {key:'settings', name: 'Settings'},
+    { key: 'dashboard', name: 'Dashboard' },
+    { key: 'assets', name: 'Assets' },
+    { key: 'processes', name: 'Processes' },
+    { key: 'users', name: 'Users' },
+    { key: 'employees', name: 'Employees' },
+    { key: 'locations', name: 'Locations' },
+    { key: 'reports', name: 'Reports' },
+    { key: 'settings', name: 'Settings' },
   ];
 
   const [profilePermissions, setProfilePermissions] = useState({});
@@ -219,7 +245,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   }
 
   return (
-    <div style={{width:'1000px'}}>
+    <div style={{ width: '1000px' }}>
       <Dialog
         onClose={handleCloseModal}
         aria-labelledby="customized-dialog-title"
@@ -229,11 +255,11 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
           id="customized-dialog-title"
           onClose={handleCloseModal}
         >
-          {`${id ? 'Edit' : 'Add' } Employee Profiles`}
+          {`${id ? 'Edit' : 'Add'} Employee Profiles`}
           {/* Add/Edit User Profiles */}
         </DialogTitle5>
         <DialogContent5 dividers>
-          <div className="kt-section__content" style={{margin:'-16px'}}>
+          <div className="kt-section__content" style={{ margin: '-16px' }}>
             <div className={classes4.root}>
               <Paper className={classes4.root}>
                 <Tabs
@@ -259,38 +285,24 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
                       Employee Profile Photo
                     </ImageUpload>
                     <div className="profile-tab-wrapper__content">
-                      <TextField
-                        id="standard-name"
-                        label="Name"
-                        className={classes.textField}
-                        value={values.name}
-                        onChange={handleChange("name")}
-                        margin="normal"
+                      <BaseFields
+                        catalogue={'employeeReferences'}
+                        collection={'employeeProfiles'}
+                        formState={[formValidation, setFormValidation]}
+                        localProps={baseFieldsLocalProps}
+                        values={values}
                       />
                       <FormControlLabel
                         value="start"
-                        control={<Switch color="primary" checked={isAssetRepository} onChange={e => setIsAssetRepository(e.target.checked)}/>}
+                        control={<Switch color="primary" checked={isAssetRepository} onChange={e => setIsAssetRepository(e.target.checked)} />}
                         label="Asset Repository"
                         labelPlacement="start"
                       />
                     </div>
                   </div>
                 </TabContainer4>
-                {/* <TabContainer4 dir={theme4.direction}>
-                  <div style={{ display:'flex', flexWrap:'wrap', justifyContent: 'space-around', padding: '0 20px' }}>
-                    {modules.map((module, index) => {
-                      return <Permission
-                                originalChecked={profilePermissions}
-                                key={module.key}
-                                id={module.key}
-                                title={module.name}
-                                setPermissions={handleSetPermissions}
-                              />
-                    })}
-                  </div>
-                </TabContainer4> */}
                 <TabContainer4 dir={theme4.direction}>
-                  <CustomFields 
+                  <CustomFields
                     customFieldsTab={customFieldsTab}
                     setCustomFieldsTab={setCustomFieldsTab}
                   />
@@ -304,7 +316,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
             Save changes
           </Button>
         </DialogActions5>
-      </Dialog>    
+      </Dialog>
     </div>
   )
 };

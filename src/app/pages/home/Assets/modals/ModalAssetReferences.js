@@ -8,19 +8,10 @@ import {
   DialogActions,
   Typography,
   IconButton,
-  Tab, 
-  AppBar, 
-  Tabs, 
+  Tab,
+  Tabs,
   Paper,
-  TextField,
-  Checkbox,
-  FormControlLabel,
-  Switch,
   InputAdornment,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem
 } from "@material-ui/core";
 import {
   withStyles,
@@ -29,11 +20,14 @@ import {
 } from "@material-ui/core/styles";
 import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
-import CustomFields from '../../Components/CustomFields/CustomFields';
+import { isEmpty } from 'lodash';
 
+import CustomFields from '../../Components/CustomFields/CustomFields';
 import './ModalAssetCategories.scss';
 import ImageUpload from '../../Components/ImageUpload';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
+import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import './ModalAssetReferences.scss';
 
 import {
   SingleLine,
@@ -45,19 +39,19 @@ import {
   Checkboxes,
   FileUpload
 } from '../../Components/CustomFields/CustomFieldsPreview';
-import './ModalAssetReferences.scss';
-import { getFileExtension, saveImage, getImageURL } from '../../utils';
+
+import BaseFields from '../../Components/BaseFields/BaseFields';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
-    singleLine: <SingleLine { ...props } />,
-    multiLine: <MultiLine { ...props } />,
-    date: <Date { ...props } />,
-    dateTime: <DateTime { ...props } />,
-    dropDown: <DropDown { ...props } />,
-    radioButtons: <RadioButtons { ...props } />,
-    checkboxes: <Checkboxes { ...props } />,
-    fileUpload: <FileUpload { ...props } />
+    singleLine: <SingleLine {...props} />,
+    multiLine: <MultiLine {...props} />,
+    date: <Date {...props} />,
+    dateTime: <DateTime {...props} />,
+    dropDown: <DropDown {...props} />,
+    radioButtons: <RadioButtons {...props} />,
+    checkboxes: <Checkboxes {...props} />,
+    fileUpload: <FileUpload {...props} />
   };
   return customFieldsPreviewObj[props.type];
 };
@@ -167,6 +161,11 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
     setValue5(newValue);
   }
 
+  const [formValidation, setFormValidation] = useState({
+    enabled: false,
+    isValidForm: {}
+  });
+
   // Example 1 - TextField
   const classes = useStyles();
   const [values, setValues] = useState({
@@ -185,7 +184,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
   const [tabs, setTabs] = useState([]);
 
   const handleChange = name => event => {
-    const value = event.target.value;
+    const value = name === 'selectedProfile' ? event.value : event.target.value;
     setValues(prev => ({ ...prev, [name]: value }));
     // Load Custom Fields based on Select Control [Category Selected]
     if (name === 'selectedProfile') {
@@ -201,23 +200,29 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
     if (!profile || !profile.id) return;
     console.log('id:', id)
     getOneDB('categories/', profile.id)
-    .then(response => response.json())
-    .then(data => { 
-      console.log(data.response);
-      const { customFieldsTab, depreciation } = data.response;
-      console.log('customFieldsTab:', customFieldsTab)
-      const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
-      tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
+      .then(response => response.json())
+      .then(data => {
+        console.log(data.response);
+        const { customFieldsTab, depreciation } = data.response;
+        console.log('customFieldsTab:', customFieldsTab)
+        const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
+        tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
 
-      console.log('tabs:', tabs)
-      setCustomFieldsTab(customFieldsTab);
-      setValues(prev => ({ ...prev, depreciation }));
-      setTabs(tabs);
-    })
-    .catch(error => console.log(error));
+        console.log('tabs:', tabs)
+        setCustomFieldsTab(customFieldsTab);
+        setValues(prev => ({ ...prev, depreciation }));
+        setTabs(tabs);
+      })
+      .catch(error => console.log(error));
   };
 
   const handleSave = () => {
+    setFormValidation({ ...formValidation, enabled: true });
+    if (!isEmpty(formValidation.isValidForm)) {
+      alert('Please fill out missing fields')
+      return;
+    }
+
     const fileExt = getFileExtension(image);
     const body = { ...values, customFieldsTab, fileExt };
     body.price = Number(body.price)
@@ -246,10 +251,55 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
     reloadTable();
   };
 
+
+  const baseFieldsLocalProps = {
+    category: {
+      componentProps: {
+        onChange: handleChange('selectedProfile'),
+        options: values.profiles,
+        value: values.selectedProfile
+      }
+    },
+    name: {
+      componentProps: {
+        onChange: handleChange('name')
+      }
+    },
+    brand: {
+      componentProps: {
+        onChange: handleChange("brand")
+      }
+    },
+    model: {
+      componentProps: {
+        onChange: handleChange("model")
+      }
+    },
+    price: {
+      ownValidFn: () => !!values.price || values.price === 0,
+      componentProps: {
+        onChange: handleChange('price'),
+        value: values.price,
+        type: "number",
+        InputProps: {
+          startAdornment: <InputAdornment position="start">$</InputAdornment>,
+        }
+      }
+    },
+    depreciation: {
+      ownValidFn: () => !!values.depreciation || values.depreciation === 0,
+      componentProps: {
+        onchange: handleChange("depreciation"),
+        type: "number",
+        disabled: true
+      }
+    }
+  };
+
   const handleCloseModal = () => {
     console.log('HANDLE CLOSE MODAL!')
     setCustomFieldsTab({});
-    setValues({ 
+    setValues({
       name: '',
       brand: '',
       model: '',
@@ -263,20 +313,23 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
     setShowModal(false);
     setValue4(0);
     setTabs([]);
+    setFormValidation({
+      enabled: false,
+      isValidForm: false
+    });
   };
 
   useEffect(() => {
     if (!showModal) return;
     console.log('Use Eff Ref>', id)
 
-    const profiles = categoryRows.map(cat => ({ id: cat.id, name: cat.name }));
-    console.log('profiles:', profiles)
+    const profiles = categoryRows.map(cat => ({ value: cat.id, label: cat.name }));
     setValues(prev => ({ ...prev, profiles }));
     if (!id || !Array.isArray(id)) return;
-      
+
     getOneDB('references/', id[0])
       .then(response => response.json())
-      .then(data => { 
+      .then(data => {
         console.log(data.response);
         const { name, brand, model, price, depreciation, customFieldsTab, fileExt } = data.response;
         setValues({
@@ -296,8 +349,9 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
       .catch(error => console.log(error));
   }, [showModal]);
 
-  // const [customFieldsTab, setCustomFieldsTab] = useState({});
-  // const [isNew, setIsNew] = useState(true);
+  useEffect(() => {
+    setFormValidation({ ...formValidation, enabled: true });
+  }, [values])
 
   // Function to update customFields
   const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
@@ -311,7 +365,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
   };
 
   return (
-    <div style={{width:'1000px'}}>
+    <div style={{ width: '1000px' }}>
       <Dialog
         onClose={handleCloseModal}
         aria-labelledby="customized-dialog-title"
@@ -321,10 +375,10 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
           id="customized-dialog-title"
           onClose={handleCloseModal}
         >
-          {`${id ? 'Edit' : 'Add' } Asset References`}
+          {`${id ? 'Edit' : 'Add'} Asset References`}
         </DialogTitle5>
         <DialogContent5 dividers>
-          <div className="kt-section__content" style={{margin:'-16px'}}>
+          <div className="kt-section__content" style={{ margin: '-16px' }}>
             <div className={classes4.root}>
               <Paper className={classes4.root}>
                 <Tabs
@@ -335,9 +389,9 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
                   variant="fullWidth"
                 >
                   <Tab label="Reference" />
-                  { tabs.map((tab, index) => (
+                  {tabs.map((tab, index) => (
                     <Tab key={`tab-reference-${index}`} label={tab.info.name} />
-                  )) }
+                  ))}
                 </Tabs>
               </Paper>
               <SwipeableViews
@@ -351,98 +405,40 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
                       Asset Reference Photo
                     </ImageUpload>
                     <div className="profile-tab-wrapper__content">
-                      <FormControl className={classes.textField}>
-                        <InputLabel htmlFor="age-simple">Category</InputLabel>
-                        <Select
-                          value={values.selectedProfile}
-                          // onChange={e => setValues({...values, selectedProfile: e.target.value})}
-                          onChange={handleChange('selectedProfile')}
-                          inputProps={{
-                            name: 'age',
-                            id: 'age-simple',
-                          }}
-                        >
-                          <MenuItem value="">
-                            <em>None</em>
-                          </MenuItem>
-                          {(values.profiles || []).map((opt, ix) => (
-                            <MenuItem key={`opt-${ix}`} value={ix}>{opt.name}</MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                      <TextField
-                        id="standard-name"
-                        label="Name"
-                        className={classes.textField}
-                        value={values.name}
-                        onChange={handleChange("name")}
-                        margin="normal"
-                      />
-                      <TextField
-                        id="standard-brand"
-                        label="Brand"
-                        className={classes.textField}
-                        value={values.brand}
-                        onChange={handleChange("brand")}
-                        margin="normal"
-                      />
-                      <TextField
-                        id="standard-model"
-                        label="Model"
-                        className={classes.textField}
-                        value={values.model}
-                        onChange={handleChange("model")}
-                        margin="normal"
-                      />
-                      <TextField
-                        id="standard-price"
-                        label="Price"
-                        value={values.price}
-                        onChange={handleChange("price")}
-                        type="number"
-                        className={classes.textField}
-                        margin="normal"
-                        InputProps={{
-                          startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                        }}
-                      />
-                      <TextField
-                        id="standard-depreciation"
-                        label="Depreciation"
-                        value={values.depreciation}
-                        onChange={handleChange("depreciation")}
-                        type="number"
-                        className={classes.textField}
-                        margin="normal"
-                        disabled
+                      <BaseFields
+                        catalogue={'references'}
+                        collection={'references'}
+                        formState={[formValidation, setFormValidation]}
+                        localProps={baseFieldsLocalProps}
+                        values={values}
                       />
                     </div>
                   </div>
                 </TabContainer4>
                 {tabs.map(tab => (
                   <TabContainer4 dir={theme4.direction}>
-                  <div className="modal-asset-reference">
-                    {Array(tab.content[1].length === 0 ? 1 : 2).fill(0).map((col, colIndex) => (
-                      <div className="modal-asset-reference__list-field" >
-                        {tab.content[colIndex].map(customField => (
-                          <CustomFieldsPreview 
-                            id={customField.id}
-                            type={customField.content}
-                            values={customField.values}
-                            onDelete={() => {}}
-                            onSelect={() => {}}
-                            columnIndex={colIndex}
-                            from="form"
-                            tab={tab}
-                            onUpdateCustomField={handleUpdateCustomFields}
-                            // customFieldIndex={props.customFieldIndex}
-                            onClick={() => alert(customField.content)}
-                          />
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                  </TabContainer4>  
+                    <div className="modal-asset-reference">
+                      {Array(tab.content[1].length === 0 ? 1 : 2).fill(0).map((col, colIndex) => (
+                        <div className="modal-asset-reference__list-field" >
+                          {tab.content[colIndex].map(customField => (
+                            <CustomFieldsPreview
+                              id={customField.id}
+                              type={customField.content}
+                              values={customField.values}
+                              onDelete={() => { }}
+                              onSelect={() => { }}
+                              columnIndex={colIndex}
+                              from="form"
+                              tab={tab}
+                              onUpdateCustomField={handleUpdateCustomFields}
+                              // customFieldIndex={props.customFieldIndex}
+                              onClick={() => alert(customField.content)}
+                            />
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </TabContainer4>
                 ))}
               </SwipeableViews>
             </div>
@@ -453,7 +449,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
             Save changes
           </Button>
         </DialogActions5>
-      </Dialog>    
+      </Dialog>
     </div>
   )
 };
