@@ -23,8 +23,6 @@ const getHeaders = (isFile = false) => {
   // const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVlYTdiNjg0M2U0ZWRhODVjNDhmZjVkOSIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImRldkBkZXYuY29tIiwiaWF0IjoxNjA2ODY5MzAxLCJleHAiOjE2MTU1MDkzMDF9.NjUoP4pjXxCcMJn2_1rIdwKCGuRlk78iuCoZhcORsI4';
   const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVlYTdiNjg0M2U0ZWRhODVjNDhmZjVkOSIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImRldkBkZXYuY29tIiwiaWF0IjoxNjE1NTExMDU4LCJleHAiOjE2MjQxNTEwNTh9.zTKbXAlfJ0slH9TDkkdS-dch8NecYv2nEbeKwtJmnGY';
 
-
-
   const headers = new Headers();
   headers.set('Authorization', `Bearer ${token}`);
   if (!isFile) {
@@ -78,7 +76,8 @@ const getDBComplex = ({
   if (queryLike) {
     const qLike = queryLike.map(({ key, value }) => {
       const res = {};
-      res[key] = { "$regex": `(?i).*${value}.*` };
+      const isValueBool = typeof value === 'boolean';
+      res[key] = isValueBool ? value : { "$regex": `(?i).*${value}.*` };
       return res;
     });
     const queryString = JSON.stringify({ "$or": qLike });

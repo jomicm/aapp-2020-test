@@ -1,112 +1,30 @@
 /* eslint-disable no-restricted-imports */
-import React, { useMemo, useState, useEffect } from "react";
-import { shallowEqual, useDispatch, useSelector } from "react-redux";
-import { Formik, setNestedObjectValues } from "formik";
-import { get, merge, isEmpty } from "lodash";
-import { FormHelperText, Switch, Tab, Tabs, Styles } from "@material-ui/core";
-import clsx from "clsx";
-import { metronic, initLayoutConfig, LayoutConfig } from "../../../../_metronic";
+import React, { useState, useEffect } from 'react';
+import { isEmpty } from 'lodash';
+import { Tabs } from '@material-ui/core';
 import {
   Portlet,
   PortletBody,
-  PortletFooter,
   PortletHeader,
   PortletHeaderToolbar
-} from "../../../partials/content/Portlet";
-import { CodeBlock } from "../../../partials/content/CodeExample";
-import Notice from "../../../partials/content/Notice";
-
-import CodeExample from '../../../partials/content/CodeExample';
-
-import {
-  makeStyles,
-  lighten,
-  withStyles,
-  useTheme
-} from "@material-ui/core/styles";
-import {
-  Checkbox,
-  Card,
-  CardHeader,
-  Grid,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Button,
-  Divider,
-} from "@material-ui/core";
+} from '../../../partials/content/Portlet';
 
 // AApp Components
 import { TabsTitles } from '../Components/Translations/tabsTitles';
-import TableComponent from '../Components/TableComponent';
+import TableComponent2 from '../Components/TableComponent2';
 import ModalProcessStages from './modals/ModalProcessStages';
-import Autocomplete from '../Components/Inputs/Autocomplete';
 import ModalProcesses from './modals/ModalProcesses';
 
-import TreeView from '../Components/TreeViewComponent';
-// import GoogleMaps from '../Components/GoogleMaps';
-// import './Assets.scss';
-
-//Icons
-import CloseIcon from "@material-ui/icons/Close";
-import DeleteIcon from '@material-ui/icons/Delete';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
-import DraftsIcon from '@material-ui/icons/Drafts';
-import SendIcon from '@material-ui/icons/Send';
-import ExpandLess from '@material-ui/icons/ExpandLess';
-import ExpandMore from '@material-ui/icons/ExpandMore';
-import StarBorder from '@material-ui/icons/StarBorder';
-
-
 //DB API methods
-import { getDB, deleteDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 import LiveProcesses from './components/LiveProcesses';
 
-const localStorageActiveTabKey = "builderActiveTab";
+const localStorageActiveTabKey = 'builderActiveTab';
 export default function Processes() {
-  
+
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
-  const dispatch = useDispatch();
-  const { layoutConfig } = useSelector(
-    ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
-    shallowEqual
-  );
-  const [loadingPreview, setLoadingPreview] = useState(false);
-  const [loadingButtonPreviewStyle, setLoadingButtonPreviewStyle] = useState({
-    paddingRight: "2.5rem"
-  });
-  const [loadingReset, setLoadingReset] = useState(false);
-  const [loadingButtonResetStyle, setLoadingButtonResetStyle] = useState({
-    paddingRight: "2.5rem"
-  });
-
-  const enableLoadingPreview = () => {
-    setLoadingPreview(true);
-    setLoadingButtonPreviewStyle({ paddingRight: "3.5rem" });
-  };
-  const enableLoadingReset = () => {
-    setLoadingReset(true);
-    setLoadingButtonResetStyle({ paddingRight: "3.5rem" });
-  };
-  const updateLayoutConfig = _config => {
-    dispatch(metronic.builder.actions.setLayoutConfigs(_config));
-    setTimeout(() => {
-      window.location.reload();
-    }, 1000);
-  };
-
-  const initialValues = useMemo(
-    () =>
-      merge(
-        // Fulfill changeable fields.
-        LayoutConfig,
-        layoutConfig
-      ),
-    [layoutConfig]
-  );
 
   const createProcessStageRow = (id, name, fn, type, custom, notification, creator, creation_date) => {
     return { id, name, function: fn, type, custom, notification, creator, creation_date };
@@ -114,80 +32,130 @@ export default function Processes() {
   const createProcessRow = (id, name, numberOfStages, creator, creation_date) => {
     return { id, name, numberOfStages, creator, creation_date };
   };
-  // const createUserProfilesRow = (id, name, creator, creation_date) => {
-  //   return { id, name, creator, creation_date };
-  // };
-
-  // const employeeProfilesHeadRows = [
-  //   // { id: "id", numeric: true, disablePadding: false, label: "ID" },
-  //   { id: "name", numeric: false, disablePadding: false, label: "Name" },
-  //   { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-  //   { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
-  // ];
 
   const processStagesHeadRows = [
-    { id: "name", numeric: false, disablePadding: false, label: "Name" },
-    { id: "function", numeric: false, disablePadding: false, label: "Function" },
-    { id: "type", numeric: false, disablePadding: false, label: "Type" },
-    { id: "custom", numeric: false, disablePadding: false, label: "Custom" },
-    { id: "notification", numeric: false, disablePadding: false, label: "Notification" },
-    { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-    { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
+    { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
+    { id: 'function', numeric: false, disablePadding: false, label: 'Function' },
+    { id: 'type', numeric: false, disablePadding: false, label: 'Type' },
+    { id: 'custom', numeric: false, disablePadding: false, label: 'Custom' },
+    { id: 'notification', numeric: false, disablePadding: false, label: 'Notification' },
+    { id: 'creator', numeric: false, disablePadding: false, label: 'Creator' },
+    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date' }
   ];
 
   const liveProcessesHeadRows = [
-    { id: "folio", numeric: false, disablePadding: false, label: "Folio" },
-    { id: "name", numeric: false, disablePadding: false, label: "Name" },
-    { id: "type", numeric: false, disablePadding: false, label: "Type" },
-    { id: "date", numeric: false, disablePadding: false, label: "Date" },
-    { id: "approvals", numeric: false, disablePadding: false, label: "Approvals" },
-    { id: "status", numeric: false, disablePadding: false, label: "Status" },
-    { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-    { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
+    { id: 'folio', numeric: false, disablePadding: false, label: 'Folio' },
+    { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
+    { id: 'type', numeric: false, disablePadding: false, label: 'Type' },
+    { id: 'date', numeric: false, disablePadding: false, label: 'Date' },
+    { id: 'approvals', numeric: false, disablePadding: false, label: 'Approvals' },
+    { id: 'status', numeric: false, disablePadding: false, label: 'Status' },
+    { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
+    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
   ];
- 
-  const createEmployeeRow = (id, name, lastName, email, designation, manager, creator, creation_date) => {
-    return { id, name, lastName, email, designation, manager, creator, creation_date };
-  };
 
   const processesHeadRows = [
-    { id: "name", numeric: false, disablePadding: false, label: "Name" },
-    { id: "numberOfStages", numeric: false, disablePadding: false, label: "Number of Stages" },
-    { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-    { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
+    { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
+    { id: 'numberOfStages', numeric: false, disablePadding: false, label: 'Number of Stages' },
+    { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
+    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
   ];
 
-  const loadProcessesData = (collectionNames = ['processStages', 'processes']) => {
-    // console.log('lets reload')
-    collectionNames =  !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
+  const [tableControl, setTableControl] = useState({
+    processStages: {
+      collection: 'processStages',
+      total: 0,
+      page: 0,
+      rowsPerPage: 5,
+      orderBy: 'name',
+      order: 1,
+      search: '',
+      searchBy: '',
+    },
+    processes: {
+      collection: 'processes',
+      total: 0,
+      page: 0,
+      rowsPerPage: 5,
+      orderBy: 'name',
+      order: 1,
+      search: '',
+      searchBy: '',
+    },
+  });
+
+  const loadProcessData = (collectionNames = ['processStages', 'processes']) => {
+    collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
-      getDB(collectionName)
-      .then(response => response.json())
-      .then(data => {
-        if (collectionName === 'processStages') {
-          // console.log('User Profiles id:', data)
-          const rows = data.response.map(row => {
-            const { functions, selectedFunction, types, selectedType, customFieldTabs } = row;
-            const isCustom = String(!isEmpty(customFieldTabs)).toUpperCase();
-            return createProcessStageRow(row._id, row.name, functions[selectedFunction], types[selectedType], isCustom, 'FALSE', 'Admin', '11/03/2020');
-          });
-          setControl(prev => ({ ...prev, processStagesRows: rows, processStagesRowsSelected: [] }));
-        }
-        if (collectionName === 'processes') {
-          const rows = data.response.map(row => {
-            return createProcessRow(row._id, row.name, row.processStages.length || 'N/A', 'Admin', '11/03/2020');
-          });
-          setControl(prev => ({ ...prev, processRows: rows, processRowsSelected: [] }));
-         }
-        }
-      )
-      .catch(error => console.log('error>', error));
+      let queryLike = '';
+      if (collectionName === 'processStages') {
+        queryLike = tableControl.processStages.searchBy ? (
+          [{ key: tableControl.processStages.searchBy, value: tableControl.processStages.search }]
+        ) : (
+          ['name', 'functions', 'types'].map(key => ({ key, value: tableControl.processStages.search }))
+        )
+      }
+      if (collectionName === 'processes') {
+        queryLike = tableControl.processes.searchBy ? (
+          [{ key: tableControl.processes.searchBy, value: tableControl.processes.search }]
+        ) : (
+          ['name'].map(key => ({ key, value: tableControl.processes.search }))
+        )
+      }
+      getCountDB({
+        collection: collectionName,
+        queryLike: tableControl[collectionName].search ? queryLike : null
+      })
+        .then(response => response.json())
+        .then(data => {
+          setTableControl(prev => ({
+            ...prev,
+            [collectionName]: {
+              ...prev[collectionName],
+              total: data.response.count
+            }
+          }))
+        });
+
+      getDBComplex({
+        collection: collectionName,
+        limit: tableControl[collectionName].rowsPerPage,
+        skip: tableControl[collectionName].rowsPerPage * tableControl[collectionName].page,
+        sort: [{ key: tableControl[collectionName].orderBy, value: tableControl[collectionName].order }],
+        queryLike: tableControl[collectionName].search ? queryLike : null
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (collectionName === 'processStages') {
+            const rows = data.response.map(row => {
+              const { functions, selectedFunction, types, selectedType, customFieldTabs } = row;
+              const isCustom = String(!isEmpty(customFieldTabs)).toUpperCase();
+              return createProcessStageRow(row._id, row.name, functions[selectedFunction], types[selectedType], isCustom, 'FALSE', 'Admin', '11/03/2020');
+            });
+            setControl(prev => ({ ...prev, processStagesRows: rows, processStagesRowsSelected: [] }));
+          }
+          if (collectionName === 'processes') {
+            const rows = data.response.map(row => {
+              return createProcessRow(row._id, row.name, row.processStages.length || 'N/A', 'Admin', '11/03/2020');
+            });
+            setControl(prev => ({ ...prev, processRows: rows, processRowsSelected: [] }));
+          }
+        })
+        .catch(error => console.log('error>', error));
     });
   };
 
   useEffect(() => {
-    loadProcessesData();
+    loadProcessData();
   }, []);
+
+  useEffect(() => {
+    loadProcessData('processes');
+  }, [tableControl.processes.page, tableControl.processes.rowsPerPage, tableControl.processes.order, tableControl.processes.orderBy, tableControl.processes.search, tableControl.processes.locationsFilter]);
+
+  useEffect(() => {
+    loadProcessData('processStages');
+  }, [tableControl.processStages.page, tableControl.processStages.rowsPerPage, tableControl.processStages.order, tableControl.processStages.orderBy, tableControl.processStages.search]);
 
   const [control, setControl] = useState({
     idProcessStage: null,
@@ -232,10 +200,10 @@ export default function Processes() {
         if (!id || !Array.isArray(id)) return;
         id.forEach(_id => {
           deleteDB(`${collection.name}/`, _id)
-            .then(response => loadProcessesData('processStages'))
+            .then(response => loadProcessData('processStages'))
             .catch(error => console.log('Error', error));
         });
-        loadProcessesData(collection.name);
+        loadProcessData(collection.name);
       },
       onSelect(id) {
         if (collectionName === 'references') {
@@ -254,119 +222,167 @@ export default function Processes() {
         title={'Add New Asset'}
         message={'Please first select a Reference from the next tab'}
       />
-      <Formik
-        initialValues={initialValues}
-        onSubmit={values => {
-          enableLoadingPreview();
-          updateLayoutConfig(values);
-        }}
-        onReset={() => {
-          enableLoadingReset();
-          updateLayoutConfig(initLayoutConfig);
-        }}
-      >
-        {({ values, handleReset, handleSubmit, handleChange, handleBlur }) => (
-          <div className="kt-form kt-form--label-right">
-            <Portlet>
-              <PortletHeader
-                toolbar={
-                  <PortletHeaderToolbar>
-                    <Tabs
-                      component="div"
-                      className="builder-tabs"
-                      value={tab}
-                      onChange={(_, nextTab) => {
-                        setTab(nextTab);
-                        localStorage.setItem(localStorageActiveTabKey, nextTab);
-                      }}
-                    >
-                      {TabsTitles('processes')}
-                    </Tabs>
-                  </PortletHeaderToolbar>
-                }
-              />
+      <div className='kt-form kt-form--label-right'>
+        <Portlet>
+          <PortletHeader
+            toolbar={
+              <PortletHeaderToolbar>
+                <Tabs
+                  component='div'
+                  className='builder-tabs'
+                  value={tab}
+                  onChange={(_, nextTab) => {
+                    setTab(nextTab);
+                    localStorage.setItem(localStorageActiveTabKey, nextTab);
+                  }}
+                >
+                  {TabsTitles('processes')}
+                </Tabs>
+              </PortletHeaderToolbar>
+            }
+          />
 
-              {tab === 0 && (
-                <PortletBody>
-                  <div className="kt-section kt-margin-t-0">
-                    <div className="kt-section__body">
-                      <div className="kt-section">
-                          <span className="kt-section__sub">
-                            This section will integrate <code>Processes List</code>
-                          </span>
-                          <ModalProcesses
-                            showModal={control.openProcessModal}
-                            setShowModal={(onOff) => setControl({ ...control, openProcessModal: onOff })}
-                            reloadTable={() => loadProcessesData('processes')}
-                            id={control.idProcess}
-                            // employeeProfileRows={control.employeeProfilesRows}
-                            // employeeProfileRows={control.employeeProfilesRows}
-                            // categoryRows={control.usersRows}
-                            // referencesSelectedId={ referencesSelectedId}
-                          />
-                          <div className="kt-separator kt-separator--dashed"/>
-                          <div className="kt-section__content">
-                            <TableComponent
-                              title={'Processes List'}
-                              headRows={processesHeadRows}
-                              rows={control.processRows}
-                              onEdit={tableActions('processes').onEdit}
-                              onAdd={tableActions('processes').onAdd}
-                              onDelete={tableActions('processes').onDelete}
-                              onSelect={tableActions('processes').onSelect}
-                            />
-                          </div>
-                        </div>
+          {tab === 0 && (
+            <PortletBody>
+              <div className='kt-section kt-margin-t-0'>
+                <div className='kt-section__body'>
+                  <div className='kt-section'>
+                    <span className='kt-section__sub'>
+                      This section will integrate <code>Processes List</code>
+                    </span>
+                    <ModalProcesses
+                      showModal={control.openProcessModal}
+                      setShowModal={(onOff) => setControl({ ...control, openProcessModal: onOff })}
+                      reloadTable={() => loadProcessData('processes')}
+                      id={control.idProcess}
+                    />
+                    <div className='kt-separator kt-separator--dashed' />
+                    <div className='kt-section__content'>
+                      <TableComponent2
+                        controlValues={tableControl.processes}
+                        disableSearchBy
+                        headRows={processesHeadRows}
+                        onAdd={tableActions('processes').onAdd}
+                        onDelete={tableActions('processes').onDelete}
+                        onEdit={tableActions('processes').onEdit}
+                        onSelect={tableActions('processes').onSelect}
+                        paginationControl={({ rowsPerPage, page }) =>
+                          setTableControl(prev => ({
+                            ...prev,
+                            processes: {
+                              ...prev.processes,
+                              rowsPerPage: rowsPerPage,
+                              page: page,
+                            }
+                          }))
+                        }
+                        rows={control.processRows}
+                        searchControl={({ value, field }) => {
+                          setTableControl(prev => ({
+                            ...prev,
+                            processes: {
+                              ...prev.processes,
+                              search: value,
+                              searchBy: field,
+                            }
+                          }))
+                        }}
+                        sortByControl={({ orderBy, order }) => {
+                          setTableControl(prev => ({
+                            ...prev,
+                            processes: {
+                              ...prev.processes,
+                              orderBy: orderBy,
+                              order: order,
+                            }
+                          }))
+                        }}
+                        title={'Processes List'}
+                      />
                     </div>
                   </div>
-                </PortletBody>
-              )}
+                </div>
+              </div>
+            </PortletBody>
+          )}
 
-              {tab === 1 && (
-                <PortletBody>
-                  <div className="kt-section kt-margin-t-0">
-                    <div className="kt-section__body">
-                      <div className="kt-section">
-                          <span className="kt-section__sub">
-                            This section will integrate <code>Processes Stages List</code>
-                          </span>
-                            <ModalProcessStages
-                              showModal={control.openProcessStagesModal}
-                              setShowModal={(onOff) => setControl({ ...control, openProcessStagesModal: onOff })}
-                              reloadTable={() => loadProcessesData('processStages')}
-                              id={control.idProcessStage}
-                              // categoryRows={control.categoryRows}
-                            />
-                            <div className="kt-separator kt-separator--dashed"/>
-                            <div className="kt-section__content">
-                              <TableComponent
-                                title={'Process Stages'}
-                                headRows={processStagesHeadRows}
-                                rows={control.processStagesRows}
-                                onAdd={tableActions('processStages').onAdd}
-                                onDelete={tableActions('processStages').onDelete}
-                                onEdit={tableActions('processStages').onEdit}
-                                onSelect={tableActions('processStages').onSelect}
-                              />
-                            </div>
-                        </div>
+          {tab === 1 && (
+            <PortletBody>
+              <div className='kt-section kt-margin-t-0'>
+                <div className='kt-section__body'>
+                  <div className='kt-section'>
+                    <span className='kt-section__sub'>
+                      This section will integrate <code>Processes Stages List</code>
+                    </span>
+                    <ModalProcessStages
+                      showModal={control.openProcessStagesModal}
+                      setShowModal={(onOff) => setControl({ ...control, openProcessStagesModal: onOff })}
+                      reloadTable={() => loadProcessData('processStages')}
+                      id={control.idProcessStage}
+                    // categoryRows={control.categoryRows}
+                    />
+                    <div className='kt-separator kt-separator--dashed' />
+                    <div className='kt-section__content'>
+                      <TableComponent2
+                        controlValues={tableControl.processStages}
+                        disableSearchBy
+                        headRows={processStagesHeadRows}
+                        onAdd={tableActions('processStages').onAdd}
+                        onDelete={tableActions('processStages').onDelete}
+                        onEdit={tableActions('processStages').onEdit}
+                        onSelect={tableActions('processStages').onSelect}
+                        paginationControl={({ rowsPerPage, page }) =>
+                          setTableControl(prev => ({
+                            ...prev,
+                            processStages: {
+                              ...prev.processStages,
+                              rowsPerPage: rowsPerPage,
+                              page: page,
+                            }
+                          }))
+                        }
+                        rows={control.processStagesRows}
+                        searchControl={({ value, field }) => {
+                          setTableControl(prev => ({
+                            ...prev,
+                            processStages: {
+                              ...prev.processStages,
+                              search: value,
+                              searchBy: field,
+                            }
+                          }))
+                        }}
+                        sortByControl={({ orderBy, order }) => {
+                          setTableControl(prev => ({
+                            ...prev,
+                            processStages: {
+                              ...prev.processStages,
+                              orderBy: orderBy,
+                              order: order,
+                            }
+                          }))
+                        }}
+                        title={'Processes List'}
+                      />
                     </div>
                   </div>
-                </PortletBody>
-              )}
+                </div>
+              </div>
+            </PortletBody>
+          )}
 
-              {tab === 2 && (
-                <PortletBody>
-                  <div className="kt-section kt-margin-t-0">
-                    <div className="kt-section__body">
-                      <div className="kt-section">
-                          <span className="kt-section__sub">
-                            This section will integrate <code>Live Processes</code>
-                          </span>
-                          <div className="kt-separator kt-separator--dashed"/>
-                          <div className="kt-section__content">
-                            <LiveProcesses />
-                              {/* <TableComponent
+          {tab === 2 && (
+            <PortletBody>
+              <div className='kt-section kt-margin-t-0'>
+                <div className='kt-section__body'>
+                  <div className='kt-section'>
+                    <span className='kt-section__sub'>
+                      This section will integrate <code>Live Processes</code>
+                    </span>
+                    <div className='kt-separator kt-separator--dashed' />
+                    <div className='kt-section__content'>
+                      <LiveProcesses />
+                      {/* <TableComponent
                                 title={'Live Processes'}
                                 headRows={liveProcessesHeadRows}
                                 rows={control.employeeProfilesRows}
@@ -375,46 +391,14 @@ export default function Processes() {
                                 onEdit={tableActions('employeeProfiles').onEdit}
                                 onSelect={tableActions('employeeProfiles').onSelect}
                               /> */}
-                            </div>
-                        </div>
                     </div>
                   </div>
-                </PortletBody>
-              )}
-
-              <PortletFooter>
-                <div className="kt-padding-30 text-center">
-                  <button
-                    type="button"
-                    onClick={handleSubmit}
-                    style={loadingButtonPreviewStyle}
-                    className={`btn btn-primary btn-elevate kt-login__btn-primary ${clsx(
-                      {
-                        "kt-spinner kt-spinner--right kt-spinner--md kt-spinner--light": loadingPreview
-                      }
-                    )}`}
-                  >
-                    <i className="la la-eye" /> Preview
-                  </button>{" "}
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    style={loadingButtonResetStyle}
-                    className={`btn btn-secondary btn-elevate kt-login__btn-primary ${clsx(
-                      {
-                        "kt-spinner kt-spinner--right kt-spinner--md kt-spinner--dark": loadingReset
-                      }
-                    )}`}
-                  >
-                    <i className="la la-recycle" /> Reset
-                  </button>
                 </div>
-              </PortletFooter>
-            </Portlet>
-
-          </div>
-        )}
-      </Formik>
+              </div>
+            </PortletBody>
+          )}
+        </Portlet>
+      </div>
     </>
   );
 }

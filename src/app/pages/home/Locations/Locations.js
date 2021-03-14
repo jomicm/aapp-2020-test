@@ -1,31 +1,21 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import clsx from 'clsx';
 import ImageMarker from 'react-image-marker';
 import SwipeableViews from 'react-swipeable-views';
-import { get, merge } from 'lodash';
+import { merge } from 'lodash';
 import { Formik } from 'formik';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
-import { FormHelperText, Switch, Tab, Tabs, Styles } from '@material-ui/core';
+import { Tab, Tabs } from '@material-ui/core';
 import { metronic, initLayoutConfig, LayoutConfig } from '../../../../_metronic';
 import {
   Portlet,
   PortletBody,
-  PortletFooter,
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
-import CodeExample from '../../../partials/content/CodeExample';
-import Notice from '../../../partials/content/Notice';
-import { CodeBlock } from '../../../partials/content/CodeExample';
-import { getDB, deleteDB } from '../../../crud/api'; 
+import { getDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import {
-  Badge,
-  Button,
   Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   FormControl,
   FormControlLabel,
   FormGroup,
@@ -38,40 +28,22 @@ import {
   Radio,
   RadioGroup,
   Select,
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TablePagination,
-  TableRow,
-  TableSortLabel,
   TextField,
-  Toolbar,
   Tooltip,
   Typography
 } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
-import CloseIcon from '@material-ui/icons/Close';
 import DeleteIcon from '@material-ui/icons/Delete';
-import DraftsIcon from '@material-ui/icons/Drafts';
 import EditIcon from '@material-ui/icons/Edit';
-import ExpandLess from '@material-ui/icons/ExpandLess';
-import ExpandMore from '@material-ui/icons/ExpandMore';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
 import RemoveIcon from '@material-ui/icons/Remove';
 import RoomIcon from '@material-ui/icons/Room';
-import SendIcon from '@material-ui/icons/Send';
-import StarBorder from '@material-ui/icons/StarBorder';
 import {
-  lighten,
   makeStyles,
   useTheme,
-  withStyles
-} from '@material-ui/core/styles';
+} from '@material-ui/core/';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import GoogleMaps from '../Components/GoogleMaps';
-import TableComponent from '../Components/TableComponent';
+import TableComponent2 from '../Components/TableComponent2';
 import TreeView from '../Components/TreeViewComponent';
 import ModalLocationList from './modals/ModalLocationList';
 import ModalLocationProfiles from './modals/ModalLocationProfiles';
@@ -95,7 +67,7 @@ import {
   SingleLineSettings
 } from '../Components/CustomFields/CustomFieldsPreview';
 import ModalYesNo from '../Components/ModalYesNo';
-import { getFileExtension, getImageURL, saveImage } from '../utils';
+import { getImageURL } from '../utils';
 
 const Divider = () => <div style={{ width: '100%', height: '3px', backgroundColor: 'black' }}></div>;
 
@@ -168,8 +140,8 @@ const Locations = () => {
     },
     removeLocation() {
       deleteDB('locationsReal/', parentSelected)
-      .then((response) => handleLoadLocations())
-      .catch((error) => console.log('Error', error));
+        .then((response) => handleLoadLocations())
+        .catch((error) => console.log('Error', error));
       setOpenYesNoModal(false);
     },
     openProfilesListBox(e) {
@@ -184,25 +156,24 @@ const Locations = () => {
   };
 
   const createLocationProfileRow = (
-    id, 
-    level, 
-    name, 
-    creator, 
+    level,
+    name,
+    creator,
     creation_date
-    ) => {
-    return { id, level, name, creator, creation_date };
+  ) => {
+    return { level, name, creator, creation_date };
   };
 
   const CustomMarker = (MarkerComponentProps) => {
     if (imageLayout !== 'http://localhost:3000/media/misc/placeholder-image.jpg') {
       return (
-        <RoomIcon style={{ color: 'red' }}/>
+        <RoomIcon style={{ color: 'red' }} />
       )
-    }else {
+    } else {
       return null;
     }
   }
-  
+
   const enableLoadingPreview = () => {
     setLoadingPreview(true);
     setLoadingButtonPreviewStyle({ paddingRight: '3.5rem' });
@@ -221,15 +192,13 @@ const Locations = () => {
   };
 
   const locHeadRows = [
-    { id: 'id', numeric: false, disablePadding: true, label: 'ID' },
     { id: 'level', numeric: true, disablePadding: false, label: 'Level' },
     { id: 'name', numeric: true, disablePadding: false, label: 'Description' },
-    { id: 'creator', numeric: true, disablePadding: false, label: 'Creator' },
-    { id: 'creation_date', numeric: true, disablePadding: false, label: 'Creation Date' }
+    { id: 'creator', numeric: true, disablePadding: false, label: 'Creator', searchByDisabled: true },
+    { id: 'creation_date', numeric: true, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
   ];
 
   const locationsHeadRows = [
-    { id: 'id', numeric: false, disablePadding: true, label: 'ID' },
     { id: 'level', numeric: true, disablePadding: false, label: 'Level' },
     { id: 'name', numeric: true, disablePadding: false, label: 'Description' },
     { id: 'creator', numeric: true, disablePadding: false, label: 'Creator' },
@@ -241,7 +210,7 @@ const Locations = () => {
     createLocationProfileRow('2', '1', 'Monterrey', 'Admin', '11/03/2020'),
     createLocationProfileRow('3', '2', 'Guadalajara', 'Admin', '11/03/2020'),
   ];
-  
+
   const TabContainer4 = ({ children, dir }) => {
     return (
       <Typography component='div' dir={dir} style={{ padding: 8 * 3 }}>
@@ -281,7 +250,7 @@ const Locations = () => {
         .then((response) => console.log('success', response))
         .catch((error) => console.log('Error', error));
     });
-    handleLoadLocationProfiles();
+    loadLocationsProfilesData();
   };
 
   const onEditProfileLocation = (_id) => {
@@ -295,10 +264,10 @@ const Locations = () => {
   };
 
   const getImageLayout = (id) => {
-    if (id === 'root') { 
+    if (id === 'root') {
       setImageLayout('http://localhost:3000/media/misc/placeholder-image.jpg')
     } else {
-      const result = locations.filter((location) =>  location._id === id);
+      const result = locations.filter((location) => location._id === id);
       const image = result.map((coordinate) => coordinate.fileExt);
       if (image[0]) {
         const imageURLLayout = getImageURL(id, 'locationsReal', image[0]);
@@ -312,8 +281,8 @@ const Locations = () => {
   const getChildren = (id) => {
     if (id === 'root') {
       setCoordinates([]);
-    } else { 
-      const result = locations.filter((location) =>  location.parent === id);
+    } else {
+      const result = locations.filter((location) => location.parent === id);
       const latLng = result.map((coordinate) => coordinate.mapInfo);
       const pinMarker = result.map((pin) => pin.imageInfo).filter((elem) => elem !== null);
       setCoordinates(latLng);
@@ -325,38 +294,38 @@ const Locations = () => {
     if (id === 'root') {
       setCoordinates([]);
     } else {
-      const result = locations.filter((location) =>  location.id === id);
+      const result = locations.filter((location) => location.id === id);
       const latLngZoom = result.map((coordinate) => coordinate.mapInfo);
       if (latLngZoom[0] === null) {
         setGoogleMapsZoom(6);
       } else {
-      setMapCenter({ lat: latLngZoom[0].lat, lng: latLngZoom[0].lng });
-      setGoogleMapsZoom(latLngZoom[0].zoom);
+        setMapCenter({ lat: latLngZoom[0].lat, lng: latLngZoom[0].lng });
+        setGoogleMapsZoom(latLngZoom[0].zoom);
       }
     }
   }
 
   const getParentExt = (idParent) => {
     if (idParent === 'root' || !idParent) return;
-    const result = locations.filter((location) =>  location._id === idParent);
+    const result = locations.filter((location) => location._id === idParent);
     if (result[0].fileExt !== '') {
       const getExt = result[0].fileExt;
       setParentFileExt(getExt);
-    } else { 
+    } else {
       return;
-    } 
+    }
   }
 
   const constructLocationTreeRecursive = (locs) => {
     if (!locs || !Array.isArray(locs) || !locs.length) return [];
     let res = [];
     locs.forEach((location) => {
-      const locObj = (({ 
-        _id: id, 
-        name, 
-        profileLevel, 
-        parent, 
-        fileExt 
+      const locObj = (({
+        _id: id,
+        name,
+        profileLevel,
+        parent,
+        fileExt
       }) => ({ id, name, profileLevel, parent, fileExt }))(location);
       const children = locations.filter((loc) => loc.parent === locObj.id);
       locObj.children = constructLocationTreeRecursive(children);
@@ -364,7 +333,7 @@ const Locations = () => {
     });
     return res;
   };
-  
+
   const handleLoadLocations = () => {
     setLocationsTree({});
     getDB('locationsReal')
@@ -378,23 +347,74 @@ const Locations = () => {
         setLocationsTree(locationsTreeData);
       })
       .catch((error) => console.log('error>', error));
-        const selectedProfileTmp = profileSelected;
-        setProfileSelected({});
-        setProfileSelected(selectedProfileTmp);
+    const selectedProfileTmp = profileSelected;
+    setProfileSelected({});
+    setProfileSelected(selectedProfileTmp);
   };
-  
-  const handleLoadLocationProfiles = () => {
-    getDB('locations')
-      .then((response) => response.json())
-      .then((data) => {
-        const profileRows = data.response.map((row) => {
-          const { _id, level, name } = row;
-          return createLocationProfileRow(_id, level, name, 'Admin', '11/03/2020');
-        });
-        setLocationProfileRows(profileRows);
-        setSelectedLocationProfileRows([]);
+
+  const [tableControl, setTableControl] = useState({
+    locations: {
+      collection: 'locations',
+      total: 0,
+      page: 0,
+      rowsPerPage: 5,
+      orderBy: 'name',
+      order: 1,
+      search: '',
+      searchBy: '',
+    },
+  });
+
+  const loadLocationsProfilesData = (collectionNames = ['locations']) => {
+    collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
+    collectionNames.forEach(collectionName => {
+      let queryLike = '';
+      let searchByFiltered = tableControl.locations.searchBy;
+      if (tableControl.locations.searchBy && tableControl.locations.searchBy === 'id') {
+        searchByFiltered = '_id';
+      }
+      if (collectionName === 'locations') {
+        queryLike = tableControl.locations.searchBy ? (
+          [{ key: searchByFiltered, value: tableControl.locations.search }]
+        ) : (
+          ['level', 'name'].map(key => ({ key, value: tableControl.locations.search }))
+        )
+      }
+      getCountDB({
+        collection: collectionName,
+        queryLike: tableControl[collectionName].search ? queryLike : null
       })
-      .catch((error) => console.log('error>', error));
+        .then(response => response.json())
+        .then(data => {
+          setTableControl(prev => ({
+            ...prev,
+            [collectionName]: {
+              ...prev[collectionName],
+              total: data.response.count
+            }
+          }))
+        });
+
+      getDBComplex({
+        collection: collectionName,
+        limit: tableControl[collectionName].rowsPerPage,
+        skip: tableControl[collectionName].rowsPerPage * tableControl[collectionName].page,
+        sort: [{ key: tableControl[collectionName].orderBy, value: tableControl[collectionName].order }],
+        queryLike: tableControl[collectionName].search ? queryLike : null
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (collectionName === 'locations') {
+            const profileRows = data.response.map((row) => {
+              const { level, name } = row;
+              return createLocationProfileRow(level, name, 'Admin', '11/03/2020');
+            });
+            setLocationProfileRows(profileRows);
+            setSelectedLocationProfileRows([]);
+          }
+        })
+        .catch(error => console.log('error>', error));
+    });
   };
 
   const handleSetProfileLocationFilter = (parent, level, realParent) => {
@@ -409,11 +429,15 @@ const Locations = () => {
     let locationProf = locationProfileRows.filter((row) => row.level == lvl);
     setSelectedLocationProfileRows(locationProf);
   };
-  
+
   useEffect(() => {
-    handleLoadLocationProfiles();
+    loadLocationsProfilesData();
     handleLoadLocations();
   }, []);
+
+  useEffect(() => {
+    loadLocationsProfilesData('locations');
+  }, [tableControl.locations.page, tableControl.locations.rowsPerPage, tableControl.locations.order, tableControl.locations.orderBy, tableControl.locations.search, tableControl.locations.locationsFilter]);
 
   return (
     <>
@@ -453,123 +477,123 @@ const Locations = () => {
                   <div className='kt-section kt-margin-t-0'>
                     <div className='kt-section__body'>
                       <div className='kt-section'>
-                          <span className='kt-section__sub'>
-                            This section will integrate <code>Locations Section</code>
-                          </span>
-                          <ModalLocationList
-                            editOrNew={editOrNew}
-                            imageLayout={imageLayout}
-                            modalId={modalId}
-                            dataFromParent={modalData}
-                            parent={parentSelected}
-                            parentExt={parentFileExt}
-                            profile={profileSelected}
-                            realParent={realParentSelected}
-                            reload={handleLoadLocations}
-                            setParentSelected={setParentSelected}
-                            setShowModal={setOpenListModal}
-                            showModal={openListModal}
-                          />
-                          <ModalYesNo
-                            message={'Are you sure you want to remove this location?'}
-                            onCancel={locationActions.closeYesNoModal}
-                            onOK={locationActions.removeLocation}
-                            showModal={openYesNoModal}
-                            title={'Remove Location'}
-                          />
-                          <div className='kt-separator kt-separator--dashed'/>
-                          <div className='kt-section__content'>
-                            {/* Insert Tree here */}
-                            <div className='locations-list__top'>
-                              <div className='locations-list_top-add'>
-                                <Menu
-                                  anchorEl={anchorEl}
-                                  id='simple-menu'
-                                  keepMounted
-                                  onClose={handleClose}
-                                  open={Boolean(anchorEl)}
-                                >
-                                  { selectedLocationProfileRows.map((locProfile) => (
-                                    <MenuItem onClick={() => handleOpenLocationListModal(locProfile)}>{locProfile.name}</MenuItem>
-                                  )) }
-                                </Menu>
-                              </div>
+                        <span className='kt-section__sub'>
+                          This section will integrate <code>Locations Section</code>
+                        </span>
+                        <ModalLocationList
+                          editOrNew={editOrNew}
+                          imageLayout={imageLayout}
+                          modalId={modalId}
+                          dataFromParent={modalData}
+                          parent={parentSelected}
+                          parentExt={parentFileExt}
+                          profile={profileSelected}
+                          realParent={realParentSelected}
+                          reload={handleLoadLocations}
+                          setParentSelected={setParentSelected}
+                          setShowModal={setOpenListModal}
+                          showModal={openListModal}
+                        />
+                        <ModalYesNo
+                          message={'Are you sure you want to remove this location?'}
+                          onCancel={locationActions.closeYesNoModal}
+                          onOK={locationActions.removeLocation}
+                          showModal={openYesNoModal}
+                          title={'Remove Location'}
+                        />
+                        <div className='kt-separator kt-separator--dashed' />
+                        <div className='kt-section__content'>
+                          {/* Insert Tree here */}
+                          <div className='locations-list__top'>
+                            <div className='locations-list_top-add'>
+                              <Menu
+                                anchorEl={anchorEl}
+                                id='simple-menu'
+                                keepMounted
+                                onClose={handleClose}
+                                open={Boolean(anchorEl)}
+                              >
+                                {selectedLocationProfileRows.map((locProfile) => (
+                                  <MenuItem onClick={() => handleOpenLocationListModal(locProfile)}>{locProfile.name}</MenuItem>
+                                ))}
+                              </Menu>
                             </div>
-                            <div className='locations-list'>
-                              <div className='locations-list__left-content'>
-                                <div>
-                                  <Tooltip placement='top' title='Add Location'>
-                                    <IconButton aria-label='Filter list' onClick={locationActions.openProfilesListBox}>
-                                      <AddIcon />
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip placement='top' title='Edit Location'>
-                                    <IconButton aria-label='Filter list' onClick={locationActions.editLocation}>
-                                      <EditIcon />
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip placement='top' title='Remove Location'>
-                                    <IconButton aria-label='Filter list' onClick={locationActions.openYesNoModal}>
-                                      <RemoveIcon />
-                                    </IconButton>
-                                  </Tooltip>
-                                </div>
-                                <TreeView data={locationsTree} onClick={handleSetProfileLocationFilter}/>
+                          </div>
+                          <div className='locations-list'>
+                            <div className='locations-list__left-content'>
+                              <div>
+                                <Tooltip placement='top' title='Add Location'>
+                                  <IconButton aria-label='Filter list' onClick={locationActions.openProfilesListBox}>
+                                    <AddIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip placement='top' title='Edit Location'>
+                                  <IconButton aria-label='Filter list' onClick={locationActions.editLocation}>
+                                    <EditIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip placement='top' title='Remove Location'>
+                                  <IconButton aria-label='Filter list' onClick={locationActions.openYesNoModal}>
+                                    <RemoveIcon />
+                                  </IconButton>
+                                </Tooltip>
                               </div>
-                              <div className='locations-list__right-content'>
-                                <div>
-                                  <Paper>
-                                    <Tabs
-                                      indicatorColor='primary'
-                                      onChange={handleChange4}
-                                      textColor='primary'
-                                      value={value4}
-                                      variant='fullWidth'
-                                    >
-                                      <Tab label='Map View' />
-                                      <Tab label='Layout View' />
-                                    </Tabs>
-                                  </Paper>
-                                  <SwipeableViews
-                                    axis={'x'}
-                                    index={value4}
-                                    onChangeIndex={handleChangeIndex4}
+                              <TreeView data={locationsTree} onClick={handleSetProfileLocationFilter} />
+                            </div>
+                            <div className='locations-list__right-content'>
+                              <div>
+                                <Paper>
+                                  <Tabs
+                                    indicatorColor='primary'
+                                    onChange={handleChange4}
+                                    textColor='primary'
+                                    value={value4}
+                                    variant='fullWidth'
                                   >
-                                    <TabContainer4 
-                                      dir={theme4.direction}
-                                    >
-                                      <div className='locations-list__map-view'>
-                                        <GoogleMaps 
-                                          center={mapCenter}
-                                          coords={coordinates}
-                                          setCoords={({lat, lng}) =>
-                                            setCoordinates({ lat, lng })
-                                          } 
-                                          setZoom={setGoogleMapsZoom}
-                                          style={{ width: '100%', height: '500px', position: 'relative' }}
-                                          zoom={googleMapsZoom}
+                                    <Tab label='Map View' />
+                                    <Tab label='Layout View' />
+                                  </Tabs>
+                                </Paper>
+                                <SwipeableViews
+                                  axis={'x'}
+                                  index={value4}
+                                  onChangeIndex={handleChangeIndex4}
+                                >
+                                  <TabContainer4
+                                    dir={theme4.direction}
+                                  >
+                                    <div className='locations-list__map-view'>
+                                      <GoogleMaps
+                                        center={mapCenter}
+                                        coords={coordinates}
+                                        setCoords={({ lat, lng }) =>
+                                          setCoordinates({ lat, lng })
+                                        }
+                                        setZoom={setGoogleMapsZoom}
+                                        style={{ width: '100%', height: '500px', position: 'relative' }}
+                                        zoom={googleMapsZoom}
+                                      />
+                                    </div>
+                                  </TabContainer4>
+                                  <TabContainer4
+                                    dir={theme4.direction}
+                                  >
+                                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                      <div style={{ height: '480px', width: '600px' }}>
+                                        <ImageMarker
+                                          src={imageLayout ? imageLayout : 'http://localhost:3000/media/misc/placeholder-image.jpg'}
+                                          markers={markers}
+                                          markerComponent={CustomMarker}
                                         />
                                       </div>
-                                    </TabContainer4>
-                                    <TabContainer4 
-                                      dir={theme4.direction}
-                                    >
-                                      <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                        <div style={{ height: '480px', width: '600px' }}>
-                                          <ImageMarker
-                                            src={imageLayout ? imageLayout : 'http://localhost:3000/media/misc/placeholder-image.jpg'}
-                                            markers={markers}
-                                            markerComponent={CustomMarker}
-                                          />
-                                        </div>
-                                      </div>
-                                    </TabContainer4>
-                                  </SwipeableViews>
-                                </div>
+                                    </div>
+                                  </TabContainer4>
+                                </SwipeableViews>
                               </div>
                             </div>
                           </div>
                         </div>
+                      </div>
                     </div>
                   </div>
                 </PortletBody>
@@ -579,29 +603,60 @@ const Locations = () => {
                   <div className='kt-section kt-margin-t-0'>
                     <div className='kt-section__body'>
                       <div className='kt-section'>
-                          <span className='kt-section__sub'>
-                            This section will integrate <code>Locations/Profile Table</code>
-                          </span>
-                          <ModalLocationProfiles
-                            id={id}
-                            reloadTable={handleLoadLocationProfiles}
-                            setShowModal={setOpenProfileModal}
-                            showModal={openProfileModal}
-                          />
+                        <span className='kt-section__sub'>
+                          This section will integrate <code>Locations/Profile Table</code>
+                        </span>
+                        <ModalLocationProfiles
+                          id={id}
+                          reloadTable={loadLocationsProfilesData}
+                          setShowModal={setOpenProfileModal}
+                          showModal={openProfileModal}
+                        />
 
-                          <div className='kt-separator kt-separator--dashed'/>
-                          <div className='kt-section__content'>
-                            {/* Insert table here */}
-                            <TableComponent
-                              headRows={locHeadRows}
-                              onAdd={onAddProfileLocation}
-                              onEdit={onEditProfileLocation}
-                              onDelete={onDeleteProfileLocation}
-                              rows={locationProfileRows}
-                              title={'Locations Profiles'}
-                            />
-                          </div>
+                        <div className='kt-separator kt-separator--dashed' />
+                        <div className='kt-section__content'>
+                          <TableComponent2
+                            controlValues={tableControl.locations}
+                            headRows={locHeadRows}
+                            onAdd={onAddProfileLocation}
+                            onDelete={onDeleteProfileLocation}
+                            onEdit={onEditProfileLocation}
+                            onSelect={(element) => console.log('onSelect:', element)}
+                            paginationControl={({ rowsPerPage, page }) =>
+                              setTableControl(prev => ({
+                                ...prev,
+                                locations: {
+                                  ...prev.locations,
+                                  rowsPerPage: rowsPerPage,
+                                  page: page,
+                                }
+                              }))
+                            }
+                            rows={locationProfileRows}
+                            searchControl={({ value, field }) => {
+                              setTableControl(prev => ({
+                                ...prev,
+                                locations: {
+                                  ...prev.locations,
+                                  search: value,
+                                  searchBy: field,
+                                }
+                              }))
+                            }}
+                            sortByControl={({ orderBy, order }) => {
+                              setTableControl(prev => ({
+                                ...prev,
+                                locations: {
+                                  ...prev.locations,
+                                  orderBy: orderBy,
+                                  order: order,
+                                }
+                              }))
+                            }}
+                            title={'Locations Profiles'}
+                          />
                         </div>
+                      </div>
                     </div>
                   </div>
                 </PortletBody>
@@ -611,11 +666,11 @@ const Locations = () => {
                   <div className='kt-section kt-margin-t-0'>
                     <div className='kt-section__body'>
                       <div className='kt-section'>
-                          <span className='kt-section__sub'>
-                            This section will integrate <code>Locations Policies</code>
-                          </span>
-                          <div className='kt-separator kt-separator--dashed'/>
-                        </div>
+                        <span className='kt-section__sub'>
+                          This section will integrate <code>Locations Policies</code>
+                        </span>
+                        <div className='kt-separator kt-separator--dashed' />
+                      </div>
                     </div>
                     {/* Single Line Settings */}
                     <SingleLineSettings />
@@ -651,7 +706,7 @@ const Locations = () => {
                         type='text'
                         value=''
                       />
-                      <DeleteIcon className='custom-field-preview-wrapper__delete-icon'/>
+                      <DeleteIcon className='custom-field-preview-wrapper__delete-icon' />
                     </div>
                     {/* Multi Line */}
                     <div className='custom-field-preview-wrapper'>
@@ -663,7 +718,7 @@ const Locations = () => {
                         multiline
                         rows='4'
                       />
-                      <DeleteIcon className='custom-field-preview-wrapper__delete-icon'/>
+                      <DeleteIcon className='custom-field-preview-wrapper__delete-icon' />
                     </div>
                     {/* Date */}
                     <div className='custom-field-preview-wrapper'>
@@ -676,7 +731,7 @@ const Locations = () => {
                         label='Date'
                         type='date'
                       />
-                      <DeleteIcon className='custom-field-preview-wrapper__delete-icon'/>
+                      <DeleteIcon className='custom-field-preview-wrapper__delete-icon' />
                     </div>
                     {/* Date Time */}
                     <div className='custom-field-preview-wrapper'>
@@ -689,7 +744,7 @@ const Locations = () => {
                         label='Date Time'
                         type='datetime-local'
                       />
-                      <DeleteIcon className='custom-field-preview-wrapper__delete-icon'/>
+                      <DeleteIcon className='custom-field-preview-wrapper__delete-icon' />
                     </div>
                     {/* Drop Down */}
                     <div className='custom-field-preview-wrapper'>
@@ -711,7 +766,7 @@ const Locations = () => {
                           <MenuItem value={30}>Option 3</MenuItem>
                         </Select>
                       </FormControl>
-                      <DeleteIcon className='custom-field-preview-wrapper__delete-icon'/>
+                      <DeleteIcon className='custom-field-preview-wrapper__delete-icon' />
                     </div>
                     {/* Radio Buttons */}
                     <div className='custom-field-preview-wrapper'>
@@ -727,7 +782,7 @@ const Locations = () => {
                           <FormControlLabel control={<Radio />} label='Radio 3' value='rad3' />
                         </RadioGroup>
                       </FormControl>
-                      <DeleteIcon className='custom-field-preview-wrapper__delete-icon'/>
+                      <DeleteIcon className='custom-field-preview-wrapper__delete-icon' />
                     </div>
                     {/* Checkboxes */}
                     <div className='custom-field-preview-wrapper'>
@@ -748,7 +803,7 @@ const Locations = () => {
                           />
                         </FormGroup>
                       </FormControl>
-                      <DeleteIcon className='custom-field-preview-wrapper__delete-icon'/>
+                      <DeleteIcon className='custom-field-preview-wrapper__delete-icon' />
                     </div>
                     {/* File Upload */}
                     <div className='custom-field-preview-wrapper'>
@@ -758,7 +813,7 @@ const Locations = () => {
                           <input type='file' name='myImage' />
                         </FormGroup>
                       </FormControl>
-                      <DeleteIcon className='custom-field-preview-wrapper__delete-icon'/>
+                      <DeleteIcon className='custom-field-preview-wrapper__delete-icon' />
                     </div>
                     <div style={{ width: '500px', height: '2px', backgroundColor: 'black' }} />
                     {/* Custom Fileds Preview Functional */}
@@ -778,43 +833,15 @@ const Locations = () => {
                   <div className='kt-section kt-margin-t-0'>
                     <div className='kt-section__body'>
                       <div className='kt-section'>
-                          <span className='kt-section__sub'>
-                            This section will integrate <code>Locations Settings</code>
-                          </span>
-                          <div className='kt-separator kt-separator--dashed'/>
-                        </div>
+                        <span className='kt-section__sub'>
+                          This section will integrate <code>Locations Settings</code>
+                        </span>
+                        <div className='kt-separator kt-separator--dashed' />
+                      </div>
                     </div>
                   </div>
                 </PortletBody>
               )}
-              <PortletFooter>
-                <div className='kt-padding-30 text-center'>
-                  <button
-                    className={`btn btn-primary btn-elevate kt-login__btn-primary ${clsx(
-                      {
-                        'kt-spinner kt-spinner--right kt-spinner--md kt-spinner--light': loadingPreview
-                      }
-                    )}`}
-                    onClick={handleSubmit}
-                    style={loadingButtonPreviewStyle}
-                    type='button'
-                  >
-                    <i className='la la-eye' /> Preview
-                  </button>
-                  <button
-                    className={`btn btn-secondary btn-elevate kt-login__btn-primary ${clsx(
-                      {
-                        'kt-spinner kt-spinner--right kt-spinner--md kt-spinner--dark': loadingReset
-                      }
-                    )}`}
-                    onClick={handleReset}
-                    style={loadingButtonResetStyle}
-                    type='button'
-                  >
-                    <i className='la la-recycle' /> Reset
-                  </button>
-                </div>
-              </PortletFooter>
             </Portlet>
           </div>
         )}
