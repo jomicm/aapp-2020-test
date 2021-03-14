@@ -334,12 +334,6 @@ const TableReportsGeneral = props => {
               <ViewColumnRoundedIcon />
             </IconButton>
           </Tooltip>
-          {/* <Tooltip title='Filter Table'>
-            <IconButton aria-label='Filter Table' onClick={() => {}}>
-              <FilterListIcon />
-            </IconButton>
-          </Tooltip> */}
-
           {
             typeof onAdd == 'function' && (
               <Tooltip title='Add'>
@@ -444,14 +438,6 @@ const TableReportsGeneral = props => {
     return (
       <TableHead>
         <TableRow>
-          {/* <TableCell padding='checkbox'>
-            <Checkbox
-              checked={numSelected === rowCount}
-              indeterminate={numSelected > 0 && numSelected < rowCount}
-              inputProps={{ 'aria-label': 'Select all desserts' }}
-              onChange={onSelectAllClick}
-            />
-          </TableCell> */}
           {columnPicker.filter((column) => column.visible).map(row => (
             <TableCell
               align={'left'}
@@ -657,12 +643,6 @@ const TableReportsGeneral = props => {
                             selected={isItemSelected}
                             tabIndex={-1}
                           >
-                            {/* <TableCell padding='checkbox'>
-                                  <Checkbox
-                                    checked={isItemSelected}
-                                    inputProps={{ 'aria-labelledby': labelId }}
-                                  />
-                                </TableCell> */}
                             {columnPicker.filter((column) => column.visible).map((header, ix) =>
                               <TableCell
                                 align={'left'}

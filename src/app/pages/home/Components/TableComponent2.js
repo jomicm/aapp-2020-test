@@ -305,7 +305,7 @@ const TableComponentTile = props => {
         )
       }
       return (
-        <React.Fragment>
+        <>
           <div aria-label='Search Box' className={classes.search} key='SearchDiv'>
             <div className={classes.searchIcon}>
               <SearchIcon />
@@ -356,7 +356,7 @@ const TableComponentTile = props => {
               </Tooltip>
             )
           }
-        </React.Fragment>
+        </>
       );
     }
     return (
@@ -617,7 +617,7 @@ const TableComponentTile = props => {
               >
                 {
                   (viewControl.table || viewControl.tree) && (
-                    <React.Fragment>
+                    <>
                       <EnhancedTableHead
                         noEdit={noEdit}
                         numSelected={selected.length}
@@ -633,7 +633,6 @@ const TableComponentTile = props => {
                             <TableRow
                               hover
                               key={`No info`}
-                              // onClick={event => handleClick(event, row.name, row.id)}
                               role='checkbox'
                               tabIndex={-1}
                             >
@@ -695,7 +694,7 @@ const TableComponentTile = props => {
                           )
                         }
                       </TableBody>
-                    </React.Fragment>
+                    </>
                   )
                 }
                 {
