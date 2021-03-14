@@ -8,12 +8,10 @@ import {
   DialogActions,
   Typography,
   IconButton,
-  Tab, 
-  AppBar, 
-  Tabs, 
+  Tab,
+  Tabs,
   Paper,
   TextField,
-  Checkbox,
   FormControlLabel,
   Switch
 } from "@material-ui/core";
@@ -24,12 +22,14 @@ import {
 } from "@material-ui/core/styles";
 import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
-import CustomFields from '../../Components/CustomFields/CustomFields';
+import { isEmpty } from 'lodash';
 
+import { postDB, getOneDB, updateDB } from '../../../../crud/api';
+import BaseFields from '../../Components/BaseFields/BaseFields';
+import CustomFields from '../../Components/CustomFields/CustomFields'
 import ImageUpload from '../../Components/ImageUpload';
 
 import './ModalLocationProfiles.scss';
-import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 
 // Example 5 - Modal
@@ -129,6 +129,7 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   function handleChangeIndex4(index) {
     setValue4(index);
   }
+
   // Example 5 - Tabs
   const classes5 = useStyles5();
   const [value5, setValue5] = useState(0);
@@ -148,12 +149,39 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   const [isNew, setIsNew] = useState(true);
   // const [isAssetRepository, setIsAssetRepository] = useState(false);
   // const [isLocationControl, setIsLocationControl] = useState(false);
-  
+
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value });
   };
-  
+
+  const [formValidation, setFormValidation] = useState({
+    enabled: false,
+    isValidForm: {}
+  });
+
+  const baseFieldsLocalProps = {
+    name: {
+      componentProps: {
+        onChange: handleChange("name")
+      }
+    },
+    selectedLevel: {
+      ownValidFn: () => !!values.level || values.level === 0,
+      componentProps: {
+        onChange: handleChange("level"),
+        type: "number",
+        value: values.level
+      }
+    },
+  };
+
   const handleSave = () => {
+    setFormValidation({ ...formValidation, enabled: true });
+    if (!isEmpty(formValidation.isValidForm)) {
+      alert('Please fill out missing fields')
+      return;
+    }
+
     const fileExt = getFileExtension(image);
     const body = { ...values, customFieldsTab, fileExt };
     console.log('isNew:', isNew)
@@ -186,20 +214,23 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
     setValues({ name: "", level: 0, isAssetRepository: false, isLocationControl: false });
     setShowModal(false);
     setValue4(0);
-    // setIsNew(false);
+    setFormValidation({
+      enabled: false,
+      isValidForm: false
+    });
   };
 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
 
   useEffect(() => {
-    if(!id || !Array.isArray(id)) {
+    if (!id || !Array.isArray(id)) {
       setIsNew(true);
       return;
     }
-      
+
     getOneDB('locations/', id[0])
       .then(response => response.json())
-      .then(data => { 
+      .then(data => {
         console.log(data.response);
         const { name, level, isAssetRepository, isLocationControl, customFieldsTab, fileExt } = data.response;
         const obj = {
@@ -217,9 +248,13 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
       .catch(error => console.log(error));
   }, [id]);
 
+  useEffect(() => {
+    setFormValidation({ ...formValidation, enabled: true });
+  }, [values])
+
   const addEdit = isNew ? 'Add' : 'Edit';
   return (
-    <div style={{width:'1000px'}}>
+    <div style={{ width: '1000px' }}>
       <Dialog
         // onClose={() => setShowModal(false)}
         onClose={handleCloseModal}
@@ -229,12 +264,12 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
         <DialogTitle5
           id="customized-dialog-title"
           onClose={handleCloseModal}
-          // onClose={() => setShowModal(false)}
+        // onClose={() => setShowModal(false)}
         >
           {`${addEdit} Location Profiles`}
         </DialogTitle5>
         <DialogContent5 dividers>
-          <div className="kt-section__content" style={{margin:'-16px'}}>
+          <div className="kt-section__content" style={{ margin: '-16px' }}>
             <div className={classes4.root}>
               <Paper className={classes4.root}>
                 <Tabs
@@ -261,22 +296,12 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
                       </ImageUpload>
                     </div>
                     <div className="profile-tab-wrapper__content">
-                      <TextField
-                        id="standard-number"
-                        label="Level"
-                        value={values.level}
-                        onChange={handleChange("level")}
-                        type="number"
-                        className={classes.textField}
-                        margin="normal"
-                      />
-                      <TextField
-                        id="standard-name"
-                        label="Name"
-                        className={classes.textField}
-                        value={values.name}
-                        onChange={handleChange("name")}
-                        margin="normal"
+                      <BaseFields
+                        catalogue={'locations'}
+                        collection={'locations'}
+                        formState={[formValidation, setFormValidation]}
+                        localProps={baseFieldsLocalProps}
+                        values={values}
                       />
                       <FormControlLabel
                         value="start"
@@ -310,7 +335,7 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
             Save changes
           </Button>
         </DialogActions5>
-      </Dialog>    
+      </Dialog>
     </div>
   )
 };
