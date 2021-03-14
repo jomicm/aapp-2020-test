@@ -1,5 +1,5 @@
 import React from 'react';
-import{
+import {
   Avatar,
   Divider,
   List,
@@ -11,7 +11,7 @@ import{
   Typography
 } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
-import "./Snapshot.scss";
+import './Snapshot.scss';
 import {
   postDBEncryptPassword,
   deleteDB,
@@ -37,7 +37,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const Snapshot = ({ id, lastName, name, subject, description, img, senderName, dateTime, to }) => {
+const Snapshot = ({ id, lastName, name, subject, description, img, senderName, dateTime, to, onHover }) => {
 
   const classes = useStyles();
 
@@ -71,9 +71,13 @@ const Snapshot = ({ id, lastName, name, subject, description, img, senderName, d
               </React.Fragment>
             }
           />
-          <ListItemSecondaryAction>
-            <DeleteIcon className='snapshot-delete-icon' onClick={() => alert('Deleted')} />
-          </ListItemSecondaryAction>
+          {
+            onHover ? (
+              <ListItemSecondaryAction>
+                <DeleteIcon className='snapshot-delete-icon' onClick={() => alert('Deleted')} /> 
+              </ListItemSecondaryAction>
+            ) : null
+          }
         </ListItem>
       </List>
     </div>

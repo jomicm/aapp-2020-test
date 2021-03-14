@@ -46,6 +46,7 @@ const GeneralMessageContainer = () => {
   const classes = useStyles();
   const [data, setData] = useState([]);
   const [preview, setPreview] = useState('');
+  const [indexHovered, setIndexHovered] = useState(null);
   const [headerInfo, setHeaderInfo] = useState({
     timeStamp: '',
     img: '',
@@ -123,6 +124,8 @@ const GeneralMessageContainer = () => {
                   style={{
                     width: '90%'
                   }}
+                  onMouseEnter={() => setIndexHovered(index)}
+                  onMouseLeave={() => setIndexHovered(null)}
                 >
                   <div
                     onClick={() => (
@@ -145,6 +148,7 @@ const GeneralMessageContainer = () => {
                       senderName={msg.from[0].email}
                       subject={msg.subject}
                       to={msg.to[0].email}
+                      onHover={ indexHovered === index }
                     />
                   </div>
                   <Divider />
