@@ -111,7 +111,7 @@ const GeneralMessageContainer = () => {
             placeholder='Search...'
           />
         </div>
-        <span className='field-validator_error'>
+        <span className='field-validator_error' style={{ display:'flex', justifyContent: 'center', width: '90%' }}>
           {control.search.length >= 3 || control.search.length === 0 ? null : 'The search value must be at least 3 characters long'}
         </span>
         {
