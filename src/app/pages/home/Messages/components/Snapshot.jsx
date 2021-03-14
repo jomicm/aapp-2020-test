@@ -1,5 +1,4 @@
 import React from 'react';
-import { makeStyles } from '@material-ui/core/styles';
 import{
   Avatar,
   Divider,
@@ -7,6 +6,8 @@ import{
   ListItem,
   ListItemAvatar,
   ListItemText,
+  ListItemSecondaryAction,
+  makeStyles,
   Typography
 } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
@@ -23,8 +24,8 @@ import {
 const useStyles = makeStyles(theme => ({
   root: {
     width: '100%',
-    minWidth: 390,
-    maxWidth: 390,
+    // minWidth: 390,
+    // maxWidth: 390,
     backgroundColor: theme.palette.background.paper
   },
   subject: {
@@ -70,12 +71,11 @@ const Snapshot = ({ id, lastName, name, subject, description, img, senderName, d
               </React.Fragment>
             }
           />
+          <ListItemSecondaryAction>
+            <DeleteIcon className='snapshot-delete-icon' onClick={() => alert('Deleted')} />
+          </ListItemSecondaryAction>
         </ListItem>
-        <Divider component='li' variant='inset' />
       </List>
-      <div className='container-snapshot-delete-icon'>
-        <DeleteIcon className='snapshot-delete-icon' onClick={() => alert('Deleted')} />
-      </div>
     </div>
   );
 };
