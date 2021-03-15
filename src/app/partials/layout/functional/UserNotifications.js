@@ -3,7 +3,7 @@ import { id } from 'date-fns/locale';
 import { Nav, Tab, Dropdown } from 'react-bootstrap';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import ReactTimeAgo from 'react-time-ago'
-import { Badge, IconButton } from '@material-ui/core';
+import { Badge, IconButton, Typography } from '@material-ui/core';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import NotificationImportantIcon from '@material-ui/icons/NotificationImportant';
@@ -17,7 +17,6 @@ import HeaderDropdownToggle from '../../content/CustomDropdowns/HeaderDropdownTo
 import {
   getCountDB,
   getDBComplex,
-  getDB
 } from '../../../crud/api'
 import { ReactComponent as CompilingIcon } from '../../../../_metronic/layout/assets/layout-svg-icons/Compiling.svg';
 import './UserNotifications.scss'
@@ -148,16 +147,6 @@ const UserNotifications = ({
     return result;
   };
 
-  // useEffect(() => {
-  //   getDB('notifications/')
-  //   .then((response) => response.json())
-  //   .then((data) => {
-  //     setData(data.response);
-  //     updateCount(data.response);
-  //   })
-  //   .catch((error) => console.log('error>', error));
-  // }, []);
-
   const [control, setControl] = useState({
     search: '',
     rowsPerPage: 5,
@@ -176,7 +165,7 @@ const UserNotifications = ({
 
   useEffect(() => {
     getCountDB({
-      collection: 'notifications/',
+      collection: 'notifications',
     })
       .then(response => response.json())
       .then(data => {
@@ -187,7 +176,7 @@ const UserNotifications = ({
       });
 
     getDBComplex({
-      collection: 'notifications/',
+      collection: 'notifications',
       limit: control.rowsPerPage,
       skip: control.rowsPerPage * control.page,
     })
@@ -218,7 +207,7 @@ const UserNotifications = ({
         </span>
       </Dropdown.Toggle>
       <Dropdown.Menu className='dropdown-menu-fit dropdown-menu-right dropdown-menu-anim dropdown-menu-top-unround dropdown-menu-lg'>
-        <form> 
+        <form>
           <div
             className={getHetBackGroundCssClassList()}
             style={{ backgroundImage: backGroundStyle() }}
@@ -283,43 +272,50 @@ const UserNotifications = ({
                             <ChevronRightIcon />
                           </IconButton>
                         </div>
-                        {data.map(({ formatDate, icon, _id, message, subject, read, status, from }) => {
-                          return (
-                            <div style={{ display: 'flex' }}>
-                              <div className={changeBarColor(read)} />
-                              <div
-                                style={{ padding: '20px' }}
-                                className={changeColor(read)}
-                                onClick={() => changeModal(read, _id, subject, message, formatDate, from)}
-                              >
-                                <div className='kt-notification__item-icon' style={{ display: 'flex' }}>
-                                  <div className='notification-icon'>
-                                    {Object.keys(iconsList).map((key) => {
-                                      return (key === icon) ? iconsList[key] : ''
-                                    })}
-                                  </div>
+                        {
+                          data.length > 0 ? (
+                            data.map(({ formatDate, icon, _id, message, subject, read, status, from }) => {
+                              return (
+                                <div style={{ display: 'flex' }}>
+                                  <div className={changeBarColor(read)} />
                                   <div
-                                    className='kt-notification__item-title'
-                                    style={{ padding: '0 10px 5px', textTransform: 'upperCase' }}
+                                    style={{ padding: '20px' }}
+                                    className={changeColor(read)}
+                                    onClick={() => changeModal(read, _id, subject, message, formatDate, from)}
                                   >
-                                    {subject ? ((subject.length > 20) ? subject.substring(0, 25) + '...' : subject) : ''}
+                                    <div className='kt-notification__item-icon' style={{ display: 'flex' }}>
+                                      <div className='notification-icon'>
+                                        {Object.keys(iconsList).map((key) => {
+                                          return (key === icon) ? iconsList[key] : ''
+                                        })}
+                                      </div>
+                                      <div
+                                        className='kt-notification__item-title'
+                                        style={{ padding: '0 10px 5px', textTransform: 'upperCase' }}
+                                      >
+                                        {subject ? ((subject.length > 20) ? subject.substring(0, 25) + '...' : subject) : ''}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      {message ? ((message.length > 25) ? message.substring(0, 25) + '...' : message) : ''}
+                                    </div>
+                                    <div className='kt-notification__item-time'>
+                                      {formatDate ?
+                                        (<ReactTimeAgo
+                                          date={formatDate}
+                                          locale='en-EN'
+                                          timeStyle='round' />)
+                                        : ''}
+                                    </div>
                                   </div>
                                 </div>
-                                <div>
-                                  {message ? ((message.length > 25) ? message.substring(0, 25) + '...' : message) : ''}
-                                </div>
-                                <div className='kt-notification__item-time'>
-                                  {formatDate ?
-                                    (<ReactTimeAgo
-                                      date={formatDate}
-                                      locale='en-EN'
-                                      timeStyle='round' />)
-                                    : ''}
-                                </div>
-                              </div>
-                            </div>
+                              )
+                            })) : (
+                            <Typography align='center' style={{ width: '100%', marginTop: '20px', marginBottom: '20px' }}>
+                              You haven't got any notification yet
+                            </Typography>
                           )
-                        })}
+                        }
                       </div>
                       <ModalUserNotifications
                         from={values.from}
