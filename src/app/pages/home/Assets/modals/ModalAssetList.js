@@ -1,36 +1,45 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
 import {
+  Timeline,
+  TimelineItem,
+  TimelineSeparator,
+  TimelineConnector,
+  TimelineContent,
+  TimelineDot,
+  TimelineOppositeContent
+} from '@material-ui/lab';
+
+import {
   Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Typography,
   IconButton,
-  Tab, 
-  AppBar, 
-  Tabs, 
-  Paper,
-  TextField,
-  Checkbox,
-  FormControlLabel,
-  Switch,
   InputAdornment,
+  Tab,
+  Tabs,
+  Typography,
+  Paper,
 } from "@material-ui/core";
+
 import {
   withStyles,
   useTheme,
   makeStyles
 } from "@material-ui/core/styles";
+import TimelineIcon from '@material-ui/icons/Timeline';
 import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
-import CustomFields from '../../Components/CustomFields/CustomFields';
+import { isEmpty } from 'lodash';
 
-import './ModalAssetList.scss';
-import ImageUpload from '../../Components/ImageUpload';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
+import CustomFields from '../../Components/CustomFields/CustomFields';
+import BaseFields from '../../Components/BaseFields/BaseFields';
+import ImageUpload from '../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import './ModalAssetList.scss';
 
 import {
   SingleLine,
@@ -45,14 +54,14 @@ import {
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
-    singleLine: <SingleLine { ...props } />,
-    multiLine: <MultiLine { ...props } />,
-    date: <Date { ...props } />,
-    dateTime: <DateTime { ...props } />,
-    dropDown: <DropDown { ...props } />,
-    radioButtons: <RadioButtons { ...props } />,
-    checkboxes: <Checkboxes { ...props } />,
-    fileUpload: <FileUpload { ...props } />
+    singleLine: <SingleLine {...props} />,
+    multiLine: <MultiLine {...props} />,
+    date: <Date {...props} />,
+    dateTime: <DateTime {...props} />,
+    dropDown: <DropDown {...props} />,
+    radioButtons: <RadioButtons {...props} />,
+    checkboxes: <Checkboxes {...props} />,
+    fileUpload: <FileUpload {...props} />
   };
   return customFieldsPreviewObj[props.type];
 };
@@ -157,10 +166,26 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   // Example 5 - Tabs
   const classes5 = useStyles5();
   const [value5, setValue5] = useState(0);
+  const [openHistory, setOpenHistory] = useState(false);
 
   function handleChange5(event, newValue) {
     setValue5(newValue);
   }
+
+  const handleChange = name => event => {
+    if (name === 'price' || name === 'purchase_price') {
+      setValues({ ...values, [name]: Number(event.target.value) });
+    }
+    else {
+      setValues({ ...values, [name]: event.target.value });
+    }
+  };
+
+
+  const [formValidation, setFormValidation] = useState({
+    enabled: false,
+    isValidForm: {}
+  });
 
   // Example 1 - TextField
   const classes = useStyles();
@@ -175,9 +200,9 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     notes: '',
     quantity: '',
     purchase_date: '',
-    purchase_price: '',
-    price: '',
-    total_price: '',
+    purchase_price: 0,
+    price: 0,
+    total_price: 0,
     EPC: '',
     location: '',
     creator: '',
@@ -188,54 +213,215 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   const [customFieldsTab, setCustomFieldsTab] = useState({});
   const [tabs, setTabs] = useState([]);
 
-  const baseFields = [
-    { id: 'name', name: 'Name', disable: true, column: 1},
-    { id: 'brand', name: 'Brand', disable: true, column: 1},
-    { id: 'model', name: 'Model', disable: true, column: 1},
-    { id: 'category', name: 'Category', disable: true, column: 1},
-    { id: 'status', name: 'Status', disable: false, column: 1},
-    { id: 'serial', name: 'Serial Number', disable: false, column: 1},
-    { id: 'responsible', name: 'Responsible', disable: false, column: 1},
-    { id: 'notes', name: 'Notes', disable: false, column: 1},
-    { id: 'quantity', name: 'Quantity', disable: false, column: 1},
-    { id: 'purchase_date', name: 'Purchase Date', column: 2},
-    { id: 'purchase_price', name: 'Purchase Price', column: 2},
-    { id: 'price', name: 'Price', column: 2},
-    { id: 'total_price', name: 'Total Price', column: 2},
-    { id: 'EPC', name: 'EPC', column: 2},
-    { id: 'location', name: 'Location', column: 2},
-    { id: 'creator', name: 'Creator', column: 2},
-    { id: 'creation_date', name: 'Creation Date', column: 2},
-    { id: 'labeling_user', name: 'Labeling User', column: 2},
-    { id: 'labeling_date', name: 'Labeling Date', column: 2},
-  ];
-
-  const handleChange = name => event => {
-    setValues({ ...values, [name]: event.target.value });
-    console.log('VALUES>', { ...values, [name]: event.target.value })
+  const baseFieldsLocalProps = {
+    name: {
+      componentProps: {
+        onChange: handleChange('name'),
+        value: values.name,
+        inputProps: {
+          readOnly: true,
+        }
+      }
+    },
+    brand: {
+      componentProps: {
+        onChange: handleChange('brand'),
+        value: values.brand,
+        inputProps: {
+          readOnly: true,
+        }
+      }
+    },
+    model: {
+      componentProps: {
+        onChange: handleChange('model'),
+        value: values.model,
+        inputProps: {
+          readOnly: true,
+        }
+      }
+    },
+    category: {
+      style: {
+        marginTop: '15px'
+      },
+      componentProps: {
+        onChange: handleChange('category'),
+        value: values.category,
+        inputProps: {
+          readOnly: true,
+        }
+      }
+    },
+    status: {
+      componentProps: {
+        onChange: handleChange('status'),
+        value: values.status,
+        inputProps: {
+          readOnly: true,
+        }
+      }
+    },
+    serialNumber: {
+      componentProps: {
+        onChange: handleChange('serial'),
+        value: values.serial,
+      }
+    },
+    responsible: {
+      componentProps: {
+        onChange: handleChange('responsible'),
+        value: values.assignedTo,
+        inputProps: {
+          readOnly: true,
+          shrink: true
+        }
+      }
+    },
+    notes: {
+      componentProps: {
+        onChange: handleChange('notes'),
+        value: values.notes,
+        multiline: true,
+        rows: 4
+      }
+    },
+    quantity: {
+      componentProps: {
+        onChange: handleChange('quantity'),
+        value: values.quantity,
+        type: "number",
+        inputProps: {
+          readOnly: true,
+        }
+      }
+    },
+    purchaseDate: {
+      componentProps: {
+        onChange: handleChange('purchase_date'),
+        value: values.purchase_date,
+        type: "date",
+        InputLabelProps: {
+          shrink: true
+        }
+      }
+    },
+    purchasePrice: {
+      ownValidFn: () => !!values.purchase_price || values.purchase_price === 0,
+      componentProps: {
+        onChange: handleChange('purchase_price'),
+        value: values.purchase_price,
+        type: "number",
+        InputProps: {
+          startAdornment: <InputAdornment position="start">$</InputAdornment>,
+        }
+      }
+    },
+    price: {
+      ownValidFn: () => !!values.price || values.price === 0,
+      componentProps: {
+        onChange: handleChange('price'),
+        value: values.price,
+        type: "number",
+        InputProps: {
+          startAdornment: <InputAdornment position="start">$</InputAdornment>,
+        }
+      }
+    },
+    totalPrice: {
+      componentProps: {
+        onChange: handleChange('total_price'),
+        value: values.total_price,
+        type: "number",
+        InputProps: {
+          startAdornment: <InputAdornment position="start">$</InputAdornment>,
+          readOnly: true,
+        }
+      }
+    },
+    EPC: {
+      componentProps: {
+        onChange: handleChange('EPC'),
+        value: values.EPC,
+        inputProps: {
+          readOnly: true,
+        }
+      }
+    },
+    location: {
+      componentProps: {
+        onChange: handleChange('location'),
+        value: values.location,
+        inputProps: {
+          readOnly: true,
+        }
+      }
+    },
+    creator: {
+      componentProps: {
+        onChange: handleChange('creator'),
+        value: values.creator,
+        inputProps: {
+          readOnly: true,
+        }
+      }
+    },
+    creationDate: {
+      componentProps: {
+        onChange: handleChange('creation_date'),
+        value: values.creation_date,
+        inputProps: {
+          readOnly: true,
+        }
+      }
+    },
+    labelingUser: {
+      componentProps: {
+        onChange: handleChange('labeling_user'),
+        value: values.creation_date,
+        inputProps: {
+          readOnly: true,
+        }
+      }
+    },
+    labelingDate: {
+      componentProps: {
+        onChange: handleChange('labeling_date'),
+        value: values.creation_date,
+        inputProps: {
+          readOnly: true,
+        }
+      }
+    },
   };
 
   const handleLoadCustomFields = (profile) => {
     if (!profile || !profile.id) return;
     console.log('id:', id)
     getOneDB('categories/', profile.id)
-    .then(response => response.json())
-    .then(data => { 
-      console.log(data.response);
-      const { customFieldsTab, depreciation } = data.response;
-      console.log('customFieldsTab:', customFieldsTab)
-      const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
-      tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
+      .then(response => response.json())
+      .then(data => {
+        console.log(data.response);
+        const { customFieldsTab, depreciation } = data.response;
+        console.log('customFieldsTab:', customFieldsTab)
+        const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
+        tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
 
-      console.log('tabs:', tabs)
-      setCustomFieldsTab(customFieldsTab);
-      setValues(prev => ({ ...prev, depreciation }));
-      setTabs(tabs);
-    })
-    .catch(error => console.log(error));
+        console.log('tabs:', tabs)
+        setCustomFieldsTab(customFieldsTab);
+        setValues(prev => ({ ...prev, depreciation }));
+        setTabs(tabs);
+      })
+      .catch(error => console.log(error));
   };
 
   const handleSave = () => {
+    setFormValidation({ ...formValidation, enabled: true });
+    if (!isEmpty(formValidation.isValidForm)) {
+      alert('Please fill out missing fields')
+      return;
+    }
+
     const fileExt = getFileExtension(image);
     const body = { ...values, customFieldsTab, fileExt };
     console.log('body:', body)
@@ -268,7 +454,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   const handleCloseModal = () => {
     console.log('HANDLE CLOSE MODAL!')
     setCustomFieldsTab({});
-    setValues({ 
+    setValues({
       name: '',
       brand: '',
       model: '',
@@ -287,21 +473,26 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       creator: '',
       creation_date: '',
       labeling_user: '',
-      labeling_date: ''
+      labeling_date: '',
+      assignedTo: ''
     });
     setShowModal(false);
     setValue4(0);
     setTabs([]);
+    setFormValidation({
+      enabled: false,
+      isValidForm: false
+    });
   };
 
   useEffect(() => {
     if (!showModal) return;
     console.log('referencesSelectedId:', referencesSelectedId)
-    
+
     if (referencesSelectedId) {
       getOneDB('references/', referencesSelectedId)
         .then(response => response.json())
-        .then(data => { 
+        .then(data => {
           const { name, brand, model, customFieldsTab } = data.response;
           setValues({
             ...values,
@@ -321,35 +512,70 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     // console.log('profiles:', profiles)
     // setValues(prev => ({ ...prev, profiles }));
     if (!id || !Array.isArray(id)) return;
-      
+
     getOneDB('assets/', id[0])
       .then(response => response.json())
-      .then(data => { 
+      .then(data => {
         console.log(data.response);
-        const { name, brand, model, category, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt } = data.response;
-        setValues({
-          ...values,
-          name,
-          brand,
-          model,
-          category,
-          status,
-          serial,
-          responsible,
-          notes,
-          quantity,
-          purchase_date,
-          purchase_price,
-          price,
-          total_price,
-          EPC,
-          location,
-          creator,
-          creation_date,
-          labeling_user,
-          labeling_date,
-          imageURL: getImageURL(id, 'assets', fileExt)
-        });
+        const { name, brand, model, category, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt, assigned } = data.response;
+        if (assigned) {
+          getOneDB('employees/', assigned)
+            .then(response => response.json())
+            .then(data => {
+              const nameRes = data.response.name;
+              const lastName = data.response.lasName;
+              setValues({
+                ...values,
+                name,
+                brand,
+                model,
+                category,
+                status,
+                serial,
+                responsible,
+                notes,
+                quantity,
+                purchase_date,
+                purchase_price,
+                price,
+                total_price: purchase_price + price,
+                EPC,
+                location,
+                creator,
+                creation_date,
+                labeling_user,
+                labeling_date,
+                imageURL: getImageURL(id, 'assets', fileExt),
+                assignedTo: `${nameRes ? nameRes : ''} ${lastName ? lastName : ''}`,
+              });
+            })
+            .catch(error => console.log(error));
+        }
+        else {
+          setValues({
+            ...values,
+            name,
+            brand,
+            model,
+            category,
+            status,
+            serial,
+            responsible,
+            notes,
+            quantity,
+            purchase_date,
+            purchase_price,
+            price,
+            total_price,
+            EPC,
+            location,
+            creator,
+            creation_date,
+            labeling_user,
+            labeling_date,
+            imageURL: getImageURL(id, 'assets', fileExt),
+          });
+        }
         const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
         tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
         setCustomFieldsTab(customFieldsTab);
@@ -357,6 +583,14 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       })
       .catch(error => console.log(error));
   }, [showModal]);
+
+  useEffect(() => {
+    setFormValidation({ ...formValidation, enabled: true });
+  }, [values])
+
+  useEffect(() => {
+    setValues(prev => ({ ...prev, total_price: prev.purchase_price + prev.price }));
+  }, [values.purchase_price, values.price])
 
   // Function to update customFields
   const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
@@ -370,7 +604,60 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   };
 
   return (
-    <div style={{width:'1000px'}}>
+    <div style={{ width: '1000px' }}>
+      <Dialog onClose={() => setOpenHistory(false)} aria-labelledby="simple-dialog-title" open={openHistory}>
+        <DialogTitle id="simple-dialog-title">History</DialogTitle>
+        <Timeline >
+          <TimelineItem>
+            <TimelineOppositeContent>
+              <Typography color="textSecondary">03/08/2017</Typography>
+            </TimelineOppositeContent>
+            <TimelineSeparator>
+              <TimelineDot />
+              <TimelineConnector />
+            </TimelineSeparator>
+            <TimelineContent>
+              <Typography>Down for maintenance</Typography>
+            </TimelineContent>
+          </TimelineItem>
+          <TimelineItem>
+            <TimelineOppositeContent>
+              <Typography color="textSecondary">21/03/2018</Typography>
+            </TimelineOppositeContent>
+            <TimelineSeparator>
+              <TimelineDot />
+              <TimelineConnector />
+            </TimelineSeparator>
+            <TimelineContent>
+              <Typography>Asigned to a new user</Typography>
+            </TimelineContent>
+          </TimelineItem>
+          <TimelineItem>
+            <TimelineOppositeContent>
+              <Typography color="textSecondary">12/12/2019</Typography>
+            </TimelineOppositeContent>
+            <TimelineSeparator>
+              <TimelineDot />
+              <TimelineConnector />
+            </TimelineSeparator>
+            <TimelineContent>
+              <Typography>Location was changed</Typography>
+            </TimelineContent>
+          </TimelineItem>
+          <TimelineItem>
+            <TimelineOppositeContent>
+              <Typography color="textSecondary">26/02/2020</Typography>
+            </TimelineOppositeContent>
+            <TimelineSeparator>
+              <TimelineDot />
+              <TimelineConnector />
+            </TimelineSeparator>
+            <TimelineContent>
+              <Typography>Asset was Deleted</Typography>
+            </TimelineContent>
+          </TimelineItem>
+        </Timeline>
+      </Dialog>
       <Dialog
         onClose={handleCloseModal}
         aria-labelledby="customized-dialog-title"
@@ -380,10 +667,10 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
           id="customized-dialog-title"
           onClose={handleCloseModal}
         >
-          {`${id ? 'Edit' : 'Add' } Asset`}
+          {`${id ? 'Edit' : 'Add'} Asset`}
         </DialogTitle5>
         <DialogContent5 dividers>
-          <div className="kt-section__content" style={{margin:'-16px'}}>
+          <div className="kt-section__content" style={{ margin: '-16px' }}>
             <div className={classes4.root}>
               <Paper className={classes4.root}>
                 <Tabs
@@ -394,9 +681,9 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                   variant="fullWidth"
                 >
                   <Tab label="Asset" />
-                  { tabs.map((tab, index) => (
+                  {tabs.map((tab, index) => (
                     <Tab key={`tab-reference-${index}`} label={tab.info.name} />
-                  )) }
+                  ))}
                 </Tabs>
               </Paper>
               <SwipeableViews
@@ -410,58 +697,65 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                       <ImageUpload setImage={setImage} image={values.imageURL}>
                         Asset Photo
                       </ImageUpload>
+                      <Button
+                        variant="contained"
+                        color="default"
+                        className={classes.button}
+                        startIcon={<TimelineIcon />}
+                        style={{
+                          marginTop: '20px',
+                          width: '60%',
+                          alignSelf: 'center',
+                        }}
+                        onClick={() => setOpenHistory(true)}
+                      >
+                        History
+                      </Button>
                     </div>
                     <div className="profile-tab-wrapper__content-left">
-                      
-                      {baseFields.filter(fields => fields.column === 1).map(field => (
-                        <TextField
-                          id={`standard-${field.id}`}
-                          label={field.name}
-                          className={classes.textField}
-                          value={values[field.id]}
-                          onChange={handleChange(field.disable ? null : field.id)}
-                          margin="normal"
-                        />
-                      ))}
+                      <BaseFields
+                        catalogue={'assets1'}
+                        collection={'assets'}
+                        formState={[formValidation, setFormValidation]}
+                        localProps={baseFieldsLocalProps}
+                        values={values}
+                      />
                     </div>
                     <div className="profile-tab-wrapper__content-left">
-                      {baseFields.filter(fields => fields.column === 2).map(field => (
-                        <TextField
-                          id={`standard-${field.id}`}
-                          label={field.name}
-                          className={classes.textField}
-                          value={values[field.id]}
-                          onChange={handleChange(field.id)}
-                          margin="normal"
-                        />
-                      ))}
+                      <BaseFields
+                        catalogue={'assets2'}
+                        collection={'assets'}
+                        formState={[formValidation, setFormValidation]}
+                        localProps={baseFieldsLocalProps}
+                        values={values}
+                      />
                     </div>
                   </div>
                 </TabContainer4>
                 {tabs.map(tab => (
                   <TabContainer4 dir={theme4.direction}>
-                  <div className="modal-asset-reference">
-                    {Array(tab.content[1].length === 0 ? 1 : 2).fill(0).map((col, colIndex) => (
-                      <div className="modal-asset-reference__list-field" >
-                        {tab.content[colIndex].map(customField => (
-                          <CustomFieldsPreview 
-                            id={customField.id}
-                            type={customField.content}
-                            values={customField.values}
-                            onDelete={() => {}}
-                            onSelect={() => {}}
-                            columnIndex={colIndex}
-                            from="form"
-                            tab={tab}
-                            onUpdateCustomField={handleUpdateCustomFields}
-                            // customFieldIndex={props.customFieldIndex}
-                            onClick={() => alert(customField.content)}
-                          />
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                  </TabContainer4>  
+                    <div className="modal-asset-reference">
+                      {Array(tab.content[1].length === 0 ? 1 : 2).fill(0).map((col, colIndex) => (
+                        <div className="modal-asset-reference__list-field" >
+                          {tab.content[colIndex].map(customField => (
+                            <CustomFieldsPreview
+                              id={customField.id}
+                              type={customField.content}
+                              values={customField.values}
+                              onDelete={() => { }}
+                              onSelect={() => { }}
+                              columnIndex={colIndex}
+                              from="form"
+                              tab={tab}
+                              onUpdateCustomField={handleUpdateCustomFields}
+                              // customFieldIndex={props.customFieldIndex}
+                              onClick={() => alert(customField.content)}
+                            />
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </TabContainer4>
                 ))}
               </SwipeableViews>
             </div>
@@ -472,7 +766,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
             Save changes
           </Button>
         </DialogActions5>
-      </Dialog>    
+      </Dialog>
     </div>
   )
 };

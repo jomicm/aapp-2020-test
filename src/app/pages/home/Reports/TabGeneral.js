@@ -8,12 +8,13 @@ import {
   Select,
   TextField
 } from "@material-ui/core";
-import { makeStyles } from '@material-ui/core/styles';
-import { getDB, deleteDB, updateDB, postDB, getOneDB } from '../../../crud/api';
-import { formatCollection } from './reportsHelpers';
+import { makeStyles } from '@material-ui/core';
+import { getDB, deleteDB, updateDB, postDB, getOneDB, getCountDB, getDBComplex } from '../../../crud/api';
+import TableReportsGeneral from '../Components/TableReportsGeneral';
+import { formatData } from './reportsHelpers';
 import ChangeReportName from './modals/ChangeReportName';
 
-const dataTableDefault = { header: [], tableRows: [], title: '' };
+const dataTableDefault = { header: [], tableRows: [], title: '', headerObject: [] };
 
 const modules = [
   { index: 0, id: 'user', name: 'Users' },
@@ -50,12 +51,12 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
   const [control, setControl] = useState(false);
   const [collectionName, setCollectionName] = useState(null);
   const [dataTable, setDataTable] = useState(dataTableDefault);
-  const [values, setValues] = useState({ 
-    selectedReport: '', 
-    startDate: '', 
-    endDate: '', 
-    enabled: false, 
-    reportName: '' 
+  const [values, setValues] = useState({
+    selectedReport: '',
+    startDate: '',
+    endDate: '',
+    enabled: false,
+    reportName: ''
   });
 
   const handleChange = (name) => (event) => {
@@ -79,17 +80,17 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
 
   const handleClickGenerateReport = (e) => {
     const { value } = e.target;
-      handleGenerateReport(value);
-      setId(value);
+    handleGenerateReport(value);
+    setId(value);
   }
-  
+
   const handleGenerateReport = (id) => {
     savedReports.map(({ _id, endDate, selectedReport, startDate }) => {
       if (_id === id) {
-        setValues({ 
-          ...values, 
-          selectedReport, 
-          startDate, 
+        setValues({
+          ...values,
+          selectedReport,
+          startDate,
           endDate
         })
         setCollectionName(selectedReport);
@@ -109,15 +110,70 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
       return;
     }
     const body = { ...values, reportName }
-      postDB('reports', body)
-        .then((data) => data.json())
-        .catch((error) => console.log('ERROR', error));
+    postDB('reports', body)
+      .then((data) => data.json())
+      .catch((error) => console.log('ERROR', error));
   }
 
   const reset = () => {
     setValues({ ...values, selectedReport: '', startDate: '', endDate: '' });
     reloadData()
+    loadReportsData(collectionName)
   }
+
+  const [tableControl, setTableControl] = useState({
+    collection: '',
+    total: 0,
+    page: 0,
+    rowsPerPage: 5,
+    orderBy: 'name',
+    order: 1,
+    search: '',
+    searchBy: '',
+  });
+
+  const loadReportsData = (collectionNames) => {
+    if (!collectionNames) return;
+    const collection = modules.find(({ id }) => id === collectionNames);
+    collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
+    collectionNames.forEach(collectionName => {
+      let queryLike = '';
+
+      if (collectionName) {
+        queryLike = tableControl.searchBy ? (
+          [{ key: tableControl.searchBy, value: tableControl.search }]
+        ) : (
+          ['name', 'lastname', 'email', 'model', 'price', 'brand', 'level'].map(key => ({ key, value: tableControl.search }))
+        )
+      }
+      getCountDB({
+        collection: collectionName,
+        queryLike: tableControl.search ? queryLike : null
+      })
+        .then(response => response.json())
+        .then(data => {
+          setTableControl(prev => ({
+            ...prev,
+            total: data.response.count
+          }))
+        });
+
+      getDBComplex({
+        collection: collectionName,
+        limit: tableControl.rowsPerPage,
+        skip: tableControl.rowsPerPage * tableControl.page,
+        sort: [{ key: tableControl.orderBy, value: tableControl.order }],
+        queryLike: tableControl.search ? queryLike : null
+      })
+        .then(response => response.json())
+        .then(data => {
+          const { response } = data;
+          const dataTable = formatData(collection.id, response);
+          setDataTable({ ...dataTable, title: collection.name });
+        })
+        .catch(error => console.log('error>', error));
+    });
+  };
 
   useEffect(() => {
     if (!values.selectedReport) {
@@ -129,15 +185,12 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
       setDataTable(dataTableDefault);
       return;
     }
-    getDB(collection.id)
-      .then((response) => response.json())
-      .then((data) => {
-        const { response } = data;
-        const dataTable = formatCollection(collection.id ,response);
-        setDataTable({ ...dataTable, title: collection.name });
-      })
-      .catch(error => console.log('error>', error));
+    loadReportsData(collectionName)
   }, [collectionName]);
+
+  useEffect(() => {
+    loadReportsData(collectionName);
+  }, [tableControl.page, tableControl.rowsPerPage, tableControl.order, tableControl.orderBy, tableControl.search, tableControl.locationsFilter]);
 
   return (
     <div>
@@ -151,30 +204,30 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>Generate Reports</h2>
         <div>
-          <Button 
-            className={classes.button} 
-            color="primary" 
+          <Button
+            className={classes.button}
+            color="primary"
             onClick={handleClickCollectionName}
-            size="large" 
-            variant="contained" 
-          > 
-            Generate Report 
+            size="large"
+            variant="contained"
+          >
+            Generate Report
           </Button>
-          <Button 
-            className={classes.button} 
-            color="primary" 
+          <Button
+            className={classes.button}
+            color="primary"
             onClick={handleChangeReportName}
-            size="large" 
-            variant="contained" 
-          > 
-            Save 
+            size="large"
+            variant="contained"
+          >
+            Save
           </Button>
         </div>
       </div>
-      <div 
-        name="Head Part" 
-        style={{ marginTop:'30px', display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap' }}
-        >
+      <div
+        name="Head Part"
+        style={{ marginTop: '30px', display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap' }}
+      >
         <FormControl style={{ width: '200px' }}>
           <InputLabel htmlFor="age-simple">Select Report</InputLabel>
           <Select
@@ -233,11 +286,37 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
         </FormControl>
       </div>
       <div>
-      <h3 style={{ marginTop: '40px' }}>Table</h3>
-        <MUIDataTable
-          columns={dataTable.header}
-          data={dataTable.tableRows}
-          options={options}
+        <h3 style={{ marginTop: '40px' }}>Table</h3>
+        <TableReportsGeneral
+          controlValues={tableControl}
+          headRows={dataTable.headerObject ? dataTable.headerObject : []}
+          onDelete={() => { }}
+          onEdit={() => { }}
+          onView={() => { }}
+          onSelect={() => { }}
+          paginationControl={({ rowsPerPage, page }) =>
+            setTableControl(prev => ({
+              ...prev,
+              rowsPerPage: rowsPerPage,
+              page: page,
+            }))
+          }
+          rows={dataTable.rows}
+          searchControl={({ value, field }) => {
+            setTableControl(prev => ({
+              ...prev,
+              search: value,
+              searchBy: field,
+            }))
+          }}
+          sortByControl={({ orderBy, order }) => {
+            setTableControl(prev => ({
+              ...prev,
+              orderBy: orderBy,
+              order: order,
+            }))
+          }}
+          disableSearchBy
           title={dataTable.title}
         />
       </div>

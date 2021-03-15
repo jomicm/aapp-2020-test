@@ -11,7 +11,6 @@ import {
   Tab,
   Tabs,
   Paper,
-  TextField,
 } from "@material-ui/core";
 import {
   withStyles,
@@ -20,12 +19,14 @@ import {
 } from "@material-ui/core/styles";
 import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
-import CustomFields from '../../Components/CustomFields/CustomFields';
+import { isEmpty } from 'lodash';
 
-// import './ModalAssetCategories.scss';
-import ImageUpload from '../../Components/ImageUpload';
+import CustomFields from '../../Components/CustomFields/CustomFields';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
+import BaseFields from '../../Components/BaseFields/BaseFields';
+import ImageUpload from '../../Components/ImageUpload';
 import ModalYesNo from '../../Components/ModalYesNo';
+import { modules } from '../../constants';
 import Permission from '../components/Permission';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 
@@ -133,6 +134,12 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
   };
 
   const handleSave = () => {
+    setFormValidation({ ...formValidation, enabled: true });
+    if (!isEmpty(formValidation.isValidForm)) {
+      alert('Please fill out missing fields')
+      return;
+    }
+
     const fileExt = getFileExtension(image);
     const body = { ...values, customFieldsTab, profilePermissions, fileExt };
     if (!id) {
@@ -159,26 +166,38 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
     reloadTable();
   };
 
+  const baseFieldsLocalProps = {
+    name: {
+      componentProps: {
+        onChange: handleChange('name')
+      }
+    },
+  };
+
   const handleCloseModal = () => {
     setCustomFieldsTab({});
     setProfilePermissions([]);
-    setValues({ 
+    setValues({
       name: "",
       categoryPic: '/media/misc/placeholder-image.jpg',
       categoryPicDefault: '/media/misc/placeholder-image.jpg'
     });
     setShowModal(false);
     setValue4(0);
+    setFormValidation({
+      enabled: false,
+      isValidForm: false
+    });
   };
 
   useEffect(() => {
-    if(!id || !Array.isArray(id)) {
+    if (!id || !Array.isArray(id)) {
       return;
     }
-      
+
     getOneDB('userProfiles/', id[0])
       .then(response => response.json())
-      .then(data => { 
+      .then(data => {
         const { name, depreciation, customFieldsTab, profilePermissions, fileExt } = data.response;
         const obj = {
           name,
@@ -192,18 +211,17 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
       .catch(error => console.log(error));
   }, [id]);
 
+  useEffect(() => {
+    setFormValidation({ ...formValidation, enabled: true });
+  }, [values])
+
   const [customFieldsTab, setCustomFieldsTab] = useState({});
 
-  const modules = [
-    {key:'dashboard', name: 'Dashboard'},
-    {key:'assets', name: 'Assets'},
-    {key:'processes', name: 'Processes'},
-    {key:'users', name: 'Users'},
-    {key:'employees', name: 'Employees'},
-    {key:'locations', name: 'Locations'},
-    {key:'reports', name: 'Reports'},
-    {key:'settings', name: 'Settings'},
-  ];
+  
+  const [formValidation, setFormValidation] = useState({
+    enabled: false,
+    isValidForm: {}
+  });
 
   const [profilePermissions, setProfilePermissions] = useState({});
 
@@ -212,7 +230,7 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
   }
 
   return (
-    <div style={{width:'1000px'}}>
+    <div style={{ width: '1000px' }}>
       <Dialog
         onClose={handleCloseModal}
         aria-labelledby="customized-dialog-title"
@@ -222,11 +240,11 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
           id="customized-dialog-title"
           onClose={handleCloseModal}
         >
-          {`${id ? 'Edit' : 'Add' } User Profiles`}
+          {`${id ? 'Edit' : 'Add'} User Profiles`}
           {/* Add/Edit User Profiles */}
         </DialogTitle5>
         <DialogContent5 dividers>
-          <div className="kt-section__content" style={{margin:'-16px'}}>
+          <div className="kt-section__content" style={{ margin: '-16px' }}>
             <div className={classes4.root}>
               <Paper className={classes4.root}>
                 <Tabs
@@ -252,32 +270,31 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
                       User Profile Photo
                     </ImageUpload>
                     <div className="profile-tab-wrapper__content">
-                      <TextField
-                        id="standard-name"
-                        label="Name"
-                        className={classes.textField}
-                        value={values.name}
-                        onChange={handleChange("name")}
-                        margin="normal"
+                      <BaseFields
+                        catalogue={'userReferences'}
+                        collection={'userReferences'}
+                        formState={[formValidation, setFormValidation]}
+                        localProps={baseFieldsLocalProps}
+                        values={values}
                       />
                     </div>
                   </div>
                 </TabContainer4>
                 <TabContainer4 dir={theme4.direction}>
-                  <div style={{ display:'flex', flexWrap:'wrap', justifyContent: 'space-around', padding: '0 20px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around', padding: '0 20px' }}>
                     {modules.map((module, index) => {
                       return <Permission
-                                originalChecked={profilePermissions}
-                                key={module.key}
-                                id={module.key}
-                                title={module.name}
-                                setPermissions={handleSetPermissions}
-                              />
+                        originalChecked={profilePermissions}
+                        key={module.key}
+                        id={module.key}
+                        title={module.name}
+                        setPermissions={handleSetPermissions}
+                      />
                     })}
                   </div>
                 </TabContainer4>
                 <TabContainer4 dir={theme4.direction}>
-                  <CustomFields 
+                  <CustomFields
                     customFieldsTab={customFieldsTab}
                     setCustomFieldsTab={setCustomFieldsTab}
                   />
@@ -291,7 +308,7 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
             Save changes
           </Button>
         </DialogActions5>
-      </Dialog>    
+      </Dialog>
     </div>
   )
 };

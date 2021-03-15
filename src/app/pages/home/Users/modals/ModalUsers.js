@@ -160,7 +160,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     email: '',
     password: '',
     users: [],
-    selectedBoss: {},
+    selectedBoss: null,
     isDisableUserProfile: false,
     selectedUserProfile: null,
     categoryPic: '/media/misc/placeholder-image.jpg',
@@ -286,6 +286,10 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       .catch(error => console.log(error));
   }, [id, userProfileRows]);
 
+  useEffect(() => {
+    setFormValidation({ ...formValidation, enabled: true });
+  }, [values])
+
   const loadInit = () => {
     getDB('user')
       .then(response => response.json())
@@ -383,7 +387,6 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       }
     },
     userGroups: {
-      ownValidFn: () => true,
       componentProps: {
         isClearable: true,
         label: 'Groups',
@@ -391,7 +394,6 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       }
     },
     boss: {
-      ownValidFn: () => !!values.selectedBoss,
       componentProps: {
         isClearable: true,
         onChange: (selectedBoss) => setValues(prev => ({ ...prev, selectedBoss })),
@@ -444,6 +446,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
                     <div className="profile-tab-wrapper__content">
                       <BaseFields
                         catalogue={'userList'}
+                        collection={'user'}
                         formState={[formValidation, setFormValidation]}
                         localProps={baseFieldsLocalProps}
                         values={values}

@@ -8,14 +8,9 @@ import {
   DialogActions,
   Typography,
   IconButton,
-  Tab, 
-  AppBar, 
-  Tabs, 
+  Tab,
+  Tabs,
   Paper,
-  TextField,
-  Checkbox,
-  FormControlLabel,
-  Switch
 } from "@material-ui/core";
 import {
   withStyles,
@@ -24,12 +19,14 @@ import {
 } from "@material-ui/core/styles";
 import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
-import CustomFields from '../../Components/CustomFields/CustomFields';
+import { isEmpty } from 'lodash';
 
-import './ModalAssetCategories.scss';
-import ImageUpload from '../../Components/ImageUpload';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
+import CustomFields from '../../Components/CustomFields/CustomFields';
+import BaseFields from '../../Components/BaseFields/BaseFields';
+import ImageUpload from '../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import './ModalAssetCategories.scss';
 
 
 // Example 5 - Modal
@@ -129,13 +126,30 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
   function handleChangeIndex4(index) {
     setValue4(index);
   }
-  // Example 5 - Tabs
-  const classes5 = useStyles5();
-  const [value5, setValue5] = useState(0);
 
-  function handleChange5(event, newValue) {
-    setValue5(newValue);
-  }
+  const handleChange = name => event => {
+    setValues({ ...values, [name]: event.target.value });
+  };
+
+  const [formValidation, setFormValidation] = useState({
+    enabled: false,
+    isValidForm: {}
+  });
+
+  const baseFieldsLocalProps = {
+    name: {
+      componentProps: {
+        onChange: handleChange('name')
+      }
+    },
+    depreciation: {
+      ownValidFn: () => !!values.depreciation || values.depreciation === 0,
+      componentProps: {
+        onChange: handleChange('depreciation'),
+        type: "number"
+      }
+    },
+  };
 
   // Example 1 - TextField
   const classes = useStyles();
@@ -147,11 +161,13 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
   });
   // const [categoryPic, setCategoryPic] 
 
-  const handleChange = name => event => {
-    setValues({ ...values, [name]: event.target.value });
-  };
-
   const handleSave = () => {
+    setFormValidation({ ...formValidation, enabled: true });
+    if (!isEmpty(formValidation.isValidForm)) {
+      alert('Please fill out missing fields')
+      return;
+    }
+
     const fileExt = getFileExtension(image);
     const body = { ...values, customFieldsTab, fileExt };
     console.log('isNew:', isNew)
@@ -182,7 +198,7 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
   const handleCloseModal = () => {
     setImage(null);
     setCustomFieldsTab({});
-    setValues({ 
+    setValues({
       name: "",
       depreciation: 0,
       categoryPic: '/media/misc/placeholder-image.jpg',
@@ -190,17 +206,21 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
     });
     setShowModal(false);
     setValue4(0);
+    setFormValidation({
+      enabled: false,
+      isValidForm: false
+    });
   };
 
   useEffect(() => {
-    if(!id || !Array.isArray(id)) {
+    if (!id || !Array.isArray(id)) {
       setIsNew(true);
       return;
     }
-      
+
     getOneDB('categories/', id[0])
       .then(response => response.json())
-      .then(data => { 
+      .then(data => {
         console.log(data.response);
         const { name, depreciation, customFieldsTab, fileExt } = data.response;
         const imageURL = getImageURL(id, 'categories', fileExt);
@@ -214,11 +234,15 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
       .catch(error => console.log(error));
   }, [id]);
 
+  useEffect(() => {
+    setFormValidation({ ...formValidation, enabled: true });
+  }, [values])
+
   const [customFieldsTab, setCustomFieldsTab] = useState({});
   const [isNew, setIsNew] = useState(true);
 
   return (
-    <div style={{width:'1000px'}}>
+    <div style={{ width: '1000px' }}>
       <Dialog
         onClose={handleCloseModal}
         aria-labelledby="customized-dialog-title"
@@ -228,11 +252,11 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
           id="customized-dialog-title"
           onClose={handleCloseModal}
         >
-          {`${id ? 'Edit' : 'Add' } Asset Categories`}
+          {`${id ? 'Edit' : 'Add'} Asset Categories`}
           {/* Add/Edit Asset Categories */}
         </DialogTitle5>
         <DialogContent5 dividers>
-          <div className="kt-section__content" style={{margin:'-16px'}}>
+          <div className="kt-section__content" style={{ margin: '-16px' }}>
             <div className={classes4.root}>
               <Paper className={classes4.root}>
                 <Tabs
@@ -257,28 +281,18 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
                       Asset Category Photo
                     </ImageUpload>
                     <div className="profile-tab-wrapper__content">
-                      <TextField
-                        id="standard-name"
-                        label="Name"
-                        className={classes.textField}
-                        value={values.name}
-                        onChange={handleChange("name")}
-                        margin="normal"
-                      />
-                      <TextField
-                        id="standard-number"
-                        label="Depreciation"
-                        value={values.depreciation}
-                        onChange={handleChange("depreciation")}
-                        type="number"
-                        className={classes.textField}
-                        margin="normal"
+                      <BaseFields
+                        catalogue={'categories'}
+                        collection={'categories'}
+                        formState={[formValidation, setFormValidation]}
+                        localProps={baseFieldsLocalProps}
+                        values={values}
                       />
                     </div>
                   </div>
                 </TabContainer4>
                 <TabContainer4 dir={theme4.direction}>
-                  <CustomFields 
+                  <CustomFields
                     customFieldsTab={customFieldsTab}
                     setCustomFieldsTab={setCustomFieldsTab}
                   />
@@ -292,7 +306,7 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
             Save changes
           </Button>
         </DialogActions5>
-      </Dialog>    
+      </Dialog>
     </div>
   )
 };

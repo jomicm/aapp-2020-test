@@ -3,12 +3,14 @@ export const defaultValues = {
   modules: [
     { index: 0, id: 'none', name: 'None' }, 
     { index: 1, id: 'user', name: 'Users' },
-    { index: 2, id: 'employees', name: 'Employees' },
-    { index: 3, id: 'locations', name: 'Locations' },
-    { index: 4, id: 'categories', name: 'Categories' },
-    { index: 5, id: 'references', name: 'References' },
-    { index: 6, id: 'assets', name: 'Assets' },
-    { index: 7, id: 'processes', name: 'Processes' },
+    { index: 2, id: 'userReferences', name: 'Users References' },
+    { index: 3, id: 'employees', name: 'Employees' },
+    { index: 4, id: 'employeeReferences', name: 'Employees References' },
+    { index: 5, id: 'locations', name: 'Locations' },
+    { index: 6, id: 'categories', name: 'Categories' },
+    { index: 7, id: 'references', name: 'References' },
+    { index: 8, id: 'assets', name: 'Assets' },
+    { index: 9, id: 'processes', name: 'Processes' },
   ],
   selectedLanguage: '',
   selectedModule: '',
@@ -22,12 +24,18 @@ export const defaultValues = {
       boss: { id: 'boss', name: 'Boss', caption: '', mandatory: false, regex: '' },
       groups: { id: 'groups', name: 'Groups', caption: '', mandatory: false, regex: '' }
     },
+    userReferences: {
+      name: { id: 'name', name: 'Name', caption: '', mandatory: false, regex: '' },
+    },
     employees: {
       employeeProfile: { id: 'employeeProfile', name: 'Employee Profile', caption: '', mandatory: false, regex: '' },
       name: { id: 'name', name: 'Name', caption: '', mandatory: false, regex: '' },
       lastName: { id: 'lastName', name: 'Last Name', caption: '', mandatory: false, regex: '' },
       email: { id: 'email', name: 'Email', caption: '', mandatory: false, regex: '' },
       responsibilityLayout: { id: 'responsibilityLayout', name: 'Responsibility Layout', caption: '', mandatory: false, regex: '' }
+    },
+    employeeReferences: {
+      name: { id: 'name', name: 'Name', caption: '', mandatory: false, regex: '' },
     },
     locations: {
       selectedLevel: { id: 'selectedLevel', name: 'Selected Level', caption: '', mandatory: false, regex: '' },
@@ -60,7 +68,7 @@ export const defaultValues = {
       price: { id: 'price', name: 'Price', caption: '', mandatory: false, regex: '' },
       totalPrice: { id: 'totalPrice', name: 'Total Price', caption: '', mandatory: false, regex: '' },
       EPC: { id: 'EPC', name: 'EPC', caption: '', mandatory: false, regex: '' },
-      locations: { id: 'locations', name: 'Locations', caption: '', mandatory: false, regex: '' },
+      location: { id: 'locations', name: 'Locations', caption: '', mandatory: false, regex: '' },
       creator: { id: 'creator', name: 'Creator', caption: '', mandatory: false, regex: '' },
       creationDate: { id: 'creationDate', name: 'Creation Date', caption: '', mandatory: false, regex: '' },
       labelingUser: { id: 'labelingUser', name: 'Labeling User', caption: '', mandatory: false, regex: '' },
