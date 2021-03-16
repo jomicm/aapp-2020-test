@@ -50,7 +50,7 @@ class UserProfile extends React.Component {
             <div className='kt-user-card__avatar'>
               <img alt='Pic' key={Date.now()} className='kt-hidden' src={user.pic} />
               <span className='kt-badge kt-badge--lg kt-badge--rounded kt-badge--bold kt-font-success'>
-                S
+              {showAvatar && <img alt='Pic' key={Date.now()} src={user.pic} />}
               </span>
             </div>
             <div className='kt-user-card__name'>{user.fullname}</div>

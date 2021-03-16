@@ -176,14 +176,13 @@ const ModalEmployees = ({
   const executePolicies = (catalogueName) => {
     const formatDate = new Date()
     const currentDate = `${(`0${formatDate.getDate()}`).slice(-2)}/${(`0${formatDate.getMonth() + 1}`).slice(-2)}/${formatDate.getFullYear()}`;
-    const currentTime = `${formatDate.getHours()}:${formatDate.getMinutes()}:${formatDate.getSeconds()}`;
+    const currentTime = `${formatDate.getHours()}:${(`0${formatDate.getMinutes()}`).slice(-2)}:${(`0${formatDate.getSeconds()}`).slice(-2)}`;
     const timeStamp = currentDate + ' ' + currentTime;
     const read = false;
     const status = 'new';
     const filteredPolicies = policies.filter(
       (policy) => policy.selectedAction === catalogueName);
       filteredPolicies.forEach(({ 
-        _id,
         apiDisabled,
         selectedIcon,
         layout,
@@ -206,7 +205,7 @@ const ModalEmployees = ({
               `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`
               ),
               postDB('messages', {
-                _id,
+                formatDate: formatDate,
                 from: messageFrom,
                 html: layout,
                 read: read,
@@ -226,7 +225,6 @@ const ModalEmployees = ({
               `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`
               ),
               postDB('notifications', {
-                _id,
                 formatDate: formatDate,
                 from: notificationFrom,
                 icon: selectedIcon,

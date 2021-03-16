@@ -105,6 +105,7 @@ const GeneralMessageContainer = () => {
   //   },
   // ]);
   const [data, setData] = useState([]);
+  const [currentUrl, setCurrentUrl] = useState('')
   const [preview, setPreview] = useState('');
   const [headerInfo, setHeaderInfo] = useState({
     timeStamp: '',
@@ -114,22 +115,53 @@ const GeneralMessageContainer = () => {
     to: ''
   });
 
-  console.log('messageForm: ', data)
+  
+  // useEffect(() => {
+  //   setCurrentUrl(window.location.search.slice(4))
+  //   const currentURL2 = window.location;
+  //   console.log(currentURL2)
+  //   // console.log(currentURL.search.slice(4))
+  //   getOneDB('messages', currentUrl)
+  //   .then((response) => response.json())
+  //   .then((data) => {
+  //     const { timeStamp, img, from, subject, to } = data.response
+  //     setHeaderInfo({
+  //       timeStamp: timeStamp,
+  //       img: img,
+  //       senderName: from,
+  //       subject: subject,
+  //       to: to[0].email
+  //     })
+  //     })
+  //     .catch((error) => console.log('error>', error));
+  // }, [currentUrl])
 
   useEffect(() => {
+    setCurrentUrl(window.location.search.slice(4).toString())
     getDB('messages')
     .then((response) => response.json())
     .then((data) => {
+      const messageFiltered = data.response.filter(({ _id }) => _id === currentUrl)
+      const { timeStamp, img, from, subject, to, html } = messageFiltered[0];
+      setPreview(html)
+      setHeaderInfo({
+        timeStamp: timeStamp,
+        img: img,
+        senderName: from,
+        subject: subject,
+        to: to[0].email
+      })
+      console.log('messageFiltered: ', messageFiltered)
       setData(data.response);
       })
       .catch((error) => console.log('error>', error));
-  }, []);
+  }, [currentUrl]);
 
   return (
     <div className='__container-gmc'>
       <div className='__container-general-snapshot'>
         {data.map((msg, index) => (
-          <div key={msg.id} onClick={() => setPreview(msg.html)}>
+          <div key={msg._id} onClick={() => setPreview(msg.html)}>
             <div
               onClick={() => (
                 setHeaderInfo({
@@ -143,10 +175,11 @@ const GeneralMessageContainer = () => {
               }
               >
               <Snapshot
+                data={data}
                 dateTime={msg.timeStamp}
                 name={msg.from[0].name}
                 lastName={msg.from[0].lastName}
-                id={msg.id}
+                id={msg._id}
                 img={msg.img}
                 senderName={msg.from[0].email}
                 subject={msg.subject}

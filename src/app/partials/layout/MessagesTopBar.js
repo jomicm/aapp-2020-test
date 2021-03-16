@@ -16,7 +16,8 @@ export default class Messages extends React.Component {
         placement='bottom'
         overlay={<Tooltip id='quick-panel-tooltip'>{msg}</Tooltip>}
       >
-        <Link to={'/messages'} className='kt-header__topbar-item' drop='down' alignRight>
+        {/* <Link to={'/messages'} className='kt-header__topbar-item' drop='down' alignRight> */}
+        <div className='kt-header__topbar-item' drop='down' alignRight>
           
             <span
               className={clsx('kt-header__topbar-icon', {
@@ -34,7 +35,7 @@ export default class Messages extends React.Component {
               )}
             </span>
           
-        </Link>
+        </div>
       </OverlayTrigger>
       }
     </FormattedMessage>

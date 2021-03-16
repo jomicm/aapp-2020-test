@@ -1,11 +1,23 @@
 .container-messages-snapshot {
-  align-items: center;
-  display: flex;
+  position: relative;
+  width: 350px;
 }
 
-.snapshot-wrapper:hover {
+.container-messages-snapshot:hover {
   background-color: rgba($color: #302c2c8c, $alpha: 0.1);
   cursor: pointer;
+}
+
+.container-messages-snapshot:hover > .container-snapshot-delete-icon {
+  display: block;
+}
+
+.container-snapshot-delete-icon {
+  display: none;
+  position: absolute;
+  right: 30px;
+  top: 40%;
+  width: 1px;
 }
 
 .snapshot-delete-icon:hover {

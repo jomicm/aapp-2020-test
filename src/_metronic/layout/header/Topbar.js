@@ -8,6 +8,7 @@ import LanguageSelector from "../../../app/partials/layout/LanguageSelector";
 import UserProfile from "../../../app/partials/layout/UserProfile";
 import Help from '../../../app/partials/layout/HelpTopBar'
 import Messages from '../../../app/partials/layout/MessagesTopBar'
+import MessagesTopBar2 from '../../../app/partials/layout/MessagesTopBar2'
 import { toAbsoluteUrl } from "../../utils/utils";
 
 export default class Topbar extends React.Component {
@@ -27,9 +28,12 @@ export default class Topbar extends React.Component {
           dot="false"
         />
          
-          <Messages
+          <MessagesTopBar2
+            bgImage={toAbsoluteUrl("/media/misc/bg-1.jpg")}
+            skin="dark"
             iconType=''
             useSVG='true'
+            type="success"
           />
 
           <Help
