@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
 import SwipeableViews from 'react-swipeable-views';
 import {
@@ -20,9 +20,16 @@ import {
 } from '@material-ui/core';
 import { withStyles, useTheme, makeStyles } from '@material-ui/core/styles';
 import CloseIcon from '@material-ui/icons/Close';
+import {
+  postDBEncryptPassword,
+  getOneDB,
+  updateDB,
+  postDB,
+  getDB
+} from '../../../../crud/api';
+import CustomFields from '../../Components/CustomFields/CustomFields';
 import Permission from '../components/Permission';
 import AssetTable from '../components/AssetTable';
-import CustomFields from '../../Components/CustomFields/CustomFields';
 import {
   Checkboxes,
   MultiLine,
@@ -36,13 +43,6 @@ import {
 import ImageUpload from '../../Components/ImageUpload';
 import ModalYesNo from '../../Components/ModalYesNo';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
-import {
-  postDBEncryptPassword,
-  getOneDB,
-  updateDB,
-  postDB,
-  getDB
-} from '../../../../crud/api';
 import ModalAssignmentReport from './ModalAssignmentReport';
 
 const CustomFieldsPreview = (props) => {

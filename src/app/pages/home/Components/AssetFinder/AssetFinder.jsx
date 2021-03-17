@@ -1,31 +1,27 @@
-/* eslint-disable no-restricted-imports */
 import React, { useEffect, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import InputBase from '@material-ui/core/InputBase';
 import IconButton from '@material-ui/core/IconButton';
 import SearchIcon from '@material-ui/icons/Search';
-
-import Table from './Table';
 import { postDBEncryptPassword, getDB, getOneDB, updateDB, postDB, getDBComplex } from '../../../../crud/api';
+import Table from './Table';
 
 const AssetFinder = ({ setTableRowsInner = () => { } }) => {
   const classes = useStyles();
-  const [searchText, setSearchText] = useState('');
   const [assetRows, setAssetRows] = useState([]);
-
-  console.log('assetRows: ', assetRows)
+  const [searchText, setSearchText] = useState('');
 
   const handleOnSearchClick = () => {
     if (searchText) {
-      const queryLike = ['name', 'brand', 'model'].map(key => ({ key, value: searchText }))
+      const queryLike = ['name', 'brand', 'model'].map(key => ({ key, value: searchText }));
       getDBComplex({ collection: 'assets', queryLike })
         .then(response => response.json())
         .then(data => {
           const rows = data.response.map(row => {
-            const { name, brand, model, _id: id, sn = 'sn' } = row;
+            const { name, brand, model, EPC, _id: id, serial } = row;
             const assigned = !!row.assigned;
-            return { name, brand, model, id, sn, assigned };
+            return { id, name, brand, model, assigned, EPC, serial };
           });
           setAssetRows(rows);
         })
@@ -42,10 +38,10 @@ const AssetFinder = ({ setTableRowsInner = () => { } }) => {
           value={searchText}
           onChange={e => setSearchText(e.target.value)}
           className={classes.input}
-          placeholder="Search Assets"
+          placeholder='Search Assets'
           inputProps={{ 'aria-label': 'search google maps' }}
         />
-        <IconButton onClick={handleOnSearchClick} className={classes.iconButton} aria-label="search">
+        <IconButton onClick={handleOnSearchClick} className={classes.iconButton} aria-label='search'>
           <SearchIcon />
         </IconButton>
       </Paper>
@@ -67,8 +63,8 @@ const getColumns = (isAssetReference = false) => {
   } else {
     return [
       ...assetReference,
-      { field: 'id', headerName: 'EPC', width: 200 },
-      { field: 'sn', headerName: 'Serial Number', width: 200 }
+      { field: 'EPC', headerName: 'EPC', width: 200 },
+      { field: 'serial', headerName: 'Serial Number', width: 200 }
     ]
   }
 };
