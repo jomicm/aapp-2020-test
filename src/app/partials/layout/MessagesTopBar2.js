@@ -58,6 +58,22 @@ const MessagesTopBar2 = ({
     }
   }
 
+  const checkStatus = (id, read) => {
+    const notif = data.findIndex(({ _id }) => _id === id)
+    const newData = data;
+    newData[notif].read = true
+    setData(newData)
+    updateCount(data);
+    handleUpdate(id, read)
+  }
+
+  const handleUpdate = (id, read) => {
+    const body = { read: true }
+    updateDB('messages/', body, id)
+      .then(response => console.log('success', response))
+      .catch(error => console.log('Error', error));
+  }
+
   const getHetBackGroundCssClassList = () => {
     let result = 'kt-head ';
     if (skin) {
@@ -118,7 +134,7 @@ const MessagesTopBar2 = ({
         console.log(data.response)
       })
       .catch((error) => console.log('error>', error));
-  }, []);
+  }, [data]);
 
   return (
     <Dropdown className='kt-header__topbar-item' drop='down' alignRight>
@@ -183,23 +199,22 @@ const MessagesTopBar2 = ({
                         data-height='300'
                         data-mobile-height='200'
                       >
-
-                        {data.map(({ _id, from, html, formatDate, read, subject }) => (
-                          <div style={{ display: 'flex' }}>
+                        {data.length ? data.map(({ _id, from, html, formatDate, read, subject }) => (
+                          <div style={{ display: 'flex', minHeight: '100px' }}>
                             <div className={changeBarColor(read)} />
-                            <Link 
-                            to={`/messages?id=${_id}`} 
-                            className='kt-header__topbar-item' 
-                            drop='down'
-                            style={{width: '100%'}}
+                            <Link
+                              to={`/messages?id=${_id}`}
+                              className='kt-header__topbar-item'
+                              drop='down'
+                              style={{ width: '100%' }}
                             >
                               <div
                                 style={{ padding: '20px' }}
                                 className={changeColor(read)}
-                              // onClick={() => changeModal(read, _id, subject, message, formatDate, from)}
+                                onClick={() => checkStatus(_id, read)}
                               >
-                                <div>
-                                  {subject ? ((subject.length > 25) ? subject.substring(0, 25) + '...' : subject) : ''}
+                                <div style={{ color: 'black', fontSize: '1.3rem' }}>
+                                  {subject}
                                 </div>
                                 <div className='kt-notification__item-time'>
                                   {formatDate ?
@@ -212,7 +227,8 @@ const MessagesTopBar2 = ({
                               </div>
                             </Link>
                           </div>
-                        ))}
+                        )) : 'You have no messages'}
+                        
 
                       </div>
                     </div>

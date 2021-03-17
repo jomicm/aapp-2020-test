@@ -115,27 +115,6 @@ const GeneralMessageContainer = () => {
     to: ''
   });
 
-  
-  // useEffect(() => {
-  //   setCurrentUrl(window.location.search.slice(4))
-  //   const currentURL2 = window.location;
-  //   console.log(currentURL2)
-  //   // console.log(currentURL.search.slice(4))
-  //   getOneDB('messages', currentUrl)
-  //   .then((response) => response.json())
-  //   .then((data) => {
-  //     const { timeStamp, img, from, subject, to } = data.response
-  //     setHeaderInfo({
-  //       timeStamp: timeStamp,
-  //       img: img,
-  //       senderName: from,
-  //       subject: subject,
-  //       to: to[0].email
-  //     })
-  //     })
-  //     .catch((error) => console.log('error>', error));
-  // }, [currentUrl])
-
   useEffect(() => {
     setCurrentUrl(window.location.search.slice(4).toString())
     getDB('messages')
@@ -151,7 +130,6 @@ const GeneralMessageContainer = () => {
         subject: subject,
         to: to[0].email
       })
-      console.log('messageFiltered: ', messageFiltered)
       setData(data.response);
       })
       .catch((error) => console.log('error>', error));
@@ -160,7 +138,7 @@ const GeneralMessageContainer = () => {
   return (
     <div className='__container-gmc'>
       <div className='__container-general-snapshot'>
-        {data.map((msg, index) => (
+        {data.length ? data.map((msg, index) => (
           <div key={msg._id} onClick={() => setPreview(msg.html)}>
             <div
               onClick={() => (
@@ -187,7 +165,7 @@ const GeneralMessageContainer = () => {
               />
             </div>
           </div>
-        ))}
+        )) : 'You have no messages'}
       </div>
       <div className='__container-preview'>
         <MessageInformation
