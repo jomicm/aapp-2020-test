@@ -165,7 +165,7 @@ const GeneralMessageContainer = () => {
               />
             </div>
           </div>
-        )) : 'You have no messages'}
+        )).reverse() : 'You have no messages'}
       </div>
       <div className='__container-preview'>
         <MessageInformation

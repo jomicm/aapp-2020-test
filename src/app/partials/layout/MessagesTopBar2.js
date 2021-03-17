@@ -227,9 +227,7 @@ const MessagesTopBar2 = ({
                               </div>
                             </Link>
                           </div>
-                        )) : 'You have no messages'}
-                        
-
+                        )).reverse() : 'You have no messages'}
                       </div>
                     </div>
                   </PerfectScrollbar>
