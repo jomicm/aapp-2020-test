@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-imports */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import InputBase from '@material-ui/core/InputBase';
@@ -9,23 +9,30 @@ import SearchIcon from '@material-ui/icons/Search';
 import Table from './Table';
 import { postDBEncryptPassword, getDB, getOneDB, updateDB, postDB, getDBComplex } from '../../../../crud/api';
 
-const AssetFinder = ({ setTableRowsInner = () => {} }) => {
+const AssetFinder = ({ setTableRowsInner = () => { } }) => {
   const classes = useStyles();
   const [searchText, setSearchText] = useState('');
   const [assetRows, setAssetRows] = useState([]);
+
+  console.log('assetRows: ', assetRows)
+
   const handleOnSearchClick = () => {
-    const queryLike = ['name', 'brand', 'model'].map(key => ({ key, value: searchText }))
-    getDBComplex({ collection: 'assets', queryLike })
-      .then(response => response.json())
-      .then(data => {
-        const rows = data.response.map(row => {
-          const { name, brand, model, _id: id, sn = 'sn' } = row;
-          const assigned = !!row.assigned;
-          return { name, brand, model, id, sn, assigned };
-        });
-        setAssetRows(rows);
-      })
-      .catch(error => console.log(error));
+    if (searchText) {
+      const queryLike = ['name', 'brand', 'model'].map(key => ({ key, value: searchText }))
+      getDBComplex({ collection: 'assets', queryLike })
+        .then(response => response.json())
+        .then(data => {
+          const rows = data.response.map(row => {
+            const { name, brand, model, _id: id, sn = 'sn' } = row;
+            const assigned = !!row.assigned;
+            return { name, brand, model, id, sn, assigned };
+          });
+          setAssetRows(rows);
+        })
+        .catch(error => console.log(error));
+    } else {
+      setAssetRows([]);
+    }
   };
 
   return (
@@ -64,7 +71,7 @@ const getColumns = (isAssetReference = false) => {
       { field: 'sn', headerName: 'Serial Number', width: 200 }
     ]
   }
-}; 
+};
 
 const useStyles = makeStyles((theme) => ({
   root: {

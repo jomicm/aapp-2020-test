@@ -46,7 +46,7 @@ const AssetTable = ({ onAssetFinderSubmit, onDeleteAssetAssigned, assetRows = []
         showModal={control.openAssetModal}
         setShowModal={(onOff) => setControl({ ...control, openAssetModal: onOff })}
         // reloadTable={() => loadInitData('settingsLists')}
-        id={control.idList}
+        id={control.idAsset}
         onAssetFinderSubmit={onAssetFinderSubmit}
       />
       <TableComponent

@@ -113,6 +113,7 @@ const ModalAssetFinder = ({ showModal, setShowModal, reloadTable, id, employeePr
   };
 
   const handleSave = () => {
+    console.log(onAssetFinderSubmit)
     onAssetFinderSubmit(tableRowsInner);
     handleCloseModal();
   };
@@ -181,7 +182,7 @@ const ModalAssetFinder = ({ showModal, setShowModal, reloadTable, id, employeePr
         </DialogContent5>
         <DialogActions5>
           <Button onClick={handleSave} color="primary">
-            Save changes
+            Add Assets
           </Button>
         </DialogActions5>
       </Dialog>    
