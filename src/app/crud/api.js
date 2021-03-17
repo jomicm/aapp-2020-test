@@ -18,6 +18,24 @@ const collection = `${REACT_APP_API_COLLECTION}/`;
 const publicReq = `${REACT_APP_API_PUBLIC_REQ}/`;
 const count = `${REACT_APP_API_COUNT}/`;
 
+const getBaseInfo = () => {
+  const state = store.default.getState();
+  const creationUserId = state?.auth?.user?.id || '';
+  const creationUserFullName = state?.auth?.user?.fullname || '';
+  const currentDate = new Date().toISOString();;
+
+  return {
+    post: {
+      creationUserId,
+      creationUserFullName,
+      creationDate: currentDate
+    },
+    update: {
+      updateDate: currentDate
+    }
+  };
+};
+
 const getAPIPath = (
   _collection = collection,
   _id = '',
@@ -25,6 +43,7 @@ const getAPIPath = (
   isPublic = false,
   isCount = false,
 ) => `${host}${version}${isPublic ? publicReq : ''}${isCount ? count : ''}${db}${_collection}${_id}${isEncrypt ? '/encrypt' : ''}`;
+
 const getAPIFilePath = (foldername) => `${host}${version}upload/${foldername}`;
 
 const getHeaders = (isFile = false) => {
@@ -40,7 +59,7 @@ const getHeaders = (isFile = false) => {
   return headers;
 };
 
-const postDB = (collection, body) => fetch(getAPIPath(collection), { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) });
+const postDB = (collection, body) => fetch(getAPIPath(collection), { method: 'POST', headers: getHeaders(), body: JSON.stringify(Object.assign(body, getBaseInfo().post)) });
 
 const postDBEncryptPassword = (collection, body) => fetch(getAPIPath(collection, '', true), { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) });
 
@@ -52,7 +71,7 @@ const getOneDB = (collection, id) => fetch(getAPIPath(collection, id), { method:
 
 const deleteDB = (collection, id) => fetch(getAPIPath(collection, id), { method: 'DELETE', headers: getHeaders() });
 
-const updateDB = (collection, body, id) => fetch(getAPIPath(collection, id), { method: 'PUT', headers: getHeaders(), body: JSON.stringify(body) });
+const updateDB = (collection, body, id) => fetch(getAPIPath(collection, id), { method: 'PUT', headers: getHeaders(), body: JSON.stringify(Object.assign(body, getBaseInfo().update)) });
 
 const postFILE = (foldername, filename, image) => {
   const { type = '/jpg' } = image;
