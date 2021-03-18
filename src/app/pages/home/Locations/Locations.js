@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { connect } from "react-redux";
 import ImageMarker from 'react-image-marker';
 import SwipeableViews from 'react-swipeable-views';
 import { merge } from 'lodash';
@@ -12,6 +13,7 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
+import * as general from "../../../store/ducks/general.duck";
 import { getDB } from '../../../crud/api';
 import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import {
@@ -81,7 +83,7 @@ const locationsTreeData = {
   parent: null
 };
 
-const Locations = () => {
+const Locations = ({ globalSearch, setGeneralSearch }) => {
 
   const theme4 = useTheme();
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -431,13 +433,30 @@ const Locations = () => {
   };
 
   useEffect(() => {
-    loadLocationsProfilesData();
     handleLoadLocations();
   }, []);
 
   useEffect(() => {
     loadLocationsProfilesData('locations');
   }, [tableControl.locations.page, tableControl.locations.rowsPerPage, tableControl.locations.order, tableControl.locations.orderBy, tableControl.locations.search, tableControl.locations.locationsFilter]);
+
+  const tabIntToText = ['', 'locations'];
+
+  useEffect(() => {
+    if (globalSearch.tabIndex >= 0) {
+      setTab(globalSearch.tabIndex);
+      setTableControl(prev => ({
+        ...prev,
+        [tabIntToText[globalSearch.tabIndex]]: {
+          ...prev[tabIntToText[globalSearch.tabIndex]],
+          search: globalSearch.searchValue,
+        }
+      }))
+      setTimeout(() => {
+        setGeneralSearch({});
+      }, 800);
+    }
+  }, [globalSearch.tabIndex, globalSearch.searchValue]);
 
   return (
     <>
@@ -850,4 +869,7 @@ const Locations = () => {
   );
 };
 
-export default Locations;
+const mapStateToProps = ({ general: { globalSearch } }) => ({
+  globalSearch
+});
+export default connect(mapStateToProps, general.actions)(Locations);
