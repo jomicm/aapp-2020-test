@@ -17,10 +17,11 @@ import {
   FormLabel,
   FormGroup
 } from '@material-ui/core';
-import { withStyles, useTheme, makeStyles } from '@material-ui/core/styles';
+import { withStyles, useTheme, makeStyles } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
-import Permission from '../components/Permission';
-import AssetTable from '../components/AssetTable';
+import { isEmpty } from 'lodash';
+
+import BaseFields from '../../Components/BaseFields/BaseFields';
 import CustomFields from '../../Components/CustomFields/CustomFields';
 import {
   SingleLine,
@@ -30,10 +31,9 @@ import {
   DropDown,
   RadioButtons,
   Checkboxes,
-  FileUpload 
+  FileUpload
 } from '../../Components/CustomFields/CustomFieldsPreview';
 import ImageUpload from '../../Components/ImageUpload';
-import ModalYesNo from '../../Components/ModalYesNo';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import {
   postDBEncryptPassword,
@@ -43,6 +43,7 @@ import {
   getDB
 } from '../../../../crud/api';
 import { getHours } from 'date-fns';
+import AssetTable from '../components/AssetTable';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -173,6 +174,11 @@ const ModalEmployees = ({
     selectedUserProfile: null
   });
 
+  const [formValidation, setFormValidation] = useState({
+    enabled: false,
+    isValidForm: {}
+  });
+
   const executePolicies = (catalogueName) => {
     const formatDate = new Date()
     const currentDate = `${(`0${formatDate.getDate()}`).slice(-2)}/${(`0${formatDate.getMonth() + 1}`).slice(-2)}/${formatDate.getFullYear()}`;
@@ -182,66 +188,67 @@ const ModalEmployees = ({
     const status = 'new';
     const filteredPolicies = policies.filter(
       (policy) => policy.selectedAction === catalogueName);
-      filteredPolicies.forEach(({ 
-        apiDisabled,
-        selectedIcon,
-        layout,
-        messageDisabled,
-        messageFrom,
-        messageNotification,
-        messageTo,
-        notificationDisabled,
-        notificationFrom,
-        notificationTo,
-        policyName,
-        selectedAction,
-        selectedCatalogue,
-        subjectMessage,
-        subjectNotification
-         }) => {
-          if(!messageDisabled){
-            return(
-            alert(
-              `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`
-              ),
-              postDB('messages', {
-                formatDate: formatDate,
-                from: messageFrom,
-                html: layout,
-                read: read,
-                status: status,
-                subject: subjectMessage,
-                timeStamp: timeStamp,
-                to: messageTo
-              })
-              .then(data => data.json())
-              .then((response) => {
-                 const { } = response.response[0];
-              })
-              .catch((error) => console.log('ERROR', error))
-            )} else if(!notificationDisabled){
-            return(
-            alert(
-              `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`
-              ),
-              postDB('notifications', {
-                formatDate: formatDate,
-                from: notificationFrom,
-                icon: selectedIcon,
-                message: messageNotification,
-                read: read,
-                status: status,
-                subject: subjectNotification,
-                timeStamp: timeStamp,
-                to: notificationTo
-              })
-              .then(data => data.json())
-              .then((response) => {
-                 const { } = response.response[0];
-              })
-              .catch((error) => console.log('ERROR', error))
-            )}
-        })
+    filteredPolicies.forEach(({
+      apiDisabled,
+      selectedIcon,
+      layout,
+      messageDisabled,
+      messageFrom,
+      messageNotification,
+      messageTo,
+      notificationDisabled,
+      notificationFrom,
+      notificationTo,
+      policyName,
+      selectedAction,
+      selectedCatalogue,
+      subjectMessage,
+      subjectNotification
+    }) => {
+      if (!messageDisabled) {
+        return (
+          alert(
+            `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`
+          ),
+          postDB('messages', {
+            from: messageFrom,
+            html: layout,
+            read: read,
+            status: status,
+            subject: subjectMessage,
+            timeStamp: timeStamp,
+            to: messageTo
+          })
+            .then(data => data.json())
+            .then((response) => {
+              const { } = response.response[0];
+            })
+            .catch((error) => console.log('ERROR', error))
+        )
+      } else if (!notificationDisabled) {
+        return (
+          alert(
+            `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`
+          ),
+          postDB('notifications', {
+            formatDate: formatDate,
+            from: notificationFrom,
+            icon: selectedIcon,
+            message: messageNotification,
+            read: read,
+            status: status,
+            subject: subjectNotification,
+            timeStamp: timeStamp,
+            to: notificationTo
+          })
+            .then(data => data.json())
+            .then((response) => {
+              const { } = response.response[0];
+            })
+            .catch((error) => console.log('ERROR', error))
+        )
+      }
+    })
   }
 
   const handleChange = (name) => (event) => {
@@ -253,40 +260,6 @@ const ModalEmployees = ({
   };
   const handleChangeIndex4 = (index) => {
     setValue4(index);
-  };
-
-  const handleCloseModal = () => {
-    setCustomFieldsTab({});
-    setProfilePermissions([]);
-    setTabs([]);
-    setProfileSelected(null);
-    setValues({
-      categoryPic: '/media/misc/placeholder-image.jpg',
-      categoryPicDefault: '/media/misc/placeholder-image.jpg',
-      email: '',
-      isDisableUserProfile: false,
-      lastName: '',
-      name: '',
-      password: '',
-      selectedUserProfile: null
-    });
-    setShowModal(false);
-    setValue4(0);
-    setLayoutOptions([]);
-    setLayoutSelected(null);
-    setAssetRows([]);
-  };
-
-  const handleOnAssetFinderSubmit = (filteredRows) => {
-    let validRows = filteredRows.rows.filter((row) => !row.assigned);
-    validRows = validRows
-      .map((rowTR) => {
-        if (!assetRows.find((row) => row.id === rowTR.id)) {
-          return rowTR;
-        }
-      })
-      .filter((row) => row);
-    setAssetRows([...assetRows, ...validRows]);
   };
 
   const onChangeEmployeeProfile = (e) => {
@@ -317,15 +290,97 @@ const ModalEmployees = ({
       .catch((error) => console.log(error));
   };
 
+  const baseFieldsLocalProps = {
+    employeeProfile: {
+      componentProps: {
+        isClearable: true,
+        isDisabled: values.isDisableUserProfile,
+        onChange: onChangeEmployeeProfile,
+        options: employeeProfilesFiltered,
+        value: profileSelected
+      }
+    },
+    name: {
+      componentProps: {
+        onChange: handleChange('name')
+      }
+    },
+    lastName: {
+      componentProps: {
+        onChange: handleChange('lastName')
+      }
+    },
+    email: {
+      componentProps: {
+        onChange: handleChange('email')
+      }
+    },
+    responsibilityLayout: {
+      style: {
+        marginTop: '15px'
+      },
+      componentProps: {
+        isClearable: true,
+        onchange: (e) => setLayoutSelected(e),
+        options: layoutOptions,
+        value: layoutSelected,
+      }
+    }
+  };
+
+  const handleCloseModal = () => {
+    setCustomFieldsTab({});
+    setProfilePermissions([]);
+    setTabs([]);
+    setProfileSelected(null);
+    setValues({
+      categoryPic: '/media/misc/placeholder-image.jpg',
+      categoryPicDefault: '/media/misc/placeholder-image.jpg',
+      email: '',
+      isDisableUserProfile: false,
+      lastName: '',
+      name: '',
+      password: '',
+      selectedUserProfile: null
+    });
+    setShowModal(false);
+    setValue4(0);
+    setLayoutOptions([]);
+    setLayoutSelected(null);
+    setAssetRows([]);
+    setFormValidation({
+      enabled: false,
+      isValidForm: false
+    });
+  };
+
+  const handleOnAssetFinderSubmit = (filteredRows) => {
+    let validRows = filteredRows.rows.filter((row) => !row.assigned);
+    validRows = validRows
+      .map((rowTR) => {
+        if (!assetRows.find((row) => row.id === rowTR.id)) {
+          return rowTR;
+        }
+      })
+      .filter((row) => row);
+    setAssetRows([...assetRows, ...validRows]);
+  };
+
   const handleOnDeleteAssetAssigned = (id) => {
     const restRows = assetRows.filter((row) => row.id !== id);
     setAssetRows(restRows);
     updateDB('assets/', { assigned: null }, id)
-      .then((response) => {})
+      .then((response) => { })
       .catch((error) => console.log(error));
   };
 
   const handleSave = () => {
+    setFormValidation({ ...formValidation, enabled: true });
+    if (!isEmpty(formValidation.isValidForm)) {
+      alert('Please fill out missing fields')
+      return;
+    }
+
     const fileExt = getFileExtension(image);
     const body = {
       ...values,
@@ -384,7 +439,7 @@ const ModalEmployees = ({
         .then((data) => {
           const body = { ...data.response, assigned: _id };
           updateDB('assets/', { assigned: _id }, asset.id)
-            .then((response) => {})
+            .then((response) => { })
             .catch((error) => console.log(error));
         })
         .catch((error) => console.log(error));
@@ -466,6 +521,10 @@ const ModalEmployees = ({
       .catch((error) => console.log(error));
   }, [id, employeeProfileRows]);
 
+  useEffect(() => {
+    setFormValidation({ ...formValidation, enabled: true });
+  }, [values])
+
   return (
     <div style={{ width: '1000px' }}>
       <Dialog
@@ -505,68 +564,13 @@ const ModalEmployees = ({
                       Employee Profile Photo
                     </ImageUpload>
                     <div className='profile-tab-wrapper__content'>
-                      <FormControl
-                        component='fieldset'
-                        className={classes.textField}
-                      >
-                        <FormLabel component='legend'>
-                          Employee Profile
-                        </FormLabel>
-                        <FormGroup>
-                          <Select
-                            // defaultValue={!id ? null : profileSelected }
-                            classNamePrefix='select'
-                            isClearable={true}
-                            isDisabled={values.isDisableUserProfile}
-                            name='color'
-                            onChange={onChangeEmployeeProfile}
-                            options={employeeProfilesFiltered}
-                            value={profileSelected}
-                          />
-                        </FormGroup>
-                      </FormControl>
-                      <TextField
-                        className={classes.textField}
-                        id='standard-name'
-                        label='Name'
-                        margin='normal'
-                        onChange={handleChange('name')}
-                        value={values.name}
+                      <BaseFields
+                        catalogue={'employees'}
+                        collection={'employees'}
+                        formState={[formValidation, setFormValidation]}
+                        localProps={baseFieldsLocalProps}
+                        values={values}
                       />
-                      <TextField
-                        className={classes.textField}
-                        id='standard-name'
-                        label='Last Name'
-                        margin='normal'
-                        onChange={handleChange('lastName')}
-                        value={values.lastName}
-                      />
-                      <TextField
-                        className={classes.textField}
-                        id='standard-name'
-                        label='Email'
-                        margin='normal'
-                        onChange={handleChange('email')}
-                        value={values.email}
-                      />
-                      <div className={classes.textField}>
-                        <FormLabel
-                          component='legend'
-                          style={{ marginTop: '25px' }}
-                        >
-                          Responsibility Layout
-                        </FormLabel>
-                        <FormGroup>
-                          <Select
-                            classNamePrefix='select'
-                            isClearable={true}
-                            name='color'
-                            onChange={(e) => setLayoutSelected(e)}
-                            options={layoutOptions}
-                            value={layoutSelected}
-                          />
-                        </FormGroup>
-                      </div>
                     </div>
                   </div>
                 </TabContainer4>
@@ -592,8 +596,8 @@ const ModalEmployees = ({
                                 from='form'
                                 id={customField.id}
                                 onClick={() => alert(customField.content)}
-                                onDelete={() => {}}
-                                onSelect={() => {}}
+                                onDelete={() => { }}
+                                onSelect={() => { }}
                                 onUpdateCustomField={handleUpdateCustomFields}
                                 tab={tab}
                                 type={customField.content}
