@@ -8,8 +8,6 @@ const assetsHeadRows = [
   { id: 'model', numeric: true, disablePadding: false, label: 'Model' },
   { id: 'EPC', numeric: true, disablePadding: false, label: 'EPC' },
   { id: 'serial', numeric: true, disablePadding: false, label: 'Serial Number' },
-  { id: 'creator', numeric: false, disablePadding: false, label: 'Creator' },
-  { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date' }
 ];
 const createAssetRow = (id, name, brand, model, epc, sn, creator, creation_date) => {
   return { id, name, brand, model, epc, sn, creator, creation_date };
@@ -22,7 +20,7 @@ const collections = {
   }
 };
 
-const AssetTable = ({ onAssetFinderSubmit, onDeleteAssetAssigned, assetRows = [] }) => {
+const AssetTable = ({ assetRows = [], onAssetFinderSubmit, onDeleteAssetAssigned }) => {
   const [control, setControl] = useState({
     idAsset: null,
     openAssetModal: false
@@ -43,18 +41,18 @@ const AssetTable = ({ onAssetFinderSubmit, onDeleteAssetAssigned, assetRows = []
   return (
     <div style={{ width: '100%', marginTop: '-50px' }}>
       <ModalAssetFinder
-        showModal={control.openAssetModal}
-        setShowModal={(onOff) => setControl({ ...control, openAssetModal: onOff })}
         id={control.idAsset}
         onAssetFinderSubmit={onAssetFinderSubmit}
+        setShowModal={(onOff) => setControl({ ...control, openAssetModal: onOff })}
+        showModal={control.openAssetModal}
       />
       <TableComponent
-        title={'Asset Children'}
         headRows={assetsHeadRows}
-        rows={assetRows}
+        noEdit={true}
         onAdd={tableActions('settingsLists').onAdd}
         onDelete={tableActions('settingsLists').onDelete}
-        noEdit={true}
+        rows={assetRows}
+        title={'Asset Children'}
       />
     </div>
   )

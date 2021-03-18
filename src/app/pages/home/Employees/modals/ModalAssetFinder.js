@@ -89,10 +89,15 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ModalAssetFinder = ({ showModal, setShowModal, reloadTable, id, employeeProfileRows, onAssetFinderSubmit }) => {
+const ModalAssetFinder = ({
+  employeeProfileRows,
+  id,
+  onAssetFinderSubmit,
+  reloadTable,
+  showModal,
+  setShowModal
+}) => {
   const classes = useStyles();
-  const [editor, setEditor] = useState(EditorState.createEmpty());
-  const [profileSelected, setProfileSelected] = useState(0);
   const [tableRowsInner, setTableRowsInner] = useState({ rows: [] });
   const [value4, setValue4] = useState(0);
   const [values, setValues] = useState({
@@ -152,8 +157,8 @@ const ModalAssetFinder = ({ showModal, setShowModal, reloadTable, id, employeePr
   return (
     <div>
       <Dialog
-        onClose={handleCloseModal}
         aria-labelledby='customized-dialog-title'
+        onClose={handleCloseModal}
         open={showModal}
       >
         <DialogTitle5
@@ -165,16 +170,17 @@ const ModalAssetFinder = ({ showModal, setShowModal, reloadTable, id, employeePr
         <DialogContent5 dividers>
           <div className='kt-section__content'>
             <div
-              style={{ minHeight: '100px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}
-              className='profile-tab-wrapper'>
-              <div style={{ margin: '0px 8px', display: 'flex', flexDirection: 'column' }}>
+              className='profile-tab-wrapper'
+              style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', minHeight: '100px' }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', margin: '0px 8px' }}>
                 <AssetFinder setTableRowsInner={setTableRowsInner} />
               </div>
             </div>
           </div>
         </DialogContent5>
         <DialogActions5>
-          <Button onClick={handleSave} color='primary'>
+          <Button color='primary' onClick={handleSave}>
             Add Assets
           </Button>
         </DialogActions5>

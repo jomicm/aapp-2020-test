@@ -178,15 +178,14 @@ const ModalEmployees = ({
 
   const executePolicies = (catalogueName) => {
     const formatDate = new Date()
-    const dformat = `${('0' + formatDate.getDate()).slice(-2)}/${('0' + formatDate.getMonth() + 1).slice(-2)}/${formatDate.getFullYear()}`
-    const tformat = `${formatDate.getHours()}:${formatDate.getMinutes()}:${formatDate.getSeconds()}`
-    const timeStamp = dformat + ' ' + tformat
+    const currentDate = `${(`0${formatDate.getDate()}`).slice(-2)}/${(`0${formatDate.getMonth() + 1}`).slice(-2)}/${formatDate.getFullYear()}`;
+    const currentTime = `${formatDate.getHours()}:${`0${formatDate.getMinutes()}`.slice(-2)}:${`0${formatDate.getSeconds()}`.slice(-2)}`;
+    const timeStamp = currentDate + ' ' + currentTime
     const read = false;
     const status = 'new'
     const filteredPolicies = policies.filter(
       (policy) => policy.selectedAction === catalogueName);
     filteredPolicies.forEach(({
-      _id,
       apiDisabled,
       selectedIcon,
       layout,
@@ -209,7 +208,6 @@ const ModalEmployees = ({
             `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`
           ),
           postDB('messages', {
-            _id,
             from: messageFrom,
             html: layout,
             read: read,
@@ -230,7 +228,6 @@ const ModalEmployees = ({
             `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`
           ),
           postDB('notifications', {
-            _id,
             formatDate: formatDate,
             from: notificationFrom,
             icon: selectedIcon,
@@ -246,10 +243,10 @@ const ModalEmployees = ({
               const { } = response.response[0];
             })
             .catch((error) => console.log('ERROR', error))
-        )
+        );
       }
-    })
-  }
+    });
+  };
 
   const handleChange = (name) => (event) => {
     setValues({ ...values, [name]: event.target.value });
@@ -279,7 +276,6 @@ const ModalEmployees = ({
     });
     setShowModal(false);
     setValue4(0);
-    // setLayoutOptions([]);
     setLayoutSelected(null);
     setAssetRows([]);
   };
@@ -365,7 +361,6 @@ const ModalEmployees = ({
     handleCloseModal();
   };
 
-  // Function to update customFields
   const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
     const colValue = ['left', 'right'];
     const customFieldsTabTmp = { ...customFieldsTab };
@@ -401,7 +396,7 @@ const ModalEmployees = ({
         const layoutOptions = data.response.map(
           ({ _id: value, name: label }) => ({ value, label })
         );
-        const employeeLayoutSelected = data.response.filter(({ _id }) => _id === layoutSelected.value)
+        const employeeLayoutSelected = data.response.filter(({ _id }) => _id === layoutSelected.value);
         setHtmlPreview(employeeLayoutSelected);
         setLayoutOptions(layoutOptions);
       })
@@ -471,9 +466,10 @@ const ModalEmployees = ({
       })
       .catch((error) => console.log(error));
   }, [id, employeeProfileRows]);
+
   const openModalAssignmentReport = () => {
     if (layoutSelected === null) {
-      alert('Please select a Responsibility Layout first')
+      alert('Please select a Responsibility Layout first');
     } else {
       setShowModalReports(true);
     }
