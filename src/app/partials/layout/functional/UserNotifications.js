@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import { id } from 'date-fns/locale';
 import { Nav, Tab, Dropdown } from 'react-bootstrap';
 import PerfectScrollbar from 'react-perfect-scrollbar';
@@ -27,7 +27,7 @@ const perfectScrollbarOptions = {
   wheelSpeed: 2
 };
 
-const UserNotifications = ({ 
+const UserNotifications = ({
   bgImage,
   click,
   dot,
@@ -39,10 +39,9 @@ const UserNotifications = ({
   type,
   useSVG,
 }) => {
-
   const [countNotifications, setCountNotifications] = useState(0)
   const [data, setData] = useState([])
-  const [getKey, setGetKey] = useState({key: 'alerts'})
+  const [getKey, setGetKey] = useState({ key: 'alerts' })
   const iconsList = {
     notificationImportantIcon: <NotificationImportantIcon />,
     notificationsIcon: <NotificationsIcon />,
@@ -67,7 +66,7 @@ const UserNotifications = ({
   };
 
   const checkStatus = (read, id) => {
-    const notif = data.findIndex( item => item._id === id)
+    const notif = data.findIndex(item => item._id === id)
     const newData = data;
     newData[notif].read = true
     setData(newData)
@@ -76,22 +75,27 @@ const UserNotifications = ({
 
   const changeModal = (read, _id, subject, message, formatDate, from) => {
     setOpenModal(true)
-    setValues({subject: subject, message: message, formatDate: formatDate, from: from[0].email})
+    setValues({
+      subject,
+      message,
+      formatDate,
+      from: from.length ? from[0].email : ''
+    })
     checkStatus(read, _id)
   }
 
   const changeColor = (read) => {
-    if(read){
+    if (read) {
       return 'firstColor'
-    }else{
+    } else {
       return 'secondColor'
     }
   }
 
   const changeBarColor = (read) => {
-    if(read){
+    if (read) {
       return ''
-    }else{
+    } else {
       return 'blue-bar'
     }
   }
@@ -104,7 +108,7 @@ const UserNotifications = ({
     result += 'kt-head--fit-x kt-head--fit-b';
     return result;
   };
-  
+
   const getHeaderTopBarCssClassList = () => {
     let result = 'kt-header__topbar-icon ';
     if (pulse) {
@@ -115,7 +119,7 @@ const UserNotifications = ({
     }
     return result;
   };
-  
+
   const getSvgCssClassList = () => {
     let result = 'kt-svg-icon ';
     if (iconType) {
@@ -123,8 +127,8 @@ const UserNotifications = ({
     }
     return result;
   };
-  
-  
+
+
   const ulTabsClassList = () => {
     let result = 'nav nav-tabs nav-tabs-line nav-tabs-bold nav-tabs-line-3x  ';
     if (type) {
@@ -135,7 +139,7 @@ const UserNotifications = ({
   };
 
   const updateCount = (dataNotif) => {
-    const filteredData = dataNotif.filter( ele => ele.read === false )
+    const filteredData = dataNotif.filter(ele => ele.read === false)
     setCountNotifications(filteredData.length)
   }
 
@@ -150,12 +154,12 @@ const UserNotifications = ({
 
   useEffect(() => {
     getDB('notifications/')
-    .then((response) => response.json())
-    .then((data) => {
-      setData(data.response);
-      updateCount(data.response);
-    })
-    .catch((error) => console.log('error>', error));
+      .then((response) => response.json())
+      .then((data) => {
+        setData(data.response);
+        updateCount(data.response);
+      })
+      .catch((error) => console.log('error>', error));
   }, []);
 
   return (
@@ -173,111 +177,112 @@ const UserNotifications = ({
               </span>
             )}
           </Badge>
-            <span className='kt-pulse__ring' hidden={!pulse} />
+          <span className='kt-pulse__ring' hidden={!pulse} />
         </span>
       </Dropdown.Toggle>
-        <Dropdown.Menu className='dropdown-menu-fit dropdown-menu-right dropdown-menu-anim dropdown-menu-top-unround dropdown-menu-lg'>
-          <form>
-            {/** Head */}
-            <div
-              className={getHetBackGroundCssClassList()}
-              style={{ backgroundImage: backGroundStyle() }}
-            >
-              <h3 className='kt-head__title'>
-                <span style={{paddingRight:'10px'}}>
+      <Dropdown.Menu className='dropdown-menu-fit dropdown-menu-right dropdown-menu-anim dropdown-menu-top-unround dropdown-menu-lg'>
+        <form>
+          {/** Head */}
+          <div
+            className={getHetBackGroundCssClassList()}
+            style={{ backgroundImage: backGroundStyle() }}
+          >
+            <h3 className='kt-head__title'>
+              <span style={{ paddingRight: '10px' }}>
                 Notifications&nbsp;
                 </span>
-                <span className={userNotificationsButtonCssClassList()} >
-                  {countNotifications}
-                </span>
-              </h3>
+              <span className={userNotificationsButtonCssClassList()} >
+                {countNotifications}
+              </span>
+            </h3>
 
-              <Tab.Container
-                defaultActiveKey='List'
+            <Tab.Container
+              defaultActiveKey='List'
+              className={ulTabsClassList()}
+            >
+              <Nav
                 className={ulTabsClassList()}
+                onSelect={_key => setGetKey({ key: _key })}
               >
-                <Nav
-                  className={ulTabsClassList()}
-                  onSelect={_key => setGetKey({ key: _key })}
-                >
-                  <Nav.Item className='nav-item'>
-                    <Nav.Link eventKey='List' className='nav-link show'>
-                      List
+                <Nav.Item className='nav-item'>
+                  <Nav.Link eventKey='List' className='nav-link show'>
+                    List
                     </Nav.Link>
-                  </Nav.Item>
-                </Nav>
+                </Nav.Item>
+              </Nav>
 
-                <Tab.Content>
-                  <Tab.Pane eventKey='List'>
-                    <PerfectScrollbar
-                      options={perfectScrollbarOptions}
-                      style={{ maxHeight: '100vh', position: 'relative' }}
+              <Tab.Content>
+                <Tab.Pane eventKey='List'>
+                  <PerfectScrollbar
+                    options={perfectScrollbarOptions}
+                    style={{ maxHeight: '100vh', position: 'relative' }}
+                  >
+                    <div
+                      className='kt-notification kt-margin-t-10 kt-margin-b-10'
+                      style={{ maxHeight: '40vh', position: 'relative' }}
                     >
                       <div
-                        className='kt-notification kt-margin-t-10 kt-margin-b-10'
-                        style={{ maxHeight: '40vh', position: 'relative' }}
+                        className='kt-notification kt-margin-t-10 kt-margin-b-10 kt-scroll'
+                        data-scroll='true'
+                        data-height='300'
+                        data-mobile-height='200'
                       >
-                        <div
-                          className='kt-notification kt-margin-t-10 kt-margin-b-10 kt-scroll'
-                          data-scroll='true'
-                          data-height='300'
-                          data-mobile-height='200'
-                        >
-                          {data.map(({ formatDate, icon, _id, message, subject, read, status, from }) => {
-                            return(
-                              <div style={{ display: 'flex'}}>
-                                <div className={changeBarColor(read)} />
-                                <div
-                                  style={{padding: '20px'}}
-                                  className={changeColor(read)}
-                                  onClick={() => changeModal(read, _id, subject, message, formatDate, from)}
-                                >
-                                <div className='kt-notification__item-icon' style={{display: 'flex'}}>
+                        {data && data.map(({ formatDate, icon, _id, message, subject, read, status, from }) => {
+                          return (
+                            <div style={{ display: 'flex', minHeight: '112px' }}>
+                              <div className={changeBarColor(read)} />
+                              <div
+                                style={{ padding: '20px' }}
+                                className={changeColor(read)}
+                                onClick={() => changeModal(read, _id, subject, message, formatDate, from)}
+                              >
+                                <div className='kt-notification__item-icon' style={{ display: 'flex' }}>
                                   <div className='notification-icon'>
                                     {Object.keys(iconsList).map((key) => {
                                       return (key === icon) ? iconsList[key] : ''
                                     })}
                                   </div>
-                                  <div 
-                                    className='kt-notification__item-title' 
-                                    style={{padding: '0 10px 5px', textTransform: 'upperCase'}}
+                                  <div
+                                    className='kt-notification__item-title'
+                                    style={{ padding: '0 10px 5px', textTransform: 'upperCase' }}
                                   >
-                                    {subject ? ((subject.length > 20) ? subject.substring(0, 25) + '...' : subject)  : '' }
+                                    {subject ? ((subject.length > 20) ? subject.substring(0, 25) + '...' : subject) : ''}
                                   </div>
                                 </div>
                                 <div>
-                                {message ? ((message.length > 25) ? message.substring(0, 25) + '...' : message) : ''}
+                                  {message ? ((message.length > 25) ? message.substring(0, 25) + '...' : message) : ''}
                                 </div>
-                                  <div className='kt-notification__item-time'>
-                                    {formatDate ? 
-                                      (<ReactTimeAgo 
-                                        date={formatDate}
-                                        locale='en-EN'
-                                        timeStyle='round' />)
-                                        : ''}
-                                  </div>
+                                <div className='kt-notification__item-time'>
+                                  {formatDate ?
+                                    (<ReactTimeAgo
+                                      date={formatDate}
+                                      locale='en-EN'
+                                      timeStyle='round' />)
+                                    : ''}
                                 </div>
                               </div>
-                          )})}
-                        </div>
-                          <ModalUserNotifications
-                            from={values.from}
-                            subject={values.subject}
-                            message={values.message}
-                            formatDate={values.formatDate}
-                            showModal={openModal}
-                            setShowModal={(onOff) => setOpenModal(onOff)}
-                          />
+                            </div>
+                          )
+                        })}
                       </div>
-                    </PerfectScrollbar>
-                  </Tab.Pane>
-                </Tab.Content>
-              </Tab.Container>
-            </div>
-          </form>
-        </Dropdown.Menu>
-      </Dropdown>
-    );
+                      <ModalUserNotifications
+                        from={values.from}
+                        subject={values.subject}
+                        message={values.message}
+                        formatDate={values.formatDate}
+                        showModal={openModal}
+                        setShowModal={(onOff) => setOpenModal(onOff)}
+                      />
+                    </div>
+                  </PerfectScrollbar>
+                </Tab.Pane>
+              </Tab.Content>
+            </Tab.Container>
+          </div>
+        </form>
+      </Dropdown.Menu>
+    </Dropdown>
+  );
 }
 
 export default UserNotifications;
