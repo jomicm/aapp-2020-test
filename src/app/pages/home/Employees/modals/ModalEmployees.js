@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import Select from 'react-select';
+import { isEmpty } from 'lodash';
 import SwipeableViews from 'react-swipeable-views';
 import {
   Button,
@@ -18,7 +18,7 @@ import {
   FormLabel,
   FormGroup
 } from '@material-ui/core';
-import { withStyles, useTheme, makeStyles } from '@material-ui/core/styles';
+import { withStyles, useTheme, makeStyles } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import {
   postDBEncryptPassword,
@@ -27,9 +27,8 @@ import {
   postDB,
   getDB
 } from '../../../../crud/api';
+import BaseFields from '../../Components/BaseFields/BaseFields';
 import CustomFields from '../../Components/CustomFields/CustomFields';
-import Permission from '../components/Permission';
-import AssetTable from '../components/AssetTable';
 import {
   Checkboxes,
   MultiLine,
@@ -41,8 +40,9 @@ import {
   FileUpload
 } from '../../Components/CustomFields/CustomFieldsPreview';
 import ImageUpload from '../../Components/ImageUpload';
-import ModalYesNo from '../../Components/ModalYesNo';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import Permission from '../components/Permission';
+import AssetTable from '../components/AssetTable';
 import ModalAssignmentReport from './ModalAssignmentReport';
 
 const CustomFieldsPreview = (props) => {
@@ -176,6 +176,11 @@ const ModalEmployees = ({
     selectedUserProfile: null
   });
 
+  const [formValidation, setFormValidation] = useState({
+    enabled: false,
+    isValidForm: {}
+  });
+
   const executePolicies = (catalogueName) => {
     const formatDate = new Date()
     const currentDate = `${(`0${formatDate.getDate()}`).slice(-2)}/${(`0${formatDate.getMonth() + 1}`).slice(-2)}/${formatDate.getFullYear()}`;
@@ -259,6 +264,72 @@ const ModalEmployees = ({
     setValue4(index);
   };
 
+  const onChangeEmployeeProfile = (e) => {
+    if (!e) {
+      setCustomFieldsTab({});
+      setProfilePermissions({});
+      setTabs([]);
+      return;
+    }
+    console.log('onChangeEmployeeProfile>>>', e);
+    setProfileSelected(e);
+    getOneDB('employeeProfiles/', e.value)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data.response);
+        const { customFieldsTab, profilePermissions } = data.response;
+        const tabs = Object.keys(customFieldsTab).map((key) => ({
+          key,
+          info: customFieldsTab[key].info,
+          content: [customFieldsTab[key].left, customFieldsTab[key].right]
+        }));
+        tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
+        setCustomFieldsTab(customFieldsTab);
+        setProfilePermissions(profilePermissions);
+        setTabs(tabs);
+        setIdUserProfile(e.value);
+      })
+      .catch((error) => console.log(error));
+  };
+
+  const baseFieldsLocalProps = {
+    employeeProfile: {
+      componentProps: {
+        isClearable: true,
+        isDisabled: values.isDisableUserProfile,
+        onChange: onChangeEmployeeProfile,
+        options: employeeProfilesFiltered,
+        value: profileSelected
+      }
+    },
+    name: {
+      componentProps: {
+        onChange: handleChange('name')
+      }
+    },
+    lastName: {
+      componentProps: {
+        onChange: handleChange('lastName')
+      }
+    },
+    email: {
+      componentProps: {
+        onChange: handleChange('email')
+      }
+    },
+    responsibilityLayout: {
+      style: {
+        marginTop: '15px'
+      },
+      componentProps: {
+        isClearable: true,
+        onchange: (e) => setLayoutSelected(e),
+        options: layoutOptions,
+        value: layoutSelected,
+      }
+    }
+  };
+
   const handleCloseModal = () => {
     setCustomFieldsTab({});
     setProfilePermissions([]);
@@ -278,6 +349,10 @@ const ModalEmployees = ({
     setValue4(0);
     setLayoutSelected(null);
     setAssetRows([]);
+    setFormValidation({
+      enabled: false,
+      isValidForm: false
+    });
   };
 
   const handleOnAssetFinderSubmit = (filteredRows) => {
@@ -292,32 +367,6 @@ const ModalEmployees = ({
     setAssetRows([...assetRows, ...validRows]);
   };
 
-  const onChangeEmployeeProfile = (e) => {
-    if (!e) {
-      setCustomFieldsTab({});
-      setProfilePermissions({});
-      setTabs([]);
-      return;
-    }
-    setProfileSelected(e);
-    getOneDB('employeeProfiles/', e.value)
-      .then((response) => response.json())
-      .then((data) => {
-        const { customFieldsTab, profilePermissions } = data.response;
-        const tabs = Object.keys(customFieldsTab).map((key) => ({
-          key,
-          info: customFieldsTab[key].info,
-          content: [customFieldsTab[key].left, customFieldsTab[key].right]
-        }));
-        tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
-        setCustomFieldsTab(customFieldsTab);
-        setProfilePermissions(profilePermissions);
-        setTabs(tabs);
-        setIdUserProfile(e.value);
-      })
-      .catch((error) => console.log(error));
-  };
-
   const handleOnDeleteAssetAssigned = (id) => {
     const restRows = assetRows.filter((row) => row.id !== id);
     setAssetRows(restRows);
@@ -327,6 +376,12 @@ const ModalEmployees = ({
   };
 
   const handleSave = () => {
+    setFormValidation({ ...formValidation, enabled: true });
+    if (!isEmpty(formValidation.isValidForm)) {
+      alert('Please fill out missing fields')
+      return;
+    }
+
     const fileExt = getFileExtension(image);
     const body = {
       ...values,
@@ -475,6 +530,10 @@ const ModalEmployees = ({
     }
   }
 
+  useEffect(() => {
+    setFormValidation({ ...formValidation, enabled: true });
+  }, [values])
+
   return (
     <div style={{ width: '1000px' }}>
       <ModalAssignmentReport
@@ -522,67 +581,13 @@ const ModalEmployees = ({
                       Employee Profile Photo
                     </ImageUpload>
                     <div className='profile-tab-wrapper__content'>
-                      <FormControl
-                        component='fieldset'
-                        className={classes.textField}
-                      >
-                        <FormLabel component='legend'>
-                          Employee Profile
-                        </FormLabel>
-                        <FormGroup>
-                          <Select
-                            classNamePrefix='select'
-                            isClearable={true}
-                            isDisabled={values.isDisableUserProfile}
-                            name='color'
-                            onChange={onChangeEmployeeProfile}
-                            options={employeeProfilesFiltered}
-                            value={profileSelected}
-                          />
-                        </FormGroup>
-                      </FormControl>
-                      <TextField
-                        className={classes.textField}
-                        id='standard-name'
-                        label='Name'
-                        margin='normal'
-                        onChange={handleChange('name')}
-                        value={values.name}
+                      <BaseFields
+                        catalogue={'employees'}
+                        collection={'employees'}
+                        formState={[formValidation, setFormValidation]}
+                        localProps={baseFieldsLocalProps}
+                        values={values}
                       />
-                      <TextField
-                        className={classes.textField}
-                        id='standard-name'
-                        label='Last Name'
-                        margin='normal'
-                        onChange={handleChange('lastName')}
-                        value={values.lastName}
-                      />
-                      <TextField
-                        className={classes.textField}
-                        id='standard-name'
-                        label='Email'
-                        margin='normal'
-                        onChange={handleChange('email')}
-                        value={values.email}
-                      />
-                      <div className={classes.textField}>
-                        <FormLabel
-                          component='legend'
-                          style={{ marginTop: '25px' }}
-                        >
-                          Responsibility Layout
-                        </FormLabel>
-                        <FormGroup>
-                          <Select
-                            classNamePrefix='select'
-                            isClearable={true}
-                            name='color'
-                            onChange={(e) => setLayoutSelected(e)}
-                            options={layoutOptions}
-                            value={layoutSelected}
-                          />
-                        </FormGroup>
-                      </div>
                     </div>
                   </div>
                 </TabContainer4>

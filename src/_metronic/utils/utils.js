@@ -7,7 +7,7 @@ export function addCSSClass(ele, cls) {
   ele.classList.add(cls);
 }
 
-export function filterObject(obj, predicate) {
+export function filterObject(obj = {}, predicate) {
   return Object.keys(obj)
     .filter((key) => predicate(obj[key]))
     .reduce((res, key) => ((res[key] = obj[key]), res), {});

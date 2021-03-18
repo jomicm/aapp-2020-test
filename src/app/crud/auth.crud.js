@@ -1,36 +1,36 @@
 import axios from "axios";
 
-const host = 'http://159.203.41.87:3001/';
-// const host = 'http://localhost:3001/';
-const version  = 'api/v1/';
-const db = 'notes-db-app/';
-const collection = 'locations/';
-
-const getAPIPath = (_collection = collection, _id = '', isEncrypt = false, isUserValidation = false) =>
-  `${host}${version}${db}${_collection}${_id}${isEncrypt ? '/encrypt' : ''}${isUserValidation ? '/validuser' : ''}`;
-const getUserTokenPath = 'http://159.203.41.87:3001/users/getuserbytoken';
-// const getUserTokenPath = 'http://localhost:3001/users/getuserbytoken';
-const getHeaders = () => {
-  // const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVlYTdiNjg0M2U0ZWRhODVjNDhmZjVkOSIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImRldkBkZXYuY29tIiwiaWF0IjoxNTg4MDUwMzg5LCJleHAiOjE1OTY2OTAzODl9.eLwnv1UlCgAop0JyEXam-BxhHJFhdlnhVLF134j-pBM';
-  // const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVlYTdiNjg0M2U0ZWRhODVjNDhmZjVkOSIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImRldkBkZXYuY29tIiwiaWF0IjoxNTk3Mzc3MzM0LCJleHAiOjE2MDYwMTczMzR9.BFy6AjKCH83rdIZmKakpElMqYXr-E6L24fUzokJnl9U';
-  // const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVlYTdiNjg0M2U0ZWRhODVjNDhmZjVkOSIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImRldkBkZXYuY29tIiwiaWF0IjoxNTk3Mzc3MzM0LCJleHAiOjE2MDYwMTczMzR9.BFy6AjKCH83rdIZmKakpElMqYXr-E6L24fUzokJnl9U';
-  // const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVlYTdiNjg0M2U0ZWRhODVjNDhmZjVkOSIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImRldkBkZXYuY29tIiwiaWF0IjoxNjA2ODY5MzAxLCJleHAiOjE2MTU1MDkzMDF9.NjUoP4pjXxCcMJn2_1rIdwKCGuRlk78iuCoZhcORsI4';
-  // "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVmNzJiZGJlYjM2NDQ4NTRmN2M0MDdiYSIsInR5cGUiOiJ1c2VyIiwiZW1haWwiOiJqdWFuQGp1YW4uY29tIiwibmFtZSI6Ikp1YW4iLCJsYXN0TmFtZSI6IlBlcmV6IiwiaWF0IjoxNjAxMzU1OTQ1LCJleHAiOjE2MDk5OTU5NDV9.ER6Hz8jsEsxAXZU57o8bNvmhZ401UYVJv1QWjTm4QfM"
-  const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVlYTdiNjg0M2U0ZWRhODVjNDhmZjVkOSIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImRldkBkZXYuY29tIiwiaWF0IjoxNjE1NTExMDU4LCJleHAiOjE2MjQxNTEwNTh9.zTKbXAlfJ0slH9TDkkdS-dch8NecYv2nEbeKwtJmnGY';
-  const headers = new Headers();
-  headers.set('Authorization', `Bearer ${token}`);
-  headers.set('Accept', "application/json");
-  headers.set('Content-Type', "application/json");
-  return headers;
-};
+const {
+  REACT_APP_API_SERVER,
+  REACT_APP_API_PORT,
+  REACT_APP_API_VERSION,
+  REACT_APP_API_DB,
+  REACT_APP_API_COLLECTION
+} = process.env;
 
 export const LOGIN_URL = "api/auth/login";
 export const REGISTER_URL = "api/auth/register";
 export const REQUEST_PASSWORD_URL = "api/auth/forgot-password";
-
-export const REAL_LOGIN_URL = ''
-
+export const REAL_LOGIN_URL = '';
 export const ME_URL = "api/me";
+export const GET_USER_TOKEN_URL = 'users/getuserbytoken';
+
+const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}/`;
+const getUserTokenPath = `${host}${GET_USER_TOKEN_URL}`;
+
+const version = REACT_APP_API_VERSION;
+const db = `${REACT_APP_API_DB}/`;
+const collection = `${REACT_APP_API_COLLECTION}/`;
+
+const getAPIPath = (_collection = collection, _id = '', isEncrypt = false, isUserValidation = false) =>
+  `${host}${version}${db}${_collection}${_id}${isEncrypt ? '/encrypt' : ''}${isUserValidation ? '/validuser' : ''}`;
+
+const getHeaders = () => {
+  const headers = new Headers();
+  headers.set('Accept', "application/json");
+  headers.set('Content-Type', "application/json");
+  return headers;
+};
 
 export function login(email, password) {
   return axios.post(LOGIN_URL, { email, password });

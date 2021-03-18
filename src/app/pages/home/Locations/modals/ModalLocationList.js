@@ -16,8 +16,8 @@ import {
   InputLabel,
   Paper,
   Switch,
-  Tab, 
-  Tabs, 
+  Tab,
+  Tabs,
   TextField,
   Typography
 } from '@material-ui/core';
@@ -57,14 +57,14 @@ const localStorageActiveTabKey = 'builderActiveTab';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
-    checkboxes: <Checkboxes { ...props } />,
-    date: <Date { ...props } />,
-    dateTime: <DateTime { ...props } />,
-    dropDown: <DropDown { ...props } />,
-    fileUpload: <FileUpload { ...props } />,
-    multiLine: <MultiLine { ...props } />,
-    radioButtons: <RadioButtons { ...props } />,
-    singleLine: <SingleLine { ...props } />
+    checkboxes: <Checkboxes {...props} />,
+    date: <Date {...props} />,
+    dateTime: <DateTime {...props} />,
+    dropDown: <DropDown {...props} />,
+    fileUpload: <FileUpload {...props} />,
+    multiLine: <MultiLine {...props} />,
+    radioButtons: <RadioButtons {...props} />,
+    singleLine: <SingleLine {...props} />
   };
   return customFieldsPreviewObj[props.type];
 };
@@ -85,20 +85,20 @@ const DialogContent5 = withStyles(theme => ({
 const DialogTitle5 = withStyles(styles5)(props => {
   const { children, classes, onClose } = props;
   return (
-    <DialogTitle 
-      disableTypography 
-      className={classes.root} 
-      style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-        <Typography variant='h6'>{children}</Typography>
-        {onClose ? (
-          <IconButton
-            aria-label='Close'
-            className={classes.closeButton}
-            onClick={onClose}
-          >
-            <CloseIcon />
-          </IconButton>
-        ) : null}
+    <DialogTitle
+      disableTypography
+      className={classes.root}
+      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <Typography variant='h6'>{children}</Typography>
+      {onClose ? (
+        <IconButton
+          aria-label='Close'
+          className={classes.closeButton}
+          onClick={onClose}
+        >
+          <CloseIcon />
+        </IconButton>
+      ) : null}
     </DialogTitle>
   );
 });
@@ -171,28 +171,20 @@ const useStyles5 = makeStyles({
   }
 });
 
-const ModalLocationList = ({ 
-  editOrNew, 
-  modalId, 
-  parent, 
-  parentExt, 
-  profile, 
-  realParent, 
-  reload, 
-  setParentSelected, 
-  setShowModal, 
-  showModal 
+const ModalLocationList = ({
+  dataFromParent,
+  editOrNew,
+  imageLayout,
+  modalId,
+  parent,
+  parentExt,
+  profile,
+  realParent,
+  reload,
+  setParentSelected,
+  setShowModal,
+  showModal
 }) => {
-
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
-  const classes = useStyles();
-  const classes4 = useStyles4();
-  const containerStyle = {
-    border: '5px dashed green',
-    position: 'relative',  
-    minWidth: '200px',
-    minHeight: '200px'
-  }
   const [image, setImage] = useState(null);
   const [mapCenter, setMapCenter] = useState(null);
   const [markers, setMarkers] = useState([]);
@@ -221,79 +213,89 @@ const ModalLocationList = ({
     parent: ''
   });
 
+  const activeTab = localStorage.getItem(localStorageActiveTabKey);
+  const classes = useStyles();
+  const classes4 = useStyles4();
+  const containerStyle = {
+    border: '5px dashed green',
+    position: 'relative',
+    minWidth: '200px',
+    minHeight: '200px'
+  }
+
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value });
   };
 
-  const handleChange4 =(event, newValue) => {
+  const handleChange4 = (event, newValue) => {
     setValue4(newValue);
   }
 
-  const handleChangeIndex4 =(index) => {
+  const handleChangeIndex4 = (index) => {
     setValue4(index);
   }
 
   const handleCloseModal = () => {
+    setValues({
+      categoryPic: '/media/misc/placeholder-image.jpg',
+      categoryPicDefault: '/media/misc/placeholder-image.jpg',
+      imageURL: '',
+      name: '',
+      profileId: '',
+      profileLevel: '',
+      profileName: '',
+      parent: '',
+      customFieldsTab: {}
+    });
     setImage(null);
     setMapCenter(null);
     setMarkers([]);
     setModalCoords([]);
     setModalMapZoom(6);
-    setParentSelected('root');
-    setShowModal(false);
     setValue4(0);
-    setValues({ 
-      categoryPic: '/media/misc/placeholder-image.jpg',
-      categoryPicDefault: '/media/misc/placeholder-image.jpg',
-      name: '', 
-      profileId: '', 
-      profileLevel: '', 
-      profileName: '',
-      parent: '', 
-      customFieldsTab: {} 
-    });
+    setShowModal(false);
   };
 
   const handleSave = () => {
     const fileExt = getFileExtension(image);
     const body = {
-      ...values, 
+      ...values,
       fileExt,
-      mapInfo: modalMapZoom !== null ? {lat: modalCoords[0].lat, lng: modalCoords[0].lng, zoom: modalMapZoom} : null,
-      imageInfo: markers.length ? {top: markers[0].top, left: markers[0].left} : null
+      mapInfo: (Object.keys(modalCoords).length > 0) ? { lat: modalCoords[0].lat, lng: modalCoords[0].lng, zoom: modalMapZoom } : null,
+      imageInfo: markers.length ? { top: markers[0].top, left: markers[0].left } : null
     };
     if (editOrNew === 'new') {
       body.parent = parent;
       postDB('locationsReal', body)
         .then((response) => response.json())
         .then((data) => {
-          const { _id } = data.response;
+          const { _id } = data.response[0];
           saveAndReload('locationsReal', _id);
-      })
-        .catch((error) => console.log(error));
-      } else {
-        body.parent = realParent;
-        updateDB('locationsReal/', body, parent)
-          .then((response) => {
-            saveAndReload('locationsReal', parent);
         })
-          .catch((error) => console.log(error));
-      }
-      setModalMapZoom(modalMapZoom);
-      handleCloseModal();
-    };
+        .catch((error) => console.log(error));
+    } else {
+      body.parent = realParent;
+      updateDB('locationsReal/', body, parent)
+        .then((response) => {
+          saveAndReload('locationsReal', parent);
+        })
+        .catch((error) => console.log(error));
+    }
+    setModalMapZoom(modalMapZoom);
+    handleCloseModal();
+  };
 
   const handlePinDelete = () => {
     setModalCoords([{}]);
     setModalMapZoom(null);
   }
-    
-    // Function to update customFields
+
+  // Function to update customFields
   const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
     const colValue = ['left', 'right'];
     const customFieldsTabTmp = { ...values.customFieldsTab };
     const field = customFieldsTabTmp[tab][colValue[colIndex]]
-    .find((cf) => cf.id === id);
+      .find((cf) => cf.id === id);
     field.values = CFValues;
   };
 
@@ -303,65 +305,77 @@ const ModalLocationList = ({
   };
 
   useEffect(() => {
-    if(!profile || !profile.id || editOrNew === 'edit') return;
+    if (!profile || !profile.id || editOrNew === 'edit' || !showModal) {
+      return;
+    }
     getOneDB('locations/', profile.id)
       .then((response) => response.json())
-      .then((data) => { 
-        const { 
-          _id: profileId, 
-          name: profileName, 
-          level: profileLevel, 
-          customFieldsTab 
+      .then((data) => {
+        const {
+          _id: profileId,
+          name: profileName,
+          level: profileLevel,
+          customFieldsTab
         } = data.response;
-        setValues({ ...values, name:'', profileName, profileId, profileLevel, customFieldsTab });
+        setValues((prev) => ({ ...prev, name: '', profileName, profileId, profileLevel, customFieldsTab }));
         setProfileLabel(profile.name);
-        const tabs = Object.keys(customFieldsTab).map((key) => ({ 
-          key, 
-          info: customFieldsTab[key].info, 
-          content: [customFieldsTab[key].left, customFieldsTab[key].right] 
+        const tabs = Object.keys(customFieldsTab).map((key) => ({
+          key,
+          info: customFieldsTab[key].info,
+          content: [customFieldsTab[key].left, customFieldsTab[key].right]
         }));
         setTabs(tabs);
         setValue4(0);
       })
       .catch((error) => console.log(error));
-  }, [profile.id, editOrNew]);
+    getOneDB('locationsReal/', parent)
+      .then((response) => response.json())
+      .then((data) => {
+        const { fileExt } = data.response;
+        const imageURL = parent !== "root" ? getImageURL(parent, 'locationsReal', fileExt) : '';
+        setValues((prev) => ({ ...prev, imageURL }));
+      })
+      .catch((error) => console.log(error));
+  }, [showModal]);
 
   useEffect(() => {
-    if(editOrNew !== 'edit') return;
+    if (editOrNew !== 'edit' || !showModal) {
+      return;
+    }
     getOneDB('locationsReal/', parent)
-    .then((response) => response.json())
-    .then((data) => { 
-      const { 
-        _id, 
-        customFieldsTab, 
-        fileExt, 
-        imageInfo, 
-        mapInfo, 
-        name, 
-        profileId, 
-        profileLevel, 
-        profileName 
-      } = data.response;      
-      const imageURL = getImageURL(realParent, 'locationsReal', parentExt);
-      setValues({ ...values, name, profileId, profileLevel, profileName, customFieldsTab, imageURL });
-      setMarkers(imageInfo !== null ? [{ top: imageInfo.top, left: imageInfo.left }] : []);
-      setMapCenter({ lat: mapInfo.lat, lng: mapInfo.lng });
-      setModalCoords([{ lat: mapInfo.lat, lng: mapInfo.lng }]);
-      setModalMapZoom(mapInfo.zoom);
-      setProfileLabel(profileName);
-      const tabs = Object.keys(customFieldsTab).map((key) => ({ 
-        key, 
-        info: customFieldsTab[key].info, 
-        content: [customFieldsTab[key].left, customFieldsTab[key].right] 
-      }));
-      setTabs(tabs);
-      setValue4(0);
-    })
-    .catch((error) => console.log(error));
-  }, [editOrNew, parent]);
+      .then((response) => response.json())
+      .then((data) => {
+        const {
+          _id,
+          customFieldsTab,
+          fileExt,
+          imageInfo,
+          mapInfo,
+          name,
+          profileId,
+          profileLevel,
+          profileName
+        } = data.response;
+        const imageURL = realParent !== "root" ? getImageURL(realParent, 'locationsReal', parentExt) : '';
+        setValues({ ...values, name, profileId, profileLevel, profileName, customFieldsTab, imageURL });
+        setMarkers(imageInfo !== null ? [{ top: imageInfo.top, left: imageInfo.left }] : []);
+        setMapCenter({ lat: mapInfo.lat, lng: mapInfo.lng });
+        setModalCoords([{ lat: mapInfo.lat, lng: mapInfo.lng }]);
+        setModalMapZoom(mapInfo.zoom);
+        setProfileLabel(profileName);
+        const tabs = Object.keys(customFieldsTab).map((key) => ({
+          key,
+          info: customFieldsTab[key].info,
+          content: [customFieldsTab[key].left, customFieldsTab[key].right]
+        }));
+        setTabs(tabs);
+        setValue4(0);
+      })
+      .catch((error) => console.log(error));
+  }, [showModal]);
 
   return (
-    <div style={{ width:'1000px' }}>
+    <div style={{ width: '1000px' }}>
       <Dialog
         aria-labelledby='customized-dialog-title'
         onClose={handleCloseModal}
@@ -374,7 +388,7 @@ const ModalLocationList = ({
           {`${editOrNew === 'new' ? 'Add' : 'Edit'} Location`}
         </DialogTitle5>
         <DialogContent5 dividers>
-          <div className='kt-section__content' style={{ margin:'-16px' }}>
+          <div className='kt-section__content' style={{ margin: '-16px' }}>
             <div className={classes4.root}>
               <Paper className={classes4.root}>
                 <Tabs
@@ -435,11 +449,11 @@ const ModalLocationList = ({
                       <div className='container-map-delete-modal-location-list'>
                         <div className='container-delete-modal-location-list'>
                           <Button
-                           className={classes.button}
-                           color='secondary'
-                           onClick={() => handlePinDelete()} 
-                           variant='contained' 
-                           >
+                            className={classes.button}
+                            color='secondary'
+                            onClick={() => handlePinDelete()}
+                            variant='contained'
+                          >
                             Delete PIN
                             <DeleteIcon className={classes.rightIcon} />
                           </Button>
@@ -449,7 +463,7 @@ const ModalLocationList = ({
                             center={mapCenter}
                             coords={modalCoords}
                             edit
-                            setCoords={setModalCoords}                
+                            setCoords={setModalCoords}
                             setZoom={setModalMapZoom}
                             styleMap={{ marginRight: '20px', width: '95%', height: '63%' }}
                             zoom={modalMapZoom}
@@ -464,14 +478,12 @@ const ModalLocationList = ({
                       <div
                         style={{ paddingTop: '20px', width: '500px' }}
                       >
-                        {values.imageURL &&
-                          <ImageMarker
-                            markerComponent={() => <RoomIcon style={{color: 'red'}}/>}
-                            markers={markers}
-                            onAddMarker={(marker) => {setMarkers([marker])}}
-                            src={ realParent !== 'root' ? values.imageURL : values.categoryPicDefault}
-                          />
-                        }
+                        <ImageMarker
+                          markerComponent={() => <RoomIcon style={{ color: 'red' }} />}
+                          markers={markers}
+                          onAddMarker={(marker) => { setMarkers([marker]) }}
+                          src={values.imageURL === '' || !values.imageURL ? values.categoryPicDefault : values.imageURL}
+                        />
                       </div>
                     </PortletBody>
                   )}
@@ -479,38 +491,38 @@ const ModalLocationList = ({
                     <PortletBody style={{ paddingTop: '20px' }}>
                       <div className='profile-tab-wrapper'>
                         <ImageUpload
-                          image={values.imageURL}
+                          image={editOrNew === 'edit' ? imageLayout : ''}
                           setImage={setImage}
-                          >
-                           Sketch Layout
-                        </ImageUpload>
+                        >
+                          Sketch Layout
+                          </ImageUpload>
                       </div>
                     </PortletBody>
                   )}
                 </TabContainer4>
                 {tabs.map((tab) => (
                   <TabContainer4 dir={theme4.direction}>
-                  <div className='modal-location'>
-                    {Array(tab.content[1].length === 0 ? 1 : 2).fill(0).map((col, colIndex) => (
-                      <div className='modal-location__list-field'>
-                        {tab.content[colIndex].map((customField) => (
-                          <CustomFieldsPreview 
-                            columnIndex={colIndex}
-                            from='form'
-                            id={customField.id}
-                            onClick={() => alert(customField.content)}
-                            onDelete={() => {}}
-                            onSelect={() => {}}
-                            onUpdateCustomField={handleUpdateCustomFields}
-                            tab={tab}
-                            type={customField.content}
-                            values={customField.values}
-                          />
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                  </TabContainer4>  
+                    <div className='modal-location'>
+                      {Array(tab.content[1].length === 0 ? 1 : 2).fill(0).map((col, colIndex) => (
+                        <div className='modal-location__list-field'>
+                          {tab.content[colIndex].map((customField) => (
+                            <CustomFieldsPreview
+                              columnIndex={colIndex}
+                              from='form'
+                              id={customField.id}
+                              onClick={() => alert(customField.content)}
+                              onDelete={() => { }}
+                              onSelect={() => { }}
+                              onUpdateCustomField={handleUpdateCustomFields}
+                              tab={tab}
+                              type={customField.content}
+                              values={customField.values}
+                            />
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </TabContainer4>
                 ))}
               </SwipeableViews>
             </div>
@@ -521,7 +533,7 @@ const ModalLocationList = ({
             Save changes
           </Button>
         </DialogActions5>
-      </Dialog>    
+      </Dialog>
     </div>
   )
 };

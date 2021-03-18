@@ -1,27 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
-  Portlet,
   PortletBody,
-  PortletHeader,
-  PortletHeaderToolbar
-} from "../../../../../partials/content/Portlet";
-import {
-  getDB,
-  postDB,
-  getOneDB,
-  updateDB,
-  deleteDB
-} from "../../../../../crud/api";
-import TableComponent from "../../TableComponent";
-import ModalPolicies from "../modals/ModalPolicies";
+} from '../../../../../partials/content/Portlet';
+import { deleteDB, getDBComplex, getCountDB } from '../../../../../crud/api';
+import TableComponent2 from '../../TableComponent2';
+import ModalPolicies from '../modals/ModalPolicies';
 
 const policiesHeadRows = [
-  { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
-  { id: 'target', numeric: false, disablePadding: false, label: 'Target' },
-  { id: 'action', numeric: false, disablePadding: false, label: 'Action' },
-  { id: 'type', numeric: false, disablePadding: false, label: 'Type' },
-  { id: 'creator', numeric: false, disablePadding: false, label: 'Creator' },
-  { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date' }
+  { id: 'name', numeric: false, disablePadding: false, label: 'Name', searchByDisabled: false },
+  { id: 'target', numeric: false, disablePadding: false, label: 'Target', searchByDisabled: false },
+  { id: 'action', numeric: false, disablePadding: false, label: 'Action', searchByDisabled: false },
+  { id: 'type', numeric: false, disablePadding: false, label: 'Type', searchByDisabled: true },
+  { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
+  { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
 ];
 
 const collections = {
@@ -81,7 +72,7 @@ const PoliciesTable = ({ module }) => {
         if (!id || !Array.isArray(id)) return;
         id.forEach((_id) => {
           deleteDB(`${collection.name}/`, _id)
-            .then((response) => loadInitData(collection.name))
+            .then((response) => loadPoliciesData(collection.name))
             .catch((error) => console.log('Error', error));
         });
       },
@@ -105,14 +96,69 @@ const PoliciesTable = ({ module }) => {
     return array.join(', ');
   };
 
-  const loadInitData = (collectionNames = ['policies']) => {
-    collectionNames = !Array.isArray(collectionNames)
-      ? [collectionNames]
-      : collectionNames;
-    collectionNames.forEach((collectionName) => {
-      getDB(collectionName)
-        .then((response) => response.json())
-        .then((data) => {
+  const [tableControl, setTableControl] = useState({
+    policies: {
+      collection: 'policies',
+      total: 0,
+      page: 0,
+      rowsPerPage: 5,
+      orderBy: 'policyName',
+      order: 1,
+      search: '',
+      searchBy: '',
+    }
+  });
+
+  const loadPoliciesData = (collectionNames = ['policies']) => {
+    collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
+    collectionNames.forEach(collectionName => {
+      let queryLike = '';
+      let searchByFiltered = tableControl.policies.searchBy;
+      switch (tableControl.policies.searchBy) {
+        case "name":
+          searchByFiltered = 'policyName'
+          break;
+        case "target":
+          searchByFiltered = 'selectedCatalogue'
+          break;
+        case "action":
+          searchByFiltered = 'selectedAction'
+          break;
+        default:
+          searchByFiltered = searchByFiltered
+          break;
+      }
+      if (collectionName === 'policies') {
+        queryLike = tableControl.policies.searchBy ? (
+          [{ key: searchByFiltered, value: tableControl.policies.search }]
+        ) : (
+          ['policyName', 'selectedCatalogue', 'selectedAction'].map(key => ({ key, value: tableControl.policies.search }))
+        )
+      }
+      getCountDB({
+        collection: collectionName,
+        queryLike: tableControl[collectionName].search ? queryLike : null
+      })
+        .then(response => response.json())
+        .then(data => {
+          setTableControl(prev => ({
+            ...prev,
+            [collectionName]: {
+              ...prev[collectionName],
+              total: data.response.count
+            }
+          }))
+        });
+
+      getDBComplex({
+        collection: collectionName,
+        limit: tableControl[collectionName].rowsPerPage,
+        skip: tableControl[collectionName].rowsPerPage * tableControl[collectionName].page,
+        sort: [{ key: tableControl[collectionName].orderBy, value: tableControl[collectionName].order }],
+        queryLike: tableControl[collectionName].search ? queryLike : null
+      })
+        .then(response => response.json())
+        .then(data => {
           if (collectionName === 'policies') {
             const rows = data.response.map((row) => {
               const {
@@ -146,13 +192,17 @@ const PoliciesTable = ({ module }) => {
             }));
           }
         })
-        .catch((error) => console.log('error>', error));
+        .catch(error => console.log('error>', error));
     });
   };
 
   useEffect(() => {
-    loadInitData();
+    loadPoliciesData();
   }, []);
+
+  useEffect(() => {
+    loadPoliciesData('policies');
+  }, [tableControl.policies.page, tableControl.policies.rowsPerPage, tableControl.policies.order, tableControl.policies.orderBy, tableControl.policies.search, tableControl.policies.searchBy, tableControl.policies.locationsFilter]);
 
   return (
     <PortletBody>
@@ -166,7 +216,7 @@ const PoliciesTable = ({ module }) => {
               id={control.idPolicies}
               employeeProfileRows={[]}
               module={module}
-              reloadTable={() => loadInitData('policies')}
+              reloadTable={() => loadPoliciesData('policies')}
               setShowModal={(onOff) =>
                 setControl({ ...control, openPoliciesModal: onOff })
               }
@@ -174,14 +224,61 @@ const PoliciesTable = ({ module }) => {
             />
             <div className='kt-separator kt-separator--dashed' />
             <div className='kt-section__content'>
-              <TableComponent
+              <TableComponent2
+                controlValues={tableControl.policies}
                 headRows={policiesHeadRows}
                 onAdd={tableActions('policies').onAdd}
-                onEdit={tableActions('policies').onEdit}
                 onDelete={tableActions('policies').onDelete}
+                onEdit={tableActions('policies').onEdit}
                 onSelect={tableActions('policies').onSelect}
+                paginationControl={({ rowsPerPage, page }) =>
+                  setTableControl(prev => ({
+                    ...prev,
+                    policies: {
+                      ...prev.policies,
+                      rowsPerPage: rowsPerPage,
+                      page: page,
+                    }
+                  }))
+                }
                 rows={control.policiesRows}
-                title={'Policies'}
+                searchControl={({ value, field }) => {
+                  setTableControl(prev => ({
+                    ...prev,
+                    policies: {
+                      ...prev.policies,
+                      search: value,
+                      searchBy: field,
+                    }
+                  }))
+                }}
+                sortByControl={({ orderBy, order }) => {
+                  var correctOrderBy = orderBy;
+                  switch (orderBy) {
+                    case "name":
+                      correctOrderBy = 'policyName'
+                      break;
+                    case "target":
+                      correctOrderBy = 'selectedCatalogue'
+                      break;
+                    case "action":
+                      correctOrderBy = 'selectedAction'
+                      break;
+                    default:
+                      correctOrderBy = orderBy
+                      break;
+                  }
+                  setTableControl(prev => ({
+                    ...prev,
+                    policies: {
+                      ...prev.policies,
+                      orderBy: correctOrderBy,
+                      order: order,
+                    }
+                  }))
+                }}
+                title={'Policies List'}
+                tileView
               />
             </div>
           </div>

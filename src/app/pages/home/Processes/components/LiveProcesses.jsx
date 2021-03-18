@@ -25,6 +25,9 @@ const liveProcessesHeadRows = [
   { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
   { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
 ];
+const createLiveProcessesHeadRows = (id, folio, name, type, date, approvals, status, creator, creation_date) => {
+  return { id, folio, name, type, date, approvals, status, creator, creation_date };
+};
 const stagesLayoutsHeadRows = [
   { id: "name", numeric: false, disablePadding: false, label: "Name" },
   { id: "stage", numeric: false, disablePadding: false, label: "Stage" },
@@ -55,6 +58,11 @@ const collections = {
     id: 'idLayoutStage',
     modal: 'openLayoutStagesModal',
     name: 'settingsLayoutsStages'
+  },
+  processLive: {
+    id: 'idProcessLive',
+    modal: 'openProcessLiveModal',
+    name: 'processLive'
   }
 };
 
@@ -69,6 +77,11 @@ const LiveProcesses = (props) => {
     openLayoutStagesModal: false,
     layoutStagesRows: [],
     layoutStagesRowsSelected: [],
+    //
+    idProcessLive: null,
+    openProcessLiveModal: false,
+    processLiveRows: [],
+    ProcessLiveRowsSelected: [],
   });
   const [tab, setTab] = useState(0);
   const tableActions = (collectionName) => {
@@ -86,7 +99,7 @@ const LiveProcesses = (props) => {
         if (!id || !Array.isArray(id)) return;
         id.forEach(_id => {
           deleteDB(`${collection.name}/`, _id)
-            .then(response => loadLayoutsData('settingsLayoutsEmployees'))
+            .then(response => loadLayoutsData('processLive'))
             .catch(error => console.log('Error', error));
         });
       },
@@ -97,24 +110,19 @@ const LiveProcesses = (props) => {
       }
     }
   };
-  const loadLayoutsData = (collectionNames = ['settingsLayoutsEmployees', 'settingsLayoutsStages']) => {
+  const loadLayoutsData = (collectionNames = ['processLive']) => {
     collectionNames =  !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
       getDB(collectionName)
       .then(response => response.json())
       .then(data => {
-        if (collectionName === 'settingsLayoutsEmployees') {
-          const rows = data.response.map(row => {
-            return createLayoutsEmployeeRow(row._id, row.name, 99, 'Admin', '11/03/2020');
-          });
-          setControl(prev => ({ ...prev, layoutEmployeesRows: rows, layoutEmployeesRowsSelected: [] }));
-        }
-        if (collectionName === 'settingsLayoutsStages') {
-          const rows = data.response.map(row => {
-            return createLayoutsStageRow(row._id, row.name, row.stageName, 99, 'Admin', '11/03/2020');
-          });
-          setControl(prev => ({ ...prev, layoutStagesRows: rows, layoutStagesRowsSelected: [] }));
-        }
+        const rows = data.response.map(row => {
+          const { _id: id, processData: { name, processStages } } = row;
+          return createLiveProcessesHeadRows(id, id.slice(-6), name, 'Type', '12/12/12', 'Approvals', processStages.length, 'Admin', '11/03/2020');
+          // return { id, folio, name, type, date, approvals, status, creator, creation_date };
+          // return createLayoutsEmployeeRow(row._id, row.name, 99, 'Admin', '11/03/2020');
+        });
+        setControl(prev => ({ ...prev, processLiveRows: rows, ProcessLiveRowsSelected: [] }));
       })
       .catch(error => console.log('error>', error));
     });
@@ -152,22 +160,22 @@ const LiveProcesses = (props) => {
               <div className="kt-section__body">
                 <div className="kt-section">
                   <ModalProcessesLive
-                    showModal={control.openLayoutEmployeesModal}
-                    setShowModal={(onOff) => setControl({ ...control, openLayoutEmployeesModal: onOff })}
-                    reloadTable={() => loadLayoutsData('settingsLayoutsEmployees')}
-                    id={control.idLayoutEmployee}
-                    employeeProfileRows={[]}
+                    showModal={control.openProcessLiveModal}
+                    setShowModal={(onOff) => setControl({ ...control, openProcessLiveModal: onOff })}
+                    reloadTable={() => loadLayoutsData('processLive')}
+                    id={control.idProcessLive}
+                    // employeeProfileRows={[]}
                   />
                   <div className="kt-section__content">
                     <TableComponent
                       title={'My Processes Requests'}
                       headRows={liveProcessesHeadRows}
-                      // rows={control.layoutEmployeesRows}
-                      rows={[]}
-                      onEdit={tableActions('layoutsEmployees').onEdit}
-                      onAdd={tableActions('layoutsEmployees').onAdd}
-                      onDelete={tableActions('layoutsEmployees').onDelete}
-                      onSelect={tableActions('layoutsEmployees').onSelect}
+                      rows={control.processLiveRows}
+                      // rows={[]}
+                      onEdit={tableActions('processLive').onEdit}
+                      onAdd={tableActions('processLive').onAdd}
+                      onDelete={tableActions('processLive').onDelete}
+                      onSelect={tableActions('processLive').onSelect}
                     />
                   </div>
                 </div>
@@ -212,7 +220,24 @@ const LiveProcesses = (props) => {
             <div className="kt-section kt-margin-t-0">
               <div className="kt-section__body">
                 <div className="kt-section">
-                  <h1>Assets in Locations</h1>    
+                  {/* <ModalLayoutStages
+                    showModal={control.openLayoutStagesModal}
+                    setShowModal={(onOff) => setControl({ ...control, openLayoutStagesModal: onOff })}
+                    reloadTable={() => loadLayoutsData('settingsLayoutsStages')}
+                    id={control.idLayoutStage}
+                    // employeeProfileRows={[]}
+                  /> */}
+                  <div className="kt-section__content">
+                    <TableComponent
+                      title={'Process Approvals'}
+                      headRows={stagesLayoutsHeadRows}
+                      rows={control.layoutStagesRows}
+                      onEdit={tableActions('layoutsStages').onEdit}
+                      onAdd={tableActions('layoutsStages').onAdd}
+                      onDelete={tableActions('layoutsStages').onDelete}
+                      onSelect={tableActions('layoutsStages').onSelect}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

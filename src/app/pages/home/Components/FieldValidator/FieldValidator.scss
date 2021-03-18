@@ -1,0 +1,11 @@
+.field-validator {
+  display: flex;
+  flex-direction: column;
+
+  &_error {
+    color: red;
+    font-size: 10px;
+    padding-left: 10px;
+    padding-top: -10px;
+  }
+}
