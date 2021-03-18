@@ -189,7 +189,6 @@ const ModalEmployees = ({
     const filteredPolicies = policies.filter(
       (policy) => policy.selectedAction === catalogueName);
     filteredPolicies.forEach(({
-      _id,
       apiDisabled,
       selectedIcon,
       layout,
@@ -212,7 +211,6 @@ const ModalEmployees = ({
             `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`
           ),
           postDB('messages', {
-            _id,
             from: messageFrom,
             html: layout,
             read: read,
@@ -233,7 +231,6 @@ const ModalEmployees = ({
             `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`
           ),
           postDB('notifications', {
-            _id,
             formatDate: formatDate,
             from: notificationFrom,
             icon: selectedIcon,
