@@ -17,7 +17,11 @@ const WrapperEditor = ({ html }) => {
   }, [html])
 
   return (
-    <Editor editorState={editorState} readOnly={true} toolbarHidden={true} />
+    <Editor
+      editorState={editorState}
+      readOnly={true}
+      toolbarHidden={true}
+    />
   )
 }
 
