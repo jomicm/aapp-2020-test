@@ -89,5 +89,5 @@ export const ChangeFormatDate = () => {
           .slice(-2)}:${`0${dateToFormat.getSeconds()}`
             .slice(-2)}`,
     dateWithoutFormat: dateToFormat
-  }
+  };
 };
