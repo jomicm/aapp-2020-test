@@ -7,13 +7,18 @@
 }
 
 .__container-general-snapshot {
-  // align-items: flex-start;
-  // display: flex;
-  // flex-direction: column-reverse;
   height: 600px;
   margin: 0 20px;
   overflow: scroll;
-  width: 30%;
+  width: 350px;
+}
+
+.snapshot-color {
+  background-color: rgba($color: #302c2c8c, $alpha: 0.3);
+}
+
+.snapshot-click {
+  background-color: purple;
 }
 
 .__container-general-snapshot::-webkit-scrollbar {
@@ -49,9 +54,8 @@
 }
 
 .__container-preview {
-  margin: 0 20px;
   min-height: 600px;
-  width: 70%;
+  width: 76%;
 }
 
 .__container-information {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Snapshot from './Snapshot';
 import MessageInformation from './MessageInformation';
-import './GeneralMessageContainer.scss';
+import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 import {
   postDBEncryptPassword,
   getOneDB,
@@ -9,103 +9,12 @@ import {
   postDB,
   getDB
 } from '../../../../crud/api';
+import './GeneralMessageContainer.scss';
 
 const GeneralMessageContainer = () => {
-
-  // const [data, setData] = useState([
-  //   {
-  //     id: 1,
-  //     date: "",
-  //     subject: "Technique Guides",
-  //     description: "Learn amazing street workout and calisthenics",
-  //     senderName: "José",
-  //     time: "5:12 a.m.",
-  //     img: "https://picsum.photos/id/237/200",
-  //     newMessage: true,
-  //     content:
-  //       "<p><strong>⭐⭐This is an %{employeeName} example ⭐</strong></p>\n<ul>\n<li><strong>dsds⭐⭐%{currentDate}⭐⭐⭐⭐</strong></li>\n<li><del><em><ins>new bullet!⭐</ins></em></del></li>\n</ul>\n<p><strong>La responsiva %{currentDate} %{employeeName} %{currentTime}<br><br>ds</strong></p>\n<p></p>\n"
-  //   },
-  //   {
-  //     id: 2,
-  //     date: "",
-  //     subject: "Skills Training",
-  //     description: "Learn the secrets of bodyweight techniques",
-  //     senderName: "Miguel",
-  //     time: "13:10 p.m.",
-  //     img: "https://picsum.photos/id/238/200",
-  //     newMessage: true,
-  //     content: "<h2> Hey!</h2>, hola <strong>Miguel</strong>"
-  //   },
-  //   {
-  //     id: 3,
-  //     date: "",
-  //     subject: "Strength Training",
-  //     description: "Train anytime, everywere and become a superhero!",
-  //     senderName: "Carlos",
-  //     time: "12:59 p.m.",
-  //     img: "https://picsum.photos/id/239/200",
-  //     newMessage: false,
-  //     content:
-  //       "\n<ul<li><h1>Hola</h1></li>\n<li><h2>Hola</h2></li>\n<li><h3>Hola</h3></li>\n<li><h4>Hola</h4></li></ul>"
-  //   },
-  //   {
-  //     id: 4,
-  //     date: "",
-  //     subject: "Segurity",
-  //     description: "Problems with your PC security",
-  //     senderName: "Diego",
-  //     time: "4:10 p.m.",
-  //     img: "https://picsum.photos/id/240/200",
-  //     newMessage: false,
-  //     content: "<h1>Prueba 4</h1>"
-  //   },
-  //   {
-  //     id: 5,
-  //     date: "",
-  //     subject: "Reports",
-  //     description: "Mail about your reports",
-  //     senderName: "Philip",
-  //     time: "1:06 a.m.",
-  //     img: "https://picsum.photos/id/241/200",
-  //     newMessage: false,
-  //     content: "<h1>Prueba 5</h1>"
-  //   },
-  //   {
-  //     id: 6,
-  //     date: "",
-  //     subject: "Confidential Information",
-  //     description: "Please read the information",
-  //     senderName: "Francisco",
-  //     time: "9:34 p.m.",
-  //     img: "https://picsum.photos/id/242/200",
-  //     newMessage: false,
-  //     content: "<h1>Prueba 6</h1>"
-  //   },
-  //   {
-  //     id: 7,
-  //     date: "",
-  //     subject: "Confidential 7",
-  //     description: "Please read the information 7",
-  //     senderName: "Sergio",
-  //     time: "9:35 p.m.",
-  //     img: "https://picsum.photos/id/243/200",
-  //     newMessage: false,
-  //     content: "<h1>Prueba 7</h1>"
-  //   },
-  //   {
-  //     id: 8,
-  //     date: "",
-  //     subject: "Confidential 8",
-  //     description: "Please read the information 8",
-  //     senderName: "Alejandro",
-  //     time: "9:36 p.m.",
-  //     img: "https://picsum.photos/id/244/200",
-  //     newMessage: false,
-  //     content: "<h1>Prueba 8</h1>"
-  //   },
-  // ]);
+  const [currentUrl, setCurrentUrl] = useState(null)
   const [data, setData] = useState([]);
-  const [currentUrl, setCurrentUrl] = useState('')
+  const [currentId, setCurrentId] = useState(null)
   const [preview, setPreview] = useState('');
   const [headerInfo, setHeaderInfo] = useState({
     timeStamp: '',
@@ -116,54 +25,60 @@ const GeneralMessageContainer = () => {
   });
 
   useEffect(() => {
-    setCurrentUrl(window.location.search.slice(4).toString())
-    getDB('messages')
-    .then((response) => response.json())
-    .then((data) => {
-      const messageFiltered = data.response.filter(({ _id }) => _id === currentUrl)
+    setCurrentUrl(window.location.search.slice(4));
+    if (data.length) {
+      const messageFiltered = data.filter(({ _id }) => _id === currentUrl)
+      setCurrentId(messageFiltered[0]._id)
       const { timeStamp, img, from, subject, to, html } = messageFiltered[0];
       setPreview(html)
       setHeaderInfo({
         timeStamp: timeStamp,
         img: img,
-        senderName: from,
+        senderName: from[0].name,
         subject: subject,
         to: to[0].email
       })
-      setData(data.response);
+    }
+  }, [window.location.search, data, currentUrl])
+
+  useEffect(() => {
+    getDB('messages')
+      .then((response) => response.json())
+      .then((data) => {
+        setData(data.response);
       })
       .catch((error) => console.log('error>', error));
-  }, [currentUrl]);
+  }, []);
+
+  const changeColor = (id) => {
+    console.log(id)
+    if (id === currentId) {
+      return 'snapshot-color'
+    }
+  }
 
   return (
     <div className='__container-gmc'>
       <div className='__container-general-snapshot'>
         {data.length ? data.map((msg, index) => (
           <div key={msg._id} onClick={() => setPreview(msg.html)}>
-            <div
-              onClick={() => (
-                setHeaderInfo({
-                  timeStamp: msg.timeStamp,
-                  img: msg.img,
-                  senderName: msg.from,
-                  subject: msg.subject,
-                  to: msg.to[0].email
-                })
-                )
-              }
-              >
-              <Snapshot
-                data={data}
-                dateTime={msg.timeStamp}
-                name={msg.from[0].name}
-                lastName={msg.from[0].lastName}
-                id={msg._id}
-                img={msg.img}
-                senderName={msg.from[0].email}
-                subject={msg.subject}
-                to={msg.to[0].email}
-              />
-            </div>
+            <Link
+              to={`/messages?id=${msg._id}`}
+            >
+              <div className={changeColor(msg._id)}>
+                <Snapshot
+                  data={data}
+                  dateTime={msg.timeStamp}
+                  name={msg.from[0].name}
+                  lastName={msg.from[0].lastName}
+                  id={msg._id}
+                  img={msg.img}
+                  senderName={msg.from[0].email}
+                  subject={msg.subject}
+                  to={msg.to[0].email}
+                />
+              </div>
+            </Link>
           </div>
         )).reverse() : 'You have no messages'}
       </div>

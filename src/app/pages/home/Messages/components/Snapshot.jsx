@@ -36,14 +36,11 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const Snapshot = ({ id, lastName, name, subject, description, img, senderName, dateTime, to }) => {
+const Snapshot = ({ id, lastName, name, subject, description, img, senderName, dateTime, to, snapshotIndex }) => {
 
   const classes = useStyles();
 
-  console.log('Deleted', id)
-
   const handleDelete = () => {
-    
   console.log('Deleted CONSOLE LOG', id)
     deleteDB('messages/', id)
       .then(response => console.log('success', response))

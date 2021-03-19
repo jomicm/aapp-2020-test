@@ -70,7 +70,7 @@ const MessagesTopBar2 = ({
   const handleUpdate = (id, read) => {
     const body = { read: true }
     updateDB('messages/', body, id)
-      .then(response => console.log('success', response))
+      // .then(response => console.log('success', response))
       .catch(error => console.log('Error', error));
   }
 
@@ -131,7 +131,6 @@ const MessagesTopBar2 = ({
       .then((data) => {
         setData(data.response);
         updateCount(data.response);
-        console.log(data.response)
       })
       .catch((error) => console.log('error>', error));
   }, [data]);
