@@ -1,6 +1,9 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
-import { connect } from "react-redux";
+import { connect } from 'react-redux';
+import Select from 'react-select';
+import SwipeableViews from 'react-swipeable-views';
+import { isEmpty } from 'lodash';
 import {
   Button,
   Dialog,
@@ -14,26 +17,19 @@ import {
   Paper,
   FormLabel,
   FormGroup
-} from "@material-ui/core";
-import Select from 'react-select';
+} from '@material-ui/core';
 import {
   withStyles,
   useTheme,
   makeStyles
-} from "@material-ui/core/styles";
-import SwipeableViews from "react-swipeable-views";
-import CloseIcon from "@material-ui/icons/Close";
-import { isEmpty } from 'lodash';
-
-// import './ModalAssetCategories.scss';
-import ImageUpload from '../../Components/ImageUpload';
+} from '@material-ui/core/styles';
+import CloseIcon from '@material-ui/icons/Close';
+import * as auth from '../../../../store/ducks/auth.duck';
 import { postDBEncryptPassword, getOneDB, getDB, updateDB } from '../../../../crud/api';
+import ImageUpload from '../../Components/ImageUpload';
 import ModalYesNo from '../../Components/ModalYesNo';
-import Permission from '../components/Permission';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
-import * as auth from "../../../../store/ducks/auth.duck";
 import { modules } from '../../constants';
-
 import {
   SingleLine,
   MultiLine,
@@ -44,9 +40,19 @@ import {
   Checkboxes,
   FileUpload
 } from '../../Components/CustomFields/CustomFieldsPreview';
-
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import LocationAssignment from '../components/LocationAssignment';
+import Permission from '../components/Permission';
+
+const {
+  REACT_APP_API_SERVER,
+  REACT_APP_API_PORT,
+  REACT_APP_LOCALHOST,
+  LOCALHOST_PORT
+} = process.env;
+
+const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
+const localHost = `${REACT_APP_LOCALHOST}:${LOCALHOST_PORT}`;
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -62,14 +68,13 @@ const CustomFieldsPreview = (props) => {
   return customFieldsPreviewObj[props.type];
 };
 
-// Example 5 - Modal
 const styles5 = theme => ({
   root: {
     margin: 0,
     padding: theme.spacing(2)
   },
   closeButton: {
-    position: "absolute",
+    position: 'absolute',
     right: theme.spacing(1),
     top: theme.spacing(1),
     color: theme.palette.grey[500]
@@ -79,10 +84,10 @@ const styles5 = theme => ({
 const DialogTitle5 = withStyles(styles5)(({ children, classes, onClose }) => {
   return (
     <DialogTitle disableTypography className={classes.root}>
-      <Typography variant="h6">{children}</Typography>
+      <Typography variant='h6'>{children}</Typography>
       {onClose ? (
         <IconButton
-          aria-label="Close"
+          aria-label='Close'
           className={classes.closeButton}
           onClick={onClose}
         >
@@ -106,10 +111,9 @@ const DialogActions5 = withStyles(theme => ({
   }
 }))(DialogActions);
 
-// Example 4 - Tabs
 function TabContainer4({ children, dir }) {
   return (
-    <Typography component="div" dir={dir} style={{ padding: 8 * 3 }}>
+    <Typography component='div' dir={dir} style={{ padding: 8 * 3 }}>
       {children}
     </Typography>
   );
@@ -121,11 +125,10 @@ const useStyles4 = makeStyles(theme => ({
   }
 }));
 
-// Example 1 - TextField
 const useStyles = makeStyles(theme => ({
   container: {
-    display: "flex",
-    flexWrap: "wrap"
+    display: 'flex',
+    flexWrap: 'wrap'
   },
   textField: {
     marginLeft: theme.spacing(1),
@@ -141,7 +144,6 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows, user, updateUserPic }) => {
-  // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
@@ -152,18 +154,9 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     setValue4(index);
   }
 
-  const {
-    REACT_APP_API_SERVER,
-    REACT_APP_API_PORT,
-    REACT_APP_LOCALHOST
-  } = process.env;
-
-  const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
-  const localHost = `${REACT_APP_LOCALHOST}`;
-  // Example 1 - TextField
   const classes = useStyles();
   const [values, setValues] = useState({
-    name: "",
+    name: '',
     lastName: '',
     email: '',
     password: '',
@@ -219,7 +212,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   const updateCurrentUserPic = (editId, fileExt) => {
     if (user.id === editId) {
       let _v = getRandomArbitrary(1, 999);
-      const defaultPic = `${localHost}:3000/media/misc/placeholder-image.jpg?v=${_v}`;
+      const defaultPic = `${localHost}/media/misc/placeholder-image.jpg?v=${_v}`;
       const pic = fileExt ?
         `${host}/uploads/user/${editId}.${fileExt}?v=${_v}` :
         defaultPic;
@@ -238,7 +231,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     setTabs([]);
     setProfileSelected(null);
     setValues({ 
-      name: "",
+      name: '',
       lastName: '',
       email: '',
       password: '',
@@ -249,7 +242,6 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     });
     setShowModal(false);
     setValue4(0);
-    //
     setFormValidation({
       enabled: false,
       isValidForm: false
@@ -285,7 +277,6 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
           imageURL: getImageURL(id, 'user', fileExt),
           selectedBoss
         });
-        //
         const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
         tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
         setCustomFieldsTab(customFieldsTab);
@@ -415,43 +406,43 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     <div style={{width:'1000px'}}>
       <Dialog
         onClose={handleCloseModal}
-        aria-labelledby="customized-dialog-title"
+        aria-labelledby='customized-dialog-title'
         open={showModal}
       >
         <DialogTitle5
-          id="customized-dialog-title"
+          id='customized-dialog-title'
           onClose={handleCloseModal}
         >
           {`${id ? 'Edit' : 'Add' } Users`}
         </DialogTitle5>
         <DialogContent5 dividers>
-          <div className="kt-section__content" style={{margin:'-16px'}}>
+          <div className='kt-section__content' style={{margin:'-16px'}}>
             <div className={classes4.root}>
               <Paper className={classes4.root}>
                 <Tabs
                   value={value4}
                   onChange={handleChange4}
-                  indicatorColor="primary"
-                  textColor="primary"
-                  variant="fullWidth"
+                  indicatorColor='primary'
+                  textColor='primary'
+                  variant='fullWidth'
                 >
-                  <Tab label="User" />
-                  <Tab label="Permissions" />
-                  <Tab label="Locations" />
+                  <Tab label='User' />
+                  <Tab label='Permissions' />
+                  <Tab label='Locations' />
                   {tabs.map((tab, index) => <Tab key={`tab-reference-${index}`} label={tab.info.name} />)}
                 </Tabs>
               </Paper>
               <SwipeableViews
-                axis={theme4.direction === "rtl" ? "x-reverse" : "x"}
+                axis={theme4.direction === 'rtl' ? 'x-reverse' : 'x'}
                 index={value4}
                 onChangeIndex={handleChangeIndex4}
               >
                 <TabContainer4 dir={theme4.direction}>
-                  <div className="profile-tab-wrapper">
+                  <div className='profile-tab-wrapper'>
                     <ImageUpload setImage={setImage} image={values.imageURL}>
                       User Profile Photo
                     </ImageUpload>
-                    <div className="profile-tab-wrapper__content">
+                    <div className='profile-tab-wrapper__content'>
                       <BaseFields
                         catalogue={'userList'}
                         collection={'user'}
@@ -485,9 +476,9 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
                 {/* TABS CUSTOM FIELDS */}
                 {tabs.map(tab => (
                   <TabContainer4 dir={theme4.direction}>
-                    <div className="modal-asset-reference">
+                    <div className='modal-asset-reference'>
                       {Array(tab.content[1].length === 0 ? 1 : 2).fill(0).map((col, colIndex) => (
-                        <div className="modal-asset-reference__list-field" >
+                        <div className='modal-asset-reference__list-field' >
                           {tab.content[colIndex].map(customField => (
                             <CustomFieldsPreview 
                               id={customField.id}
@@ -496,10 +487,9 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
                               onDelete={() => {}}
                               onSelect={() => {}}
                               columnIndex={colIndex}
-                              from="form"
+                              from='form'
                               tab={tab}
                               onUpdateCustomField={handleUpdateCustomFields}
-                              // customFieldIndex={props.customFieldIndex}
                               onClick={() => alert(customField.content)}
                             />
                           ))}
@@ -513,7 +503,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
           </div>
         </DialogContent5>
         <DialogActions5>
-          <Button onClick={handleSave} color="primary">
+          <Button onClick={handleSave} color='primary'>
             Save changes
           </Button>
         </DialogActions5>
@@ -522,7 +512,6 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   )
 };
 
-// export default ModalUsers;
 const mapStateToProps = ({ auth: { user } }) => ({
   user
 });

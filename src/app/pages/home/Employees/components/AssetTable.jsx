@@ -7,7 +7,7 @@ const assetsHeadRows = [
   { id: 'brand', numeric: true, disablePadding: false, label: 'Brand' },
   { id: 'model', numeric: true, disablePadding: false, label: 'Model' },
   { id: 'EPC', numeric: true, disablePadding: false, label: 'EPC' },
-  { id: 'serial', numeric: true, disablePadding: false, label: 'Serial Number' },
+  { id: 'serial', numeric: true, disablePadding: false, label: 'Serial Number' }
 ];
 const createAssetRow = (id, name, brand, model, epc, sn, creator, creation_date) => {
   return { id, name, brand, model, epc, sn, creator, creation_date };

@@ -2,9 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { makeStyles, Typography, Button, Collapse, IconButton } from '@material-ui/core';
 import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
-
 import ModalYesNo from '../Components/ModalYesNo';
 import { getImageURL } from '../utils';
+
+const {
+  REACT_APP_LOCALHOST,
+  LOCALHOST_PORT
+} = process.env;
+
+const localHost = `${REACT_APP_LOCALHOST}:${LOCALHOST_PORT}`;
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -88,10 +94,6 @@ const TileView = ({ tiles, collection, tailWidth = '120px', tailHeight = '120px'
   const classes = useStyles();
   const [selectedId, setSelectedId] = useState([])
   const [openYesNoModal, setOpenYesNoModal] = useState([false, []]);
-  const {
-    REACT_APP_LOCALHOST
-  } = process.env;
-  const localHost = `${REACT_APP_LOCALHOST}`;
 
   const onTileHover = (id) => {
     if (id) {
@@ -130,7 +132,7 @@ const TileView = ({ tiles, collection, tailWidth = '120px', tailHeight = '120px'
                   key={tile.id}
                 >
                   <img 
-                    src={imageURL ? `${imageURL}?${new Date()}` : `${localHost}:3000/media/misc/placeholder-image.jpg`} 
+                    src={imageURL ? `${imageURL}?${new Date()}` : `${localHost}/media/misc/placeholder-image.jpg`} 
                     width='100%' 
                     height='100%' 
                     className={classes.image} 

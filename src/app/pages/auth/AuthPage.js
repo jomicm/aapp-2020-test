@@ -1,12 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { Link, Switch, Route, Redirect } from "react-router-dom";
-import { toAbsoluteUrl } from "../../../_metronic";
-import "../../../_metronic/_assets/sass/pages/login/login-1.scss";
-import Login from "./Login";
-import Registration from "./Registration";
-import ForgotPassword from "./ForgotPassword";
+import React, { useEffect, useState } from 'react';
+import { Link, Switch, Route, Redirect } from 'react-router-dom';
+import { toAbsoluteUrl } from '../../../_metronic';
+import '../../../_metronic/_assets/sass/pages/login/login-1.scss';
 import { getDB, getPublicDB, postDB, getOneDB, updateDB } from '../../crud/api';
+import Registration from './Registration';
+import ForgotPassword from './ForgotPassword';
+import Login from './Login';
 import './AuthPage.scss';
+
+const {
+  REACT_APP_API_SERVER,
+  REACT_APP_API_PORT,
+  REACT_APP_LOCALHOST,
+  LOCALHOST_PORT
+} = process.env;
+
+const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
+const localHost = `${REACT_APP_LOCALHOST}:${LOCALHOST_PORT}`;
 
 const defaultDesignValues = {
   logoTitle: 'Welcome to AApp 2020!!!',
@@ -30,15 +40,6 @@ const defaultDesignValues = {
 };
 
 const AuthPage = () => {
-  const {
-    REACT_APP_API_SERVER,
-    REACT_APP_API_PORT,
-    REACT_APP_LOCALHOST
-  } = process.env;
-  
-  const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
-  const localHost = `${REACT_APP_LOCALHOST}`;
-
   const loadDesignData = (collectionName = 'settingsDesign') => {
     getPublicDB(collectionName)
     .then(response => response.json())
@@ -58,7 +59,7 @@ const AuthPage = () => {
 
   const [values, setValues] = useState(defaultDesignValues);
   const [logoLoginURL, setLogoLoginURL] = useState(`${localHost}/media/misc/placeholder-image.jpg`)
-  const [logoBackgroundURL, setLogoBackgroundURL] = useState(`url(${toAbsoluteUrl("/media/bg/bg-4.jpg")})`)
+  const [logoBackgroundURL, setLogoBackgroundURL] = useState(`url(${toAbsoluteUrl('/media/bg/bg-4.jpg')})`)
 
   useEffect(() => {
     loadDesignData();
@@ -66,43 +67,43 @@ const AuthPage = () => {
 
   return (
     <>
-      <div className="kt-grid kt-grid--ver kt-grid--root">
+      <div className='kt-grid kt-grid--ver kt-grid--root'>
         <div
-          id="kt_login"
-          className="kt-grid kt-grid--hor kt-grid--root kt-login kt-login--v1"
+          id='kt_login'
+          className='kt-grid kt-grid--hor kt-grid--root kt-login kt-login--v1'
         >
-          <div className="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--desktop kt-grid--ver-desktop kt-grid--hor-tablet-and-mobile">
+          <div className='kt-grid__item kt-grid__item--fluid kt-grid kt-grid--desktop kt-grid--ver-desktop kt-grid--hor-tablet-and-mobile'>
             <div
-              className="kt-grid__item kt-grid__item--order-tablet-and-mobile-2 kt-grid kt-grid--hor kt-login__aside"
+              className='kt-grid__item kt-grid__item--order-tablet-and-mobile-2 kt-grid kt-grid--hor kt-login__aside'
               style={{ backgroundImage: logoBackgroundURL }}
             >
-              <div className="logo-container">
+              <div className='logo-container'>
                   <img
-                    className="logo-container__logo"
-                    alt="Logo"
+                    className='logo-container__logo'
+                    alt='Logo'
                     src={logoLoginURL}
                   />
               </div>
-              <div className="kt-grid__item kt-grid__item--fluid kt-grid kt-grid--ver">
-                <div className="kt-grid__item kt-grid__item--middle">
-                  <h3 className="kt-login__title">{values.logoTitle}</h3>
-                  <h4 className="kt-login__subtitle">{values.logoMessage}</h4>
+              <div className='kt-grid__item kt-grid__item--fluid kt-grid kt-grid--ver'>
+                <div className='kt-grid__item kt-grid__item--middle'>
+                  <h3 className='kt-login__title'>{values.logoTitle}</h3>
+                  <h4 className='kt-login__subtitle'>{values.logoMessage}</h4>
                 </div>
               </div>
-              <div className="kt-grid__item">
-                <div className="kt-login__info">
-                  <div className="kt-login__copyright">{values.logoWatermark}</div>
-                  <div className="kt-login__menu">
+              <div className='kt-grid__item'>
+                <div className='kt-login__info'>
+                  <div className='kt-login__copyright'>{values.logoWatermark}</div>
+                  <div className='kt-login__menu'>
                     {values.isPrivacy &&
-                      <a href={values.privacyURL} className="kt-link" target="_blank" rel="noopener noreferrer">
+                      <a href={values.privacyURL} className='kt-link' target='_blank' rel='noopener noreferrer'>
                         {values.privacyTitle}
                       </a>}
                     {values.isLegal &&
-                      <a href={values.legalURL} className="kt-link" target="_blank" rel="noopener noreferrer">
+                      <a href={values.legalURL} className='kt-link' target='_blank' rel='noopener noreferrer'>
                         {values.legalTitle}
                       </a>}
                     {values.isContact &&
-                      <a href={values.contactURL} className="kt-link" target="_blank" rel="noopener noreferrer">
+                      <a href={values.contactURL} className='kt-link' target='_blank' rel='noopener noreferrer'>
                         {values.contactTitle}
                       </a>}
                   </div>
@@ -110,13 +111,13 @@ const AuthPage = () => {
               </div>
             </div>
 
-            <div style={{ backgroundColor: values.loginBackgroundColor || 'white' }} className="kt-grid__item kt-grid__item--fluid  kt-grid__item--order-tablet-and-mobile-1  kt-login__wrapper">
+            <div style={{ backgroundColor: values.loginBackgroundColor || 'white' }} className='kt-grid__item kt-grid__item--fluid  kt-grid__item--order-tablet-and-mobile-1  kt-login__wrapper'>
               <Switch>
-                <Route path="/auth/login" component={Login} />
-                <Route path="/auth/registration" component={Registration} />
-                <Route path="/auth/forgot-password" component={ForgotPassword} />
-                <Redirect from="/auth" exact={true} to="/auth/login" />
-                <Redirect to="/auth/login" />
+                <Route path='/auth/login' component={Login} />
+                <Route path='/auth/registration' component={Registration} />
+                <Route path='/auth/forgot-password' component={ForgotPassword} />
+                <Redirect from='/auth' exact={true} to='/auth/login' />
+                <Redirect to='/auth/login' />
               </Switch>
             </div>
           </div>

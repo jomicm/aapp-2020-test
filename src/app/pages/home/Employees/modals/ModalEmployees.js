@@ -526,7 +526,7 @@ const ModalEmployees = ({
     } else {
       setShowModalReports(true);
     }
-  }
+  };
 
   useEffect(() => {
     setFormValidation({ ...formValidation, enabled: true });

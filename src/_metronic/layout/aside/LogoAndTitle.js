@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import { getDB } from '../../../app/crud/api';
 
+const {
+  REACT_APP_API_SERVER,
+  REACT_APP_API_PORT,
+  REACT_APP_LOCALHOST,
+  LOCALHOST_PORT
+} = process.env;
+
+const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
+const localHost = `${REACT_APP_LOCALHOST}:${LOCALHOST_PORT}`;
+
 const LogoAndTitle = () => {
   const [values, setValues] = useState({});
-
-  const {
-    REACT_APP_API_SERVER,
-    REACT_APP_API_PORT,
-    REACT_APP_LOCALHOST
-  } = process.env;
-  
-  const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
-  const localHost = `${REACT_APP_LOCALHOST}`;
 
   const loadData = (collectionName = 'settingsDesign') => {
     getDB(collectionName)
@@ -34,7 +35,7 @@ const LogoAndTitle = () => {
           values.logoSideBarExt ? (
             `${host}/uploads/settingsDesign/logoSideBar.${values.logoSideBarExt}`
           ) : (
-              `${localHost}:3000/media/misc/placeholder-image.jpg`
+              `${localHost}/media/misc/placeholder-image.jpg`
             )}
         alt='Logo'
       />

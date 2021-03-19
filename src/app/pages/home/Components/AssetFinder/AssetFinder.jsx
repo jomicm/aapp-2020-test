@@ -65,7 +65,7 @@ const getColumns = (isAssetReference = false) => {
       ...assetReference,
       { field: 'EPC', headerName: 'EPC', width: 200 },
       { field: 'serial', headerName: 'Serial Number', width: 200 }
-    ]
+    ];
   }
 };
 

@@ -1,21 +1,31 @@
 /* eslint-disable no-restricted-imports */
 import React, { useEffect, useState, useRef } from 'react';
-import { FormControlLabel, Tabs, Tab, TextField, Switch } from '@material-ui/core';
 import { omit } from 'lodash';
+import { useFormikContext } from 'formik';
 import { ColorPicker } from 'material-ui-color';
+import { FormControlLabel, Tabs, Tab, TextField, Switch } from '@material-ui/core';
 import {
   Portlet,
   PortletBody,
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../../partials/content/Portlet';
-import { useFormikContext } from 'formik';
 import { getDB, postDB, updateDB } from '../../../../crud/api';
 import ImageUpload from '../../Components/ImageUpload';
 import { getFileExtension, saveImage, getFirstDocCollection } from '../../utils';
+import Builder from '../../Builder';
 import SaveButton from '../settings-tabs/components/SaveButton';
 import './settings-tabs.scss';
-import Builder from '../../Builder';
+
+const {
+  REACT_APP_API_SERVER,
+  REACT_APP_API_PORT,
+  REACT_APP_LOCALHOST,
+  LOCALHOST_PORT
+} = process.env;
+
+const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
+const localHost = `${REACT_APP_LOCALHOST}:${LOCALHOST_PORT}`;
 
 const Design = props => {
   const [tab, setTab] = useState(0);
@@ -35,17 +45,10 @@ const Design = props => {
     loginBackgroundColor: '#000',
     sideBarTitle: ''
   });
-  const {
-    REACT_APP_API_SERVER,
-    REACT_APP_API_PORT,
-    REACT_APP_LOCALHOST
-  } = process.env;
-  const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
-  const localHost = `${REACT_APP_LOCALHOST}`;
   const [imageURLS, setImagesURLS] = useState({
-    logoLogin: `${localHost}:3000/media/misc/placeholder-image.jpg`,
-    logoBackground: `${localHost}:3000/media/misc/placeholder-image.jpg`,
-    logoSideBar: `${localHost}:3000/media/misc/placeholder-image.jpg`
+    logoLogin: `${localHost}/media/misc/placeholder-image.jpg`,
+    logoBackground: `${localHost}/media/misc/placeholder-image.jpg`,
+    logoSideBar: `${localHost}/media/misc/placeholder-image.jpg`
   });
 
   const handleChange = name => event => {
