@@ -1,12 +1,17 @@
 /* eslint-disable no-restricted-imports */
 import React, { useEffect, useState } from 'react';
-import { Tabs } from '@material-ui/core';
+import { Tabs, Card, CardContent, Typography } from '@material-ui/core';
 import {
   Portlet,
   PortletBody,
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
+
+import LanguageIcon from '@material-ui/icons/Language';
+import CheckIcon from '@material-ui/icons/Check';
+import BuildIcon from '@material-ui/icons/Build';
+import NotInterestedIcon from '@material-ui/icons/NotInterested';
 
 // AApp Components
 import { TabsTitles } from '../Components/Translations/tabsTitles';
@@ -67,6 +72,33 @@ export default function Assets() {
     { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
   ];
 
+  const [assetsKPI, setAssetsKPI] = useState({
+    total: {
+      number: 0,
+      text: 'Total',
+      icon: <LanguageIcon style={{ fill: 'white', fontSize: 40 }} />,
+      color: '#1E1E2D'
+    },
+    available: {
+      number: 0,
+      text: 'Available',
+      icon: <CheckIcon style={{ fill: 'white', fontSize: 40 }} />,
+      color: '#427241'
+    },
+    onProcess: {
+      number: 0,
+      text: 'On Process',
+      icon: <BuildIcon style={{ fill: 'white', fontSize: 40 }} />,
+      color: '#3e4fa8'
+    },
+    decommissioned: {
+      number: 0,
+      text: 'Decommissioned',
+      icon: <NotInterestedIcon style={{ fill: 'white', fontSize: 40 }} />,
+      color: '#ad2222'
+    }
+  })
+
   const loadAssetsData = (collectionNames = ['assets', 'categories', 'references']) => {
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
@@ -111,6 +143,15 @@ export default function Assets() {
               total: data.response.count
             }
           }))
+          if (collectionName === 'assets') {
+            setAssetsKPI(prev => ({
+              ...prev,
+              total: {
+                ...prev.total,
+                number: data.response.count
+              }
+            }))
+          }
         });
 
       getDBComplex({
@@ -298,7 +339,40 @@ export default function Assets() {
                 <div className='kt-section__body'>
                   <div className='kt-section'>
                     <span className='kt-section__sub'>
-                      This section will integrate <code>Assets List</code>
+                      <div style={{ display: 'flex', justifyContent: 'space-evenly' }}>
+                        {
+                          Object.keys(assetsKPI).map((key) => (
+                            <Card elevation={2} style={{ display: 'flex' }}>
+                              <div
+                                style={{
+                                  width: '80px',
+                                  height: '100%',
+                                  backgroundColor: assetsKPI[key].color,
+                                  display: 'flex',
+                                  justifyContent: 'center',
+                                  alignItems: 'center'
+                                }}
+                              >
+                                {assetsKPI[key].icon}
+                              </div>
+                              <div
+                                style={{ width: '135px' }}
+                              >
+                                <CardContent style={{ padding: '12px' }}>
+                                  <center>
+                                    <Typography variant='subtitle'>
+                                      {assetsKPI[key].text}
+                                    </Typography>
+                                    <Typography variant='h4'>
+                                      {assetsKPI[key].number}
+                                    </Typography>
+                                  </center>
+                                </CardContent>
+                              </div>
+                            </Card>
+                          ))
+                        }
+                      </div>
                     </span>
                     <ModalAssetList
                       showModal={control.openAssetsModal}
