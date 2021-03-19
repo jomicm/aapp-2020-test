@@ -271,12 +271,10 @@ const ModalEmployees = ({
       setTabs([]);
       return;
     }
-    console.log('onChangeEmployeeProfile>>>', e);
     setProfileSelected(e);
     getOneDB('employeeProfiles/', e.value)
       .then((response) => response.json())
       .then((data) => {
-        console.log(data.response);
         const { customFieldsTab, profilePermissions } = data.response;
         const tabs = Object.keys(customFieldsTab).map((key) => ({
           key,
