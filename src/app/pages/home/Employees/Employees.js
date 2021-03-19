@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { connect } from "react-redux";
 import { Tabs } from '@material-ui/core';
 import {
   Portlet,
@@ -7,6 +8,7 @@ import {
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
 import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
+import * as general from "../../../store/ducks/general.duck";
 import TableComponent2 from '../Components/TableComponent2';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import ModalYesNo from '../Components/ModalYesNo';
@@ -16,7 +18,7 @@ import ModalEmployeeProfiles from './modals/ModalEmployeeProfiles';
 
 const localStorageActiveTabKey = 'builderActiveTab';
 
-const Employees = () => {
+const Employees = ({ globalSearch, setGeneralSearch }) => {
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [employeeLayoutSelected, setEmployeeLayoutSelected] = useState({});
   const [policies, setPolicies] = useState(['']);
@@ -174,6 +176,23 @@ const Employees = () => {
     loadEmployeesData('employeeProfiles');
   }, [tableControl.employeeProfiles.page, tableControl.employeeProfiles.rowsPerPage, tableControl.employeeProfiles.order, tableControl.employeeProfiles.orderBy, tableControl.employeeProfiles.search]);
 
+  const tabIntToText = ['employees', 'employeeProfiles'];
+
+  useEffect(() => {
+    if (globalSearch.tabIndex >= 0) {
+      setTab(globalSearch.tabIndex);
+      setTableControl(prev => ({
+        ...prev,
+        [tabIntToText[globalSearch.tabIndex]]: {
+          ...prev[tabIntToText[globalSearch.tabIndex]],
+          search: globalSearch.searchValue,
+        }
+      }))
+      setTimeout(() => {
+        setGeneralSearch({});
+      }, 800);
+    }
+  }, [globalSearch.tabIndex, globalSearch.searchValue]);
 
   const [control, setControl] = useState({
     employeeProfilesRows: [],
@@ -425,4 +444,8 @@ const Employees = () => {
     </>
   );
 }
-export default Employees;
+
+const mapStateToProps = ({ general: { globalSearch } }) => ({
+  globalSearch
+});
+export default connect(mapStateToProps, general.actions)(Employees);
