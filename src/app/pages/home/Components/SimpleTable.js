@@ -14,7 +14,7 @@ const SimpleTable = ({ headRows, rows = [] }) => {
         </tr>
       ))}
     </table>
-  )
-}
+  );
+};
 
 export default SimpleTable;

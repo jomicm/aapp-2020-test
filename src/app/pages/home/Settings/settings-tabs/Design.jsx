@@ -35,10 +35,17 @@ const Design = props => {
     loginBackgroundColor: '#000',
     sideBarTitle: ''
   });
+  const {
+    REACT_APP_API_SERVER,
+    REACT_APP_API_PORT,
+    REACT_APP_LOCALHOST
+  } = process.env;
+  const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
+  const localHost = `${REACT_APP_LOCALHOST}`;
   const [imageURLS, setImagesURLS] = useState({
-    logoLogin: 'http://localhost:3000/media/misc/placeholder-image.jpg',
-    logoBackground: 'http://localhost:3000/media/misc/placeholder-image.jpg',
-    logoSideBar: 'http://localhost:3000/media/misc/placeholder-image.jpg'
+    logoLogin: `${localHost}:3000/media/misc/placeholder-image.jpg`,
+    logoBackground: `${localHost}:3000/media/misc/placeholder-image.jpg`,
+    logoSideBar: `${localHost}:3000/media/misc/placeholder-image.jpg`
   });
 
   const handleChange = name => event => {
@@ -104,15 +111,15 @@ const Design = props => {
         setValues(omit(_values, '_id'));
         const { logoLoginExt, logoBackgroundExt, loginBackgroundColor, logoSideBarExt } = _values;
         if (logoLoginExt) {
-          handleImageChange('logoLogin', `http://159.203.41.87:3001/uploads/settingsDesign/logoLogin.${logoLoginExt}`);
+          handleImageChange('logoLogin', `${host}/uploads/settingsDesign/logoLogin.${logoLoginExt}`);
           setLogoLogin(true);
         }
         if (logoBackgroundExt) {
-          handleImageChange('logoBackground', `http://159.203.41.87:3001/uploads/settingsDesign/logoBackground.${logoBackgroundExt}`);
+          handleImageChange('logoBackground', `${host}/uploads/settingsDesign/logoBackground.${logoBackgroundExt}`);
           setLogoBackground(true);
         }
         if (logoSideBarExt) {
-          handleImageChange('logoSideBar', `http://159.203.41.87:3001/uploads/settingsDesign/logoSideBar.${logoSideBarExt}`);
+          handleImageChange('logoSideBar', `${host}/uploads/settingsDesign/logoSideBar.${logoSideBarExt}`);
           setLogoSideBar(true);
         }
         if (loginBackgroundColor) {

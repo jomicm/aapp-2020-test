@@ -137,19 +137,19 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
         .then(data => {
           if (collectionName === 'employeeProfiles') {
             const rows = data.response.map((row) => {
-              const { _id, name } = row;
+              const { _id, name, creationUserFullName, creationDate } = row;
               return createUserProfilesRow(
                 _id,
                 name,
-                'Admin',
-                '11/03/2020'
+                creationUserFullName,
+                creationDate
               );
             });
             setControl(prev => ({ ...prev, employeeProfilesRows: rows, employeeProfilesRowsSelected: [] }));
           }
           if (collectionName === 'employees') {
             const rows = data.response.map((row) => {
-              const { _id, name, lastName, email, designation, manager } = row;
+              const { _id, name, lastName, email, designation, manager, creationUserFullName, creationDate } = row;
               return createEmployeeRow(
                 _id,
                 name,
@@ -157,8 +157,8 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
                 email,
                 designation,
                 manager,
-                'Admin',
-                '11/03/2020'
+                creationUserFullName,
+                creationDate
               );
             });
             setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));

@@ -121,6 +121,10 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
     ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
     shallowEqual
   );
+  const {
+    REACT_APP_LOCALHOST
+  } = process.env;
+  const localHost = `${REACT_APP_LOCALHOST}`;
 
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const dispatch = useDispatch();
@@ -167,7 +171,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
   };
 
   const CustomMarker = (MarkerComponentProps) => {
-    if (imageLayout !== 'http://localhost:3000/media/misc/placeholder-image.jpg') {
+    if (imageLayout !== `${localHost}:3000/media/misc/placeholder-image.jpg`) {
       return (
         <RoomIcon style={{ color: 'red' }} />
       )
@@ -267,7 +271,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
 
   const getImageLayout = (id) => {
     if (id === 'root') {
-      setImageLayout('http://localhost:3000/media/misc/placeholder-image.jpg')
+      setImageLayout(`${localHost}:3000/media/misc/placeholder-image.jpg`)
     } else {
       const result = locations.filter((location) => location._id === id);
       const image = result.map((coordinate) => coordinate.fileExt);
@@ -275,7 +279,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
         const imageURLLayout = getImageURL(id, 'locationsReal', image[0]);
         setImageLayout(imageURLLayout);
       } else {
-        setImageLayout('http://localhost:3000/media/misc/placeholder-image.jpg');
+        setImageLayout(`${localHost}:3000/media/misc/placeholder-image.jpg`);
       }
     }
   }
@@ -600,7 +604,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
                                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                                       <div style={{ height: '480px', width: '600px' }}>
                                         <ImageMarker
-                                          src={imageLayout ? imageLayout : 'http://localhost:3000/media/misc/placeholder-image.jpg'}
+                                          src={imageLayout ? imageLayout : `${localHost}:3000/media/misc/placeholder-image.jpg`}
                                           markers={markers}
                                           markerComponent={CustomMarker}
                                         />

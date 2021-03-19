@@ -40,7 +40,7 @@ import {
   FileUpload
 } from '../../Components/CustomFields/CustomFieldsPreview';
 import ImageUpload from '../../Components/ImageUpload';
-import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import { getFileExtension, saveImage, getImageURL, ChangeFormatDate } from '../../utils';
 import Permission from '../components/Permission';
 import AssetTable from '../components/AssetTable';
 import ModalAssignmentReport from './ModalAssignmentReport';
@@ -182,9 +182,9 @@ const ModalEmployees = ({
   });
 
   const executePolicies = (catalogueName) => {
-    const formatDate = new Date()
-    const currentDate = `${(`0${formatDate.getDate()}`).slice(-2)}/${(`0${formatDate.getMonth() + 1}`).slice(-2)}/${formatDate.getFullYear()}`;
-    const currentTime = `${formatDate.getHours()}:${`0${formatDate.getMinutes()}`.slice(-2)}:${`0${formatDate.getSeconds()}`.slice(-2)}`;
+    const formatDate = ChangeFormatDate().dateWithoutFormat;
+    const currentDate = ChangeFormatDate().currentDate;
+    const currentTime = ChangeFormatDate().currentTime;
     const timeStamp = currentDate + ' ' + currentTime
     const read = false;
     const status = 'new'
@@ -323,7 +323,7 @@ const ModalEmployees = ({
       },
       componentProps: {
         isClearable: true,
-        onchange: (e) => setLayoutSelected(e),
+        onChange: (e) => setLayoutSelected(e),
         options: layoutOptions,
         value: layoutSelected,
       }

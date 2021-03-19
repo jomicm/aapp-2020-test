@@ -14,7 +14,7 @@ const WrapperEditor = ({ html }) => {
       entityMap
     );
     setEditorState(EditorState.createWithContent(contentState));
-  }, [html])
+  }, [html]);
 
   return (
     <Editor
@@ -22,7 +22,7 @@ const WrapperEditor = ({ html }) => {
       readOnly={true}
       toolbarHidden={true}
     />
-  )
-}
+  );
+};
 
 export default WrapperEditor;

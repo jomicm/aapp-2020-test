@@ -15,6 +15,15 @@ function Login(props) {
     paddingRight: "2.5rem"
   });
 
+  const {
+    REACT_APP_API_SERVER,
+    REACT_APP_API_PORT,
+    REACT_APP_LOCALHOST
+  } = process.env;
+  
+  const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
+  const localHost = `${REACT_APP_LOCALHOST}`;
+
   const enableLoading = () => {
     setLoading(true);
     setLoadingButtonStyle({ paddingRight: "3.5rem" });
@@ -85,8 +94,8 @@ function Login(props) {
                     const { email, accessToken, id, fileExt, profilePermissions } = response;
                     // global.token = accessToken;
                     const pic = fileExt ?
-                      `http://159.203.41.87:3001/uploads/user/${id}.${fileExt}` :
-                      'http://localhost:3000/media/misc/placeholder-image.jpg';
+                      `${host}/uploads/user/${id}.${fileExt}` :
+                      `${localHost}:3000/media/misc/placeholder-image.jpg`;
                     // const pic = 'https://i2.wp.com/float8ion.com/wp-content/uploads/2015/12/random-user-31.jpg';
                     const user = {id, fullname: `${response.name} ${response.lastName}`, email, accessToken, pic, profilePermissions };
                     props.fulfillUser(user);

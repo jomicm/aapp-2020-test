@@ -4,6 +4,15 @@ import { getDB } from '../../../app/crud/api';
 const LogoAndTitle = () => {
   const [values, setValues] = useState({});
 
+  const {
+    REACT_APP_API_SERVER,
+    REACT_APP_API_PORT,
+    REACT_APP_LOCALHOST
+  } = process.env;
+  
+  const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
+  const localHost = `${REACT_APP_LOCALHOST}`;
+
   const loadData = (collectionName = 'settingsDesign') => {
     getDB(collectionName)
       .then(response => response.json())
@@ -23,9 +32,9 @@ const LogoAndTitle = () => {
       <img
         src={
           values.logoSideBarExt ? (
-            `http://159.203.41.87:3001/uploads/settingsDesign/logoSideBar.${values.logoSideBarExt}`
+            `${host}/uploads/settingsDesign/logoSideBar.${values.logoSideBarExt}`
           ) : (
-              'http://localhost:3000/media/misc/placeholder-image.jpg'
+              `${localHost}:3000/media/misc/placeholder-image.jpg`
             )}
         alt='Logo'
       />

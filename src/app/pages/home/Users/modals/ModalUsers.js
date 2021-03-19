@@ -152,6 +152,14 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     setValue4(index);
   }
 
+  const {
+    REACT_APP_API_SERVER,
+    REACT_APP_API_PORT,
+    REACT_APP_LOCALHOST
+  } = process.env;
+
+  const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
+  const localHost = `${REACT_APP_LOCALHOST}`;
   // Example 1 - TextField
   const classes = useStyles();
   const [values, setValues] = useState({
@@ -211,9 +219,9 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   const updateCurrentUserPic = (editId, fileExt) => {
     if (user.id === editId) {
       let _v = getRandomArbitrary(1, 999);
-      const defaultPic = `http://localhost:3000/media/misc/placeholder-image.jpg?v=${_v}`;
+      const defaultPic = `${localHost}:3000/media/misc/placeholder-image.jpg?v=${_v}`;
       const pic = fileExt ?
-        `http://159.203.41.87:3001/uploads/user/${editId}.${fileExt}?v=${_v}` :
+        `${host}/uploads/user/${editId}.${fileExt}?v=${_v}` :
         defaultPic;
       setTimeout(() => updateUserPic(defaultPic), 250);
       setTimeout(() => updateUserPic(pic), 1000);

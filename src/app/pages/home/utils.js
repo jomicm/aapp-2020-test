@@ -1,6 +1,13 @@
 import { getDB, postDB, getOneDB, updateDB } from '../../crud/api';
 import { postFILE } from '../../crud/api';
 
+const {
+  REACT_APP_API_SERVER,
+  REACT_APP_API_PORT
+} = process.env;
+
+const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
+
 export const getFileExtension = file => {
   if (!file) return '';
   const { type } = file;
@@ -31,7 +38,7 @@ export const getFirstDocCollection = (collectionName) => {
 
 export const getImageURL = (id, folder, fileExt = '') => {
   return fileExt ?
-    `http://159.203.41.87:3001/uploads/${folder}/${id}.${fileExt}` :
+    `${host}/uploads/${folder}/${id}.${fileExt}` :
     '';
 };
 
@@ -59,4 +66,22 @@ export const getVariables = (html) => {
       return acu;
     }
   }, []);
+};
+
+export const ChangeFormatDate = () => {
+  const dateToFormat = new Date();
+  return (
+    {
+      currentDate:
+        `${(`0${dateToFormat.getDate()}`)
+          .slice(-2)}/${(`0${dateToFormat.getMonth() + 1}`)
+            .slice(-2)}/${dateToFormat.getFullYear()}`,
+      currentTime:
+        `${`0${dateToFormat.getHours()}`
+          .slice(-2)}:${`0${dateToFormat.getMinutes()}`
+            .slice(-2)}:${`0${dateToFormat.getSeconds()}`
+              .slice(-2)}`,
+      dateWithoutFormat: dateToFormat
+    }
+  );
 };

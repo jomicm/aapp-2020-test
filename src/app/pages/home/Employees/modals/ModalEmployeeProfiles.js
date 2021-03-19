@@ -113,6 +113,12 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
+  const {
+    REACT_APP_API_SERVER,
+    REACT_APP_API_PORT
+  } = process.env;
+  const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
+
   function handleChange4(event, newValue) {
     setValue4(newValue);
   }
@@ -131,7 +137,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
     name: "",
     categoryPic: '/media/misc/placeholder-image.jpg',
     categoryPicDefault: '/media/misc/placeholder-image.jpg',
-    // imageURL: 'http://159.203.41.87:3001/uploads/employeeProfiles/5f36151ddd0b7e53fb62df66.png',
+    // imageURL: '${host}/uploads/employeeProfiles/5f36151ddd0b7e53fb62df66.png',
     imageURL: '',
   });
   // const [categoryPic, setCategoryPic] 

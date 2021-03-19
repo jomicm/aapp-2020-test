@@ -88,6 +88,10 @@ const TileView = ({ tiles, collection, tailWidth = '120px', tailHeight = '120px'
   const classes = useStyles();
   const [selectedId, setSelectedId] = useState([])
   const [openYesNoModal, setOpenYesNoModal] = useState([false, []]);
+  const {
+    REACT_APP_LOCALHOST
+  } = process.env;
+  const localHost = `${REACT_APP_LOCALHOST}`;
 
   const onTileHover = (id) => {
     if (id) {
@@ -103,7 +107,6 @@ const TileView = ({ tiles, collection, tailWidth = '120px', tailHeight = '120px'
     setOpenYesNoModal([false, []])
     setSelectedId([])
   }
-  
   
   return (
     <Collapse in={showTileView}>
@@ -127,7 +130,7 @@ const TileView = ({ tiles, collection, tailWidth = '120px', tailHeight = '120px'
                   key={tile.id}
                 >
                   <img 
-                    src={imageURL ? `${imageURL}?${new Date()}` : 'http://localhost:3000/media/misc/placeholder-image.jpg'} 
+                    src={imageURL ? `${imageURL}?${new Date()}` : `${localHost}:3000/media/misc/placeholder-image.jpg`} 
                     width='100%' 
                     height='100%' 
                     className={classes.image} 

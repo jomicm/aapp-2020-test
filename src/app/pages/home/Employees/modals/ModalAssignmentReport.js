@@ -12,7 +12,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import {
   PortletBody
 } from '../../../../partials/content/Portlet';
-import { getVariables } from '../../utils';
+import { ChangeFormatDate, getVariables } from '../../utils';
 import SimpleTable from '../../Components/SimpleTable';
 import WrapperEditor from '../components/WrapperEditor';
 import './ModalAssignmentReport.scss';
@@ -35,9 +35,9 @@ const ModalAssignmentReport = ({
 }) => {
   const [assignmentReportRows, setAssignmentReportRows] = useState([]);
   const [htmlTransformed, setHtmlTransformed] = useState({});
-  const formatDate = new Date();
-  const currentDate = `${(`0${formatDate.getDate()}`).slice(-2)}/${(`0${formatDate.getMonth() + 1}`).slice(-2)}/${formatDate.getFullYear()}`;
-  const currentTime = `${formatDate.getHours()}:${`0${formatDate.getMinutes()}`.slice(-2)}:${`0${formatDate.getSeconds()}`.slice(-2)}`;
+  const formatDate = ChangeFormatDate().dateWithoutFormat;
+  const currentDate = ChangeFormatDate().currentDate;
+  const currentTime = ChangeFormatDate().currentTime;
 
   const mapVariables = {
     employeeName: `${values.name} ${values.lastName}`,

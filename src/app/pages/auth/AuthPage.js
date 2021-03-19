@@ -30,6 +30,15 @@ const defaultDesignValues = {
 };
 
 const AuthPage = () => {
+  const {
+    REACT_APP_API_SERVER,
+    REACT_APP_API_PORT,
+    REACT_APP_LOCALHOST
+  } = process.env;
+  
+  const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
+  const localHost = `${REACT_APP_LOCALHOST}`;
+
   const loadDesignData = (collectionName = 'settingsDesign') => {
     getPublicDB(collectionName)
     .then(response => response.json())
@@ -38,17 +47,17 @@ const AuthPage = () => {
       setValues(designData);
       const { logoLoginExt, logoBackgroundExt } = designData;
       if (logoLoginExt) {
-        setLogoLoginURL(`http://159.203.41.87:3001/uploads/settingsDesign/logoLogin.${logoLoginExt}`);
+        setLogoLoginURL(`${host}/uploads/settingsDesign/logoLogin.${logoLoginExt}`);
       }
       if (logoBackgroundExt) {
-        setLogoBackgroundURL(`url(http://159.203.41.87:3001/uploads/settingsDesign/logoBackground.${logoBackgroundExt})`);
+        setLogoBackgroundURL(`url(${host}/uploads/settingsDesign/logoBackground.${logoBackgroundExt})`);
       }
     })
     .catch(error => console.log('error>', error));
   };
 
   const [values, setValues] = useState(defaultDesignValues);
-  const [logoLoginURL, setLogoLoginURL] = useState('http://localhost:3000/media/misc/placeholder-image.jpg')
+  const [logoLoginURL, setLogoLoginURL] = useState(`${localHost}/media/misc/placeholder-image.jpg`)
   const [logoBackgroundURL, setLogoBackgroundURL] = useState(`url(${toAbsoluteUrl("/media/bg/bg-4.jpg")})`)
 
   useEffect(() => {
