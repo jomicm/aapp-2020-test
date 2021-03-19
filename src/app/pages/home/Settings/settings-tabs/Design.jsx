@@ -12,20 +12,10 @@ import {
 } from '../../../../partials/content/Portlet';
 import { getDB, postDB, updateDB } from '../../../../crud/api';
 import ImageUpload from '../../Components/ImageUpload';
-import { getFileExtension, saveImage, getFirstDocCollection } from '../../utils';
+import { environmentVariables, getFileExtension, saveImage, getFirstDocCollection } from '../../utils';
 import Builder from '../../Builder';
 import SaveButton from '../settings-tabs/components/SaveButton';
 import './settings-tabs.scss';
-
-const {
-  REACT_APP_API_SERVER,
-  REACT_APP_API_PORT,
-  REACT_APP_LOCALHOST,
-  LOCALHOST_PORT
-} = process.env;
-
-const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
-const localHost = `${REACT_APP_LOCALHOST}:${LOCALHOST_PORT}`;
 
 const Design = props => {
   const [tab, setTab] = useState(0);
@@ -46,9 +36,9 @@ const Design = props => {
     sideBarTitle: ''
   });
   const [imageURLS, setImagesURLS] = useState({
-    logoLogin: `${localHost}/media/misc/placeholder-image.jpg`,
-    logoBackground: `${localHost}/media/misc/placeholder-image.jpg`,
-    logoSideBar: `${localHost}/media/misc/placeholder-image.jpg`
+    logoLogin: `${environmentVariables().localHost}/media/misc/placeholder-image.jpg`,
+    logoBackground: `${environmentVariables().localHost}/media/misc/placeholder-image.jpg`,
+    logoSideBar: `${environmentVariables().localHost}/media/misc/placeholder-image.jpg`
   });
 
   const handleChange = name => event => {
@@ -114,15 +104,15 @@ const Design = props => {
         setValues(omit(_values, '_id'));
         const { logoLoginExt, logoBackgroundExt, loginBackgroundColor, logoSideBarExt } = _values;
         if (logoLoginExt) {
-          handleImageChange('logoLogin', `${host}/uploads/settingsDesign/logoLogin.${logoLoginExt}`);
+          handleImageChange('logoLogin', `${environmentVariables().apiHost}/uploads/settingsDesign/logoLogin.${logoLoginExt}`);
           setLogoLogin(true);
         }
         if (logoBackgroundExt) {
-          handleImageChange('logoBackground', `${host}/uploads/settingsDesign/logoBackground.${logoBackgroundExt}`);
+          handleImageChange('logoBackground', `${environmentVariables().apiHost}/uploads/settingsDesign/logoBackground.${logoBackgroundExt}`);
           setLogoBackground(true);
         }
         if (logoSideBarExt) {
-          handleImageChange('logoSideBar', `${host}/uploads/settingsDesign/logoSideBar.${logoSideBarExt}`);
+          handleImageChange('logoSideBar', `${environmentVariables().apiHost}/uploads/settingsDesign/logoSideBar.${logoSideBarExt}`);
           setLogoSideBar(true);
         }
         if (loginBackgroundColor) {

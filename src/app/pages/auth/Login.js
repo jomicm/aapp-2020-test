@@ -7,16 +7,7 @@ import clsx from 'clsx';
 import { TextField } from '@material-ui/core';
 import * as auth from '../../store/ducks/auth.duck';
 import { loginReal } from '../../crud/auth.crud';
-
-const {
-  REACT_APP_API_SERVER,
-  REACT_APP_API_PORT,
-  REACT_APP_LOCALHOST,
-  LOCALHOST_PORT
-} = process.env;
-
-const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
-const localHost = `${REACT_APP_LOCALHOST}:${LOCALHOST_PORT}`;
+import { environmentVariables } from '../home/utils';
 
 function Login(props) {
   const { intl } = props;
@@ -95,8 +86,8 @@ function Login(props) {
                     const { email, accessToken, id, fileExt, profilePermissions } = response;
                     // global.token = accessToken;
                     const pic = fileExt ?
-                      `${host}/uploads/user/${id}.${fileExt}` :
-                      `${localHost}/media/misc/placeholder-image.jpg`;
+                      `${environmentVariables().apiHost}/uploads/user/${id}.${fileExt}` :
+                      `${environmentVariables().localHost}/media/misc/placeholder-image.jpg`;
                     // const pic = 'https://i2.wp.com/float8ion.com/wp-content/uploads/2015/12/random-user-31.jpg';
                     const user = {id, fullname: `${response.name} ${response.lastName}`, email, accessToken, pic, profilePermissions };
                     props.fulfillUser(user);

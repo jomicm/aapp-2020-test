@@ -3,20 +3,11 @@ import { Link, Switch, Route, Redirect } from 'react-router-dom';
 import { toAbsoluteUrl } from '../../../_metronic';
 import '../../../_metronic/_assets/sass/pages/login/login-1.scss';
 import { getDB, getPublicDB, postDB, getOneDB, updateDB } from '../../crud/api';
+import { environmentVariables } from '../home/utils';
 import Registration from './Registration';
 import ForgotPassword from './ForgotPassword';
 import Login from './Login';
 import './AuthPage.scss';
-
-const {
-  REACT_APP_API_SERVER,
-  REACT_APP_API_PORT,
-  REACT_APP_LOCALHOST,
-  LOCALHOST_PORT
-} = process.env;
-
-const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
-const localHost = `${REACT_APP_LOCALHOST}:${LOCALHOST_PORT}`;
 
 const defaultDesignValues = {
   logoTitle: 'Welcome to AApp 2020!!!',
@@ -48,17 +39,17 @@ const AuthPage = () => {
       setValues(designData);
       const { logoLoginExt, logoBackgroundExt } = designData;
       if (logoLoginExt) {
-        setLogoLoginURL(`${host}/uploads/settingsDesign/logoLogin.${logoLoginExt}`);
+        setLogoLoginURL(`${environmentVariables().apiHost}/uploads/settingsDesign/logoLogin.${logoLoginExt}`);
       }
       if (logoBackgroundExt) {
-        setLogoBackgroundURL(`url(${host}/uploads/settingsDesign/logoBackground.${logoBackgroundExt})`);
+        setLogoBackgroundURL(`url(${environmentVariables().apiHost}/uploads/settingsDesign/logoBackground.${logoBackgroundExt})`);
       }
     })
     .catch(error => console.log('error>', error));
   };
 
   const [values, setValues] = useState(defaultDesignValues);
-  const [logoLoginURL, setLogoLoginURL] = useState(`${localHost}/media/misc/placeholder-image.jpg`)
+  const [logoLoginURL, setLogoLoginURL] = useState(`${environmentVariables().localHost}/media/misc/placeholder-image.jpg`)
   const [logoBackgroundURL, setLogoBackgroundURL] = useState(`url(${toAbsoluteUrl('/media/bg/bg-4.jpg')})`)
 
   useEffect(() => {

@@ -1,15 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { getDB } from '../../../app/crud/api';
-
-const {
-  REACT_APP_API_SERVER,
-  REACT_APP_API_PORT,
-  REACT_APP_LOCALHOST,
-  LOCALHOST_PORT
-} = process.env;
-
-const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
-const localHost = `${REACT_APP_LOCALHOST}:${LOCALHOST_PORT}`;
+import { environmentVariables } from '../../../app/pages/home/utils';
 
 const LogoAndTitle = () => {
   const [values, setValues] = useState({});
@@ -33,9 +24,9 @@ const LogoAndTitle = () => {
       <img
         src={
           values.logoSideBarExt ? (
-            `${host}/uploads/settingsDesign/logoSideBar.${values.logoSideBarExt}`
+            `${environmentVariables().apiHost}/uploads/settingsDesign/logoSideBar.${values.logoSideBarExt}`
           ) : (
-              `${localHost}/media/misc/placeholder-image.jpg`
+              `${environmentVariables().localHost}/media/misc/placeholder-image.jpg`
             )}
         alt='Logo'
       />

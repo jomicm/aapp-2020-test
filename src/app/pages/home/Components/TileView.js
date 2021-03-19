@@ -4,13 +4,7 @@ import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
 import ModalYesNo from '../Components/ModalYesNo';
 import { getImageURL } from '../utils';
-
-const {
-  REACT_APP_LOCALHOST,
-  LOCALHOST_PORT
-} = process.env;
-
-const localHost = `${REACT_APP_LOCALHOST}:${LOCALHOST_PORT}`;
+import { environmentVariables } from '../utils';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -132,7 +126,7 @@ const TileView = ({ tiles, collection, tailWidth = '120px', tailHeight = '120px'
                   key={tile.id}
                 >
                   <img 
-                    src={imageURL ? `${imageURL}?${new Date()}` : `${localHost}/media/misc/placeholder-image.jpg`} 
+                    src={imageURL ? `${imageURL}?${new Date()}` : `${environmentVariables().localHost}/media/misc/placeholder-image.jpg`} 
                     width='100%' 
                     height='100%' 
                     className={classes.image} 

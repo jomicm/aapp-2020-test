@@ -69,14 +69,7 @@ import {
   SingleLineSettings
 } from '../Components/CustomFields/CustomFieldsPreview';
 import ModalYesNo from '../Components/ModalYesNo';
-import { getImageURL } from '../utils';
-
-const {
-  REACT_APP_LOCALHOST,
-  LOCALHOST_PORT
-} = process.env;
-
-const localHost = `${REACT_APP_LOCALHOST}:${LOCALHOST_PORT}`;
+import { environmentVariables, getImageURL } from '../utils';
 
 const Divider = () => <div style={{ width: '100%', height: '3px', backgroundColor: 'black' }}></div>;
 
@@ -174,7 +167,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
   };
 
   const CustomMarker = (MarkerComponentProps) => {
-    if (imageLayout !== `${localHost}/media/misc/placeholder-image.jpg`) {
+    if (imageLayout !== `${environmentVariables().localHost}/media/misc/placeholder-image.jpg`) {
       return (
         <RoomIcon style={{ color: 'red' }} />
       )
@@ -274,7 +267,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
 
   const getImageLayout = (id) => {
     if (id === 'root') {
-      setImageLayout(`${localHost}/media/misc/placeholder-image.jpg`)
+      setImageLayout(`${environmentVariables().localHost}/media/misc/placeholder-image.jpg`)
     } else {
       const result = locations.filter((location) => location._id === id);
       const image = result.map((coordinate) => coordinate.fileExt);
@@ -282,7 +275,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
         const imageURLLayout = getImageURL(id, 'locationsReal', image[0]);
         setImageLayout(imageURLLayout);
       } else {
-        setImageLayout(`${localHost}/media/misc/placeholder-image.jpg`);
+        setImageLayout(`${environmentVariables().localHost}/media/misc/placeholder-image.jpg`);
       }
     }
   }
@@ -607,7 +600,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
                                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                                       <div style={{ height: '480px', width: '600px' }}>
                                         <ImageMarker
-                                          src={imageLayout ? imageLayout : `${localHost}/media/misc/placeholder-image.jpg`}
+                                          src={imageLayout ? imageLayout : `${environmentVariables().localHost}/media/misc/placeholder-image.jpg`}
                                           markers={markers}
                                           markerComponent={CustomMarker}
                                         />

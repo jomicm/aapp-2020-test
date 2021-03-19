@@ -28,7 +28,7 @@ import * as auth from '../../../../store/ducks/auth.duck';
 import { postDBEncryptPassword, getOneDB, getDB, updateDB } from '../../../../crud/api';
 import ImageUpload from '../../Components/ImageUpload';
 import ModalYesNo from '../../Components/ModalYesNo';
-import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import { environmentVariables, getFileExtension, saveImage, getImageURL } from '../../utils';
 import { modules } from '../../constants';
 import {
   SingleLine,
@@ -43,16 +43,6 @@ import {
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import LocationAssignment from '../components/LocationAssignment';
 import Permission from '../components/Permission';
-
-const {
-  REACT_APP_API_SERVER,
-  REACT_APP_API_PORT,
-  REACT_APP_LOCALHOST,
-  LOCALHOST_PORT
-} = process.env;
-
-const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
-const localHost = `${REACT_APP_LOCALHOST}:${LOCALHOST_PORT}`;
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -212,9 +202,9 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   const updateCurrentUserPic = (editId, fileExt) => {
     if (user.id === editId) {
       let _v = getRandomArbitrary(1, 999);
-      const defaultPic = `${localHost}/media/misc/placeholder-image.jpg?v=${_v}`;
+      const defaultPic = `${environmentVariables().localHost}/media/misc/placeholder-image.jpg?v=${_v}`;
       const pic = fileExt ?
-        `${host}/uploads/user/${editId}.${fileExt}?v=${_v}` :
+        `${environmentVariables().apiHost}/uploads/user/${editId}.${fileExt}?v=${_v}` :
         defaultPic;
       setTimeout(() => updateUserPic(defaultPic), 250);
       setTimeout(() => updateUserPic(pic), 1000);

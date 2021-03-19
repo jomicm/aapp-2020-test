@@ -3,10 +3,19 @@ import { postFILE } from '../../crud/api';
 
 const {
   REACT_APP_API_SERVER,
-  REACT_APP_API_PORT
+  REACT_APP_API_PORT,
+  REACT_APP_LOCALHOST,
+  REACT_APP_LOCALHOST_PORT
 } = process.env;
 
 const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
+
+export const environmentVariables = () => {
+  return {
+    apiHost: `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`,
+    localHost: `${REACT_APP_LOCALHOST}:${REACT_APP_LOCALHOST_PORT}`
+  };
+};
 
 export const getFileExtension = file => {
   if (!file) return '';
@@ -18,7 +27,6 @@ export const saveImage = (image, folderName, id) => {
   if (image) {
     postFILE(folderName, id, image)
       .then(response => {
-        console.log('FIlE uploaded!', response);
       })
       .catch(error => console.log(error));
   }
@@ -70,18 +78,16 @@ export const getVariables = (html) => {
 
 export const ChangeFormatDate = () => {
   const dateToFormat = new Date();
-  return (
-    {
-      currentDate:
-        `${(`0${dateToFormat.getDate()}`)
-          .slice(-2)}/${(`0${dateToFormat.getMonth() + 1}`)
-            .slice(-2)}/${dateToFormat.getFullYear()}`,
-      currentTime:
-        `${`0${dateToFormat.getHours()}`
-          .slice(-2)}:${`0${dateToFormat.getMinutes()}`
-            .slice(-2)}:${`0${dateToFormat.getSeconds()}`
-              .slice(-2)}`,
-      dateWithoutFormat: dateToFormat
-    }
-  );
+  return {
+    currentDate:
+      `${(`0${dateToFormat.getDate()}`)
+        .slice(-2)}/${(`0${dateToFormat.getMonth() + 1}`)
+          .slice(-2)}/${dateToFormat.getFullYear()}`,
+    currentTime:
+      `${`0${dateToFormat.getHours()}`
+        .slice(-2)}:${`0${dateToFormat.getMinutes()}`
+          .slice(-2)}:${`0${dateToFormat.getSeconds()}`
+            .slice(-2)}`,
+    dateWithoutFormat: dateToFormat
+  }
 };
