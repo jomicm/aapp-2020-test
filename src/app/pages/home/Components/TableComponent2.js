@@ -31,6 +31,7 @@ import {
 
 import AccountTreeRoundedIcon from '@material-ui/icons/AccountTreeRounded';
 import AddIcon from '@material-ui/icons/Add';
+import ClearIcon from '@material-ui/icons/Clear';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
 import ListRoundedIcon from '@material-ui/icons/ListRounded';
@@ -75,7 +76,7 @@ const useToolbarStyles = makeStyles(theme => ({
       backgroundColor: '#F5F5F5',
     },
     marginRight: '10px',
-    width: '200px',
+    width: '230px',
     border: '1px #ffffff00 solid',
     borderRadius: '12px',
     display: 'flex',
@@ -85,6 +86,7 @@ const useToolbarStyles = makeStyles(theme => ({
   searchIcon: {
     position: 'relative',
     marginRight: '1px',
+    marginLeft: '5px'
   },
   inputInput: {
     border: 'none',
@@ -318,6 +320,22 @@ const TableComponentTile = props => {
               placeholder='Search...'
               value={controlValues.searchBy ? null : controlValues.search}
             />
+            {
+              (controlValues.search.length > 0 && !controlValues.searchBy) && (
+                <div>
+                  <IconButton size="small" onClick={() => searchControl({ value: '' })}>
+                    <ClearIcon />
+                  </IconButton>
+                </div>
+              )
+            }
+             {
+              (!controlValues.search.length || controlValues.searchBy) && (
+                <div style={{ width: '25px'}}>
+                 
+                </div>
+              )
+            }
           </div>
           <Tooltip title='Table View'>
             <IconButton aria-label='Table View' onClick={showTableView}>
