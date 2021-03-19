@@ -276,9 +276,7 @@ function Assets({ globalSearch, setGeneralSearch }) {
           search: globalSearch.searchValue,
         }
       }))
-      setTimeout(() => {
-        setGeneralSearch({});
-      }, 800);
+      setGeneralSearch({});
     }
   }, [globalSearch.tabIndex, globalSearch.searchValue]);
 

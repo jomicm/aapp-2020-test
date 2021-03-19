@@ -143,10 +143,9 @@ class SearchDropdown extends React.Component {
                 'kt-quick-search--has-result': data && data.length
               }
             )}
-            // this.state.show ? this.setWrapperRef() : null
             ref={(nodo) => this.state.show ? this.setWrapperRef(nodo) : null}
           >
-            <form className='kt-quick-search__form'>
+            <div className='kt-quick-search__form'>
               <div
                 className={clsx('input-group', {
                   'kt-spinner kt-spinner--input kt-spinner--sm kt-spinner--brand kt-spinner--right': loading
@@ -179,7 +178,7 @@ class SearchDropdown extends React.Component {
                   </span>
                 </div>
               </div>
-            </form>
+            </div>
             <PerfectScrollbar
               className='kt-quick-search__wrapper kt-scroll'
               data-height='325'
@@ -201,5 +200,3 @@ export default compose(
   withRouter,
   connect(null, general.actions)
 )(SearchDropdown);
-
-// export default compose(withRouter(connect(null, general.actions)(SearchDropdown)));
