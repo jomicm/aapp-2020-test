@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Nav, Tab, Dropdown } from "react-bootstrap";
-import PerfectScrollbar from "react-perfect-scrollbar";
-import ReactTimeAgo from 'react-time-ago'
+import { Nav, Tab, Dropdown } from 'react-bootstrap';
+import PerfectScrollbar from 'react-perfect-scrollbar';
+import ReactTimeAgo from 'react-time-ago';
 import clsx from 'clsx';
-import { BrowserRouter as Router, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { FormattedMessage } from 'react-intl';
 import Badge from '@material-ui/core/Badge';
@@ -14,9 +14,8 @@ import {
   updateDB,
   postDB,
   getDB
-} from '../../crud/api'
-import HeaderDropdownToggle from "../content/CustomDropdowns/HeaderDropdownToggle";
-// import Messages from './MessagesTopBar';
+} from '../../crud/api';
+import HeaderDropdownToggle from '../content/CustomDropdowns/HeaderDropdownToggle';
 import Messages from '../../pages/home/Messages/Messages';
 
 const perfectScrollbarOptions = {
@@ -31,13 +30,12 @@ const MessagesTopBar2 = ({
   pulse,
   skin,
   type,
-  useSVG,
+  useSVG
 }) => {
-
-  const [countNotifications, setCountNotifications] = useState(0)
-  const [data, setData] = useState([])
-  const [getKey, setGetKey] = useState({ key: 'alerts' })
-  const [openModal, setOpenModal] = useState(false)
+  const [countNotifications, setCountNotifications] = useState(0);
+  const [data, setData] = useState([]);
+  const [getKey, setGetKey] = useState({ key: 'alerts' });
+  const [openModal, setOpenModal] = useState(false);
 
   const backGroundStyle = () => {
     if (!bgImage) {
@@ -50,27 +48,22 @@ const MessagesTopBar2 = ({
     read ? 'firstColor' : 'secondColor'
   )
 
-  const changeBarColor = (read) => {
-    if (read) {
-      return ''
-    } else {
-      return 'blue-bar'
-    }
-  }
+  const changeBarColor = (read) => (
+    read ? '' : 'blue-bar'
+  )
 
   const checkStatus = (id, read) => {
-    const notif = data.findIndex(({ _id }) => _id === id)
+    const notif = data.findIndex(({ _id }) => _id === id);
     const newData = data;
-    newData[notif].read = true
-    setData(newData)
+    newData[notif].read = true;
+    setData(newData);
     updateCount(data);
-    handleUpdate(id, read)
+    handleUpdate(id, read);
   }
 
   const handleUpdate = (id, read) => {
-    const body = { read: true }
+    const body = { read: true };
     updateDB('messages/', body, id)
-      // .then(response => console.log('success', response))
       .catch(error => console.log('Error', error));
   }
 
@@ -112,8 +105,8 @@ const MessagesTopBar2 = ({
   };
 
   const updateCount = (dataNotif) => {
-    const filteredData = dataNotif.filter(ele => ele.read === false)
-    setCountNotifications(filteredData.length)
+    const filteredData = dataNotif.filter(ele => ele.read === false);
+    setCountNotifications(filteredData.length);
   }
 
   const userNotificationsButtonCssClassList = () => {
@@ -153,19 +146,20 @@ const MessagesTopBar2 = ({
       </Dropdown.Toggle>
       <Dropdown.Menu className='dropdown-menu-fit dropdown-menu-right dropdown-menu-anim dropdown-menu-top-unround dropdown-menu-lg'>
         <form>
-          {/** Head */}
           <div
             className={getHetBackGroundCssClassList()}
             style={{ backgroundImage: backGroundStyle() }}
           >
-            <h3 className='kt-head__title'>
-              <span style={{ paddingRight: '10px' }}>
-                Messages&nbsp;
+            <Link to='/messages'>
+              <h3 className='kt-head__title'>
+                <span style={{ cursor: 'pointer', paddingRight: '10px' }}>
+                  Messages&nbsp;
                 </span>
-              <span className={userNotificationsButtonCssClassList()} >
-                {countNotifications}
-              </span>
-            </h3>
+                <span className={userNotificationsButtonCssClassList()} >
+                  {countNotifications}
+                </span>
+              </h3>
+            </Link>
 
             <Tab.Container
               defaultActiveKey='List'
@@ -181,7 +175,6 @@ const MessagesTopBar2 = ({
                     </Nav.Link>
                 </Nav.Item>
               </Nav>
-
               <Tab.Content>
                 <Tab.Pane eventKey='List'>
                   <PerfectScrollbar

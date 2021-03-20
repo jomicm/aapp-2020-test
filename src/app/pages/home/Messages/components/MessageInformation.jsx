@@ -7,7 +7,7 @@ import {
   CardHeader,
   Divider,
   Typography
-} from '@material-ui/core'
+} from '@material-ui/core';
 import Preview from './Preview';
 import './MessageInformation.scss';
 
@@ -36,7 +36,6 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const MessageInformation = ({ dateTime, img, preview, senderName, subject, to }) => {
-
   const classes = useStyles();
 
   return (
@@ -44,31 +43,31 @@ const MessageInformation = ({ dateTime, img, preview, senderName, subject, to })
       <CardHeader
         avatar={<Avatar alt='Remy Sharp' src={img} />}
         title={
-          <Typography 
-          className={classes.subject} 
-          color='textSecondary' 
-          component='h2'
-          variant='body2' 
-          > 
+          <Typography
+            className={classes.subject}
+            color='textSecondary'
+            component='h2'
+            variant='body2'
+          >
             {subject}
           </Typography>
-         }
+        }
         subheader={
-            <Typography 
-            className={classes.dateTime} 
-            color='textSecondary' 
+          <Typography
+            className={classes.dateTime}
+            color='textSecondary'
             component='div'
             variant='body2'
-            > 
-              {`${dateTime}`}
-            </Typography>
-         }
+          >
+            {dateTime}
+          </Typography>
+        }
       />
       <Divider />
       <CardContent>
         <Typography className={classes.preview} variant='body2' color='p'>
           <div className='container-messages-preview'>
-          <Preview preview={preview}/>
+            <Preview preview={preview} />
           </div>
         </Typography>
       </CardContent>

@@ -3,6 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import {
   Avatar,
   Divider,
+  IconButton,
   List,
   ListItem,
   ListItemAvatar,
@@ -10,7 +11,6 @@ import {
   Typography
 } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
-import "./Snapshot.scss";
 import {
   postDBEncryptPassword,
   deleteDB,
@@ -19,6 +19,7 @@ import {
   postDB,
   getDB
 } from '../../../../crud/api';
+import './Snapshot.scss';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -36,16 +37,26 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const Snapshot = ({ id, lastName, name, subject, description, img, senderName, dateTime, to, snapshotIndex }) => {
-
+const Snapshot = ({
+  dateTime,
+  id,
+  img,
+  lastName,
+  name,
+  senderName,
+  subject,
+  reload
+}) => {
   const classes = useStyles();
 
   const handleDelete = () => {
-  console.log('Deleted CONSOLE LOG', id)
     deleteDB('messages/', id)
       .then(response => console.log('success', response))
       .catch(error => console.log('Error', error));
-  }
+    setTimeout(() => {
+      reload();
+    }, 100);
+  };
 
   return (
     <>
@@ -82,8 +93,11 @@ const Snapshot = ({ id, lastName, name, subject, description, img, senderName, d
             </ListItem>
           </List>
         </div>
-        <div className='container-snapshot-delete-icon' onClick={handleDelete}>
-          <DeleteIcon className='snapshot-delete-icon' />
+
+        <div className='container-snapshot-delete-icon'>
+          <IconButton onClick={handleDelete}>
+            <DeleteIcon className='snapshot-delete-icon' />
+          </IconButton>
         </div>
         <Divider />
       </div>
