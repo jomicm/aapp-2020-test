@@ -72,18 +72,15 @@ export const getVariables = (html) => {
   }, []);
 };
 
-export const ChangeFormatDate = () => {
-  const dateToFormat = new Date();
-  return {
-    currentDate:
-      `${(`0${dateToFormat.getDate()}`)
-        .slice(-2)}/${(`0${dateToFormat.getMonth() + 1}`)
-          .slice(-2)}/${dateToFormat.getFullYear()}`,
-    currentTime:
-      `${`0${dateToFormat.getHours()}`
-        .slice(-2)}:${`0${dateToFormat.getMinutes()}`
-          .slice(-2)}:${`0${dateToFormat.getSeconds()}`
-            .slice(-2)}`,
-    dateWithoutFormat: dateToFormat
-  };
+export const getCurrentDateTime = () => {
+  const rawDate = new Date();
+  const dateFormatted = `${(`0${rawDate.getDate()}`).slice(-2)}/${(`0${rawDate.getMonth() + 1}`).slice(-2)}/${rawDate.getFullYear()}`;
+  const timeFormatted = `${`0${rawDate.getHours()}`.slice(-2)}:${`0${rawDate.getMinutes()}`.slice(-2)}:${`0${rawDate.getSeconds()}`.slice(-2)}`;
+
+  return { dateFormatted, rawDate, timeFormatted };
+};
+
+export const simplePost = (collection, object) => {
+  postDB(collection, object)
+    .catch((error) => console.error('ERROR', error))
 };
