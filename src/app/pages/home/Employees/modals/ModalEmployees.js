@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Select from 'react-select';
 import SwipeableViews from 'react-swipeable-views';
 import {
   Button,
@@ -11,16 +10,12 @@ import {
   IconButton,
   Tab,
   Tabs,
-  Paper,
-  TextField,
-  FormControl,
-  FormLabel,
-  FormGroup
+  Paper
 } from '@material-ui/core';
 import { withStyles, useTheme, makeStyles } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import { isEmpty } from 'lodash';
-
+import { executePolicies } from '../../Components/Policies/utils';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import CustomFields from '../../Components/CustomFields/CustomFields';
 import {
@@ -36,13 +31,11 @@ import {
 import ImageUpload from '../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import {
-  postDBEncryptPassword,
   getOneDB,
   updateDB,
   postDB,
   getDB
 } from '../../../../crud/api';
-import { getHours } from 'date-fns';
 import AssetTable from '../components/AssetTable';
 
 const CustomFieldsPreview = (props) => {
@@ -178,81 +171,6 @@ const ModalEmployees = ({
     enabled: false,
     isValidForm: {}
   });
-
-  const executePolicies = (catalogueName) => {
-    const formatDate = new Date()
-    const dformat = `${('0' + formatDate.getDate()).slice(-2)}/${('0' + formatDate.getMonth() + 1).slice(-2)}/${formatDate.getFullYear()}`
-    const tformat = `${formatDate.getHours()}:${formatDate.getMinutes()}:${formatDate.getSeconds()}`
-    const timeStamp = dformat + ' ' + tformat
-    const read = false;
-    const status = 'new'
-    const filteredPolicies = policies.filter(
-      (policy) => policy.selectedAction === catalogueName);
-    filteredPolicies.forEach(({
-      _id,
-      apiDisabled,
-      selectedIcon,
-      layout,
-      messageDisabled,
-      messageFrom,
-      messageNotification,
-      messageTo,
-      notificationDisabled,
-      notificationFrom,
-      notificationTo,
-      policyName,
-      selectedAction,
-      selectedCatalogue,
-      subjectMessage,
-      subjectNotification
-    }) => {
-      if (!messageDisabled) {
-        return (
-          alert(
-            `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`
-          ),
-          postDB('messages', {
-            _id,
-            from: messageFrom,
-            html: layout,
-            read: read,
-            status: status,
-            subject: subjectMessage,
-            timeStamp: timeStamp,
-            to: messageTo
-          })
-            .then(data => data.json())
-            .then((response) => {
-              const { } = response.response[0];
-            })
-            .catch((error) => console.log('ERROR', error))
-        )
-      } else if (!notificationDisabled) {
-        return (
-          alert(
-            `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`
-          ),
-          postDB('notifications', {
-            _id,
-            formatDate: formatDate,
-            from: notificationFrom,
-            icon: selectedIcon,
-            message: messageNotification,
-            read: read,
-            status: status,
-            subject: subjectNotification,
-            timeStamp: timeStamp,
-            to: notificationTo
-          })
-            .then(data => data.json())
-            .then((response) => {
-              const { } = response.response[0];
-            })
-            .catch((error) => console.log('ERROR', error))
-        )
-      }
-    })
-  }
 
   const handleChange = (name) => (event) => {
     setValues({ ...values, [name]: event.target.value });
@@ -402,7 +320,7 @@ const ModalEmployees = ({
         .then((response) => {
           const { _id } = response.response[0];
           saveAndReload('employees', _id);
-          executePolicies('OnAdd');
+          executePolicies('OnAdd', policies);
           updateAssignedEmpToAssets(_id);
         })
         .catch((error) => console.log('ERROR', error));
@@ -411,7 +329,7 @@ const ModalEmployees = ({
         .then((response) => {
           saveAndReload('employees', id[0]);
           updateAssignedEmpToAssets(id[0]);
-          executePolicies('OnEdit');
+          executePolicies('OnEdit', policies);
         })
         .catch((error) => console.log(error));
     }
@@ -492,7 +410,7 @@ const ModalEmployees = ({
           fileExt,
           assetsAssigned = []
         } = data.response;
-        executePolicies('OnLoad');
+        executePolicies('OnLoad', policies);
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
         setLayoutSelected(layoutSelected);
