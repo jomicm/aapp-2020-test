@@ -13,7 +13,6 @@ import {
   PortletBody
 } from '../../../../partials/content/Portlet';
 import { getCurrentDateTime, getVariables } from '../../utils';
-// import { getVariables } from '../../utils';
 import SimpleTable from '../../Components/SimpleTable';
 import WrapperEditor from '../components/WrapperEditor';
 import './ModalAssignmentReport.scss';
