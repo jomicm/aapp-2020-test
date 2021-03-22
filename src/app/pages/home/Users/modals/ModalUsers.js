@@ -28,7 +28,7 @@ import * as auth from '../../../../store/ducks/auth.duck';
 import { postDBEncryptPassword, getOneDB, getDB, updateDB } from '../../../../crud/api';
 import ImageUpload from '../../Components/ImageUpload';
 import ModalYesNo from '../../Components/ModalYesNo';
-import { environmentVariables, getFileExtension, saveImage, getImageURL } from '../../utils';
+import { hosts, getFileExtension, saveImage, getImageURL } from '../../utils';
 import { modules } from '../../constants';
 import {
   SingleLine,
@@ -44,16 +44,18 @@ import BaseFields from '../../Components/BaseFields/BaseFields';
 import LocationAssignment from '../components/LocationAssignment';
 import Permission from '../components/Permission';
 
+const { apiHost, localHost } = hosts;
+
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
-    singleLine: <SingleLine { ...props } />,
-    multiLine: <MultiLine { ...props } />,
-    date: <Date { ...props } />,
-    dateTime: <DateTime { ...props } />,
-    dropDown: <DropDown { ...props } />,
-    radioButtons: <RadioButtons { ...props } />,
-    checkboxes: <Checkboxes { ...props } />,
-    fileUpload: <FileUpload { ...props } />
+    singleLine: <SingleLine {...props} />,
+    multiLine: <MultiLine {...props} />,
+    date: <Date {...props} />,
+    dateTime: <DateTime {...props} />,
+    dropDown: <DropDown {...props} />,
+    radioButtons: <RadioButtons {...props} />,
+    checkboxes: <Checkboxes {...props} />,
+    fileUpload: <FileUpload {...props} />
   };
   return customFieldsPreviewObj[props.type];
 };
@@ -202,9 +204,9 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   const updateCurrentUserPic = (editId, fileExt) => {
     if (user.id === editId) {
       let _v = getRandomArbitrary(1, 999);
-      const defaultPic = `${environmentVariables().localHost}/media/misc/placeholder-image.jpg?v=${_v}`;
+      const defaultPic = `${localHost}/media/misc/placeholder-image.jpg?v=${_v}`;
       const pic = fileExt ?
-        `${environmentVariables().apiHost}/uploads/user/${editId}.${fileExt}?v=${_v}` :
+        `${apiHost}/uploads/user/${editId}.${fileExt}?v=${_v}` :
         defaultPic;
       setTimeout(() => updateUserPic(defaultPic), 250);
       setTimeout(() => updateUserPic(pic), 1000);
@@ -220,7 +222,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     setProfilePermissions([]);
     setTabs([]);
     setProfileSelected(null);
-    setValues({ 
+    setValues({
       name: '',
       lastName: '',
       email: '',
@@ -236,7 +238,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       enabled: false,
       isValidForm: false
     });
-    
+
   };
 
   const [userProfilesFiltered, setUserProfilesFiltered] = useState([]);
@@ -252,13 +254,13 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
 
     getOneDB('user/', id[0])
       .then(response => response.json())
-      .then(data => { 
+      .then(data => {
         const { name, lastName, email, customFieldsTab, profilePermissions, idUserProfile, locationsTable, fileExt, selectedBoss } = data.response;
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
         setProfileSelected(userProfilesFiltered.filter(profile => profile.value === idUserProfile));
         setLocationsTable(locationsTable || []);
-        setValues({ 
+        setValues({
           ...values,
           name,
           lastName,
@@ -315,18 +317,18 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     console.log('onChangeUserProfile>>>', e);
     setProfileSelected(e);
     getOneDB('userProfiles/', e.value)
-    .then(response => response.json())
-    .then(data => { 
-      console.log(data.response);
-      const { customFieldsTab, profilePermissions } = data.response;
-      const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
-      tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
-      setCustomFieldsTab(customFieldsTab);
-      setProfilePermissions(profilePermissions);
-      setTabs(tabs);
-      setIdUserProfile(e.value);
-    })
-    .catch(error => console.log(error));
+      .then(response => response.json())
+      .then(data => {
+        console.log(data.response);
+        const { customFieldsTab, profilePermissions } = data.response;
+        const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
+        tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
+        setCustomFieldsTab(customFieldsTab);
+        setProfilePermissions(profilePermissions);
+        setTabs(tabs);
+        setIdUserProfile(e.value);
+      })
+      .catch(error => console.log(error));
   };
 
   // Function to update customFields
@@ -393,7 +395,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   };
 
   return (
-    <div style={{width:'1000px'}}>
+    <div style={{ width: '1000px' }}>
       <Dialog
         onClose={handleCloseModal}
         aria-labelledby='customized-dialog-title'
@@ -403,10 +405,10 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
           id='customized-dialog-title'
           onClose={handleCloseModal}
         >
-          {`${id ? 'Edit' : 'Add' } Users`}
+          {`${id ? 'Edit' : 'Add'} Users`}
         </DialogTitle5>
         <DialogContent5 dividers>
-          <div className='kt-section__content' style={{margin:'-16px'}}>
+          <div className='kt-section__content' style={{ margin: '-16px' }}>
             <div className={classes4.root}>
               <Paper className={classes4.root}>
                 <Tabs
@@ -445,7 +447,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
                 </TabContainer4>
                 {/* TAB PERMISSIONS */}
                 <TabContainer4 dir={theme4.direction}>
-                  <div style={{ display:'flex', flexWrap:'wrap', justifyContent: 'space-around', padding: '0 20px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around', padding: '0 20px' }}>
                     {modules.map((module, index) => {
                       return (
                         <Permission
@@ -470,12 +472,12 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
                       {Array(tab.content[1].length === 0 ? 1 : 2).fill(0).map((col, colIndex) => (
                         <div className='modal-asset-reference__list-field' >
                           {tab.content[colIndex].map(customField => (
-                            <CustomFieldsPreview 
+                            <CustomFieldsPreview
                               id={customField.id}
                               type={customField.content}
                               values={customField.values}
-                              onDelete={() => {}}
-                              onSelect={() => {}}
+                              onDelete={() => { }}
+                              onSelect={() => { }}
                               columnIndex={colIndex}
                               from='form'
                               tab={tab}
@@ -497,7 +499,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
             Save changes
           </Button>
         </DialogActions5>
-      </Dialog>    
+      </Dialog>
     </div>
   )
 };

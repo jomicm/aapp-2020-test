@@ -7,7 +7,9 @@ import clsx from 'clsx';
 import { TextField } from '@material-ui/core';
 import * as auth from '../../store/ducks/auth.duck';
 import { loginReal } from '../../crud/auth.crud';
-import { environmentVariables } from '../home/utils';
+import { hosts } from '../home/utils';
+
+const { apiHost, localHost } = hosts;
 
 function Login(props) {
   const { intl } = props;
@@ -86,10 +88,10 @@ function Login(props) {
                     const { email, accessToken, id, fileExt, profilePermissions } = response;
                     // global.token = accessToken;
                     const pic = fileExt ?
-                      `${environmentVariables().apiHost}/uploads/user/${id}.${fileExt}` :
-                      `${environmentVariables().localHost}/media/misc/placeholder-image.jpg`;
+                      `${apiHost}/uploads/user/${id}.${fileExt}` :
+                      `${localHost}/media/misc/placeholder-image.jpg`;
                     // const pic = 'https://i2.wp.com/float8ion.com/wp-content/uploads/2015/12/random-user-31.jpg';
-                    const user = {id, fullname: `${response.name} ${response.lastName}`, email, accessToken, pic, profilePermissions };
+                    const user = { id, fullname: `${response.name} ${response.lastName}`, email, accessToken, pic, profilePermissions };
                     props.fulfillUser(user);
                   })
                   .catch((err) => {
@@ -127,7 +129,7 @@ function Login(props) {
                   </div>
                 ) : (
                   <>
-                  {/* <div role='alert' className='alert alert-info'>
+                    {/* <div role='alert' className='alert alert-info'>
                     <div className='alert-text'>
                       Use account <strong>admin@demo.com</strong> and password{' '}
                       <strong>demo</strong> to continue.

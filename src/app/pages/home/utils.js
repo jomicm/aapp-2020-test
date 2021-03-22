@@ -8,14 +8,10 @@ const {
   REACT_APP_LOCALHOST_PORT
 } = process.env;
 
-const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
+const apiHost = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`;
+const localHost = `${REACT_APP_LOCALHOST}:${REACT_APP_LOCALHOST_PORT}`;
 
-export const environmentVariables = () => {
-  return {
-    apiHost: `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}`,
-    localHost: `${REACT_APP_LOCALHOST}:${REACT_APP_LOCALHOST_PORT}`
-  };
-};
+export const hosts = { apiHost, localHost };
 
 export const getFileExtension = file => {
   if (!file) return '';
@@ -46,7 +42,7 @@ export const getFirstDocCollection = (collectionName) => {
 
 export const getImageURL = (id, folder, fileExt = '') => {
   return fileExt ?
-    `${host}/uploads/${folder}/${id}.${fileExt}` :
+    `${apiHost}/uploads/${folder}/${id}.${fileExt}` :
     '';
 };
 

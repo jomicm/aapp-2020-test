@@ -3,11 +3,13 @@ import { Link, Switch, Route, Redirect } from 'react-router-dom';
 import { toAbsoluteUrl } from '../../../_metronic';
 import '../../../_metronic/_assets/sass/pages/login/login-1.scss';
 import { getDB, getPublicDB, postDB, getOneDB, updateDB } from '../../crud/api';
-import { environmentVariables } from '../home/utils';
+import { hosts } from '../home/utils';
 import Registration from './Registration';
 import ForgotPassword from './ForgotPassword';
 import Login from './Login';
 import './AuthPage.scss';
+
+const { apiHost, localHost } = hosts;
 
 const defaultDesignValues = {
   logoTitle: 'Welcome to AApp 2020!!!',
@@ -33,23 +35,23 @@ const defaultDesignValues = {
 const AuthPage = () => {
   const loadDesignData = (collectionName = 'settingsDesign') => {
     getPublicDB(collectionName)
-    .then(response => response.json())
-    .then(data => {
-      const designData = (data.response && data.response[0]) || {};
-      setValues(designData);
-      const { logoLoginExt, logoBackgroundExt } = designData;
-      if (logoLoginExt) {
-        setLogoLoginURL(`${environmentVariables().apiHost}/uploads/settingsDesign/logoLogin.${logoLoginExt}`);
-      }
-      if (logoBackgroundExt) {
-        setLogoBackgroundURL(`url(${environmentVariables().apiHost}/uploads/settingsDesign/logoBackground.${logoBackgroundExt})`);
-      }
-    })
-    .catch(error => console.log('error>', error));
+      .then(response => response.json())
+      .then(data => {
+        const designData = (data.response && data.response[0]) || {};
+        setValues(designData);
+        const { logoLoginExt, logoBackgroundExt } = designData;
+        if (logoLoginExt) {
+          setLogoLoginURL(`${apiHost}/uploads/settingsDesign/logoLogin.${logoLoginExt}`);
+        }
+        if (logoBackgroundExt) {
+          setLogoBackgroundURL(`url(${apiHost}/uploads/settingsDesign/logoBackground.${logoBackgroundExt})`);
+        }
+      })
+      .catch(error => console.log('error>', error));
   };
 
   const [values, setValues] = useState(defaultDesignValues);
-  const [logoLoginURL, setLogoLoginURL] = useState(`${environmentVariables().localHost}/media/misc/placeholder-image.jpg`)
+  const [logoLoginURL, setLogoLoginURL] = useState(`${localHost}/media/misc/placeholder-image.jpg`)
   const [logoBackgroundURL, setLogoBackgroundURL] = useState(`url(${toAbsoluteUrl('/media/bg/bg-4.jpg')})`)
 
   useEffect(() => {
@@ -69,11 +71,11 @@ const AuthPage = () => {
               style={{ backgroundImage: logoBackgroundURL }}
             >
               <div className='logo-container'>
-                  <img
-                    className='logo-container__logo'
-                    alt='Logo'
-                    src={logoLoginURL}
-                  />
+                <img
+                  className='logo-container__logo'
+                  alt='Logo'
+                  src={logoLoginURL}
+                />
               </div>
               <div className='kt-grid__item kt-grid__item--fluid kt-grid kt-grid--ver'>
                 <div className='kt-grid__item kt-grid__item--middle'>

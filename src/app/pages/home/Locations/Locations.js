@@ -69,7 +69,9 @@ import {
   SingleLineSettings
 } from '../Components/CustomFields/CustomFieldsPreview';
 import ModalYesNo from '../Components/ModalYesNo';
-import { environmentVariables, getImageURL } from '../utils';
+import { hosts, getImageURL } from '../utils';
+
+const { apiHost, localHost } = hosts;
 
 const Divider = () => <div style={{ width: '100%', height: '3px', backgroundColor: 'black' }}></div>;
 
@@ -167,7 +169,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
   };
 
   const CustomMarker = (MarkerComponentProps) => {
-    if (imageLayout !== `${environmentVariables().localHost}/media/misc/placeholder-image.jpg`) {
+    if (imageLayout !== `${localHost}/media/misc/placeholder-image.jpg`) {
       return (
         <RoomIcon style={{ color: 'red' }} />
       )
@@ -267,7 +269,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
 
   const getImageLayout = (id) => {
     if (id === 'root') {
-      setImageLayout(`${environmentVariables().localHost}/media/misc/placeholder-image.jpg`)
+      setImageLayout(`${localHost}/media/misc/placeholder-image.jpg`)
     } else {
       const result = locations.filter((location) => location._id === id);
       const image = result.map((coordinate) => coordinate.fileExt);
@@ -275,7 +277,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
         const imageURLLayout = getImageURL(id, 'locationsReal', image[0]);
         setImageLayout(imageURLLayout);
       } else {
-        setImageLayout(`${environmentVariables().localHost}/media/misc/placeholder-image.jpg`);
+        setImageLayout(`${localHost}/media/misc/placeholder-image.jpg`);
       }
     }
   }
@@ -600,7 +602,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
                                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                                       <div style={{ height: '480px', width: '600px' }}>
                                         <ImageMarker
-                                          src={imageLayout ? imageLayout : `${environmentVariables().localHost}/media/misc/placeholder-image.jpg`}
+                                          src={imageLayout ? imageLayout : `${localHost}/media/misc/placeholder-image.jpg`}
                                           markers={markers}
                                           markerComponent={CustomMarker}
                                         />
