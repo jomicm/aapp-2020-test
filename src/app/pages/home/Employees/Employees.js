@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { connect } from "react-redux";
 import { Tabs } from '@material-ui/core';
 import {
   Portlet,
@@ -6,7 +7,7 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
-
+import * as general from "../../../store/ducks/general.duck";
 // AApp Components
 import TableComponent2 from '../Components/TableComponent2';
 import ModalEmployeeProfiles from './modals/ModalEmployeeProfiles';
@@ -20,7 +21,7 @@ import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 
 const localStorageActiveTabKey = 'builderActiveTab';
 
-const Employees = () => {
+const Employees = ({ globalSearch, setGeneralSearch }) => {
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
 
@@ -166,6 +167,23 @@ const Employees = () => {
     loadEmployeesData('employeeProfiles');
   }, [tableControl.employeeProfiles.page, tableControl.employeeProfiles.rowsPerPage, tableControl.employeeProfiles.order, tableControl.employeeProfiles.orderBy, tableControl.employeeProfiles.search]);
 
+  const tabIntToText = ['employees', 'employeeProfiles'];
+
+  useEffect(() => {
+    if (globalSearch.tabIndex >= 0) {
+      setTab(globalSearch.tabIndex);
+      setTableControl(prev => ({
+        ...prev,
+        [tabIntToText[globalSearch.tabIndex]]: {
+          ...prev[tabIntToText[globalSearch.tabIndex]],
+          search: globalSearch.searchValue,
+        }
+      }))
+      setTimeout(() => {
+        setGeneralSearch({});
+      }, 800);
+    }
+  }, [globalSearch.tabIndex, globalSearch.searchValue]);
 
   const [control, setControl] = useState({
     employeeProfilesRows: [],
@@ -423,4 +441,8 @@ const Employees = () => {
     </>
   );
 }
-export default Employees;
+
+const mapStateToProps = ({ general: { globalSearch } }) => ({
+  globalSearch
+});
+export default connect(mapStateToProps, general.actions)(Employees);
