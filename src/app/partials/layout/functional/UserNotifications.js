@@ -38,7 +38,6 @@ const UserNotifications = ({
   type,
   useSVG,
 }) => {
-
   const [countNotifications, setCountNotifications] = useState(0)
   const [data, setData] = useState([])
   const [getKey, setGetKey] = useState({ key: 'alerts' })
@@ -75,7 +74,12 @@ const UserNotifications = ({
 
   const changeModal = (read, _id, subject, message, formatDate, from) => {
     setOpenModal(true)
-    setValues({ subject: subject, message: message, formatDate: formatDate, from: from[0].email })
+    setValues({
+      subject,
+      message,
+      formatDate,
+      from: from.length ? from[0].email : ''
+    })
     checkStatus(read, _id)
   }
 

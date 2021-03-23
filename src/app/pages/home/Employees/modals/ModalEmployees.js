@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import Select from 'react-select';
+import React, { useEffect, useState } from 'react';
+import { isEmpty } from 'lodash';
 import SwipeableViews from 'react-swipeable-views';
 import {
   Button,
@@ -7,43 +7,39 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Divider,
   Typography,
   IconButton,
   Tab,
   Tabs,
-  Paper,
-  TextField,
-  FormControl,
-  FormLabel,
-  FormGroup
+  Paper
 } from '@material-ui/core';
 import { withStyles, useTheme, makeStyles } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
-import { isEmpty } from 'lodash';
-
+import { executePolicies } from '../../Components/Policies/utils';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import CustomFields from '../../Components/CustomFields/CustomFields';
 import {
-  SingleLine,
+  Checkboxes,
   MultiLine,
   Date as DateField,
   DateTime,
   DropDown,
   RadioButtons,
-  Checkboxes,
+  SingleLine,
   FileUpload
 } from '../../Components/CustomFields/CustomFieldsPreview';
 import ImageUpload from '../../Components/ImageUpload';
+import Permission from '../components/Permission';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import {
-  postDBEncryptPassword,
   getOneDB,
   updateDB,
   postDB,
   getDB
 } from '../../../../crud/api';
-import { getHours } from 'date-fns';
 import AssetTable from '../components/AssetTable';
+import ModalAssignmentReport from './ModalAssignmentReport';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -142,16 +138,18 @@ const collections = {
 };
 
 const ModalEmployees = ({
-  showModal,
-  setShowModal,
-  reloadTable,
   id,
-  employeeProfileRows
+  employeeProfileRows,
+  reloadTable,
+  showModal,
+  setShowModal
 }) => {
   const [assetRows, setAssetRows] = useState([]);
   const classes = useStyles();
   const classes4 = useStyles4();
+  const [showModalReports, setShowModalReports] = useState(false);
   const [customFieldsTab, setCustomFieldsTab] = useState({});
+  const [htmlPreview, setHtmlPreview] = useState([])
   const [employeeProfilesFiltered, setEmployeeProfilesFiltered] = useState([]);
   const [idUserProfile, setIdUserProfile] = useState('');
   const [image, setImage] = useState(null);
@@ -179,81 +177,6 @@ const ModalEmployees = ({
     isValidForm: {}
   });
 
-  const executePolicies = (catalogueName) => {
-    const formatDate = new Date()
-    const dformat = `${('0' + formatDate.getDate()).slice(-2)}/${('0' + formatDate.getMonth() + 1).slice(-2)}/${formatDate.getFullYear()}`
-    const tformat = `${formatDate.getHours()}:${formatDate.getMinutes()}:${formatDate.getSeconds()}`
-    const timeStamp = dformat + ' ' + tformat
-    const read = false;
-    const status = 'new'
-    const filteredPolicies = policies.filter(
-      (policy) => policy.selectedAction === catalogueName);
-    filteredPolicies.forEach(({
-      _id,
-      apiDisabled,
-      selectedIcon,
-      layout,
-      messageDisabled,
-      messageFrom,
-      messageNotification,
-      messageTo,
-      notificationDisabled,
-      notificationFrom,
-      notificationTo,
-      policyName,
-      selectedAction,
-      selectedCatalogue,
-      subjectMessage,
-      subjectNotification
-    }) => {
-      if (!messageDisabled) {
-        return (
-          alert(
-            `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`
-          ),
-          postDB('messages', {
-            _id,
-            from: messageFrom,
-            html: layout,
-            read: read,
-            status: status,
-            subject: subjectMessage,
-            timeStamp: timeStamp,
-            to: messageTo
-          })
-            .then(data => data.json())
-            .then((response) => {
-              const { } = response.response[0];
-            })
-            .catch((error) => console.log('ERROR', error))
-        )
-      } else if (!notificationDisabled) {
-        return (
-          alert(
-            `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`
-          ),
-          postDB('notifications', {
-            _id,
-            formatDate: formatDate,
-            from: notificationFrom,
-            icon: selectedIcon,
-            message: messageNotification,
-            read: read,
-            status: status,
-            subject: subjectNotification,
-            timeStamp: timeStamp,
-            to: notificationTo
-          })
-            .then(data => data.json())
-            .then((response) => {
-              const { } = response.response[0];
-            })
-            .catch((error) => console.log('ERROR', error))
-        )
-      }
-    })
-  }
-
   const handleChange = (name) => (event) => {
     setValues({ ...values, [name]: event.target.value });
   };
@@ -272,12 +195,10 @@ const ModalEmployees = ({
       setTabs([]);
       return;
     }
-    console.log('onChangeEmployeeProfile>>>', e);
     setProfileSelected(e);
     getOneDB('employeeProfiles/', e.value)
       .then((response) => response.json())
       .then((data) => {
-        console.log(data.response);
         const { customFieldsTab, profilePermissions } = data.response;
         const tabs = Object.keys(customFieldsTab).map((key) => ({
           key,
@@ -324,7 +245,7 @@ const ModalEmployees = ({
       },
       componentProps: {
         isClearable: true,
-        onchange: (e) => setLayoutSelected(e),
+        onChange: (e) => setLayoutSelected(e),
         options: layoutOptions,
         value: layoutSelected,
       }
@@ -348,7 +269,6 @@ const ModalEmployees = ({
     });
     setShowModal(false);
     setValue4(0);
-    setLayoutOptions([]);
     setLayoutSelected(null);
     setAssetRows([]);
     setFormValidation({
@@ -402,7 +322,7 @@ const ModalEmployees = ({
         .then((response) => {
           const { _id } = response.response[0];
           saveAndReload('employees', _id);
-          executePolicies('OnAdd');
+          executePolicies('OnAdd', policies);
           updateAssignedEmpToAssets(_id);
         })
         .catch((error) => console.log('ERROR', error));
@@ -411,19 +331,16 @@ const ModalEmployees = ({
         .then((response) => {
           saveAndReload('employees', id[0]);
           updateAssignedEmpToAssets(id[0]);
-          executePolicies('OnEdit');
+          executePolicies('OnEdit', policies);
         })
         .catch((error) => console.log(error));
     }
     handleCloseModal();
   };
 
-  // Function to update customFields
   const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
     const colValue = ['left', 'right'];
-    console.log('Looking for you', tab, id, colIndex, values);
     const customFieldsTabTmp = { ...customFieldsTab };
-
     const field = customFieldsTabTmp[tab][colValue[colIndex]].find(
       (cf) => cf.id === id
     );
@@ -450,21 +367,25 @@ const ModalEmployees = ({
   };
 
   useEffect(() => {
-    const userProfiles = employeeProfileRows.map((profile, ix) => ({
-      value: profile.id,
-      label: profile.name
-    }));
-    setEmployeeProfilesFiltered(userProfiles);
-
     getDB('settingsLayoutsEmployees')
       .then((response) => response.json())
       .then((data) => {
         const layoutOptions = data.response.map(
           ({ _id: value, name: label }) => ({ value, label })
         );
+        const employeeLayoutSelected = data.response.filter(({ _id }) => _id === layoutSelected.value);
+        setHtmlPreview(employeeLayoutSelected);
         setLayoutOptions(layoutOptions);
       })
       .catch((error) => console.log('error>', error));
+  }, [layoutSelected]);
+
+  useEffect(() => {
+    const userProfiles = employeeProfileRows.map((profile, ix) => ({
+      value: profile.id,
+      label: profile.name
+    }));
+    setEmployeeProfilesFiltered(userProfiles);
 
     getDB('policies')
       .then((response) => response.json())
@@ -492,7 +413,7 @@ const ModalEmployees = ({
           fileExt,
           assetsAssigned = []
         } = data.response;
-        executePolicies('OnLoad');
+        executePolicies('OnLoad', policies);
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
         setLayoutSelected(layoutSelected);
@@ -511,7 +432,6 @@ const ModalEmployees = ({
           imageURL: getImageURL(id, 'employees', fileExt)
         });
         setAssetRows(assetsAssigned);
-        //
         const tabs = Object.keys(customFieldsTab).map((key) => ({
           key,
           info: customFieldsTab[key].info,
@@ -524,12 +444,28 @@ const ModalEmployees = ({
       .catch((error) => console.log(error));
   }, [id, employeeProfileRows]);
 
+  const openModalAssignmentReport = () => {
+    if (layoutSelected === null) {
+      alert('Please select a Responsibility Layout first');
+    } else {
+      setShowModalReports(true);
+    }
+  };
+
   useEffect(() => {
     setFormValidation({ ...formValidation, enabled: true });
   }, [values])
 
   return (
     <div style={{ width: '1000px' }}>
+      <ModalAssignmentReport
+        assetRows={assetRows}
+        htmlPreview={htmlPreview}
+        layoutSelected={layoutSelected}
+        setShowModal={setShowModalReports}
+        showModal={showModalReports}
+        values={values}
+      />
       <Dialog
         aria-labelledby='customized-dialog-title'
         onClose={handleCloseModal}
@@ -578,6 +514,17 @@ const ModalEmployees = ({
                   </div>
                 </TabContainer4>
                 <TabContainer4 dir={theme4.direction}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                      color='primary'
+                      onClick={openModalAssignmentReport}
+                      size='large'
+                      style={{ marginBottom: '20px' }}
+                      variant='contained'
+                    >
+                      Generate Report
+                    </Button>
+                  </div>
                   <div className='profile-tab-wrapper'>
                     <AssetTable
                       assetRows={assetRows}

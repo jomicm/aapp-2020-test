@@ -1,10 +1,11 @@
 /* eslint-disable no-script-url,jsx-a11y/anchor-is-valid */
 import React from "react";
 import clsx from "clsx";
+import SearchIcon from '@material-ui/icons/Search';
 
 export default class SearchResult extends React.Component {
   render() {
-    const { data } = this.props;
+    const { data, handleClick } = this.props;
 
     if (!data) {
       return null;
@@ -26,21 +27,14 @@ export default class SearchResult extends React.Component {
           <React.Fragment key={index}>
             {item.type === 1 && (
               <div className="kt-quick-search__item">
-                <div className={clsx({"kt-quick-search__item-img": item.iconImage, "kt-quick-search__item-icon": item.iconClassName})}>
-                  {item.iconClassName ? (
-                    <i className={item.iconClassName} />
-                  ) : item.iconImage ? (
-                    <img src={item.iconImage} alt="" />
-                  ) : null}
+                <div className={clsx({"kt-quick-search__item-img": item.icon, "kt-quick-search__item-icon": item.iconClassName})}>
+                  <SearchIcon />
                 </div>
 
-                <div className="kt-quick-search__item-wrapper">
+                <div className="kt-quick-search__item-wrapper" onClick={() => handleClick(item)}>
                   <a href="#" className="kt-quick-search__item-title">
                     {item.text}
                   </a>
-                  <div className="kt-quick-search__item-desc">
-                    {item.description}
-                  </div>
                 </div>
               </div>
             )}

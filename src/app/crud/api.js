@@ -1,10 +1,40 @@
-// const host = 'http://localhost:3001/';
-const host = 'http://159.203.41.87:3001/';
-const version = 'api/v1/';
-const db = 'notes-db-app/';
-const collection = 'locations/';
-const publicReq = 'public/';
-const count = 'count/';
+const store = require('../../app/store/store');
+
+const {
+  REACT_APP_API_SERVER,
+  REACT_APP_API_PORT,
+  REACT_APP_API_VERSION,
+  REACT_APP_API_DB,
+  REACT_APP_API_COLLECTION,
+  REACT_APP_API_PUBLIC_REQ,
+  REACT_APP_API_COUNT,
+  REACT_APP_TOKEN
+} = process.env;
+
+const host = `${REACT_APP_API_SERVER}:${REACT_APP_API_PORT}/`;
+const version = REACT_APP_API_VERSION;
+const db = `${REACT_APP_API_DB}/`;
+const collection = `${REACT_APP_API_COLLECTION}/`;
+const publicReq = `${REACT_APP_API_PUBLIC_REQ}/`;
+const count = `${REACT_APP_API_COUNT}/`;
+
+const getBaseInfo = () => {
+  const state = store.default.getState();
+  const creationUserId = state?.auth?.user?.id || '';
+  const creationUserFullName = state?.auth?.user?.fullname || '';
+  const currentDate = new Date().toISOString();;
+
+  return {
+    post: {
+      creationUserId,
+      creationUserFullName,
+      creationDate: currentDate
+    },
+    update: {
+      updateDate: currentDate
+    }
+  };
+};
 
 const getAPIPath = (
   _collection = collection,
@@ -13,16 +43,13 @@ const getAPIPath = (
   isPublic = false,
   isCount = false,
 ) => `${host}${version}${isPublic ? publicReq : ''}${isCount ? count : ''}${db}${_collection}${_id}${isEncrypt ? '/encrypt' : ''}`;
+
 const getAPIFilePath = (foldername) => `${host}${version}upload/${foldername}`;
 
-
 const getHeaders = (isFile = false) => {
-  // const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVlYTdiNjg0M2U0ZWRhODVjNDhmZjVkOSIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImRldkBkZXYuY29tIiwiaWF0IjoxNTg4MDUwMzg5LCJleHAiOjE1OTY2OTAzODl9.eLwnv1UlCgAop0JyEXam-BxhHJFhdlnhVLF134j-pBM';
-  // const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVkYWIzZTg3NjAzOGRjNTZkMDg4NzdjMyIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImFAYS5teCIsImlhdCI6MTU5NzIwNTE3NywiZXhwIjoxNjA1ODQ1MTc3fQ.w29W5N9a9jTilzIJp-5xyD_h7ndq5Mqm937h0ipgCkY';
-  // const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVlYTdiNjg0M2U0ZWRhODVjNDhmZjVkOSIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImRldkBkZXYuY29tIiwiaWF0IjoxNTk3Mzc3MzM0LCJleHAiOjE2MDYwMTczMzR9.BFy6AjKCH83rdIZmKakpElMqYXr-E6L24fUzokJnl9U';
-  // const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVlYTdiNjg0M2U0ZWRhODVjNDhmZjVkOSIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImRldkBkZXYuY29tIiwiaWF0IjoxNjA2ODY5MzAxLCJleHAiOjE2MTU1MDkzMDF9.NjUoP4pjXxCcMJn2_1rIdwKCGuRlk78iuCoZhcORsI4';
-  const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVlYTdiNjg0M2U0ZWRhODVjNDhmZjVkOSIsInR5cGUiOiJkZXZlbG9wZXIiLCJlbWFpbCI6ImRldkBkZXYuY29tIiwiaWF0IjoxNjE1NTExMDU4LCJleHAiOjE2MjQxNTEwNTh9.zTKbXAlfJ0slH9TDkkdS-dch8NecYv2nEbeKwtJmnGY';
-
+  const state = store.default.getState();
+  const token = state?.auth?.user?.accessToken || REACT_APP_TOKEN;
+  
   const headers = new Headers();
   headers.set('Authorization', `Bearer ${token}`);
   if (!isFile) {
@@ -32,7 +59,7 @@ const getHeaders = (isFile = false) => {
   return headers;
 };
 
-const postDB = (collection, body) => fetch(getAPIPath(collection), { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) });
+const postDB = (collection, body) => fetch(getAPIPath(collection), { method: 'POST', headers: getHeaders(), body: JSON.stringify(Object.assign(body, getBaseInfo().post)) });
 
 const postDBEncryptPassword = (collection, body) => fetch(getAPIPath(collection, '', true), { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) });
 
@@ -44,7 +71,7 @@ const getOneDB = (collection, id) => fetch(getAPIPath(collection, id), { method:
 
 const deleteDB = (collection, id) => fetch(getAPIPath(collection, id), { method: 'DELETE', headers: getHeaders() });
 
-const updateDB = (collection, body, id) => fetch(getAPIPath(collection, id), { method: 'PUT', headers: getHeaders(), body: JSON.stringify(body) });
+const updateDB = (collection, body, id) => fetch(getAPIPath(collection, id), { method: 'PUT', headers: getHeaders(), body: JSON.stringify(Object.assign(body, getBaseInfo().update)) });
 
 const postFILE = (foldername, filename, image) => {
   const { type = '/jpg' } = image;
@@ -126,6 +153,7 @@ const getCountDB = ({
   const reqURL = `${getAPIPath(collection, '', false, false, count)}${additionalParams}`;
   return fetch(reqURL, { method: 'GET', headers: getHeaders() });
 };
+
 module.exports = {
   deleteDB,
   getDB,

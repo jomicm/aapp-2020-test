@@ -1,13 +1,14 @@
 /* eslint-disable no-restricted-imports */
 import React, { useEffect, useState } from 'react';
 import { Tabs } from '@material-ui/core';
+import { connect } from "react-redux";
 import {
   Portlet,
   PortletBody,
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
-
+import * as general from "../../../store/ducks/general.duck";
 // AApp Components
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import TableComponent2 from '../Components/TableComponent2';
@@ -22,7 +23,7 @@ import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 
 const localStorageActiveTabKey = 'builderActiveTab';
-export default function Assets() {
+function Assets({ globalSearch, setGeneralSearch }) {
 
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
@@ -263,6 +264,22 @@ export default function Assets() {
     loadAssetsData('categories');
   }, [tableControl.categories.page, tableControl.categories.rowsPerPage, tableControl.categories.order, tableControl.categories.orderBy, tableControl.categories.search]);
 
+  const tabIntToText = ['assets', 'references', 'categories'];
+
+  useEffect(() => {
+    if (globalSearch.tabIndex >= 0) {
+      setTab(globalSearch.tabIndex);
+      setTableControl(prev => ({
+        ...prev,
+        [tabIntToText[globalSearch.tabIndex]]: {
+          ...prev[tabIntToText[globalSearch.tabIndex]],
+          search: globalSearch.searchValue,
+        }
+      }))
+      setGeneralSearch({});
+    }
+  }, [globalSearch.tabIndex, globalSearch.searchValue]);
+
   return (
     <>
       <ModalYesNo
@@ -424,7 +441,7 @@ export default function Assets() {
                           }))
                         }}
                         title={'Asset References'}
-                        tableView
+                        tileView
                       />
                     </div>
                   </div>
@@ -488,7 +505,7 @@ export default function Assets() {
                           }))
                         }}
                         title={'Asset Categories'}
-                        tableView
+                        tileView
                       />
                     </div>
                   </div>
@@ -516,3 +533,7 @@ export default function Assets() {
     </>
   );
 }
+const mapStateToProps = ({ general: { globalSearch } }) => ({
+  globalSearch
+});
+export default connect(mapStateToProps, general.actions)(Assets);
