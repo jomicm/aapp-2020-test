@@ -79,21 +79,9 @@ const UserNotifications = ({
     checkStatus(read, _id)
   }
 
-  const changeColor = (read) => {
-    if (read) {
-      return 'firstColor'
-    } else {
-      return 'secondColor'
-    }
-  }
+  const changeColor = (read) => read ? ('firstColor') : ('secondColor');
 
-  const changeBarColor = (read) => {
-    if (read) {
-      return ''
-    } else {
-      return 'blue-bar'
-    }
-  }
+  const changeBarColor = (read) => read ? ('') : ('blue-bar');
 
   const getHetBackGroundCssClassList = () => {
     let result = 'kt-head ';
