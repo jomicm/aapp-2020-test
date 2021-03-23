@@ -1,111 +1,52 @@
 import React, { useState, useEffect } from 'react';
+import { makeStyles, Divider, Typography, IconButton } from '@material-ui/core';
+import SearchIcon from '@material-ui/icons/Search';
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
+
 import Snapshot from './Snapshot';
 import MessageInformation from './MessageInformation';
 import './GeneralMessageContainer.scss';
 import {
-  postDBEncryptPassword,
-  getOneDB,
-  updateDB,
-  postDB,
-  getDB
+  getCountDB,
+  getDBComplex
 } from '../../../../crud/api';
 
-const GeneralMessageContainer = () => {
+const useStyles = makeStyles(theme => ({
+  search: {
+    backgroundColor: '#fafafa',
+    '&:hover': {
+      backgroundColor: '#F5F5F5',
+    },
+    width: '90%',
+    height: '40px',
+    margin: '15px',
+    border: '1px #ffffff00 solid',
+    borderRadius: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'start',
+  },
+  searchIcon: {
+    position: 'relative',
+    paddingRight: '10px',
+    paddingLeft: '10px'
+  },
+  inputInput: {
+    border: 'none',
+    outline: 'none',
+    backgroundColor: '#FFFFFF00'
+  },
+  IconButton: {
+    margin: '10px'
+  }
+}));
 
-  // const [data, setData] = useState([
-  //   {
-  //     id: 1,
-  //     date: "",
-  //     subject: "Technique Guides",
-  //     description: "Learn amazing street workout and calisthenics",
-  //     senderName: "José",
-  //     time: "5:12 a.m.",
-  //     img: "https://picsum.photos/id/237/200",
-  //     newMessage: true,
-  //     content:
-  //       "<p><strong>⭐⭐This is an %{employeeName} example ⭐</strong></p>\n<ul>\n<li><strong>dsds⭐⭐%{currentDate}⭐⭐⭐⭐</strong></li>\n<li><del><em><ins>new bullet!⭐</ins></em></del></li>\n</ul>\n<p><strong>La responsiva %{currentDate} %{employeeName} %{currentTime}<br><br>ds</strong></p>\n<p></p>\n"
-  //   },
-  //   {
-  //     id: 2,
-  //     date: "",
-  //     subject: "Skills Training",
-  //     description: "Learn the secrets of bodyweight techniques",
-  //     senderName: "Miguel",
-  //     time: "13:10 p.m.",
-  //     img: "https://picsum.photos/id/238/200",
-  //     newMessage: true,
-  //     content: "<h2> Hey!</h2>, hola <strong>Miguel</strong>"
-  //   },
-  //   {
-  //     id: 3,
-  //     date: "",
-  //     subject: "Strength Training",
-  //     description: "Train anytime, everywere and become a superhero!",
-  //     senderName: "Carlos",
-  //     time: "12:59 p.m.",
-  //     img: "https://picsum.photos/id/239/200",
-  //     newMessage: false,
-  //     content:
-  //       "\n<ul<li><h1>Hola</h1></li>\n<li><h2>Hola</h2></li>\n<li><h3>Hola</h3></li>\n<li><h4>Hola</h4></li></ul>"
-  //   },
-  //   {
-  //     id: 4,
-  //     date: "",
-  //     subject: "Segurity",
-  //     description: "Problems with your PC security",
-  //     senderName: "Diego",
-  //     time: "4:10 p.m.",
-  //     img: "https://picsum.photos/id/240/200",
-  //     newMessage: false,
-  //     content: "<h1>Prueba 4</h1>"
-  //   },
-  //   {
-  //     id: 5,
-  //     date: "",
-  //     subject: "Reports",
-  //     description: "Mail about your reports",
-  //     senderName: "Philip",
-  //     time: "1:06 a.m.",
-  //     img: "https://picsum.photos/id/241/200",
-  //     newMessage: false,
-  //     content: "<h1>Prueba 5</h1>"
-  //   },
-  //   {
-  //     id: 6,
-  //     date: "",
-  //     subject: "Confidential Information",
-  //     description: "Please read the information",
-  //     senderName: "Francisco",
-  //     time: "9:34 p.m.",
-  //     img: "https://picsum.photos/id/242/200",
-  //     newMessage: false,
-  //     content: "<h1>Prueba 6</h1>"
-  //   },
-  //   {
-  //     id: 7,
-  //     date: "",
-  //     subject: "Confidential 7",
-  //     description: "Please read the information 7",
-  //     senderName: "Sergio",
-  //     time: "9:35 p.m.",
-  //     img: "https://picsum.photos/id/243/200",
-  //     newMessage: false,
-  //     content: "<h1>Prueba 7</h1>"
-  //   },
-  //   {
-  //     id: 8,
-  //     date: "",
-  //     subject: "Confidential 8",
-  //     description: "Please read the information 8",
-  //     senderName: "Alejandro",
-  //     time: "9:36 p.m.",
-  //     img: "https://picsum.photos/id/244/200",
-  //     newMessage: false,
-  //     content: "<h1>Prueba 8</h1>"
-  //   },
-  // ]);
+const GeneralMessageContainer = () => {
+  const classes = useStyles();
   const [data, setData] = useState([]);
   const [preview, setPreview] = useState('');
+  const [indexHovered, setIndexHovered] = useState(null);
   const [headerInfo, setHeaderInfo] = useState({
     timeStamp: '',
     img: '',
@@ -113,48 +54,135 @@ const GeneralMessageContainer = () => {
     subject: '',
     to: ''
   });
+  const [control, setControl] = useState({
+    search: '',
+    rowsPerPage: 5,
+    page: 0,
+    total: 1,
+  });
 
-  console.log('messageForm: ', data)
+  const handlePageChange = (action) => {
+    if (action === 'add' && (control.page + 1) < Math.ceil(control.total / control.rowsPerPage)) {
+      setControl(prev => ({ ...prev, page: prev.page + 1 }))
+    }
+    else if (action === 'reduce' && (control.page + 1) > 1) {
+      setControl(prev => ({ ...prev, page: prev.page - 1 }))
+    }
+  }
 
   useEffect(() => {
-    getDB('messages')
-    .then((response) => response.json())
-    .then((data) => {
-      setData(data.response);
+    let queryLike = ['subject', 'html'].map(key => ({ key, value: control.search }))
+
+    getCountDB({
+      collection: 'messages',
+      queryLike: control.search.length >= 3 ? queryLike : null,
+    })
+      .then(response => response.json())
+      .then(data => {
+        setControl(prev => ({
+          ...prev,
+          total: data.response.count === 0 ? 1 : data.response.count
+        }))
+      });
+
+    getDBComplex({
+      collection: 'messages',
+      limit: control.rowsPerPage,
+      skip: control.rowsPerPage * control.page,
+      queryLike: control.search.length >= 3 ? queryLike : null,
+    })
+      .then(response => response.json())
+      .then((data) => {
+        setData(data.response);
       })
       .catch((error) => console.log('error>', error));
-  }, []);
+  }, [control.search, control.page]);
 
   return (
     <div className='__container-gmc'>
       <div className='__container-general-snapshot'>
-        {data.map((msg, index) => (
-          <div key={msg.id} onClick={() => setPreview(msg.html)}>
-            <div
-              onClick={() => (
-                setHeaderInfo({
-                  timeStamp: msg.timeStamp,
-                  img: msg.img,
-                  senderName: msg.from,
-                  subject: msg.subject,
-                  to: msg.to[0].email
-                })
-                )
-              }
-              >
-              <Snapshot
-                dateTime={msg.timeStamp}
-                name={msg.from[0].name}
-                lastName={msg.from[0].lastName}
-                id={msg.id}
-                img={msg.img}
-                senderName={msg.from[0].email}
-                subject={msg.subject}
-                to={msg.to[0].email}
-              />
-            </div>
+        <div aria-label='Search Box' className={classes.search} key='SearchDiv'>
+          <div className={classes.searchIcon}>
+            <SearchIcon />
           </div>
-        ))}
+          <input
+            className={classes.inputInput}
+            key='SearchField'
+            onChange={event => setControl(prev => ({ ...prev, search: event.target.value }))}
+            placeholder='Search...'
+          />
+        </div>
+        <span className='field-validator_error' style={{ display:'flex', justifyContent: 'center', width: '90%' }}>
+          {control.search.length >= 3 || control.search.length === 0 ? null : 'The search value must be at least 3 characters long'}
+        </span>
+        {
+          data.length > 0 ? (
+            data.map((msg, index) => (
+              <>
+                <div key={msg.id}
+                  onClick={() => setPreview(msg.html)}
+                  style={{
+                    width: '90%'
+                  }}
+                  onMouseEnter={() => setIndexHovered(index)}
+                  onMouseLeave={() => setIndexHovered(null)}
+                >
+                  <div
+                    onClick={() => (
+                      setHeaderInfo({
+                        timeStamp: msg.timeStamp,
+                        img: msg.img,
+                        senderName: msg.from,
+                        subject: msg.subject,
+                        to: msg.to[0].email
+                      })
+                    )
+                    }
+                  >
+                    <Snapshot
+                      dateTime={msg.timeStamp}
+                      name={msg.from[0].name}
+                      lastName={msg.from[0].lastName}
+                      id={msg.id}
+                      img={msg.img}
+                      senderName={msg.from[0].email}
+                      subject={msg.subject}
+                      to={msg.to[0].email}
+                      onHover={ indexHovered === index }
+                    />
+                  </div>
+                  <Divider />
+                </div>
+              </>
+            ))
+          ) : (
+            <Typography align='center' style={{ width: '90%', marginTop: '20px' }}>
+              There are no messages to display
+            </Typography>
+          )
+        }
+        <div style={{
+          position: 'fixed',
+          bottom: 40,
+          width: '28%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end'
+        }}>
+          Page: {control.page + 1}/{Math.ceil(control.total / control.rowsPerPage)}
+          <IconButton
+            style={{ marginLeft: '5px' }}
+            onClick={() => handlePageChange('reduce')}
+          >
+            <ChevronLeftIcon />
+          </IconButton>
+          <IconButton
+            style={{ marginRight: '5px' }}
+            onClick={() => handlePageChange('add')}
+          >
+            <ChevronRightIcon />
+          </IconButton>
+        </div>
       </div>
       <div className='__container-preview'>
         <MessageInformation
