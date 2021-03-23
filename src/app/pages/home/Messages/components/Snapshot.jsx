@@ -24,8 +24,6 @@ import {
 const useStyles = makeStyles(theme => ({
   root: {
     width: '100%',
-    // minWidth: 390,
-    // maxWidth: 390,
     backgroundColor: theme.palette.background.paper
   },
   subject: {
