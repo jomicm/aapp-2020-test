@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useEffect, useState } from 'react';
-import { Tabs, Card, CardContent, Typography } from '@material-ui/core';
+import { Card, CardContent, Tabs, Typography } from '@material-ui/core';
 import {
   Portlet,
   PortletBody,
@@ -341,19 +341,19 @@ export default function Assets() {
                     <span className='kt-section__sub'>
                       <div style={{ display: 'flex', justifyContent: 'space-evenly' }}>
                         {
-                          Object.keys(assetsKPI).map((key) => (
+                          Object.entries(assetsKPI).map(([key, val]) => (
                             <Card elevation={2} style={{ display: 'flex' }}>
                               <div
                                 style={{
                                   width: '80px',
                                   height: '100%',
-                                  backgroundColor: assetsKPI[key].color,
+                                  backgroundColor: val.color,
                                   display: 'flex',
                                   justifyContent: 'center',
                                   alignItems: 'center'
                                 }}
                               >
-                                {assetsKPI[key].icon}
+                                {val.icon}
                               </div>
                               <div
                                 style={{ width: '135px' }}
@@ -361,10 +361,10 @@ export default function Assets() {
                                 <CardContent style={{ padding: '12px' }}>
                                   <center>
                                     <Typography variant='subtitle'>
-                                      {assetsKPI[key].text}
+                                      {val.text}
                                     </Typography>
                                     <Typography variant='h4'>
-                                      {assetsKPI[key].number}
+                                      {val.number}
                                     </Typography>
                                   </center>
                                 </CardContent>
