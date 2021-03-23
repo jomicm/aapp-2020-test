@@ -2,22 +2,9 @@ import React from "react";
 import clsx from "clsx";
 import { connect } from "react-redux";
 import { Dropdown } from "react-bootstrap";
-import { metronic, toAbsoluteUrl } from "../../../_metronic";
+import { metronic } from "../../../_metronic";
 import HeaderDropdownToggle from "../content/CustomDropdowns/HeaderDropdownToggle";
-
-const languages = [
-  {
-    lang: "en",
-    name: "English",
-    flag: toAbsoluteUrl("/media/flags/226-united-states.svg")
-  },
-  {
-    lang: "es",
-    name: "Spanish",
-    flag: toAbsoluteUrl("/media/flags/252-mexico.svg")
-  },
-];
-
+import { languages } from "../../pages/home/constants";
 class LanguageSelector extends React.Component {
   render() {
     const { lang, iconType, setLanguage } = this.props;
@@ -49,7 +36,7 @@ class LanguageSelector extends React.Component {
                   onClick={() => {
                     setLanguage(language.lang);
                     this.setState({ open: false });
-                    setTimeout(()=> window.location.reload(), 400);
+                    setTimeout(() => window.location.reload(), 400);
                   }}
                   className={clsx("kt-nav__link", {
                     "kt-nav__link--active":
