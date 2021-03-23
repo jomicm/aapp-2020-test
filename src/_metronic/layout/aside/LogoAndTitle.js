@@ -1,5 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { getDB } from '../../../app/crud/api';
+import { hosts } from '../../../app/pages/home/utils';
+
+const { apiHost, localHost } = hosts;
 
 const LogoAndTitle = () => {
   const [values, setValues] = useState({});
@@ -23,10 +26,10 @@ const LogoAndTitle = () => {
       <img
         src={
           values.logoSideBarExt ? (
-            `http://159.203.41.87:3001/uploads/settingsDesign/logoSideBar.${values.logoSideBarExt}`
+            `${apiHost}/uploads/settingsDesign/logoSideBar.${values.logoSideBarExt}`
           ) : (
-              'http://localhost:3000/media/misc/placeholder-image.jpg'
-            )}
+            `${localHost}/media/misc/placeholder-image.jpg`
+          )}
         alt='Logo'
       />
       <span>

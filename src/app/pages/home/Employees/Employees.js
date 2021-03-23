@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { connect } from "react-redux";
 import { Tabs } from '@material-ui/core';
 import {
   Portlet,
@@ -6,22 +7,26 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
-
-// AApp Components
+import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
+import * as general from "../../../store/ducks/general.duck";
 import TableComponent2 from '../Components/TableComponent2';
-import ModalEmployeeProfiles from './modals/ModalEmployeeProfiles';
-import ModalEmployees from './modals/ModalEmployees';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
-
-//DB API methods
 import ModalYesNo from '../Components/ModalYesNo';
 import Policies from '../Components/Policies/Policies';
-import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
+import ModalEmployees from './modals/ModalEmployees';
+import ModalEmployeeProfiles from './modals/ModalEmployeeProfiles';
 
 const localStorageActiveTabKey = 'builderActiveTab';
 
-const Employees = () => {
+const Employees = ({ globalSearch, setGeneralSearch }) => {
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
+  const [employeeLayoutSelected, setEmployeeLayoutSelected] = useState({});
+  const [policies, setPolicies] = useState(['']);
+  const [referencesSelectedId, setReferencesSelectedId] = useState(null);
+  const [
+    selectReferenceConfirmation,
+    setSelectReferenceConfirmation
+  ] = useState(false);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
 
   const createUserProfilesRow = (id, name, creator, creation_date) => {
@@ -131,22 +136,29 @@ const Employees = () => {
         .then(response => response.json())
         .then(data => {
           if (collectionName === 'employeeProfiles') {
-            const rows = data.response.map(row => {
-              return createUserProfilesRow(row._id, row.name, 'Admin', '11/03/2020');
+            const rows = data.response.map((row) => {
+              const { _id, name, creationUserFullName, creationDate } = row;
+              return createUserProfilesRow(
+                _id,
+                name,
+                creationUserFullName,
+                creationDate
+              );
             });
             setControl(prev => ({ ...prev, employeeProfilesRows: rows, employeeProfilesRowsSelected: [] }));
           }
           if (collectionName === 'employees') {
-            const rows = data.response.map(row => {
+            const rows = data.response.map((row) => {
+              const { _id, name, lastName, email, designation, manager, creationUserFullName, creationDate } = row;
               return createEmployeeRow(
-                row._id,
-                row.name,
-                row.lastName,
-                row.email,
-                row.designation,
-                row.manager,
-                'Admin',
-                '11/03/2020'
+                _id,
+                name,
+                lastName,
+                email,
+                designation,
+                manager,
+                creationUserFullName,
+                creationDate
               );
             });
             setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));
@@ -156,8 +168,6 @@ const Employees = () => {
     });
   };
 
-  const [policies, setPolicies] = useState(['']);
-
   useEffect(() => {
     loadEmployeesData('employees');
   }, [tableControl.employees.page, tableControl.employees.rowsPerPage, tableControl.employees.order, tableControl.employees.orderBy, tableControl.employees.search, tableControl.employees.locationsFilter]);
@@ -166,6 +176,23 @@ const Employees = () => {
     loadEmployeesData('employeeProfiles');
   }, [tableControl.employeeProfiles.page, tableControl.employeeProfiles.rowsPerPage, tableControl.employeeProfiles.order, tableControl.employeeProfiles.orderBy, tableControl.employeeProfiles.search]);
 
+  const tabIntToText = ['employees', 'employeeProfiles'];
+
+  useEffect(() => {
+    if (globalSearch.tabIndex >= 0) {
+      setTab(globalSearch.tabIndex);
+      setTableControl(prev => ({
+        ...prev,
+        [tabIntToText[globalSearch.tabIndex]]: {
+          ...prev[tabIntToText[globalSearch.tabIndex]],
+          search: globalSearch.searchValue,
+        }
+      }))
+      setTimeout(() => {
+        setGeneralSearch({});
+      }, 800);
+    }
+  }, [globalSearch.tabIndex, globalSearch.searchValue]);
 
   const [control, setControl] = useState({
     employeeProfilesRows: [],
@@ -177,12 +204,6 @@ const Employees = () => {
     usersRows: [],
     usersRowsSelected: []
   });
-
-  const [referencesSelectedId, setReferencesSelectedId] = useState(null);
-  const [
-    selectReferenceConfirmation,
-    setSelectReferenceConfirmation
-  ] = useState(false);
 
   const collections = {
     employeeProfiles: {
@@ -230,13 +251,13 @@ const Employees = () => {
         if (collectionName === 'references') {
           setReferencesSelectedId(id);
         }
-      },
+      }
     };
   };
 
   const executePolicies = (catalogueName) => {
     const filteredPolicies = policies.filter(
-      (policy) => policy.selectedAction === catalogueName
+      ({ selectedAction }) => selectedAction === catalogueName
     );
     filteredPolicies.forEach(
       ({ policyName, selectedAction, selectedCatalogue }) =>
@@ -423,4 +444,8 @@ const Employees = () => {
     </>
   );
 }
-export default Employees;
+
+const mapStateToProps = ({ general: { globalSearch } }) => ({
+  globalSearch
+});
+export default connect(mapStateToProps, general.actions)(Employees);

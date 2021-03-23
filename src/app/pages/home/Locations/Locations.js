@@ -1,19 +1,11 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { connect } from 'react-redux';
 import ImageMarker from 'react-image-marker';
 import SwipeableViews from 'react-swipeable-views';
 import { merge } from 'lodash';
 import { Formik } from 'formik';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { Tab, Tabs } from '@material-ui/core';
-import { metronic, initLayoutConfig, LayoutConfig } from '../../../../_metronic';
-import {
-  Portlet,
-  PortletBody,
-  PortletHeader,
-  PortletHeaderToolbar
-} from '../../../partials/content/Portlet';
-import { getDB } from '../../../crud/api';
-import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import {
   Checkbox,
   FormControl,
@@ -41,6 +33,16 @@ import {
   makeStyles,
   useTheme,
 } from '@material-ui/core/';
+import { metronic, initLayoutConfig, LayoutConfig } from '../../../../_metronic';
+import {
+  Portlet,
+  PortletBody,
+  PortletHeader,
+  PortletHeaderToolbar
+} from '../../../partials/content/Portlet';
+import * as general from '../../../store/ducks/general.duck';
+import { getDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import GoogleMaps from '../Components/GoogleMaps';
 import TableComponent2 from '../Components/TableComponent2';
@@ -67,7 +69,9 @@ import {
   SingleLineSettings
 } from '../Components/CustomFields/CustomFieldsPreview';
 import ModalYesNo from '../Components/ModalYesNo';
-import { getImageURL } from '../utils';
+import { hosts, getImageURL } from '../utils';
+
+const { apiHost, localHost } = hosts;
 
 const Divider = () => <div style={{ width: '100%', height: '3px', backgroundColor: 'black' }}></div>;
 
@@ -81,7 +85,7 @@ const locationsTreeData = {
   parent: null
 };
 
-const Locations = () => {
+const Locations = ({ globalSearch, setGeneralSearch }) => {
 
   const theme4 = useTheme();
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -165,7 +169,7 @@ const Locations = () => {
   };
 
   const CustomMarker = (MarkerComponentProps) => {
-    if (imageLayout !== 'http://localhost:3000/media/misc/placeholder-image.jpg') {
+    if (imageLayout !== `${localHost}/media/misc/placeholder-image.jpg`) {
       return (
         <RoomIcon style={{ color: 'red' }} />
       )
@@ -265,7 +269,7 @@ const Locations = () => {
 
   const getImageLayout = (id) => {
     if (id === 'root') {
-      setImageLayout('http://localhost:3000/media/misc/placeholder-image.jpg')
+      setImageLayout(`${localHost}/media/misc/placeholder-image.jpg`)
     } else {
       const result = locations.filter((location) => location._id === id);
       const image = result.map((coordinate) => coordinate.fileExt);
@@ -273,7 +277,7 @@ const Locations = () => {
         const imageURLLayout = getImageURL(id, 'locationsReal', image[0]);
         setImageLayout(imageURLLayout);
       } else {
-        setImageLayout('http://localhost:3000/media/misc/placeholder-image.jpg');
+        setImageLayout(`${localHost}/media/misc/placeholder-image.jpg`);
       }
     }
   }
@@ -431,13 +435,30 @@ const Locations = () => {
   };
 
   useEffect(() => {
-    loadLocationsProfilesData();
     handleLoadLocations();
   }, []);
 
   useEffect(() => {
     loadLocationsProfilesData('locations');
   }, [tableControl.locations.page, tableControl.locations.rowsPerPage, tableControl.locations.order, tableControl.locations.orderBy, tableControl.locations.search, tableControl.locations.locationsFilter]);
+
+  const tabIntToText = ['', 'locations'];
+
+  useEffect(() => {
+    if (globalSearch.tabIndex >= 0) {
+      setTab(globalSearch.tabIndex);
+      setTableControl(prev => ({
+        ...prev,
+        [tabIntToText[globalSearch.tabIndex]]: {
+          ...prev[tabIntToText[globalSearch.tabIndex]],
+          search: globalSearch.searchValue,
+        }
+      }))
+      setTimeout(() => {
+        setGeneralSearch({});
+      }, 800);
+    }
+  }, [globalSearch.tabIndex, globalSearch.searchValue]);
 
   return (
     <>
@@ -581,7 +602,7 @@ const Locations = () => {
                                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                                       <div style={{ height: '480px', width: '600px' }}>
                                         <ImageMarker
-                                          src={imageLayout ? imageLayout : 'http://localhost:3000/media/misc/placeholder-image.jpg'}
+                                          src={imageLayout ? imageLayout : `${localHost}/media/misc/placeholder-image.jpg`}
                                           markers={markers}
                                           markerComponent={CustomMarker}
                                         />
@@ -850,4 +871,7 @@ const Locations = () => {
   );
 };
 
-export default Locations;
+const mapStateToProps = ({ general: { globalSearch } }) => ({
+  globalSearch
+});
+export default connect(mapStateToProps, general.actions)(Locations);

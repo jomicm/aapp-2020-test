@@ -1,16 +1,17 @@
 import React from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import{
+import {
   Avatar,
   Divider,
   List,
   ListItem,
   ListItemAvatar,
   ListItemText,
+  ListItemSecondaryAction,
+  makeStyles,
   Typography
 } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
-import "./Snapshot.scss";
+import './Snapshot.scss';
 import {
   postDBEncryptPassword,
   deleteDB,
@@ -23,8 +24,6 @@ import {
 const useStyles = makeStyles(theme => ({
   root: {
     width: '100%',
-    minWidth: 390,
-    maxWidth: 390,
     backgroundColor: theme.palette.background.paper
   },
   subject: {
@@ -36,7 +35,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const Snapshot = ({ id, lastName, name, subject, description, img, senderName, dateTime, to }) => {
+const Snapshot = ({ id, lastName, name, subject, description, img, senderName, dateTime, to, onHover }) => {
 
   const classes = useStyles();
 
@@ -70,12 +69,15 @@ const Snapshot = ({ id, lastName, name, subject, description, img, senderName, d
               </React.Fragment>
             }
           />
+          {
+            onHover ? (
+              <ListItemSecondaryAction>
+                <DeleteIcon className='snapshot-delete-icon' onClick={() => alert('Deleted')} /> 
+              </ListItemSecondaryAction>
+            ) : null
+          }
         </ListItem>
-        <Divider component='li' variant='inset' />
       </List>
-      <div className='container-snapshot-delete-icon'>
-        <DeleteIcon className='snapshot-delete-icon' onClick={() => alert('Deleted')} />
-      </div>
     </div>
   );
 };
