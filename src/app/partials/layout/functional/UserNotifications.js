@@ -3,7 +3,9 @@ import { id } from 'date-fns/locale';
 import { Nav, Tab, Dropdown } from 'react-bootstrap';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import ReactTimeAgo from 'react-time-ago'
-import Badge from '@material-ui/core/Badge';
+import { Badge, IconButton, Typography } from '@material-ui/core';
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import NotificationImportantIcon from '@material-ui/icons/NotificationImportant';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import NotificationsActiveIcon from '@material-ui/icons/NotificationsActive';
@@ -13,11 +15,8 @@ import NotificationsPausedIcon from '@material-ui/icons/NotificationsPaused';
 import ModalUserNotifications from './modalNotification/ModalUserNotifications'
 import HeaderDropdownToggle from '../../content/CustomDropdowns/HeaderDropdownToggle';
 import {
-  postDBEncryptPassword,
-  getOneDB,
-  updateDB,
-  postDB,
-  getDB
+  getCountDB,
+  getDBComplex,
 } from '../../../crud/api'
 import { ReactComponent as CompilingIcon } from '../../../../_metronic/layout/assets/layout-svg-icons/Compiling.svg';
 import './UserNotifications.scss'
@@ -84,21 +83,9 @@ const UserNotifications = ({
     checkStatus(read, _id)
   }
 
-  const changeColor = (read) => {
-    if (read) {
-      return 'firstColor'
-    } else {
-      return 'secondColor'
-    }
-  }
+  const changeColor = (read) => read ? ('firstColor') : ('secondColor');
 
-  const changeBarColor = (read) => {
-    if (read) {
-      return ''
-    } else {
-      return 'blue-bar'
-    }
-  }
+  const changeBarColor = (read) => read ? ('') : ('blue-bar');
 
   const getHetBackGroundCssClassList = () => {
     let result = 'kt-head ';
@@ -152,15 +139,46 @@ const UserNotifications = ({
     return result;
   };
 
+  const [control, setControl] = useState({
+    search: '',
+    rowsPerPage: 5,
+    page: 0,
+    total: 1,
+  });
+
+  const handlePageChange = (action) => {
+    if (action === 'add' && (control.page + 1) < Math.ceil(control.total / control.rowsPerPage)) {
+      setControl(prev => ({ ...prev, page: prev.page + 1 }))
+    }
+    else if (action === 'reduce' && (control.page + 1) > 1) {
+      setControl(prev => ({ ...prev, page: prev.page - 1 }))
+    }
+  }
+
   useEffect(() => {
-    getDB('notifications/')
-      .then((response) => response.json())
+    getCountDB({
+      collection: 'notifications',
+    })
+      .then(response => response.json())
+      .then(data => {
+        setControl(prev => ({
+          ...prev,
+          total: data.response.count === 0 ? 1 : data.response.count
+        }))
+      });
+
+    getDBComplex({
+      collection: 'notifications',
+      limit: control.rowsPerPage,
+      skip: control.rowsPerPage * control.page,
+    })
+      .then(response => response.json())
       .then((data) => {
         setData(data.response);
         updateCount(data.response);
       })
       .catch((error) => console.log('error>', error));
-  }, []);
+  }, [control.search, control.page]);
 
   return (
     <Dropdown className='kt-header__topbar-item' drop='down' alignRight>
@@ -182,7 +200,6 @@ const UserNotifications = ({
       </Dropdown.Toggle>
       <Dropdown.Menu className='dropdown-menu-fit dropdown-menu-right dropdown-menu-anim dropdown-menu-top-unround dropdown-menu-lg'>
         <form>
-          {/** Head */}
           <div
             className={getHetBackGroundCssClassList()}
             style={{ backgroundImage: backGroundStyle() }}
@@ -227,43 +244,70 @@ const UserNotifications = ({
                         data-height='300'
                         data-mobile-height='200'
                       >
-                        {data && data.map(({ formatDate, icon, _id, message, subject, read, status, from }) => {
-                          return (
-                            <div style={{ display: 'flex', minHeight: '112px' }}>
-                              <div className={changeBarColor(read)} />
-                              <div
-                                style={{ padding: '20px' }}
-                                className={changeColor(read)}
-                                onClick={() => changeModal(read, _id, subject, message, formatDate, from)}
-                              >
-                                <div className='kt-notification__item-icon' style={{ display: 'flex' }}>
-                                  <div className='notification-icon'>
-                                    {Object.keys(iconsList).map((key) => {
-                                      return (key === icon) ? iconsList[key] : ''
-                                    })}
-                                  </div>
+                        <div style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'flex-end'
+                        }}>
+                          Page: {control.page + 1}/{Math.ceil(control.total / control.rowsPerPage)}
+                          <IconButton
+                            style={{ marginLeft: '5px' }}
+                            onClick={() => handlePageChange('reduce')}
+                          >
+                            <ChevronLeftIcon />
+                          </IconButton>
+                          <IconButton
+                            style={{ marginRight: '5px' }}
+                            onClick={() => handlePageChange('add')}
+                          >
+                            <ChevronRightIcon />
+                          </IconButton>
+                        </div>
+                        {
+                          data.length > 0 ? (
+                            data.map(({ formatDate, icon, _id, message, subject, read, status, from }) => {
+                              return (
+                                <div style={{ display: 'flex' }}>
+                                  <div className={changeBarColor(read)} />
                                   <div
-                                    className='kt-notification__item-title'
-                                    style={{ padding: '0 10px 5px', textTransform: 'upperCase' }}
+                                    style={{ padding: '20px' }}
+                                    className={changeColor(read)}
+                                    onClick={() => changeModal(read, _id, subject, message, formatDate, from)}
                                   >
-                                    {subject ? ((subject.length > 20) ? subject.substring(0, 25) + '...' : subject) : ''}
+                                    <div className='kt-notification__item-icon' style={{ display: 'flex' }}>
+                                      <div className='notification-icon'>
+                                        {Object.keys(iconsList).map((key) => {
+                                          return (key === icon) ? iconsList[key] : ''
+                                        })}
+                                      </div>
+                                      <div
+                                        className='kt-notification__item-title'
+                                        style={{ padding: '0 10px 5px', textTransform: 'upperCase' }}
+                                      >
+                                        {subject ? ((subject.length > 20) ? subject.substring(0, 25) + '...' : subject) : ''}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      {message ? ((message.length > 25) ? message.substring(0, 25) + '...' : message) : ''}
+                                    </div>
+                                    <div className='kt-notification__item-time'>
+                                      {formatDate ?
+                                        (<ReactTimeAgo
+                                          date={formatDate}
+                                          locale='en-EN'
+                                          timeStyle='round' />)
+                                        : ''}
+                                    </div>
                                   </div>
                                 </div>
-                                <div>
-                                  {message ? ((message.length > 25) ? message.substring(0, 25) + '...' : message) : ''}
-                                </div>
-                                <div className='kt-notification__item-time'>
-                                  {formatDate ?
-                                    (<ReactTimeAgo
-                                      date={formatDate}
-                                      locale='en-EN'
-                                      timeStyle='round' />)
-                                    : ''}
-                                </div>
-                              </div>
-                            </div>
+                              )
+                            })) : (
+                            <Typography align='center' style={{ width: '100%', marginTop: '20px', marginBottom: '20px' }}>
+                              You haven't got any notification yet
+                            </Typography>
                           )
-                        })}
+                        }
                       </div>
                       <ModalUserNotifications
                         from={values.from}
