@@ -4,6 +4,8 @@ import { omit } from 'lodash';
 import { useFormikContext } from 'formik';
 import { ColorPicker } from 'material-ui-color';
 import { FormControlLabel, Tabs, Tab, TextField, Switch } from '@material-ui/core';
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../../store/ducks/general.duck';
 import {
   Portlet,
   PortletBody,
@@ -20,6 +22,8 @@ import './settings-tabs.scss';
 const { apiHost, localHost } = hosts;
 
 const Design = props => {
+  const dispatch = useDispatch();
+  const { setAlertControls } = actions;
   const [tab, setTab] = useState(0);
   const [values, setValues] = useState({
     logoTitle: '',
@@ -72,19 +76,59 @@ const Design = props => {
             .then(data => data.json())
             .then(response => {
               saveImages(imagesInfo);
+              dispatch(
+                setAlertControls({
+                  open: true,
+                  message: 'Saved!',
+                  type: 'success'
+                })
+              );
             })
-            .catch(error => console.log(error));
+            .catch(error => {
+              console.log(error);
+              dispatch(
+                setAlertControls({
+                  open: true,
+                  message: 'There was an error, please try again',
+                  type: 'error'
+                })
+              );
+            });
           setLoading(false);
         } else {
           updateDB('settingsDesign/', body, id)
             .then(response => {
               saveImages(imagesInfo);
+              dispatch(
+                setAlertControls({
+                  open: true,
+                  message: 'Saved!',
+                  type: 'success'
+                })
+              );
             })
-            .catch(error => console.log(error));
+            .catch(error => {
+              console.log(error);
+              dispatch(
+                setAlertControls({
+                  open: true,
+                  message: 'There was an error, please try again',
+                  type: 'error'
+                })
+              );
+            });
           setLoading(false);
         }
       })
-      .catch(ex => { });
+      .catch(ex => { 
+        dispatch(
+          setAlertControls({
+            open: true,
+            message: 'There was an error, please try again',
+            type: 'error'
+          })
+        );
+      });
   };
 
   const [logoLogin, setLogoLogin] = useState(null);
