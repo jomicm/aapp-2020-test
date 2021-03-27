@@ -1,5 +1,10 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect, useRef } from 'react';
+import { useDispatch } from 'react-redux';
+import SwipeableViews from "react-swipeable-views";
+import { isEmpty } from 'lodash';
+import { v4 as uuidv4 } from 'uuid';
+
 import { makeStyles } from '@material-ui/core/styles';
 import ExpansionPanel from '@material-ui/core/ExpansionPanel';
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
@@ -23,6 +28,9 @@ import {
   Radio,
   Tooltip
 } from "@material-ui/core";
+import AddIcon from '@material-ui/icons/Add';
+
+import { actions } from '../../../../store/ducks/general.duck';
 import {
   SingleLineSettings,
   MultiLineSettings,
@@ -33,15 +41,7 @@ import {
   CheckboxesSettings,
   FileUploadSettings
 } from './CustomFieldsPreview';
-import { useDispatch } from 'react-redux';
-import { actions } from '../../../../store/ducks/general.duck';
 import DragDropArea from './DragDropArea';
-import SwipeableViews from "react-swipeable-views";
-import AddIcon from '@material-ui/icons/Add';
-import { isEmpty } from 'lodash';
-
-import { v4 as uuidv4 } from 'uuid';
-
 import './CustomFields.scss';
 
 const useStylesAccordion = makeStyles(theme => ({
@@ -62,12 +62,6 @@ function TabContainer({ children, dir }) {
     </Typography>
   );
 }
-// const useStyles4 = makeStyles(theme => ({
-//   root: {
-//     backgroundColor: theme.palette.background.paper,
-//     width: 1000
-//   }
-// }));
 
 const CustomFieldsSettings = (props) => {
   const { idSelectedCustomField: id, values, setValues, selfValues } = props.settings;

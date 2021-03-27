@@ -383,8 +383,7 @@ const ModalLocationList = ({
       setZoom={setModalMapZoom}
       styleMap={{ marginRight: '20px', width: '95%', height: '63%' }}
       zoom={modalMapZoom}
-    >
-    </GoogleMaps>
+    />
   );
 
   return (
@@ -472,16 +471,8 @@ const ModalLocationList = ({
                           </Button>
                         </div>
                         <div className='container-map-view-modal-location-list'>
-                          {
-                            (mapCenter && editOrNew === 'edit') && (
-                              MapGoogle(mapCenter)
-                            )
-                          }
-                          {
-                            editOrNew === 'new' && (
-                              MapGoogle({ lat: 19.432608, lng:  -99.133209 })
-                            )
-                          }
+                          {(mapCenter && editOrNew === 'edit') && MapGoogle(mapCenter)}
+                          {editOrNew === 'new' && MapGoogle({ lat: 19.432608, lng:  -99.133209 })}
                         </div>
                       </div>
                     </PortletBody>

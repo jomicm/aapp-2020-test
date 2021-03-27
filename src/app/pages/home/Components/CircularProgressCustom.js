@@ -22,7 +22,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function CircularProgressCustom(props) {
+const CircularProgressCustom = (props) => {
   const classes = useStyles();
   const { size } = props;
   return (
@@ -49,3 +49,5 @@ export default function CircularProgressCustom(props) {
     </div>
   );
 }
+
+export default CircularProgressCustom;

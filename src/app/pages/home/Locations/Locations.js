@@ -649,7 +649,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
                             onAdd={onAddProfileLocation}
                             onDelete={onDeleteProfileLocation}
                             onEdit={onEditProfileLocation}
-                            onSelect={(element) => console.log('onSelected:', element)}
+                            onSelect={setProfileSelectedId}
                             paginationControl={({ rowsPerPage, page }) =>
                               setTableControl(prev => ({
                                 ...prev,

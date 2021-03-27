@@ -203,10 +203,12 @@ function Users({ globalSearch, setGeneralSearch }) {
         if (!id || !Array.isArray(id)) return;
         id.forEach(_id => {
           deleteDB(`${collection.name}/`, _id)
-            .then(response => console.log('success', response))
+            .then(response => {
+              console.log('success', response);
+              loadUsersData(collection.name);
+          })
             .catch(error => console.log('Error', error));
         });
-        loadUsersData(collection.name);
       },
       onSelect(id) {
         if (collectionName === 'userProfiles') {

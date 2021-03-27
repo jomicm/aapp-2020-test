@@ -33,17 +33,10 @@ const GoogleMaps = ({
     }
   }
 
-  useEffect(() => {
-    console.log('center: ', center)
-    console.log('coords: ', coords)
-    console.log('google: ', google)
-    console.log('zoom: ', zoom)
-  }, [center, coords, google, zoom])
-
   return (
       <Map
-        initialCenter={center}
         google={google}
+        initialCenter={center}
         onClick={handleClick}
         onZoomChanged={handleZoomChanged}
         style={styleMap}

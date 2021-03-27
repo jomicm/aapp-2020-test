@@ -68,7 +68,6 @@ const Fields = props => {
               );
             })
             .catch(error => {
-              console.log(error)
               dispatch(
                 setAlertControls({
                   open: true,
@@ -89,7 +88,6 @@ const Fields = props => {
               );
             })
             .catch(error => {
-              console.log(error)
               dispatch(
                 setAlertControls({
                   open: true,
@@ -116,7 +114,6 @@ const Fields = props => {
     .then(response => response.json())
     .then(data => {
       const _values = data.response[0] || {};
-      console.log('_values:', _values)
       if (!isEmpty(_values)) {
         setValues(omit(_values, '_id'));
       }

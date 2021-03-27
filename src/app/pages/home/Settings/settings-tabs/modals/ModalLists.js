@@ -1,77 +1,29 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { isEmpty, omit } from 'lodash';
 import {
   Button,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
-  Typography,
-  IconButton,
+  DialogContent,
+  DialogTitle,
+  Fab,
   FormLabel,
-  FormGroup,
+  IconButton,
   TextField,
-  InputLabel,
-  FormControl,
-  MenuItem,
-  Checkbox,
-  Fab
-} from "@material-ui/core";
-import { isEmpty, omit } from 'lodash';
-import Select from 'react-select';
-import {
+  Typography,
   withStyles,
-  useTheme,
-  makeStyles
-} from "@material-ui/core/styles";
-import { useDispatch } from 'react-redux';
-import { actions } from '../../../../../store/ducks/general.duck';
-import SwipeableViews from "react-swipeable-views";
+} from "@material-ui/core";
 import CloseIcon from "@material-ui/icons/Close";
-import CustomFields from '../../../Components/CustomFields/CustomFields';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import TreeView from '../../../Components/TreeViewComponent';
-
-// import './ModalAssetCategories.scss';
-import ImageUpload from '../../../Components/ImageUpload';
-import { postDBEncryptPassword, getDB, getOneDB, updateDB, postDB } from '../../../../../crud/api';
-import ModalYesNo from '../../../Components/ModalYesNo';
-import Permission from '../../components/Permission';
-import { getFileExtension, saveImage, getImageURL } from '../../../utils';
-
-import {
-  SingleLine,
-  MultiLine,
-  Date,
-  DateTime,
-  DropDown,
-  RadioButtons,
-  Checkboxes,
-  FileUpload
-} from '../../../Components/CustomFields/CustomFieldsPreview';
-import { EditorState } from 'draft-js';
-
-import LocationAssignment from '../../components/LocationAssignment';
 import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import DeleteIcon from '@material-ui/icons/Delete';
 import AddIcon from '@material-ui/icons/Add';
 
-const CustomFieldsPreview = (props) => {
-  const customFieldsPreviewObj = {
-    singleLine: <SingleLine { ...props } />,
-    multiLine: <MultiLine { ...props } />,
-    date: <Date { ...props } />,
-    dateTime: <DateTime { ...props } />,
-    dropDown: <DropDown { ...props } />,
-    radioButtons: <RadioButtons { ...props } />,
-    checkboxes: <Checkboxes { ...props } />,
-    fileUpload: <FileUpload { ...props } />
-  };
-  return customFieldsPreviewObj[props.type];
-};
+import { actions } from '../../../../../store/ducks/general.duck';
+import { getOneDB, updateDB, postDB } from '../../../../../crud/api';
 
-// Example 5 - Modal
 const styles5 = theme => ({
   root: {
     margin: 0,
@@ -115,59 +67,9 @@ const DialogActions5 = withStyles(theme => ({
   }
 }))(DialogActions);
 
-// Example 4 - Tabs
-function TabContainer4({ children, dir }) {
-  return (
-    <Typography component="div" dir={dir} style={{ padding: 8 * 3 }}>
-      {children}
-    </Typography>
-  );
-}
-const useStyles4 = makeStyles(theme => ({
-  root: {
-    backgroundColor: theme.palette.background.paper,
-    width: 2000
-  }
-}));
-
-// Example 1 - TextField
-const useStyles = makeStyles(theme => ({
-  container: {
-    display: "flex",
-    flexWrap: "wrap"
-  },
-  textField: {
-    marginLeft: theme.spacing(1),
-    marginRight: theme.spacing(1),
-    width: 600
-  },
-  dense: {
-    marginTop: 19
-  },
-  menu: {
-    width: 600
-  }
-}));
-
 const ModalLists = ({ showModal, setShowModal, reloadTable, id, employeeProfileRows }) => {
   const dispatch = useDispatch();
   const { setAlertControls } = actions;
-  // Example 4 - Tabs
-  const classes4 = useStyles4();
-  const theme4 = useTheme();
-  const [value4, setValue4] = useState(0);
-  function handleChange4(event, newValue) {
-    setValue4(newValue);
-  }
-  function handleChangeIndex4(index) {
-    setValue4(index);
-  }
-
-  // Example 1 - TextField
-  const classes = useStyles();
-  const [editor, setEditor] = useState(EditorState.createEmpty());
-  const [profileSelected, setProfileSelected] = useState(0);
-  // const [layoutSelected, setLayoutSelected] = useState(0);
 
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value });
@@ -211,7 +113,6 @@ const ModalLists = ({ showModal, setShowModal, reloadTable, id, employeeProfileR
   const handleCloseModal = () => {
     reset();
     setShowModal(false);
-    setValue4(0);
   };
   const reset = () => {
     setValues({ 
@@ -223,7 +124,6 @@ const ModalLists = ({ showModal, setShowModal, reloadTable, id, employeeProfileR
   useEffect(() => {
     if(!id || !Array.isArray(id)) {
       reset();
-      // loadInitData();
       return;
     }
     

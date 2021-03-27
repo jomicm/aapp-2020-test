@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { omit, isEmpty } from 'lodash';
 import { useDispatch } from 'react-redux';
-import { actions } from '../../../../store/ducks/general.duck';
 import {
   FormControl,
   InputLabel,
@@ -10,6 +9,7 @@ import {
   Select,
 } from '@material-ui/core';
 
+import { actions } from '../../../../store/ducks/general.duck';
 import { getDB, postDB, updateDB } from '../../../../crud/api';
 import SaveButton from '../settings-tabs/components/SaveButton';
 import { getFirstDocCollection } from '../../utils';
@@ -52,7 +52,6 @@ const General = () => {
               );
             })
             .catch(error => {
-              console.log(error)
               dispatch(
                 setAlertControls({
                   open: true,
@@ -72,8 +71,7 @@ const General = () => {
                 })
               );
             })
-            .catch(error => {
-              console.log(error)
+            .catch(error => {              
               dispatch(
                 setAlertControls({
                   open: true,
@@ -84,8 +82,7 @@ const General = () => {
             });
         }
       })
-      .catch(ex => {
-        console.log(ex)
+      .catch(ex => {        
         dispatch(
           setAlertControls({
             open: true,

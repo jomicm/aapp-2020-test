@@ -17,8 +17,7 @@ export const useStyles = makeStyles(theme => ({
   },
 }));
 
-// Acciones graban estado y selectores lo leen
-function CustomizedAlert({ alertControls, setAlertControls, children }) { //open, message, type
+const CustomizedAlert = ({ alertControls, setAlertControls, children }) => {
   const { open, message, type } = alertControls;
   const classes = useStyles();
 

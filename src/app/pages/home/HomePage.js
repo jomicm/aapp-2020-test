@@ -6,7 +6,6 @@ import { LayoutSplashScreen } from '../../../_metronic';
 // AApp 2020 Modules
 import { protectedRoutes } from '../../router/protectedRoutes';
 import { nonProtectedRoutes } from '../../router/nonProtectedRoutes';
-import CustomizedAlert from '../home/Components/CustomizedAlert';
 
 function HomePage({ user }) {
   const userRoutes = Object.keys(filterObject(user?.profilePermissions, (element) => element.length > 1));

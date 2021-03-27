@@ -1,5 +1,8 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import SwipeableViews from "react-swipeable-views";
+import { isEmpty } from 'lodash';
 import {
   Timeline,
   TimelineItem,
@@ -18,31 +21,22 @@ import {
   DialogActions,
   IconButton,
   InputAdornment,
+  makeStyles,
+  Paper,
   Tab,
   Tabs,
   Typography,
-  Paper,
-} from "@material-ui/core";
-
-import {
-  withStyles,
   useTheme,
-  makeStyles
-} from "@material-ui/core/styles";
+  withStyles,
+} from "@material-ui/core";
 import TimelineIcon from '@material-ui/icons/Timeline';
-import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
-import { isEmpty } from 'lodash';
 
+import { actions } from '../../../../store/ducks/general.duck';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
-import CustomFields from '../../Components/CustomFields/CustomFields';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import ImageUpload from '../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
-import './ModalAssetList.scss';
-import { useDispatch } from 'react-redux';
-import { actions } from '../../../../store/ducks/general.duck';
-
 import {
   SingleLine,
   MultiLine,
@@ -53,6 +47,7 @@ import {
   Checkboxes,
   FileUpload
 } from '../../Components/CustomFields/CustomFieldsPreview';
+import './ModalAssetList.scss';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {

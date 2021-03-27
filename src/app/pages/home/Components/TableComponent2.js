@@ -172,7 +172,7 @@ const TableComponentTile = props => {
   const [selectedId, setSelectedId] = useState([]);
   const isSelected = name => {
     return selected.indexOf(name) !== -1;
-  }
+  };
 
   //ExternalVariables
   const [order, setOrder] = useState(controlValues.order === 1 ? 'asc' : 'desc');
@@ -208,7 +208,12 @@ const TableComponentTile = props => {
 
   useEffect(() => {
     loadLocationsData();
-    if (rows.length > 0 || controlValues.search.length) setLoading(false);
+    if (rows.length > 0 || controlValues.search.length) {
+      setLoading(false);
+    };
+    if (!rows.length && page > 0){
+      setPage(page - 1 );
+    }
   }, [rows]);
 
   const locationsTreeData = {
@@ -282,9 +287,10 @@ const TableComponentTile = props => {
     }
 
     useEffect(() => {
-      if (!props.onSelect) return;
+      if (!props.onSelect) {
+        return;
+      };
       const selectedIdToSend = numSelected ? selectedId : null;
-      console.log('rows', rows)
       props.onSelect(selectedIdToSend);
     }, [numSelected]);
 

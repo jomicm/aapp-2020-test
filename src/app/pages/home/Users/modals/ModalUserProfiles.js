@@ -1,32 +1,30 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import SwipeableViews from "react-swipeable-views";
+import { isEmpty } from 'lodash';
 import {
   Button,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
-  Typography,
+  DialogContent,
+  DialogTitle,
   IconButton,
+  makeStyles,
+  Paper,
   Tab,
   Tabs,
-  Paper,
-} from "@material-ui/core";
-import {
-  withStyles,
+  Typography,
   useTheme,
-  makeStyles
-} from "@material-ui/core/styles";
-import SwipeableViews from "react-swipeable-views";
+  withStyles,
+} from "@material-ui/core";
 import CloseIcon from "@material-ui/icons/Close";
-import { isEmpty } from 'lodash';
-import { useDispatch } from 'react-redux';
+
 import { actions } from '../../../../store/ducks/general.duck';
-import CustomFields from '../../Components/CustomFields/CustomFields';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
+import CustomFields from '../../Components/CustomFields/CustomFields';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import ImageUpload from '../../Components/ImageUpload';
-import ModalYesNo from '../../Components/ModalYesNo';
 import { modules } from '../../constants';
 import Permission from '../components/Permission';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
@@ -90,25 +88,6 @@ const useStyles4 = makeStyles(theme => ({
   }
 }));
 
-// Example 1 - TextField
-const useStyles = makeStyles(theme => ({
-  container: {
-    display: "flex",
-    flexWrap: "wrap"
-  },
-  textField: {
-    marginLeft: theme.spacing(1),
-    marginRight: theme.spacing(1),
-    width: 200
-  },
-  dense: {
-    marginTop: 19
-  },
-  menu: {
-    width: 200
-  }
-}));
-
 const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
   const dispatch = useDispatch();
   const { setAlertControls } = actions;
@@ -123,8 +102,6 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
     setValue4(index);
   }
 
-  // Example 1 - TextField
-  const classes = useStyles();
   const [values, setValues] = useState({
     name: "",
     categoryPic: '/media/misc/placeholder-image.jpg',

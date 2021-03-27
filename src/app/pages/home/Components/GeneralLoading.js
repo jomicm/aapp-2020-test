@@ -1,8 +1,8 @@
-import React from 'react'
-import CircularProgressCustom from './CircularProgressCustom';
+import React from 'react';
 import { connect } from 'react-redux';
+import CircularProgressCustom from './CircularProgressCustom';
 
-function GeneralLoading({ children, generalLoading }) {
+const GeneralLoading = ({ children, generalLoading }) => {
     
   const showLoader = () => {
     if (generalLoading.active) {
@@ -24,13 +24,15 @@ function GeneralLoading({ children, generalLoading }) {
           <CircularProgressCustom size={75} />
         </div>
       )
-    } else return null
+    } else {
+      return null;
+    }
   };
 
   return (
     <>
-      { showLoader() }
-      { children }
+      {showLoader()}
+      {children}
     </>
   )
 }
