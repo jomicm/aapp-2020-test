@@ -1,5 +1,5 @@
-import React from 'react';
-import { GoogleApiWrapper, InfoWindow, Map, Marker } from 'google-maps-react';
+import React, { useEffect } from 'react';
+import { GoogleApiWrapper, Map, Marker } from 'google-maps-react';
 
 const GoogleMaps = ({ 
   center, 
@@ -33,9 +33,16 @@ const GoogleMaps = ({
     }
   }
 
+  useEffect(() => {
+    console.log('center: ', center)
+    console.log('coords: ', coords)
+    console.log('google: ', google)
+    console.log('zoom: ', zoom)
+  }, [center, coords, google, zoom])
+
   return (
       <Map
-        initialCenter={center || { lat: 19.432608, lng:  -99.133209 }}
+        initialCenter={center}
         google={google}
         onClick={handleClick}
         onZoomChanged={handleZoomChanged}

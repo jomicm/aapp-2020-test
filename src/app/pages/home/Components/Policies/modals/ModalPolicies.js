@@ -24,6 +24,7 @@ import {
   FormGroup,
   FormLabel,
   InputLabel,
+  makeStyles,
   MenuItem,
   Paper,
   Select,
@@ -36,11 +37,11 @@ import {
   TableRow,
   TextareaAutosize,
   TextField,
-  Typography
+  Typography,
+  useTheme,
+  withStyles,
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import { withStyles, useTheme, makeStyles } from '@material-ui/core/styles';
 import { pick } from 'lodash';
 import {
   EditorState,
@@ -51,6 +52,8 @@ import {
 } from 'draft-js';
 import { Editor } from 'react-draft-wysiwyg';
 import SwipeableViews from 'react-swipeable-views';
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../../../store/ducks/general.duck';
 import {
   Portlet,
   PortletBody,
@@ -194,8 +197,10 @@ const ModalPolicies = ({
   setShowModal,
   showModal
 }) => {
+  const dispatch = useDispatch();
+  const { setAlertControls } = actions;
   const [alignment, setAlignment] = useState('');
-  const actions = [
+  const actionsReader = [
     { value: 'OnAdd', label: 'On Add' },
     { value: 'OnEdit', label: 'On Edit' },
     { value: 'OnDelete', label: 'On Delete' },
@@ -314,7 +319,13 @@ const ModalPolicies = ({
   const handleSave = () => {
     const { selectedAction, selectedCatalogue } = values;
     if (!selectedAction || !selectedCatalogue) {
-      alert('Select values before saving...');
+      dispatch(
+        setAlertControls({
+          open: true,
+          message: 'Select values before saving...',
+          type: 'warning'
+        })
+      );
       return;
     }
     const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
@@ -502,7 +513,7 @@ const ModalPolicies = ({
                             onChange={handleOnChangeValue('selectedAction')}
                             value={values.selectedAction}
                           >
-                            {actions.map(({ value, label }) => (
+                            {actionsReader.map(({ value, label }) => (
                               <MenuItem key={value} value={value}>
                                 {label}
                               </MenuItem>

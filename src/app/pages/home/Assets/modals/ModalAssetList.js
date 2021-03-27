@@ -40,6 +40,8 @@ import BaseFields from '../../Components/BaseFields/BaseFields';
 import ImageUpload from '../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import './ModalAssetList.scss';
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../../store/ducks/general.duck';
 
 import {
   SingleLine,
@@ -153,6 +155,8 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadTable, id }) => {
+  const dispatch = useDispatch();
+  const { setAlertControls } = actions;
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -418,7 +422,13 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
-      alert('Please fill out missing fields')
+      dispatch(
+        setAlertControls({
+          open: true,
+          message: 'Please fill out missing fields',
+          type: 'warning'
+        })
+      );
       return;
     }
 
@@ -584,9 +594,6 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       .catch(error => console.log(error));
   }, [showModal]);
 
-  useEffect(() => {
-    setFormValidation({ ...formValidation, enabled: true });
-  }, [values])
 
   useEffect(() => {
     setValues(prev => ({ ...prev, total_price: prev.purchase_price + prev.price }));

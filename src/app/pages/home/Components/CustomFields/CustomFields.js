@@ -8,19 +8,15 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import {
   Button,
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Typography,
   IconButton,
   Tab, 
-  AppBar, 
   Tabs, 
   Paper,
   TextField,
-  Checkbox,
   FormControlLabel,
-  Switch,
   FormControl,
   FormLabel,
   RadioGroup,
@@ -37,17 +33,16 @@ import {
   CheckboxesSettings,
   FileUploadSettings
 } from './CustomFieldsPreview';
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../../store/ducks/general.duck';
 import DragDropArea from './DragDropArea';
 import SwipeableViews from "react-swipeable-views";
 import AddIcon from '@material-ui/icons/Add';
-import DeleteIcon from '@material-ui/icons/Delete';
-import styled from "@emotion/styled";
 import { isEmpty } from 'lodash';
 
 import { v4 as uuidv4 } from 'uuid';
 
 import './CustomFields.scss';
-import { isEmptyArray } from 'formik';
 
 const useStylesAccordion = makeStyles(theme => ({
   root: {
@@ -98,6 +93,8 @@ const CustomFieldsSettings = (props) => {
 
 
 function CustomFields(props) {
+  const dispatch = useDispatch();
+  const { setAlertControls } = actions;
   const { customFieldsTab, setCustomFieldsTab } = props;
 
   const [values, setValues] = useState({
@@ -162,7 +159,13 @@ function CustomFields(props) {
   // Custom Control Click
   const handleAddCustomFieldToTab = customFieldName => {
     if (!tabs.length) {
-      alert('First add a Tab');
+      dispatch(
+        setAlertControls({
+          open: true,
+          message: 'First add a Tab',
+          type: 'warning'
+        })
+      );
       return;
     }
     const customFieldsTabTmp = { ...customFieldsTab };

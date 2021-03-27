@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from "react-redux";
 import { Tabs } from '@material-ui/core';
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../store/ducks/general.duck';
 import {
   Portlet,
   PortletBody,
@@ -19,6 +21,8 @@ import ModalEmployeeProfiles from './modals/ModalEmployeeProfiles';
 const localStorageActiveTabKey = 'builderActiveTab';
 
 const Employees = ({ globalSearch, setGeneralSearch }) => {
+  const dispatch = useDispatch();
+  const { setAlertControls } = actions;
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [employeeLayoutSelected, setEmployeeLayoutSelected] = useState({});
   const [policies, setPolicies] = useState(['']);
@@ -260,10 +264,15 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
       ({ selectedAction }) => selectedAction === catalogueName
     );
     filteredPolicies.forEach(
-      ({ policyName, selectedAction, selectedCatalogue }) =>
-        alert(
-          `Policy <${policyName}> with action <${selectedAction}> of type <${selectedCatalogue}> will be executed`
-        )
+      ({ policyName, selectedAction, selectedCatalogue }) =>{
+        dispatch(
+          setAlertControls({
+            open: true,
+            message: `Policy <${policyName}> with action <${selectedAction}> of type <${selectedCatalogue}> will be executed`,
+            type: 'info'
+          })
+        );
+      }
     );
   };
 

@@ -23,9 +23,7 @@ function CustomizedAlert({ alertControls, setAlertControls, children }) { //open
   const classes = useStyles();
 
   const handleClose = (event, reason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
+    if (reason === 'clickaway') return;
     setAlertControls({
       open: false,
       message: message,
@@ -37,10 +35,12 @@ function CustomizedAlert({ alertControls, setAlertControls, children }) { //open
   return (
     <>
       <Snackbar
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        style={{ marginTop: '50px' }}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         autoHideDuration={4000}
         open={open}
         onClose={handleClose}
+        id='CustomSpinner'
       >
         <Alert
           action={

@@ -18,6 +18,8 @@ import {
   useTheme,
   makeStyles
 } from "@material-ui/core/styles";
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../../../store/ducks/general.duck';
 import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
 import CustomFields from '../../../Components/CustomFields/CustomFields';
@@ -138,6 +140,8 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const ModalWitnesses = ({ showModal, setShowModal, reloadTable, id, employeeProfileRows }) => {
+  const dispatch = useDispatch();
+  const { setAlertControls } = actions;
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -162,7 +166,13 @@ const ModalWitnesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
   const handleSave = () => {
     const { description, userSelected, location: { locationSelected } } = values;
     if (!description || !userSelected || !locationSelected) {
-      alert('Select values before saving');
+      dispatch(
+        setAlertControls({
+          open: true,
+          message: 'Select values before saving',
+          type: 'warning'
+        })
+      );
       return;
     }
     const body = { ...values };

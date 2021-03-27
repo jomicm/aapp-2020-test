@@ -11,28 +11,26 @@ import CustomizedAlert from '../home/Components/CustomizedAlert';
 function HomePage({ user }) {
   const userRoutes = Object.keys(filterObject(user?.profilePermissions, (element) => element.length > 1));
   return (
-    <CustomizedAlert>
-      <Suspense fallback={<LayoutSplashScreen />}>
-        <Switch>
-          {/* Redirect from root URL to /dashboard. */}
-          <Redirect exact from='/' to='/dashboard' />
-          {
-            protectedRoutes.map(({ name, path, component }) => (
-              userRoutes.includes(name) && (
-                <Route path={path} component={component} />
-              )
-            ))
-          }
-          {
-            nonProtectedRoutes.map(({ path, component }) => (
+    <Suspense fallback={<LayoutSplashScreen />}>
+      <Switch>
+        {/* Redirect from root URL to /dashboard. */}
+        <Redirect exact from='/' to='/dashboard' />
+        {
+          protectedRoutes.map(({ name, path, component }) => (
+            userRoutes.includes(name) && (
               <Route path={path} component={component} />
-            ))
-          }
-          {/* <Redirect to='/error/error-v1' /> */}
-          <Redirect to='/logout' />
-        </Switch>
-      </Suspense>
-    </CustomizedAlert>
+            )
+          ))
+        }
+        {
+          nonProtectedRoutes.map(({ path, component }) => (
+            <Route path={path} component={component} />
+          ))
+        }
+        {/* <Redirect to='/error/error-v1' /> */}
+        <Redirect to='/logout' />
+      </Switch>
+    </Suspense>
   );
 }
 

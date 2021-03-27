@@ -1,59 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { EditorState } from "draft-js";
-import Select from "react-select";
-import SwipeableViews from "react-swipeable-views";
 import {
   Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Typography,
   IconButton,
-  FormLabel,
-  FormGroup,
-  TextField,
+  makeStyles,
+  Typography,
+  useTheme,
+  withStyles,
 } from "@material-ui/core";
-import { withStyles, useTheme, makeStyles } from "@material-ui/core/styles";
 import CloseIcon from "@material-ui/icons/Close";
-import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../../../store/ducks/general.duck';
 import {
-  postDBEncryptPassword,
-  getDB,
   getOneDB,
   updateDB,
   postDB,
 } from "../../../../../crud/api";
-import CustomFields from "../../../Components/CustomFields/CustomFields";
-import TreeView from "../../../Components/TreeViewComponent";
-import ImageUpload from "../../../Components/ImageUpload";
-import ModalYesNo from "../../../Components/ModalYesNo";
-import { getFileExtension, saveImage, getImageURL } from "../../../utils";
-import {
-  SingleLine,
-  MultiLine,
-  Date,
-  DateTime,
-  DropDown,
-  RadioButtons,
-  Checkboxes,
-  FileUpload,
-} from "../../../Components/CustomFields/CustomFieldsPreview";
 import TicketRequest from "../TicketRequest";
-
-const CustomFieldsPreview = (props) => {
-  const customFieldsPreviewObj = {
-    singleLine: <SingleLine {...props} />,
-    multiLine: <MultiLine {...props} />,
-    date: <Date {...props} />,
-    dateTime: <DateTime {...props} />,
-    dropDown: <DropDown {...props} />,
-    radioButtons: <RadioButtons {...props} />,
-    checkboxes: <Checkboxes {...props} />,
-    fileUpload: <FileUpload {...props} />,
-  };
-  return customFieldsPreviewObj[props.type];
-};
 
 const styles5 = (theme) => ({
   root: {
@@ -137,6 +104,8 @@ const ModalMyTickets = ({
   id,
   employeeProfileRows,
 }) => {
+  const dispatch = useDispatch();
+  const { setAlertControls } = actions;
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
@@ -154,7 +123,13 @@ const ModalMyTickets = ({
   const handleSave = () => {
     const { subject, message, selectedType, peaceOfMind } = values;
     if (!subject || !message || !selectedType || !peaceOfMind) {
-      alert("Select values before saving");
+      dispatch(
+        setAlertControls({
+          open: true,
+          message: 'Select values before saving',
+          type: 'warning'
+        })
+      );
       return;
     }
     const body = { ...values };

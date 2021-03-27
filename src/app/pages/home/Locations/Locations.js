@@ -14,6 +14,7 @@ import {
   FormLabel,
   IconButton,
   InputLabel,
+  makeStyles,
   Menu,
   MenuItem,
   Paper,
@@ -22,17 +23,15 @@ import {
   Select,
   TextField,
   Tooltip,
-  Typography
+  Typography,
+  useTheme,
 } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
 import RemoveIcon from '@material-ui/icons/Remove';
 import RoomIcon from '@material-ui/icons/Room';
-import {
-  makeStyles,
-  useTheme,
-} from '@material-ui/core/';
+import { actions } from '../../../store/ducks/general.duck';
 import { metronic, initLayoutConfig, LayoutConfig } from '../../../../_metronic';
 import {
   Portlet,
@@ -86,7 +85,7 @@ const locationsTreeData = {
 };
 
 const Locations = ({ globalSearch, setGeneralSearch }) => {
-
+  const { setAlertControls } = actions;
   const theme4 = useTheme();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [coordinates, setCoordinates] = useState([]);
@@ -106,12 +105,13 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
   const [locationsList, setLocationsList] = useState([]);
   const [locationProfileRows, setLocationProfileRows] = useState([]);
   const [locationsTree, setLocationsTree] = useState({});
-  const [mapCenter, setMapCenter] = useState(null);
+  const [mapCenter, setMapCenter] = useState({ lat: 19.432608, lng: -99.133209 });
   const [markers, setMarkers] = useState([]);
   const [modalId, setModalId] = useState(null);
   const [parentFileExt, setParentFileExt] = useState(null);
   const [parentSelected, setParentSelected] = useState(null);
   const [profileSelected, setProfileSelected] = useState({});
+  const [profileSelectedId, setProfileSelectedId] = useState('');
   const [openListModal, setOpenListModal] = useState(false);
   const [openProfileModal, setOpenProfileModal] = useState(false);
   const [openYesNoModal, setOpenYesNoModal] = useState(false);
@@ -149,23 +149,43 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
       setOpenYesNoModal(false);
     },
     openProfilesListBox(e) {
+      if (!parentSelected) {
+        dispatch(
+          setAlertControls({
+            open: true,
+            message: 'Please select a valid location',
+            type: 'warning'
+          })
+        );
+        return;
+      }
       setEditOrNew('new');
       setAnchorEl(e.currentTarget);
     },
     editLocation() {
-      if (!parentSelected || parentSelected === 'root') return;
+      if (!parentSelected || parentSelected === 'root') {
+        dispatch(
+          setAlertControls({
+            open: true,
+            message: 'Please select a valid location',
+            type: 'warning'
+          })
+        );
+        return;
+      };
       setEditOrNew('edit');
       setOpenListModal(true);
     }
   };
 
   const createLocationProfileRow = (
+    id,
     level,
     name,
     creator,
     creation_date
   ) => {
-    return { level, name, creator, creation_date };
+    return { id, level, name, creator, creation_date };
   };
 
   const CustomMarker = (MarkerComponentProps) => {
@@ -200,19 +220,6 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
     { id: 'name', numeric: true, disablePadding: false, label: 'Description' },
     { id: 'creator', numeric: true, disablePadding: false, label: 'Creator', searchByDisabled: true },
     { id: 'creation_date', numeric: true, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
-  ];
-
-  const locationsHeadRows = [
-    { id: 'level', numeric: true, disablePadding: false, label: 'Level' },
-    { id: 'name', numeric: true, disablePadding: false, label: 'Description' },
-    { id: 'creator', numeric: true, disablePadding: false, label: 'Creator' },
-    { id: 'creation_date', numeric: true, disablePadding: false, label: 'Creation Date' }
-  ];
-
-  const locationsRows = [
-    createLocationProfileRow('1', '0', 'CDMX', 'Admin', '11/03/2020'),
-    createLocationProfileRow('2', '1', 'Monterrey', 'Admin', '11/03/2020'),
-    createLocationProfileRow('3', '2', 'Guadalajara', 'Admin', '11/03/2020'),
   ];
 
   const TabContainer4 = ({ children, dir }) => {
@@ -410,8 +417,8 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
         .then(data => {
           if (collectionName === 'locations') {
             const profileRows = data.response.map((row) => {
-              const { level, name } = row;
-              return createLocationProfileRow(level, name, 'Admin', '11/03/2020');
+              const { _id, level, name } = row;
+              return createLocationProfileRow(_id, level, name, 'Admin', '11/03/2020');
             });
             setLocationProfileRows(profileRows);
             setSelectedLocationProfileRows([]);
@@ -642,7 +649,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
                             onAdd={onAddProfileLocation}
                             onDelete={onDeleteProfileLocation}
                             onEdit={onEditProfileLocation}
-                            onSelect={(element) => console.log('onSelect:', element)}
+                            onSelect={(element) => console.log('onSelected:', element)}
                             paginationControl={({ rowsPerPage, page }) =>
                               setTableControl(prev => ({
                                 ...prev,

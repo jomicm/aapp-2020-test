@@ -145,15 +145,6 @@ function Assets({ globalSearch, setGeneralSearch }) {
               total: data.response.count
             }
           }))
-          if (collectionName === 'assets') {
-            setAssetsKPI(prev => ({
-              ...prev,
-              total: {
-                ...prev.total,
-                number: data.response.count
-              }
-            }))
-          }
         });
 
       getDBComplex({
@@ -305,6 +296,20 @@ function Assets({ globalSearch, setGeneralSearch }) {
   useEffect(() => {
     loadAssetsData('categories');
   }, [tableControl.categories.page, tableControl.categories.rowsPerPage, tableControl.categories.order, tableControl.categories.orderBy, tableControl.categories.search]);
+
+  useEffect(() => {
+    getCountDB({ collection: 'assets' })
+      .then(response => response.json())
+      .then(data => {
+        setAssetsKPI(prev => ({
+          ...prev,
+          total: {
+            ...prev.total,
+            number: data.response.count
+          }
+        }));
+      });
+  }, []);
 
   const tabIntToText = ['assets', 'references', 'categories'];
 

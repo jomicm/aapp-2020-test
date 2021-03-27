@@ -20,7 +20,8 @@ import {
 import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
 import { isEmpty } from 'lodash';
-
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../../store/ducks/general.duck';
 import CustomFields from '../../Components/CustomFields/CustomFields';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import BaseFields from '../../Components/BaseFields/BaseFields';
@@ -109,6 +110,8 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
+  const dispatch = useDispatch();
+  const { setAlertControls } = actions;
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -136,7 +139,13 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
-      alert('Please fill out missing fields')
+      dispatch(
+        setAlertControls({
+          open: true,
+          message: 'Please fill out missing fields',
+          type: 'warning'
+        })
+      );
       return;
     }
 
@@ -211,9 +220,6 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
       .catch(error => console.log(error));
   }, [id]);
 
-  useEffect(() => {
-    setFormValidation({ ...formValidation, enabled: true });
-  }, [values])
 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
 

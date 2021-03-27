@@ -9,6 +9,8 @@ import {
   TextField
 } from "@material-ui/core";
 import { makeStyles } from '@material-ui/core';
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../store/ducks/general.duck';
 import { getDB, deleteDB, updateDB, postDB, getOneDB, getCountDB, getDBComplex } from '../../../crud/api';
 import TableReportsGeneral from '../Components/TableReportsGeneral';
 import { formatData } from './reportsHelpers';
@@ -47,6 +49,8 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
+  const dispatch = useDispatch();
+  const { setAlertControls } = actions;
   const classes = useStyles();
   const [control, setControl] = useState(false);
   const [collectionName, setCollectionName] = useState(null);
@@ -106,7 +110,13 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
   const handleSave = (reportName) => {
     const { selectedReport, startDate, endDate } = values;
     if (!selectedReport) {
-      alert('Select values before saving...');
+      dispatch(
+        setAlertControls({
+          open: true,
+          message: 'Select values before saving...',
+          type: 'warning'
+        })
+      );
       return;
     }
     const body = { ...values, reportName }

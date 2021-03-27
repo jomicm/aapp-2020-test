@@ -374,6 +374,19 @@ const ModalLocationList = ({
       .catch((error) => console.log(error));
   }, [showModal]);
 
+  const MapGoogle = (centerCoords) => (
+    <GoogleMaps
+      center={centerCoords}
+      coords={modalCoords}
+      edit
+      setCoords={setModalCoords}
+      setZoom={setModalMapZoom}
+      styleMap={{ marginRight: '20px', width: '95%', height: '63%' }}
+      zoom={modalMapZoom}
+    >
+    </GoogleMaps>
+  );
+
   return (
     <div style={{ width: '1000px' }}>
       <Dialog
@@ -459,16 +472,16 @@ const ModalLocationList = ({
                           </Button>
                         </div>
                         <div className='container-map-view-modal-location-list'>
-                          <GoogleMaps
-                            center={mapCenter}
-                            coords={modalCoords}
-                            edit
-                            setCoords={setModalCoords}
-                            setZoom={setModalMapZoom}
-                            styleMap={{ marginRight: '20px', width: '95%', height: '63%' }}
-                            zoom={modalMapZoom}
-                          >
-                          </GoogleMaps>
+                          {
+                            (mapCenter && editOrNew === 'edit') && (
+                              MapGoogle(mapCenter)
+                            )
+                          }
+                          {
+                            editOrNew === 'new' && (
+                              MapGoogle({ lat: 19.432608, lng:  -99.133209 })
+                            )
+                          }
                         </div>
                       </div>
                     </PortletBody>

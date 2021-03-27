@@ -16,6 +16,8 @@ import {
 } from '@material-ui/core';
 import { withStyles, useTheme, makeStyles } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../../store/ducks/general.duck';
 import { executePolicies } from '../../Components/Policies/utils';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import CustomFields from '../../Components/CustomFields/CustomFields';
@@ -144,6 +146,8 @@ const ModalEmployees = ({
   showModal,
   setShowModal
 }) => {
+  const dispatch = useDispatch();
+  const { setAlertControls } = actions;
   const [assetRows, setAssetRows] = useState([]);
   const classes = useStyles();
   const classes4 = useStyles4();
@@ -300,7 +304,13 @@ const ModalEmployees = ({
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
-      alert('Please fill out missing fields')
+      dispatch(
+        setAlertControls({
+          open: true,
+          message: 'Please fill out missing fields',
+          type: 'warning'
+        })
+      );
       return;
     }
 
@@ -445,16 +455,19 @@ const ModalEmployees = ({
   }, [id, employeeProfileRows]);
 
   const openModalAssignmentReport = () => {
-    if (layoutSelected === null) {
-      alert('Please select a Responsibility Layout first');
+    if (!layoutSelected) {
+      dispatch(
+        setAlertControls({
+          open: true,
+          message: 'Please select a Responsibility Layout first',
+          type: 'warning'
+        })
+      );
     } else {
       setShowModalReports(true);
     }
   };
 
-  useEffect(() => {
-    setFormValidation({ ...formValidation, enabled: true });
-  }, [values])
 
   return (
     <div style={{ width: '1000px' }}>

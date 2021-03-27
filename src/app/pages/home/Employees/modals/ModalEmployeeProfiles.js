@@ -13,7 +13,6 @@ import {
   Paper,
   Switch,
   Tab,
-  TextField,
   Tabs,
   Typography
 } from '@material-ui/core';
@@ -23,7 +22,9 @@ import {
   makeStyles
 } from '@material-ui/core/styles';
 import CloseIcon from '@material-ui/icons/Close';
-import { postDB, getOneDB, updateDB, postFILE } from '../../../../crud/api';
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../../store/ducks/general.duck';
+import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import CustomFields from '../../Components/CustomFields/CustomFields';
 import ImageUpload from '../../Components/ImageUpload';
@@ -105,6 +106,8 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
+  const dispatch = useDispatch();
+  const { setAlertControls } = actions;
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
@@ -144,7 +147,13 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
-      alert('Please fill out missing fields')
+      dispatch(
+        setAlertControls({
+          open: true,
+          message: 'Please fill out missing fields',
+          type: 'warning'
+        })
+      );
       return;
     }
 
@@ -213,9 +222,6 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
       .catch(error => console.log(error));
   }, [id]);
 
-  useEffect(() => {
-    setFormValidation({ ...formValidation, enabled: true });
-  }, [values])
 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
 
@@ -278,7 +284,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
                     <div className='profile-tab-wrapper__content'>
                       <BaseFields
                         catalogue={'employeeReferences'}
-                        collection={'employeeProfiles'}
+                        collection={'employeeReferences'}
                         formState={[formValidation, setFormValidation]}
                         localProps={baseFieldsLocalProps}
                         values={values}
