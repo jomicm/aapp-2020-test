@@ -23,7 +23,7 @@ const { apiHost, localHost } = hosts;
 
 const Design = props => {
   const dispatch = useDispatch();
-  const { setAlertControls } = actions;
+  const { showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const [tab, setTab] = useState(0);
   const [values, setValues] = useState({
     logoTitle: '',
@@ -76,58 +76,28 @@ const Design = props => {
             .then(data => data.json())
             .then(response => {
               saveImages(imagesInfo);
-              dispatch(
-                setAlertControls({
-                  open: true,
-                  message: 'Saved!',
-                  type: 'success'
-                })
-              );
+              dispatch(showSavedAlert());
             })
             .catch(error => {
               console.log(error);
-              dispatch(
-                setAlertControls({
-                  open: true,
-                  message: 'There was an error, please try again',
-                  type: 'error'
-                })
-              );
+              dispatch(showErrorAlert());
             });
           setLoading(false);
         } else {
           updateDB('settingsDesign/', body, id)
             .then(response => {
               saveImages(imagesInfo);
-              dispatch(
-                setAlertControls({
-                  open: true,
-                  message: 'Saved!',
-                  type: 'success'
-                })
-              );
+              dispatch(showUpdatedAlert());
             })
             .catch(error => {
               console.log(error);
-              dispatch(
-                setAlertControls({
-                  open: true,
-                  message: 'There was an error, please try again',
-                  type: 'error'
-                })
-              );
+              dispatch(showErrorAlert());
             });
           setLoading(false);
         }
       })
       .catch(ex => { 
-        dispatch(
-          setAlertControls({
-            open: true,
-            message: 'There was an error, please try again',
-            type: 'error'
-          })
-        );
+        dispatch(showErrorAlert());
       });
   };
 

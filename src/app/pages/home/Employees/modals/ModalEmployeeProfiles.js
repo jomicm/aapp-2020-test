@@ -107,7 +107,7 @@ const useStyles = makeStyles(theme => ({
 
 const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
   const dispatch = useDispatch();
-  const { setAlertControls } = actions;
+  const { showFillFieldsAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
@@ -147,13 +147,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
-      dispatch(
-        setAlertControls({
-          open: true,
-          message: 'Please fill out missing fields',
-          type: 'warning'
-        })
-      );
+      dispatch(showFillFieldsAlert());
       return;
     }
 
@@ -163,17 +157,19 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
       postDB('employeeProfiles', body)
         .then(data => data.json())
         .then(response => {
+          dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('employeeProfiles', _id);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('employeeProfiles/', body, id[0])
         .then(data => data.json())
         .then(response => {
+          dispatch(showUpdatedAlert());
           saveAndReload('employeeProfiles', id[0]);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
 
     handleCloseModal();
@@ -219,7 +215,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
         setIsAssetRepository(isAssetRepository);
         setProfilePermissions(profilePermissions);
       })
-      .catch(error => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [id]);
 
 

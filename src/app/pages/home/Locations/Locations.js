@@ -85,7 +85,7 @@ const locationsTreeData = {
 };
 
 const Locations = ({ globalSearch, setGeneralSearch }) => {
-  const { setAlertControls } = actions;
+  const { showCustomAlert, showDeletedAlert, showErrorAlert } = actions;
   const theme4 = useTheme();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [coordinates, setCoordinates] = useState([]);
@@ -144,14 +144,17 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
     },
     removeLocation() {
       deleteDB('locationsReal/', parentSelected)
-        .then((response) => handleLoadLocations())
-        .catch((error) => console.log('Error', error));
+        .then((response) => {
+          dispatch(showDeletedAlert());
+          handleLoadLocations();
+        })
+        .catch((error) => dispatch(showErrorAlert()));
       setOpenYesNoModal(false);
     },
     openProfilesListBox(e) {
       if (!parentSelected) {
         dispatch(
-          setAlertControls({
+          showCustomAlert({
             open: true,
             message: 'Please select a valid location',
             type: 'warning'
@@ -165,7 +168,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
     editLocation() {
       if (!parentSelected || parentSelected === 'root') {
         dispatch(
-          setAlertControls({
+          showCustomAlert({
             open: true,
             message: 'Please select a valid location',
             type: 'warning'
@@ -258,10 +261,12 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
     if (!id || !Array.isArray(id)) return;
     id.forEach(_id => {
       deleteDB('locations/', _id)
-        .then((response) => console.log('success', response))
-        .catch((error) => console.log('Error', error));
+        .then((response) => {
+          dispatch(showDeletedAlert());
+          loadLocationsProfilesData();
+        })
+        .catch((error) => dispatch(showErrorAlert()));
     });
-    loadLocationsProfilesData();
   };
 
   const onEditProfileLocation = (_id) => {
@@ -444,6 +449,19 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
   useEffect(() => {
     handleLoadLocations();
   }, []);
+
+  useEffect(() => {
+    if(anchorEl && !selectedLocationProfileRows.length){
+      dispatch(
+        showCustomAlert({
+          open: true,
+          message: "There aren't more profiles to add",
+          type: 'warning'
+        })
+      );
+      setAnchorEl(null);
+    }
+  }, [anchorEl])
 
   useEffect(() => {
     loadLocationsProfilesData('locations');

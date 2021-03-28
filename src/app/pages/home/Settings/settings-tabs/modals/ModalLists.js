@@ -69,7 +69,7 @@ const DialogActions5 = withStyles(theme => ({
 
 const ModalLists = ({ showModal, setShowModal, reloadTable, id, employeeProfileRows }) => {
   const dispatch = useDispatch();
-  const { setAlertControls } = actions;
+  const { showErrorAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
 
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value });
@@ -78,13 +78,7 @@ const ModalLists = ({ showModal, setShowModal, reloadTable, id, employeeProfileR
   const handleSave = () => {
     const { name, options } = values;
     if (!name.trim() || !options.length) {
-      dispatch(
-        setAlertControls({
-          open: true,
-          message: 'Select values before saving',
-          type: 'warning'
-        })
-      );
+      dispatch(showSelectValuesAlert());
       return;
     }
     const body = { ...values };
@@ -92,16 +86,18 @@ const ModalLists = ({ showModal, setShowModal, reloadTable, id, employeeProfileR
       postDB('settingsLists', body)
         .then(data => data.json())
         .then(response => {
+          dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('settingsLists', _id);
         })
-        .catch(error => console.log('ERROR', error));
+        .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('settingsLists/', body, id[0])
         .then(response => {
+          dispatch(showUpdatedAlert());
           saveAndReload('settingsLists', id[0]);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
     handleCloseModal();
   };

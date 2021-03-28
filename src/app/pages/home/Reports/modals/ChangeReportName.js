@@ -102,7 +102,7 @@ const ChangeReportName = ({
   showModal
 }) => {
   const dispatch = useDispatch();
-  const { setAlertControls } = actions;
+  const { showCustomAlert } = actions;
   const [renameReport, setRenameReport] = useState('');
 
   const handleChangeName = (e) => {
@@ -118,7 +118,7 @@ const ChangeReportName = ({
   const handleSave = () => {
     if (renameReport.trim() === '') {
       dispatch(
-        setAlertControls({
+        showCustomAlert({
           open: true,
           message: 'Please enter a valid name...',
           type: 'warning'

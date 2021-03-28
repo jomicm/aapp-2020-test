@@ -22,7 +22,7 @@ const localStorageActiveTabKey = 'builderActiveTab';
 
 const Employees = ({ globalSearch, setGeneralSearch }) => {
   const dispatch = useDispatch();
-  const { setAlertControls } = actions;
+  const { showCustomAlert, showDeletedAlert, showErrorAlert} = actions;
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [employeeLayoutSelected, setEmployeeLayoutSelected] = useState({});
   const [policies, setPolicies] = useState(['']);
@@ -244,10 +244,11 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
         id.forEach((_id) => {
           deleteDB(`${collection.name}/`, _id)
             .then((response) => {
+              dispatch(showDeletedAlert());
               executePolicies('OnDelete');
               loadEmployeesData(collection.name);
             })
-            .catch((error) => console.log('Error', error));
+            .catch((error) => dispatch(showErrorAlert()));
         });
         loadEmployeesData(collection.name);
       },
@@ -266,7 +267,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
     filteredPolicies.forEach(
       ({ policyName, selectedAction, selectedCatalogue }) =>{
         dispatch(
-          setAlertControls({
+          showCustomAlert({
             open: true,
             message: `Policy <${policyName}> with action <${selectedAction}> of type <${selectedCatalogue}> will be executed`,
             type: 'info'

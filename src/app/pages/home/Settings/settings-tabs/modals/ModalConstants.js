@@ -65,7 +65,7 @@ const DialogActions5 = withStyles(theme => ({
 
 const ModalConstants = ({ showModal, setShowModal, reloadTable, id, employeeProfileRows }) => {
   const dispatch = useDispatch();
-  const { setAlertControls } = actions;
+  const { showErrorAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
 
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value });
@@ -74,13 +74,7 @@ const ModalConstants = ({ showModal, setShowModal, reloadTable, id, employeeProf
   const handleSave = () => {
     const { name, value } = values;
     if (!name.trim() || !value.trim()) {
-      dispatch(
-        setAlertControls({
-          open: true,
-          message: 'Select values before saving',
-          type: 'warning'
-        })
-      );
+      dispatch(showSelectValuesAlert());
       return;
     }
     const body = { ...values };
@@ -88,16 +82,18 @@ const ModalConstants = ({ showModal, setShowModal, reloadTable, id, employeeProf
       postDB('settingsConstants', body)
         .then(data => data.json())
         .then(response => {
+          dispatch(showSavedAlert);
           const { _id } = response.response[0];
           saveAndReload('settingsConstants', _id);
         })
-        .catch(error => console.log('ERROR', error));
+        .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('settingsConstants/', body, id[0])
         .then(response => {
+          dispatch(showUpdatedAlert());
           saveAndReload('settingsConstants', id[0]);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
     handleCloseModal();
   };
@@ -130,7 +126,7 @@ const ModalConstants = ({ showModal, setShowModal, reloadTable, id, employeeProf
         const values = omit(data.response, '_id');
         setValues(values);
       })
-      .catch(error => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [id, employeeProfileRows]);
 
   const [values, setValues] = useState({

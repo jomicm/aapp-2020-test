@@ -135,7 +135,7 @@ const useStyles = makeStyles(theme => ({
 
 const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows, user, updateUserPic }) => {
   const dispatch = useDispatch();
-  const { setAlertControls } = actions;
+  const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
@@ -168,13 +168,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
-      dispatch(
-        setAlertControls({
-          open: true,
-          message: 'Please fill out missing fields',
-          type: 'warning'
-        })
-      );
+      dispatch(showFillFieldsAlert());
       return;
     }
 
@@ -185,19 +179,19 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       postDBEncryptPassword('user', body)
         .then(data => data.json())
         .then(response => {
+          dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('user', _id);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('user/', body, id[0])
         .then(response => {
+          dispatch(showUpdatedAlert());
           saveAndReload('user', id[0]);
           updateCurrentUserPic(id[0], fileExt);
         })
-        .catch(error => {
-          console.log(error)
-        });
+        .catch(error => dispatch(showErrorAlert()));
     }
     handleCloseModal();
   };
@@ -280,7 +274,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
         setCustomFieldsTab(customFieldsTab);
         setTabs(tabs);
       })
-      .catch(error => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [id, userProfileRows]);
 
 
@@ -291,7 +285,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
         const users = data.response.map(({ _id: value, email: label }) => ({ value, label }));
         setAllUsers(users);
       })
-      .catch(error => console.log('error>', error));
+      .catch(error => dispatch(showErrorAlert()));
   };
 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
@@ -331,7 +325,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
         setTabs(tabs);
         setIdUserProfile(e.value);
       })
-      .catch(error => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   };
 
   // Function to update customFields

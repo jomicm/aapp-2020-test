@@ -87,7 +87,7 @@ const useStyles = makeStyles(theme => ({
 
 const ModalWitnesses = ({ showModal, setShowModal, reloadTable, id, employeeProfileRows }) => {
   const dispatch = useDispatch();
-  const { setAlertControls } = actions;
+  const { showErrorAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
 
   // Example 1 - TextField
   const classes = useStyles();
@@ -99,13 +99,7 @@ const ModalWitnesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
   const handleSave = () => {
     const { description, userSelected, location: { locationSelected } } = values;
     if (!description || !userSelected || !locationSelected) {
-      dispatch(
-        setAlertControls({
-          open: true,
-          message: 'Select values before saving',
-          type: 'warning'
-        })
-      );
+      dispatch(showSelectValuesAlert);
       return;
     }
     const body = { ...values };
@@ -113,16 +107,18 @@ const ModalWitnesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
       postDB('settingsWitnesses', body)
         .then(data => data.json())
         .then(response => {
+          dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('settingsWitnesses', _id);
         })
-        .catch(error => console.log('ERROR', error));
+        .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('settingsWitnesses/', body, id[0])
         .then(response => {
+          dispatch(showUpdatedAlert());
           saveAndReload('settingsWitnesses', id[0]);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
     handleCloseModal();
   };
@@ -184,7 +180,7 @@ const ModalWitnesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
             setValues(prev => ({ ...prev, categories }));
           }
         })
-        .catch(error => console.log('error>', error));
+        .catch(error => dispatch(showErrorAlert()));
     });
   };
 

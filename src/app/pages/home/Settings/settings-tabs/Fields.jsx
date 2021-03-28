@@ -26,7 +26,7 @@ import { defaultValues, settings } from './constants'
 
 const Fields = props => {
   const dispatch = useDispatch();
-  const { setAlertControls } = actions;
+  const { showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const classes = useStyles();
   const [values, setValues] = useState(defaultValues);
   const [selectedModule, setSelectedModule] = useState('');
@@ -59,53 +59,23 @@ const Fields = props => {
           postDB('settingsFields', body)
             .then(data => data.json())
             .then(response => {
-              dispatch(
-                setAlertControls({
-                  open: true,
-                  message: 'Saved!',
-                  type: 'success'
-                })
-              );
+              dispatch(showSavedAlert());
             })
             .catch(error => {
-              dispatch(
-                setAlertControls({
-                  open: true,
-                  message: 'There was an error, please try again',
-                  type: 'error'
-                })
-              );
+              dispatch(showErrorAlert());
             });
         } else {
           updateDB('settingsFields/', body, id)
             .then(response => {
-              dispatch(
-                setAlertControls({
-                  open: true,
-                  message: 'Saved!',
-                  type: 'success'
-                })
-              );
+              dispatch(showUpdatedAlert());
             })
             .catch(error => {
-              dispatch(
-                setAlertControls({
-                  open: true,
-                  message: 'There was an error, please try again',
-                  type: 'error'
-                })
-              );
+              dispatch(showErrorAlert());
             });
         }
       })
       .catch(ex => {
-        dispatch(
-          setAlertControls({
-            open: true,
-            message: 'There was an error, please try again',
-            type: 'error'
-          })
-        );
+        dispatch(showErrorAlert());
       });
   };
 

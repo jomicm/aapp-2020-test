@@ -88,7 +88,7 @@ const CustomFieldsSettings = (props) => {
 
 function CustomFields(props) {
   const dispatch = useDispatch();
-  const { setAlertControls } = actions;
+  const { showCustomAlert } = actions;
   const { customFieldsTab, setCustomFieldsTab } = props;
 
   const [values, setValues] = useState({
@@ -154,7 +154,7 @@ function CustomFields(props) {
   const handleAddCustomFieldToTab = customFieldName => {
     if (!tabs.length) {
       dispatch(
-        setAlertControls({
+        showCustomAlert({
           open: true,
           message: 'First add a Tab',
           type: 'warning'

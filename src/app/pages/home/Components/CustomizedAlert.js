@@ -17,13 +17,13 @@ export const useStyles = makeStyles(theme => ({
   },
 }));
 
-const CustomizedAlert = ({ alertControls, setAlertControls, children }) => {
+const CustomizedAlert = ({ alertControls, showCustomAlert, children }) => {
   const { open, message, type } = alertControls;
   const classes = useStyles();
 
   const handleClose = (event, reason) => {
     if (reason === 'clickaway') return;
-    setAlertControls({
+    showCustomAlert({
       open: false,
       message: message,
       type: type

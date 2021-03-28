@@ -50,7 +50,7 @@ const useStyles = makeStyles(theme => ({
 
 const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
   const dispatch = useDispatch();
-  const { setAlertControls } = actions;
+  const { showErrorAlert, showSavedAlert, showSelectValuesAlert} = actions;
   const classes = useStyles();
   const [control, setControl] = useState(false);
   const [collectionName, setCollectionName] = useState(null);
@@ -110,19 +110,16 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
   const handleSave = (reportName) => {
     const { selectedReport, startDate, endDate } = values;
     if (!selectedReport) {
-      dispatch(
-        setAlertControls({
-          open: true,
-          message: 'Select values before saving...',
-          type: 'warning'
-        })
-      );
+      dispatch(showSelectValuesAlert());
       return;
     }
     const body = { ...values, reportName }
     postDB('reports', body)
-      .then((data) => data.json())
-      .catch((error) => console.log('ERROR', error));
+      .then((response) => response.json())
+      .then(() => {
+        dispatch(showSavedAlert());
+      })
+      .catch((error) => dispatch(showErrorAlert()));
   }
 
   const reset = () => {

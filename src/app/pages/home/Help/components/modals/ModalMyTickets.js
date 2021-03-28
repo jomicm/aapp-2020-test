@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { EditorState } from "draft-js";
 import {
   Button,
   Dialog,
@@ -7,9 +6,7 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
-  makeStyles,
   Typography,
-  useTheme,
   withStyles,
 } from "@material-ui/core";
 import CloseIcon from "@material-ui/icons/Close";
@@ -52,50 +49,12 @@ const DialogTitle5 = withStyles(styles5)(({ children, classes, onClose }) => {
   );
 });
 
-const DialogContent5 = withStyles((theme) => ({
-  root: {
-    padding: theme.spacing(2),
-  },
-}))(DialogContent);
-
 const DialogActions5 = withStyles((theme) => ({
   root: {
     margin: 0,
     padding: theme.spacing(1),
   },
 }))(DialogActions);
-
-function TabContainer4({ children, dir }) {
-  return (
-    <Typography component="div" dir={dir} style={{ padding: 8 * 3 }}>
-      {children}
-    </Typography>
-  );
-}
-const useStyles4 = makeStyles((theme) => ({
-  root: {
-    backgroundColor: theme.palette.background.paper,
-    width: 1000,
-  },
-}));
-
-const useStyles = makeStyles((theme) => ({
-  container: {
-    display: "flex",
-    flexWrap: "wrap",
-  },
-  textField: {
-    marginLeft: theme.spacing(1),
-    marginRight: theme.spacing(1),
-    width: 200,
-  },
-  dense: {
-    marginTop: 19,
-  },
-  menu: {
-    width: 200,
-  },
-}));
 
 const ModalMyTickets = ({
   showModal,
@@ -105,31 +64,12 @@ const ModalMyTickets = ({
   employeeProfileRows,
 }) => {
   const dispatch = useDispatch();
-  const { setAlertControls } = actions;
-  const classes4 = useStyles4();
-  const theme4 = useTheme();
-  const [value4, setValue4] = useState(0);
-  function handleChange4(event, newValue) {
-    setValue4(newValue);
-  }
-  function handleChangeIndex4(index) {
-    setValue4(index);
-  }
-
-  const classes = useStyles();
-  const [editor, setEditor] = useState(EditorState.createEmpty());
-  const [profileSelected, setProfileSelected] = useState(0);
+  const { showErrorAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
 
   const handleSave = () => {
     const { subject, message, selectedType, peaceOfMind } = values;
     if (!subject || !message || !selectedType || !peaceOfMind) {
-      dispatch(
-        setAlertControls({
-          open: true,
-          message: 'Select values before saving',
-          type: 'warning'
-        })
-      );
+      dispatch(showSelectValuesAlert());
       return;
     }
     const body = { ...values };
@@ -137,16 +77,18 @@ const ModalMyTickets = ({
       postDB("tickets", body)
         .then((data) => data.json())
         .then((response) => {
+          dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload("tickets", _id);
         })
-        .catch((error) => console.log("ERROR", error));
+        .catch((error) => dispatch(showErrorAlert()));
     } else {
       updateDB("tickets/", body, id[0])
         .then((response) => {
+          dispatch(showUpdatedAlert());
           saveAndReload("tickets", id[0]);
         })
-        .catch((error) => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
     handleCloseModal();
   };
@@ -158,7 +100,6 @@ const ModalMyTickets = ({
   const handleCloseModal = () => {
     reset();
     setShowModal(false);
-    setValue4(0);
   };
   const reset = () => {
     setValues({
@@ -181,7 +122,7 @@ const ModalMyTickets = ({
         const values = data.response;
         setValues(values);
       })
-      .catch((error) => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [id, employeeProfileRows]);
 
   const [values, setValues] = useState({

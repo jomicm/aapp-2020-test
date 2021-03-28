@@ -121,7 +121,7 @@ const useStyles = makeStyles(theme => ({
 
 const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
   const dispatch = useDispatch();
-  const { setAlertControls } = actions;
+  const { showFillFieldsAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -181,13 +181,7 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
-      dispatch(
-        setAlertControls({
-          open: true,
-          message: 'Please fill out missing fields',
-          type: 'warning'
-        })
-      );
+      dispatch(showFillFieldsAlert());
       return;
     }
 
@@ -198,16 +192,18 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
       postDB('locations', body)
         .then(data => data.json())
         .then(response => {
+          dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('locations', _id);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('locations/', body, id[0])
         .then(response => {
+          dispatch(showUpdatedAlert());
           saveAndReload('locations', id[0]);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
     handleCloseModal();
   };
@@ -254,7 +250,7 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
         setCustomFieldsTab(customFieldsTab);
         setIsNew(false);
       })
-      .catch(error => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [id]);
 
 

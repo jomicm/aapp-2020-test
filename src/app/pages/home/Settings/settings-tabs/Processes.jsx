@@ -24,7 +24,7 @@ import SaveButton from '../settings-tabs/components/SaveButton';
 
 const Processes = props => {
   const dispatch = useDispatch();
-  const { setAlertControls } = actions;
+  const { showCustomAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const [values, setValues] = useState({ alerts: [] });
   const [color, setColor] = useState('');
   const [days, setDays] = useState(0);
@@ -34,7 +34,7 @@ const Processes = props => {
   const handleAddAlert = () => {
     if (!color || !days || days < 1) {
       dispatch(
-        setAlertControls({
+        showCustomAlert({
           open: true,
           message: 'Days and/or color have invalid values',
           type: 'warning'
@@ -45,7 +45,7 @@ const Processes = props => {
     const found = (values.alerts || []).find(x => x.days == days);
     if (found) {
       dispatch(
-        setAlertControls({
+        showCustomAlert({
           open: true,
           message: 'There is already an existing alert for those days',
           type: 'warning'
@@ -72,55 +72,25 @@ const Processes = props => {
           postDB('settingsProcesses', body)
             .then(data => data.json())
             .then(response => {
-              dispatch(
-                setAlertControls({
-                  open: true,
-                  message: 'Saved!',
-                  type: 'success'
-                })
-              );
+              dispatch(showSavedAlert());
             })
             .catch(error => {
               console.log(error)
-              dispatch(
-                setAlertControls({
-                  open: true,
-                  message: 'There was an error, please try again',
-                  type: 'error'
-                })
-              );
+              dispatch(showErrorAlert());
             });
         } else {
           updateDB('settingsProcesses/', body, id)
             .then(response => {
-              dispatch(
-                setAlertControls({
-                  open: true,
-                  message: 'Saved!',
-                  type: 'success'
-                })
-              );
+              dispatch(showUpdatedAlert());
             })
             .catch(error => {
               console.log(error)
-              dispatch(
-                setAlertControls({
-                  open: true,
-                  message: 'There was an error, please try again',
-                  type: 'error'
-                })
-              );
+              dispatch(showErrorAlert());
             });
         }
       })
       .catch(ex => {
-        dispatch(
-          setAlertControls({
-            open: true,
-            message: 'There was an error, please try again',
-            type: 'error'
-          })
-        );
+        dispatch(showErrorAlert());
       });
   };
   const loadInitData = (collectionName = 'settingsProcesses') => {

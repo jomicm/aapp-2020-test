@@ -1,5 +1,8 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import SwipeableViews from "react-swipeable-views";
+import { isEmpty } from 'lodash';
 import {
   Button,
   Dialog,
@@ -17,10 +20,7 @@ import {
   useTheme,
   makeStyles
 } from "@material-ui/core/styles";
-import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
-import { isEmpty } from 'lodash';
-import { useDispatch } from 'react-redux';
 import { actions } from '../../../../store/ducks/general.duck';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import CustomFields from '../../Components/CustomFields/CustomFields';
@@ -90,35 +90,9 @@ const useStyles4 = makeStyles(theme => ({
   }
 }));
 
-// Example 5 - Tabs
-const useStyles5 = makeStyles({
-  root: {
-    flexGrow: 1
-  }
-});
-
-// Example 1 - TextField
-const useStyles = makeStyles(theme => ({
-  container: {
-    display: "flex",
-    flexWrap: "wrap"
-  },
-  textField: {
-    marginLeft: theme.spacing(1),
-    marginRight: theme.spacing(1),
-    width: 200
-  },
-  dense: {
-    marginTop: 19
-  },
-  menu: {
-    width: 200
-  }
-}));
-
 const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
   const dispatch = useDispatch();
-  const { setAlertControls } = actions;
+  const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -155,7 +129,6 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
   };
 
   // Example 1 - TextField
-  const classes = useStyles();
   const [values, setValues] = useState({
     name: "",
     depreciation: 0,
@@ -167,13 +140,7 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
-      dispatch(
-        setAlertControls({
-          open: true,
-          message: 'Please fill out missing fields',
-          type: 'warning'
-        })
-      );
+      dispatch(showFillFieldsAlert());
       return;
     }
 
@@ -184,16 +151,18 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
       postDB('categories', body)
         .then(data => data.json())
         .then(response => {
+          dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('categories', _id);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('categories/', body, id[0])
         .then(response => {
+          dispatch(showUpdatedAlert());
           saveAndReload('categories', id[0]);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
     handleCloseModal();
   };
@@ -240,7 +209,7 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
         console.log('customFieldsTab:', customFieldsTab)
         setIsNew(false);
       })
-      .catch(error => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [id]);
 
 
