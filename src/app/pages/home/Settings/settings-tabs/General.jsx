@@ -2,8 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { omit, isEmpty } from 'lodash';
 import { connect } from "react-redux";
-import { getDB, postDB, updateDB } from '../../../../crud/api';
 import { metronic } from "../../../../../_metronic";
+import { getDB, postDB, updateDB } from '../../../../crud/api';
 import { getFirstDocCollection } from '../../utils';
 import { languages } from '../../constants';
 import SaveButton from '../settings-tabs/components/SaveButton';
@@ -45,7 +45,7 @@ const General = props => {
             .then(data => data.json())
             .then(response => {
               // saveImages(imagesInfo);
-              window.location.reload()
+              window.location.reload();
             })
             .catch(error => console.log(error));
         } else {
@@ -53,7 +53,7 @@ const General = props => {
             .then(response => {
               // saveImages(imagesInfo);
               // saveAndReload('settingsDesign', 'logoLogin');
-              window.location.reload()
+              window.location.reload();
             })
             .catch(error => console.log(error));
         }
@@ -66,10 +66,9 @@ const General = props => {
       .then(response => response.json())
       .then(data => {
         const _values = data.response[0] || {};
-        console.log('_values:', _values)
         if (!isEmpty(_values)) {
           setValues(omit(_values, '_id'));
-        }
+        };
       })
       .catch(error => console.log('error>', error));
   };

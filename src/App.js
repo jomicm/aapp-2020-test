@@ -16,24 +16,24 @@ export default function App({ store, persistor, basename }) {
   const [logoutPreferences, setlogoutPreferences] = useState({
     inactivityPeriod: 600000,
     selectedInactivity: 0
-  })
+  });
 
   const handleIdle = () => {
-    const hrefSplitted = window.location.href.split('/')
+    const hrefSplitted = window.location.href.split('/');
     if (hrefSplitted[hrefSplitted.length - 1] !== 'login' && logoutPreferences.selectedInactivity === 1) {
-      window.location.replace('/logout')
-    }
-  }
+      window.location.replace('/logout');
+    };
+  };
 
   useEffect(() => {
     getDB('settingsGeneral')
       .then(response => response.json())
       .then(data => {
         const { inactivityPeriod, selectedInactivity } = data.response[0];
-        setlogoutPreferences({inactivityPeriod, selectedInactivity})
+        setlogoutPreferences({inactivityPeriod, selectedInactivity});
       })
       .catch(error => console.log('error>', error));
-  }, [])
+  }, []);
 
   useIdleTimer({
     timeout: logoutPreferences.inactivityPeriod,
