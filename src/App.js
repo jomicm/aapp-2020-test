@@ -2,15 +2,45 @@
  * Entry application component used to compose providers and render Routes.
  * */
 
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { PersistGate } from "redux-persist/integration/react";
 import { LastLocationProvider } from "react-router-last-location";
+import { useIdleTimer } from "react-idle-timer";
 import { Routes } from "./app/router/Routes";
 import { I18nProvider, LayoutSplashScreen, ThemeProvider } from "./_metronic";
+import { getDB } from './app/crud/api';
 
 export default function App({ store, persistor, basename }) {
+  const [logoutPreferences, setlogoutPreferences] = useState({
+    inactivityPeriod: 600000,
+    selectedInactivity: 0
+  });
+
+  const handleIdle = () => {
+    const hrefSplitted = window.location.href.split('/');
+    if (hrefSplitted[hrefSplitted.length - 1] !== 'login' && logoutPreferences.selectedInactivity === 1) {
+      window.location.replace('/logout');
+    };
+  };
+
+  useEffect(() => {
+    getDB('settingsGeneral')
+      .then(response => response.json())
+      .then(data => {
+        const { inactivityPeriod, selectedInactivity } = data.response[0];
+        setlogoutPreferences({inactivityPeriod, selectedInactivity});
+      })
+      .catch(error => console.log('error>', error));
+  }, []);
+
+  useIdleTimer({
+    timeout: logoutPreferences.inactivityPeriod,
+    onActive: () => { },
+    onIdle: handleIdle,
+  });
+
   return (
     /* Provide Redux store */
     <Provider store={store}>

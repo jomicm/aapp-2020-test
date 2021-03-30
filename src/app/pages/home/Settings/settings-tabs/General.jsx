@@ -1,31 +1,35 @@
 /* eslint-disable no-restricted-imports */
 import React, { useEffect, useState } from 'react';
 import { omit, isEmpty } from 'lodash';
-import { useDispatch } from 'react-redux';
+import { connect, useDispatch } from "react-redux";
 import {
   FormControl,
   InputLabel,
   MenuItem,
   Select,
-} from '@material-ui/core';
+  TextField
+} from "@material-ui/core";
 
+import { metronic } from "../../../../../_metronic";
 import { actions } from '../../../../store/ducks/general.duck';
 import { getDB, postDB, updateDB } from '../../../../crud/api';
-import SaveButton from '../settings-tabs/components/SaveButton';
 import { getFirstDocCollection } from '../../utils';
+import { languages } from '../../constants';
+import SaveButton from '../settings-tabs/components/SaveButton';
 import { useStyles } from './styles';
 
-const General = () => {
+const General = (props) => {
   const dispatch = useDispatch();
   const { showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const classes = useStyles();
   const [values, setValues] = useState({
-    languages: [{ id: 'en', name: 'English' }, { id: 'es', name: 'Español' }],
+    languages,
     currencies: [{ id: 'usd', name: 'American Dollar' }, { id: 'mxn', name: 'Mexican Peso' }],
-    inactivity: [{ id: 'in0', name: 'Do nothing' }, { id: 'in1', name: 'Logout (10 min)' }],
-    selectedLanguage: '',
-    selectedCurrency: '',
-    selectedInactivity: ''
+    inactivity: [{ id: 'in0', name: 'Do nothing' }, { id: 'in1', name: 'Logout' }],
+    selectedLanguage: props.lang,
+    selectedCurrency: 1,
+    selectedInactivity: 0,
+    inactivityPeriod: 60000
   });
   const fields = [
     { id: 'languages', name: 'Language', selected: 'selectedLanguage' },
@@ -33,7 +37,7 @@ const General = () => {
     { id: 'inactivity', name: 'Inactivity', selected: 'selectedInactivity' }
   ];
   const handleChange = name => event => {
-    setValues({ ...values, [name]: event.target.value });
+    setValues({ ...values, [name]: name === 'inactivityPeriod' ? Number(event.target.value * 60000) : event.target.value });
   };
   const handleSave = () => {
     const body = { ...values };
@@ -68,10 +72,9 @@ const General = () => {
       .then(response => response.json())
       .then(data => {
         const _values = data.response[0] || {};
-        console.log('_values:', _values)
         if (!isEmpty(_values)) {
           setValues(omit(_values, '_id'));
-        }
+        };
       })
       .catch(error => console.log('error>', error));
   };
@@ -98,8 +101,27 @@ const General = () => {
           </Select>
         </FormControl>
       ))}
+      {
+        values.selectedInactivity === 1 && (
+          <FormControl className={classes.textField}>
+            <TextField
+              inputProps={{
+                min: 1
+              }}
+              label='Minutes idle before Logout'
+              onChange={handleChange('inactivityPeriod')}
+              type='number'
+              value={Math.trunc(values.inactivityPeriod / 60000)}
+            />
+          </FormControl>
+        )
+      }
     </div>
   );
 }
 
-export default General;
+const mapStateToProps = ({ i18n }) => ({ lang: i18n.lang });
+export default connect(
+  mapStateToProps,
+  metronic.i18n.actions
+)(General);

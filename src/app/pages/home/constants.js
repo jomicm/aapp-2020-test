@@ -1,3 +1,5 @@
+import { toAbsoluteUrl } from "../../../_metronic";
+
 export const modules = [
   { key: 'dashboard', name: 'Dashboard' },
   { key: 'assets', name: 'Assets' },
@@ -87,3 +89,16 @@ export const allBaseFields = {
     labelingDate: { validationId: 'labelingDate', component: 'textField', compLabel: 'Labeling Date' },
   },
 };
+
+export const languages = [
+  {
+    lang: "en",
+    name: "English",
+    flag: toAbsoluteUrl("/media/flags/226-united-states.svg")
+  },
+  {
+    lang: "es",
+    name: "Spanish",
+    flag: toAbsoluteUrl("/media/flags/252-mexico.svg")
+  },
+];
