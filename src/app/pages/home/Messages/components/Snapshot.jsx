@@ -7,24 +7,18 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
-  ListItemSecondaryAction,
   makeStyles,
   Typography
 } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
 import {
-  postDBEncryptPassword,
   deleteDB,
-  getOneDB,
-  updateDB,
-  postDB,
-  getDB
 } from '../../../../crud/api';
 import './Snapshot.scss';
 
 const useStyles = makeStyles(theme => ({
   root: {
-    width: '100%',
+    width: '60%',
     backgroundColor: theme.palette.background.paper
   },
   subject: {
@@ -58,49 +52,47 @@ const Snapshot = ({
   };
 
   return (
-    <>
-      <div className='container-messages-snapshot'>
-        <div>
-          <List>
-            <ListItem className='snapshot-wrapper'>
-              <ListItemAvatar>
-                <Avatar alt='Remy Sharp' src={img} />
-              </ListItemAvatar>
-              <ListItemText
-                primary={`${name} ${lastName} <${senderName}>`}
-                secondary={
-                  <React.Fragment>
-                    <Typography
-                      className={classes.subject}
-                      color='textPrimary'
-                      component='div'
-                      variant='body2'
-                    >
-                      {subject}
-                    </Typography>
-                    <Typography
-                      className={classes.To}
-                      color='textPrimary'
-                      component='div'
-                      variant='body2'
-                    >
-                      {`${dateTime}`}
-                    </Typography>
-                  </React.Fragment>
-                }
-              />
-            </ListItem>
-          </List>
-        </div>
-
-        <div className='container-snapshot-delete-icon'>
-          <IconButton onClick={handleDelete}>
-            <DeleteIcon className='snapshot-delete-icon' />
-          </IconButton>
-        </div>
-        <Divider />
+    <div className='container-messages-snapshot'>
+      <div style={{ width: '90%' }}>
+        <List>
+          <ListItem className='snapshot-wrapper'>
+            <ListItemAvatar>
+              <Avatar alt='Remy Sharp' src={img} />
+            </ListItemAvatar>
+            <ListItemText
+              primary={`${name} ${lastName} <${senderName}>`}
+              secondary={
+                <>
+                  <Typography
+                    className={classes.subject}
+                    color='textPrimary'
+                    component='div'
+                    variant='body2'
+                  >
+                    {subject}
+                  </Typography>
+                  <Typography
+                    className={classes.To}
+                    color='textPrimary'
+                    component='div'
+                    variant='body2'
+                  >
+                    {`${dateTime}`}
+                  </Typography>
+                </>
+              }
+            />
+          </ListItem>
+        </List>
       </div>
-    </>
+
+      <div className='container-snapshot-delete-icon'>
+        <IconButton onClick={handleDelete}>
+          <DeleteIcon className='snapshot-delete-icon' />
+        </IconButton>
+      </div>
+      <Divider />
+    </div>
   );
 };
 

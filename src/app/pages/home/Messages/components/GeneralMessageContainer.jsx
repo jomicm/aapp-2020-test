@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import Snapshot from './Snapshot';
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
+import { makeStyles, Divider, Typography, IconButton } from '@material-ui/core';
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
+import ClearIcon from '@material-ui/icons/Clear';
+import SearchIcon from '@material-ui/icons/Search';
 import {
   getCountDB,
   getDBComplex,
@@ -8,8 +12,41 @@ import {
 } from '../../../../crud/api';
 import MessageInformation from './MessageInformation';
 import './GeneralMessageContainer.scss';
+import Snapshot from './Snapshot';
+
+const useStyles = makeStyles(theme => ({
+  search: {
+    backgroundColor: '#fafafa',
+    '&:hover': {
+      backgroundColor: '#F5F5F5',
+    },
+    width: '90%',
+    height: '40px',
+    margin: '15px',
+    border: '1px #ffffff00 solid',
+    borderRadius: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'start',
+  },
+  searchIcon: {
+    position: 'relative',
+    paddingRight: '10px',
+    paddingLeft: '10px'
+  },
+  inputInput: {
+    width: '74%', 
+    border: 'none',
+    outline: 'none',
+    backgroundColor: '#FFFFFF00'
+  },
+  IconButton: {
+    margin: '10px'
+  }
+}));
 
 const GeneralMessageContainer = () => {
+  const classes = useStyles();
   const [currentId, setCurrentId] = useState(null);
   const [currentUrl, setCurrentUrl] = useState(null);
   const [data, setData] = useState([]);
@@ -26,11 +63,46 @@ const GeneralMessageContainer = () => {
     id === currentId ? 'snapshot-color' : ''
   );
 
+  const [control, setControl] = useState({
+    search: '',
+    rowsPerPage: 5,
+    page: 0,
+    total: 1,
+  });
+
+  const handlePageChange = (action) => {
+    if (action === 'add' && (control.page + 1) < Math.ceil(control.total / control.rowsPerPage)) {
+      setControl(prev => ({ ...prev, page: prev.page + 1 }))
+    }
+    else if (action === 'reduce' && (control.page + 1) > 1) {
+      setControl(prev => ({ ...prev, page: prev.page - 1 }))
+    }
+  };
+
   const loadInitData = () => {
-    getDB('messages')
-      .then((response) => response.json())
+    let queryLike = ['subject', 'html'].map(key => ({ key, value: control.search }))
+
+    getCountDB({
+      collection: 'messages',
+      queryLike: control.search.length >= 3 ? queryLike : null,
+    })
+      .then(response => response.json())
+      .then(data => {
+        setControl(prev => ({
+          ...prev,
+          total: data.response.count === 0 ? 1 : data.response.count
+        }))
+      });
+
+    getDBComplex({
+      collection: 'messages',
+      limit: control.rowsPerPage,
+      skip: control.rowsPerPage * control.page,
+      queryLike: control.search.length >= 3 ? queryLike : null,
+    })
+      .then(response => response.json())
       .then((data) => {
-        setData(data.response);
+        setData(data.response.reverse());
       })
       .catch((error) => console.log('error>', error));
     reset();
@@ -48,6 +120,10 @@ const GeneralMessageContainer = () => {
   };
 
   useEffect(() => {
+    loadInitData()
+  }, [control.search, control.page])
+
+  useEffect(() => {
     setCurrentUrl(window.location.search.slice(4));
   }, [window.location.search]);
 
@@ -59,10 +135,10 @@ const GeneralMessageContainer = () => {
         const { timeStamp, img, from, subject, to, html } = messageFiltered[0];
         setPreview(html);
         setHeaderInfo({
-          timeStamp: timeStamp,
-          img: img,
+          img,
           senderName: from[0].name,
-          subject: subject,
+          subject,
+          timeStamp,
           to: to[0].email
         });
       } else {
@@ -78,6 +154,33 @@ const GeneralMessageContainer = () => {
   return (
     <div className='__container-gmc'>
       <div className='__container-general-snapshot'>
+        <div aria-label='Search Box' className={classes.search} key='SearchDiv'>
+          <div className={classes.searchIcon}>
+            <SearchIcon />
+          </div>
+          <input
+            className={classes.inputInput}
+            key='SearchField'
+            onChange={event => setControl(prev => ({ ...prev, search: event.target.value }))}
+            value = {control.search}
+            placeholder='Search...'
+          />
+          {
+            control.search.length > 0 && (
+              <div style={{
+                display:'flex',
+                justifyContent: 'flex-end'
+              }}>
+                <IconButton size="small" onClick={() => setControl(prev => ({ ...prev, search: '' }))}>
+                  <ClearIcon />
+                </IconButton>
+              </div>
+            )
+          }
+        </div>
+        <span className='field-validator_error' style={{ display: 'flex', justifyContent: 'center', width: '90%' }}>
+          {control.search.length >= 3 || control.search.length === 0 ? null : 'The search value must be at least 3 characters long'}
+        </span>
         {data.length ? data.map((msg, index) => {
           const { html, _id, timeStamp, from, img, subject, to } = msg;
           return (
@@ -100,7 +203,30 @@ const GeneralMessageContainer = () => {
               </Link>
             </div>
           )
-        }).reverse() : 'You have no messages'}
+        }) : 'You have no messages'}
+        <div style={{
+          position: 'fixed',
+          bottom: 18,
+          width: '49vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+
+        }}>
+          Page: {control.page + 1}/{Math.ceil(control.total / control.rowsPerPage)}
+          <IconButton
+            style={{ marginLeft: '5px' }}
+            onClick={() => handlePageChange('reduce')}
+          >
+            <ChevronLeftIcon />
+          </IconButton>
+          <IconButton
+            style={{ marginRight: '5px' }}
+            onClick={() => handlePageChange('add')}
+          >
+            <ChevronRightIcon />
+          </IconButton>
+        </div>
       </div>
       <div className='__container-preview'>
         <MessageInformation

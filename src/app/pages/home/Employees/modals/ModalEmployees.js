@@ -33,7 +33,7 @@ import {
 } from '../../Components/CustomFields/CustomFieldsPreview';
 import ImageUpload from '../../Components/ImageUpload';
 import Permission from '../components/Permission';
-import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import { getFileExtension, saveImage, getImageURL, getCurrentDateTime } from '../../utils';
 import {
   getOneDB,
   updateDB,
@@ -182,10 +182,9 @@ const ModalEmployees = ({
   });
 
   const executePolicies = (catalogueName) => {
-    const formatDate = new Date()
-    const currentDate = `${(`0${formatDate.getDate()}`).slice(-2)}/${(`0${formatDate.getMonth() + 1}`).slice(-2)}/${formatDate.getFullYear()}`;
-    const currentTime = `${formatDate.getHours()}:${(`0${formatDate.getMinutes()}`).slice(-2)}:${(`0${formatDate.getSeconds()}`).slice(-2)}`;
-    const timeStamp = currentDate + ' ' + currentTime;
+    const formatDate = new Date();
+    const {dateFormatted: currentDate, timeFormatted: currentTime} = getCurrentDateTime();
+    const timeStamp = `${currentDate} ${currentTime}`;
     const read = false;
     const status = 'new';
     const filteredPolicies = policies.filter(
