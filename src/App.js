@@ -38,7 +38,7 @@ export default function App({ store, persistor, basename }) {
   useIdleTimer({
     timeout: logoutPreferences.inactivityPeriod,
     onActive: () => { },
-    onIdle: () => handleIdle(),
+    onIdle: handleIdle,
   });
 
   return (

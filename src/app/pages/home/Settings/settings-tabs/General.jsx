@@ -20,7 +20,7 @@ import { useStyles } from './styles';
 const General = props => {
   const classes = useStyles();
   const [values, setValues] = useState({
-    languages: languages,
+    languages,
     currencies: [{ id: 'usd', name: 'American Dollar' }, { id: 'mxn', name: 'Mexican Peso' }],
     inactivity: [{ id: 'in0', name: 'Do nothing' }, { id: 'in1', name: 'Logout' }],
     selectedLanguage: props.lang,
@@ -58,7 +58,7 @@ const General = props => {
             .catch(error => console.log(error));
         }
       })
-      .catch(ex => { });
+      .catch(ex => { console.log('error:', ex) });
   };
 
   const loadProcessesData = (collectionName = 'settingsGeneral') => {
@@ -99,13 +99,13 @@ const General = props => {
         values.selectedInactivity === 1 && (
           <FormControl className={classes.textField}>
             <TextField
-              type='number'
-              label='Minutes idle before Logout'
-              onChange={handleChange('inactivityPeriod')}
-              value={Math.trunc(values.inactivityPeriod / 60000)}
               inputProps={{
                 min: 1
               }}
+              label='Minutes idle before Logout'
+              onChange={handleChange('inactivityPeriod')}
+              type='number'
+              value={Math.trunc(values.inactivityPeriod / 60000)}
             />
           </FormControl>
         )

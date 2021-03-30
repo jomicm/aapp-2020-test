@@ -3,8 +3,8 @@ import clsx from "clsx";
 import { connect } from "react-redux";
 import { Dropdown } from "react-bootstrap";
 import { metronic } from "../../../_metronic";
-import HeaderDropdownToggle from "../content/CustomDropdowns/HeaderDropdownToggle";
 import { languages } from "../../pages/home/constants";
+import HeaderDropdownToggle from "../content/CustomDropdowns/HeaderDropdownToggle";
 class LanguageSelector extends React.Component {
   render() {
     const { lang, iconType, setLanguage } = this.props;
