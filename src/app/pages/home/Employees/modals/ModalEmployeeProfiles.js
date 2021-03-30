@@ -1,5 +1,7 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { isEmpty } from 'lodash';
+import SwipeableViews from 'react-swipeable-views';
 import {
   Button,
   Dialog,
@@ -11,33 +13,30 @@ import {
   Paper,
   Switch,
   Tab,
-  TextField,
   Tabs,
   Typography
-} from "@material-ui/core";
+} from '@material-ui/core';
 import {
   withStyles,
   useTheme,
   makeStyles
-} from "@material-ui/core/styles";
-import SwipeableViews from "react-swipeable-views";
-import CloseIcon from "@material-ui/icons/Close";
-import { isEmpty } from 'lodash';
-
+} from '@material-ui/core/styles';
+import CloseIcon from '@material-ui/icons/Close';
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../../store/ducks/general.duck';
+import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import CustomFields from '../../Components/CustomFields/CustomFields';
 import ImageUpload from '../../Components/ImageUpload';
-import { postDB, getOneDB, updateDB, postFILE } from '../../../../crud/api';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 
-// Example 5 - Modal
 const styles5 = theme => ({
   root: {
     margin: 0,
     padding: theme.spacing(2)
   },
   closeButton: {
-    position: "absolute",
+    position: 'absolute',
     right: theme.spacing(1),
     top: theme.spacing(1),
     color: theme.palette.grey[500]
@@ -47,10 +46,10 @@ const styles5 = theme => ({
 const DialogTitle5 = withStyles(styles5)(({ children, classes, onClose }) => {
   return (
     <DialogTitle disableTypography className={classes.root}>
-      <Typography variant="h6">{children}</Typography>
+      <Typography variant='h6'>{children}</Typography>
       {onClose ? (
         <IconButton
-          aria-label="Close"
+          aria-label='Close'
           className={classes.closeButton}
           onClick={onClose}
         >
@@ -74,10 +73,9 @@ const DialogActions5 = withStyles(theme => ({
   }
 }))(DialogActions);
 
-// Example 4 - Tabs
 function TabContainer4({ children, dir }) {
   return (
-    <Typography component="div" dir={dir} style={{ padding: 8 * 3 }}>
+    <Typography component='div' dir={dir} style={{ padding: 8 * 3 }}>
       {children}
     </Typography>
   );
@@ -89,11 +87,10 @@ const useStyles4 = makeStyles(theme => ({
   }
 }));
 
-// Example 1 - TextField
 const useStyles = makeStyles(theme => ({
   container: {
-    display: "flex",
-    flexWrap: "wrap"
+    display: 'flex',
+    flexWrap: 'wrap'
   },
   textField: {
     marginLeft: theme.spacing(1),
@@ -109,10 +106,12 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
-  // Example 4 - Tabs
+  const dispatch = useDispatch();
+  const { showFillFieldsAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
+
   function handleChange4(event, newValue) {
     setValue4(newValue);
   }
@@ -125,16 +124,13 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
     isValidForm: {}
   });
 
-  // Example 1 - TextField
   const classes = useStyles();
   const [values, setValues] = useState({
-    name: "",
+    name: '',
     categoryPic: '/media/misc/placeholder-image.jpg',
     categoryPicDefault: '/media/misc/placeholder-image.jpg',
-    // imageURL: 'http://159.203.41.87:3001/uploads/employeeProfiles/5f36151ddd0b7e53fb62df66.png',
     imageURL: '',
   });
-  // const [categoryPic, setCategoryPic] 
 
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value });
@@ -151,7 +147,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
-      alert('Please fill out missing fields')
+      dispatch(showFillFieldsAlert());
       return;
     }
 
@@ -161,17 +157,19 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
       postDB('employeeProfiles', body)
         .then(data => data.json())
         .then(response => {
+          dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('employeeProfiles', _id);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('employeeProfiles/', body, id[0])
         .then(data => data.json())
         .then(response => {
+          dispatch(showUpdatedAlert());
           saveAndReload('employeeProfiles', id[0]);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
 
     handleCloseModal();
@@ -187,7 +185,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
     setCustomFieldsTab({});
     setProfilePermissions([]);
     setValues({
-      name: "",
+      name: '',
       categoryPic: '/media/misc/placeholder-image.jpg',
       categoryPicDefault: '/media/misc/placeholder-image.jpg',
       imageURL: '',
@@ -217,12 +215,9 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
         setIsAssetRepository(isAssetRepository);
         setProfilePermissions(profilePermissions);
       })
-      .catch(error => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [id]);
 
-  useEffect(() => {
-    setFormValidation({ ...formValidation, enabled: true });
-  }, [values])
 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
 
@@ -234,7 +229,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
     { key: 'employees', name: 'Employees' },
     { key: 'locations', name: 'Locations' },
     { key: 'reports', name: 'Reports' },
-    { key: 'settings', name: 'Settings' },
+    { key: 'settings', name: 'Settings' }
   ];
 
   const [profilePermissions, setProfilePermissions] = useState({});
@@ -248,55 +243,53 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
     <div style={{ width: '1000px' }}>
       <Dialog
         onClose={handleCloseModal}
-        aria-labelledby="customized-dialog-title"
+        aria-labelledby='customized-dialog-title'
         open={showModal}
       >
         <DialogTitle5
-          id="customized-dialog-title"
+          id='customized-dialog-title'
           onClose={handleCloseModal}
         >
           {`${id ? 'Edit' : 'Add'} Employee Profiles`}
-          {/* Add/Edit User Profiles */}
         </DialogTitle5>
         <DialogContent5 dividers>
-          <div className="kt-section__content" style={{ margin: '-16px' }}>
+          <div className='kt-section__content' style={{ margin: '-16px' }}>
             <div className={classes4.root}>
               <Paper className={classes4.root}>
                 <Tabs
                   value={value4}
                   onChange={handleChange4}
-                  indicatorColor="primary"
-                  textColor="primary"
-                  variant="fullWidth"
+                  indicatorColor='primary'
+                  textColor='primary'
+                  variant='fullWidth'
                 >
-                  <Tab label="Profile" />
-                  {/* <Tab label="Permissions" /> */}
-                  <Tab label="Custom Fields" />
+                  <Tab label='Profile' />
+                  <Tab label='Custom Fields' />
                 </Tabs>
               </Paper>
               <SwipeableViews
-                axis={theme4.direction === "rtl" ? "x-reverse" : "x"}
+                axis={theme4.direction === 'rtl' ? 'x-reverse' : 'x'}
                 index={value4}
                 onChangeIndex={handleChangeIndex4}
               >
                 <TabContainer4 dir={theme4.direction}>
-                  <div className="profile-tab-wrapper">
+                  <div className='profile-tab-wrapper'>
                     <ImageUpload setImage={setImage} image={values.imageURL}>
                       Employee Profile Photo
                     </ImageUpload>
-                    <div className="profile-tab-wrapper__content">
+                    <div className='profile-tab-wrapper__content'>
                       <BaseFields
                         catalogue={'employeeReferences'}
-                        collection={'employeeProfiles'}
+                        collection={'employeeReferences'}
                         formState={[formValidation, setFormValidation]}
                         localProps={baseFieldsLocalProps}
                         values={values}
                       />
                       <FormControlLabel
-                        value="start"
-                        control={<Switch color="primary" checked={isAssetRepository} onChange={e => setIsAssetRepository(e.target.checked)} />}
-                        label="Asset Repository"
-                        labelPlacement="start"
+                        value='start'
+                        control={<Switch color='primary' checked={isAssetRepository} onChange={e => setIsAssetRepository(e.target.checked)} />}
+                        label='Asset Repository'
+                        labelPlacement='start'
                       />
                     </div>
                   </div>
@@ -312,7 +305,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
           </div>
         </DialogContent5>
         <DialogActions5>
-          <Button onClick={handleSave} color="primary">
+          <Button onClick={handleSave} color='primary'>
             Save changes
           </Button>
         </DialogActions5>

@@ -2,10 +2,8 @@ import React, { useEffect, useState } from 'react';
 import Snapshot from './Snapshot';
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 import {
-  postDBEncryptPassword,
-  getOneDB,
-  updateDB,
-  postDB,
+  getCountDB,
+  getDBComplex,
   getDB
 } from '../../../../crud/api';
 import MessageInformation from './MessageInformation';

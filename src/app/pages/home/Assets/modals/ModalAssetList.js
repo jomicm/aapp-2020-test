@@ -1,5 +1,8 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import SwipeableViews from "react-swipeable-views";
+import { isEmpty } from 'lodash';
 import {
   Timeline,
   TimelineItem,
@@ -18,29 +21,22 @@ import {
   DialogActions,
   IconButton,
   InputAdornment,
+  makeStyles,
+  Paper,
   Tab,
   Tabs,
   Typography,
-  Paper,
-} from "@material-ui/core";
-
-import {
-  withStyles,
   useTheme,
-  makeStyles
-} from "@material-ui/core/styles";
+  withStyles,
+} from "@material-ui/core";
 import TimelineIcon from '@material-ui/icons/Timeline';
-import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
-import { isEmpty } from 'lodash';
 
+import { actions } from '../../../../store/ducks/general.duck';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
-import CustomFields from '../../Components/CustomFields/CustomFields';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import ImageUpload from '../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
-import './ModalAssetList.scss';
-
 import {
   SingleLine,
   MultiLine,
@@ -51,6 +47,7 @@ import {
   Checkboxes,
   FileUpload
 } from '../../Components/CustomFields/CustomFieldsPreview';
+import './ModalAssetList.scss';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -153,6 +150,8 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadTable, id }) => {
+  const dispatch = useDispatch();
+  const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -412,13 +411,13 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
         setValues(prev => ({ ...prev, depreciation }));
         setTabs(tabs);
       })
-      .catch(error => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   };
 
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
-      alert('Please fill out missing fields')
+      dispatch(showFillFieldsAlert());
       return;
     }
 
@@ -431,16 +430,18 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       postDB('assets', body)
         .then(data => data.json())
         .then(response => {
+          dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('assets', _id);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('assets/', body, id[0])
         .then(response => {
+          dispatch(showUpdatedAlert());
           saveAndReload('assets', id[0]);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
     handleCloseModal();
   };
@@ -505,7 +506,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
           setCustomFieldsTab(customFieldsTab);
           setTabs(tabs);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
 
     // const profiles = categoryRows.map(cat => ({ id: cat.id, name: cat.name }));
@@ -549,7 +550,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                 assignedTo: `${nameRes ? nameRes : ''} ${lastName ? lastName : ''}`,
               });
             })
-            .catch(error => console.log(error));
+            .catch(error => dispatch(showErrorAlert()));
         }
         else {
           setValues({
@@ -581,12 +582,9 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
         setCustomFieldsTab(customFieldsTab);
         setTabs(tabs);
       })
-      .catch(error => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [showModal]);
 
-  useEffect(() => {
-    setFormValidation({ ...formValidation, enabled: true });
-  }, [values])
 
   useEffect(() => {
     setValues(prev => ({ ...prev, total_price: prev.purchase_price + prev.price }));

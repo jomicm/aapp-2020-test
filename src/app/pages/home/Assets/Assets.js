@@ -1,6 +1,7 @@
 /* eslint-disable no-restricted-imports */
 import React, { useEffect, useState } from 'react';
-import { Tabs } from '@material-ui/core';
+import { Card, CardContent, Tabs, Typography } from '@material-ui/core';
+import { connect, useDispatch } from "react-redux";
 import {
   Portlet,
   PortletBody,
@@ -8,6 +9,12 @@ import {
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
 
+import LanguageIcon from '@material-ui/icons/Language';
+import CheckIcon from '@material-ui/icons/Check';
+import BuildIcon from '@material-ui/icons/Build';
+import NotInterestedIcon from '@material-ui/icons/NotInterested';
+
+import * as general from "../../../store/ducks/general.duck";
 // AApp Components
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import TableComponent2 from '../Components/TableComponent2';
@@ -22,8 +29,8 @@ import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 
 const localStorageActiveTabKey = 'builderActiveTab';
-export default function Assets() {
-
+function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAlert }) {
+  const dispatch = useDispatch();
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
 
@@ -66,6 +73,33 @@ export default function Assets() {
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
     { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
   ];
+
+  const [assetsKPI, setAssetsKPI] = useState({
+    total: {
+      number: 0,
+      text: 'Total',
+      icon: <LanguageIcon style={{ fill: 'white', fontSize: 40 }} />,
+      color: '#1E1E2D'
+    },
+    available: {
+      number: 0,
+      text: 'Available',
+      icon: <CheckIcon style={{ fill: 'white', fontSize: 40 }} />,
+      color: '#427241'
+    },
+    onProcess: {
+      number: 0,
+      text: 'On Process',
+      icon: <BuildIcon style={{ fill: 'white', fontSize: 40 }} />,
+      color: '#3e4fa8'
+    },
+    decommissioned: {
+      number: 0,
+      text: 'Decommissioned',
+      icon: <NotInterestedIcon style={{ fill: 'white', fontSize: 40 }} />,
+      color: '#ad2222'
+    }
+  })
 
   const loadAssetsData = (collectionNames = ['assets', 'categories', 'references']) => {
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
@@ -238,10 +272,12 @@ export default function Assets() {
         if (!id || !Array.isArray(id)) return;
         id.forEach(_id => {
           deleteDB(`${collection.name}/`, _id)
-            .then(response => console.log('success', response))
-            .catch(error => console.log('Error', error));
+            .then(response => {
+              dispatch(showDeletedAlert());
+              loadAssetsData(collection.name);
+            })
+            .catch(error => showErrorAlert());
         });
-        loadAssetsData(collection.name);
       },
       onSelect(id) {
         if (collectionName === 'references') {
@@ -262,6 +298,36 @@ export default function Assets() {
   useEffect(() => {
     loadAssetsData('categories');
   }, [tableControl.categories.page, tableControl.categories.rowsPerPage, tableControl.categories.order, tableControl.categories.orderBy, tableControl.categories.search]);
+
+  useEffect(() => {
+    getCountDB({ collection: 'assets' })
+      .then(response => response.json())
+      .then(data => {
+        setAssetsKPI(prev => ({
+          ...prev,
+          total: {
+            ...prev.total,
+            number: data.response.count
+          }
+        }));
+      });
+  }, []);
+
+  const tabIntToText = ['assets', 'references', 'categories'];
+
+  useEffect(() => {
+    if (globalSearch.tabIndex >= 0) {
+      setTab(globalSearch.tabIndex);
+      setTableControl(prev => ({
+        ...prev,
+        [tabIntToText[globalSearch.tabIndex]]: {
+          ...prev[tabIntToText[globalSearch.tabIndex]],
+          search: globalSearch.searchValue,
+        }
+      }))
+      setGeneralSearch({});
+    }
+  }, [globalSearch.tabIndex, globalSearch.searchValue]);
 
   return (
     <>
@@ -298,7 +364,40 @@ export default function Assets() {
                 <div className='kt-section__body'>
                   <div className='kt-section'>
                     <span className='kt-section__sub'>
-                      This section will integrate <code>Assets List</code>
+                      <div style={{ display: 'flex', justifyContent: 'space-evenly' }}>
+                        {
+                          Object.entries(assetsKPI).map(([key, val]) => (
+                            <Card elevation={2} style={{ display: 'flex' }}>
+                              <div
+                                style={{
+                                  width: '80px',
+                                  height: '100%',
+                                  backgroundColor: val.color,
+                                  display: 'flex',
+                                  justifyContent: 'center',
+                                  alignItems: 'center'
+                                }}
+                              >
+                                {val.icon}
+                              </div>
+                              <div
+                                style={{ width: '135px' }}
+                              >
+                                <CardContent style={{ padding: '12px' }}>
+                                  <center>
+                                    <Typography variant='subtitle'>
+                                      {val.text}
+                                    </Typography>
+                                    <Typography variant='h4'>
+                                      {val.number}
+                                    </Typography>
+                                  </center>
+                                </CardContent>
+                              </div>
+                            </Card>
+                          ))
+                        }
+                      </div>
                     </span>
                     <ModalAssetList
                       showModal={control.openAssetsModal}
@@ -424,7 +523,7 @@ export default function Assets() {
                           }))
                         }}
                         title={'Asset References'}
-                        tableView
+                        tileView
                       />
                     </div>
                   </div>
@@ -488,7 +587,7 @@ export default function Assets() {
                           }))
                         }}
                         title={'Asset Categories'}
-                        tableView
+                        tileView
                       />
                     </div>
                   </div>
@@ -516,3 +615,7 @@ export default function Assets() {
     </>
   );
 }
+const mapStateToProps = ({ general: { globalSearch } }) => ({
+  globalSearch
+});
+export default connect(mapStateToProps, general.actions)(Assets);

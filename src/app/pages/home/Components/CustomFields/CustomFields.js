@@ -1,5 +1,10 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect, useRef } from 'react';
+import { useDispatch } from 'react-redux';
+import SwipeableViews from "react-swipeable-views";
+import { isEmpty } from 'lodash';
+import { v4 as uuidv4 } from 'uuid';
+
 import { makeStyles } from '@material-ui/core/styles';
 import ExpansionPanel from '@material-ui/core/ExpansionPanel';
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
@@ -8,25 +13,24 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import {
   Button,
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Typography,
   IconButton,
   Tab, 
-  AppBar, 
   Tabs, 
   Paper,
   TextField,
-  Checkbox,
   FormControlLabel,
-  Switch,
   FormControl,
   FormLabel,
   RadioGroup,
   Radio,
   Tooltip
 } from "@material-ui/core";
+import AddIcon from '@material-ui/icons/Add';
+
+import { actions } from '../../../../store/ducks/general.duck';
 import {
   SingleLineSettings,
   MultiLineSettings,
@@ -38,16 +42,7 @@ import {
   FileUploadSettings
 } from './CustomFieldsPreview';
 import DragDropArea from './DragDropArea';
-import SwipeableViews from "react-swipeable-views";
-import AddIcon from '@material-ui/icons/Add';
-import DeleteIcon from '@material-ui/icons/Delete';
-import styled from "@emotion/styled";
-import { isEmpty } from 'lodash';
-
-import { v4 as uuidv4 } from 'uuid';
-
 import './CustomFields.scss';
-import { isEmptyArray } from 'formik';
 
 const useStylesAccordion = makeStyles(theme => ({
   root: {
@@ -67,12 +62,6 @@ function TabContainer({ children, dir }) {
     </Typography>
   );
 }
-// const useStyles4 = makeStyles(theme => ({
-//   root: {
-//     backgroundColor: theme.palette.background.paper,
-//     width: 1000
-//   }
-// }));
 
 const CustomFieldsSettings = (props) => {
   const { idSelectedCustomField: id, values, setValues, selfValues } = props.settings;
@@ -98,6 +87,8 @@ const CustomFieldsSettings = (props) => {
 
 
 function CustomFields(props) {
+  const dispatch = useDispatch();
+  const { showCustomAlert } = actions;
   const { customFieldsTab, setCustomFieldsTab } = props;
 
   const [values, setValues] = useState({
@@ -162,7 +153,13 @@ function CustomFields(props) {
   // Custom Control Click
   const handleAddCustomFieldToTab = customFieldName => {
     if (!tabs.length) {
-      alert('First add a Tab');
+      dispatch(
+        showCustomAlert({
+          open: true,
+          message: 'First add a Tab',
+          type: 'warning'
+        })
+      );
       return;
     }
     const customFieldsTabTmp = { ...customFieldsTab };

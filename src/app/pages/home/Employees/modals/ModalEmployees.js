@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import Select from 'react-select';
+import React, { useEffect, useState } from 'react';
+import { isEmpty } from 'lodash';
 import SwipeableViews from 'react-swipeable-views';
 import {
   Button,
@@ -7,43 +7,41 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Divider,
   Typography,
   IconButton,
   Tab,
   Tabs,
-  Paper,
-  TextField,
-  FormControl,
-  FormLabel,
-  FormGroup
+  Paper
 } from '@material-ui/core';
 import { withStyles, useTheme, makeStyles } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
-import { isEmpty } from 'lodash';
-
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../../store/ducks/general.duck';
+import { executePolicies } from '../../Components/Policies/utils';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import CustomFields from '../../Components/CustomFields/CustomFields';
 import {
-  SingleLine,
+  Checkboxes,
   MultiLine,
   Date as DateField,
   DateTime,
   DropDown,
   RadioButtons,
-  Checkboxes,
+  SingleLine,
   FileUpload
 } from '../../Components/CustomFields/CustomFieldsPreview';
 import ImageUpload from '../../Components/ImageUpload';
+import Permission from '../components/Permission';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import {
-  postDBEncryptPassword,
   getOneDB,
   updateDB,
   postDB,
   getDB
 } from '../../../../crud/api';
-import { getHours } from 'date-fns';
 import AssetTable from '../components/AssetTable';
+import ModalAssignmentReport from './ModalAssignmentReport';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -142,16 +140,20 @@ const collections = {
 };
 
 const ModalEmployees = ({
-  showModal,
-  setShowModal,
-  reloadTable,
   id,
-  employeeProfileRows
+  employeeProfileRows,
+  reloadTable,
+  showModal,
+  setShowModal
 }) => {
+  const dispatch = useDispatch();
+  const { showCustomAlert, showFillFieldsAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const [assetRows, setAssetRows] = useState([]);
   const classes = useStyles();
   const classes4 = useStyles4();
+  const [showModalReports, setShowModalReports] = useState(false);
   const [customFieldsTab, setCustomFieldsTab] = useState({});
+  const [htmlPreview, setHtmlPreview] = useState([])
   const [employeeProfilesFiltered, setEmployeeProfilesFiltered] = useState([]);
   const [idUserProfile, setIdUserProfile] = useState('');
   const [image, setImage] = useState(null);
@@ -269,12 +271,10 @@ const ModalEmployees = ({
       setTabs([]);
       return;
     }
-    console.log('onChangeEmployeeProfile>>>', e);
     setProfileSelected(e);
     getOneDB('employeeProfiles/', e.value)
       .then((response) => response.json())
       .then((data) => {
-        console.log(data.response);
         const { customFieldsTab, profilePermissions } = data.response;
         const tabs = Object.keys(customFieldsTab).map((key) => ({
           key,
@@ -287,7 +287,7 @@ const ModalEmployees = ({
         setTabs(tabs);
         setIdUserProfile(e.value);
       })
-      .catch((error) => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   };
 
   const baseFieldsLocalProps = {
@@ -321,7 +321,7 @@ const ModalEmployees = ({
       },
       componentProps: {
         isClearable: true,
-        onchange: (e) => setLayoutSelected(e),
+        onChange: (e) => setLayoutSelected(e),
         options: layoutOptions,
         value: layoutSelected,
       }
@@ -345,7 +345,6 @@ const ModalEmployees = ({
     });
     setShowModal(false);
     setValue4(0);
-    setLayoutOptions([]);
     setLayoutSelected(null);
     setAssetRows([]);
     setFormValidation({
@@ -371,13 +370,13 @@ const ModalEmployees = ({
     setAssetRows(restRows);
     updateDB('assets/', { assigned: null }, id)
       .then((response) => { })
-      .catch((error) => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   };
 
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
-      alert('Please fill out missing fields')
+      dispatch(showFillFieldsAlert());
       return;
     }
 
@@ -397,30 +396,29 @@ const ModalEmployees = ({
       postDB('employees', body)
         .then((data) => data.json())
         .then((response) => {
+          dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('employees', _id);
-          executePolicies('OnAdd');
+          executePolicies('OnAdd', policies);
           updateAssignedEmpToAssets(_id);
         })
-        .catch((error) => console.log('ERROR', error));
+        .catch((error) => dispatch(showErrorAlert()));
     } else {
       updateDB('employees/', body, id[0])
         .then((response) => {
+          dispatch(showUpdatedAlert);
           saveAndReload('employees', id[0]);
           updateAssignedEmpToAssets(id[0]);
-          executePolicies('OnEdit');
+          executePolicies('OnEdit', policies);
         })
-        .catch((error) => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
     handleCloseModal();
   };
 
-  // Function to update customFields
   const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
     const colValue = ['left', 'right'];
-    console.log('Looking for you', tab, id, colIndex, values);
     const customFieldsTabTmp = { ...customFieldsTab };
-
     const field = customFieldsTabTmp[tab][colValue[colIndex]].find(
       (cf) => cf.id === id
     );
@@ -440,11 +438,25 @@ const ModalEmployees = ({
           const body = { ...data.response, assigned: _id };
           updateDB('assets/', { assigned: _id }, asset.id)
             .then((response) => { })
-            .catch((error) => console.log(error));
+            .catch(error => dispatch(showErrorAlert()));
         })
-        .catch((error) => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     });
   };
+
+  useEffect(() => {
+    getDB('settingsLayoutsEmployees')
+      .then((response) => response.json())
+      .then((data) => {
+        const layoutOptions = data.response.map(
+          ({ _id: value, name: label }) => ({ value, label })
+        );
+        const employeeLayoutSelected = data.response.filter(({ _id }) => _id === layoutSelected.value);
+        setHtmlPreview(employeeLayoutSelected);
+        setLayoutOptions(layoutOptions);
+      })
+      .catch((error) => console.log('error>', error));
+  }, [layoutSelected]);
 
   useEffect(() => {
     const userProfiles = employeeProfileRows.map((profile, ix) => ({
@@ -452,16 +464,6 @@ const ModalEmployees = ({
       label: profile.name
     }));
     setEmployeeProfilesFiltered(userProfiles);
-
-    getDB('settingsLayoutsEmployees')
-      .then((response) => response.json())
-      .then((data) => {
-        const layoutOptions = data.response.map(
-          ({ _id: value, name: label }) => ({ value, label })
-        );
-        setLayoutOptions(layoutOptions);
-      })
-      .catch((error) => console.log('error>', error));
 
     getDB('policies')
       .then((response) => response.json())
@@ -489,7 +491,7 @@ const ModalEmployees = ({
           fileExt,
           assetsAssigned = []
         } = data.response;
-        executePolicies('OnLoad');
+        executePolicies('OnLoad', policies);
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
         setLayoutSelected(layoutSelected);
@@ -508,7 +510,6 @@ const ModalEmployees = ({
           imageURL: getImageURL(id, 'employees', fileExt)
         });
         setAssetRows(assetsAssigned);
-        //
         const tabs = Object.keys(customFieldsTab).map((key) => ({
           key,
           info: customFieldsTab[key].info,
@@ -518,15 +519,34 @@ const ModalEmployees = ({
         setCustomFieldsTab(customFieldsTab);
         setTabs(tabs);
       })
-      .catch((error) => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [id, employeeProfileRows]);
 
-  useEffect(() => {
-    setFormValidation({ ...formValidation, enabled: true });
-  }, [values])
+  const openModalAssignmentReport = () => {
+    if (!layoutSelected) {
+      dispatch(
+        showCustomAlert({
+          open: true,
+          message: 'Please select a Responsibility Layout first',
+          type: 'warning'
+        })
+      );
+    } else {
+      setShowModalReports(true);
+    }
+  };
+
 
   return (
     <div style={{ width: '1000px' }}>
+      <ModalAssignmentReport
+        assetRows={assetRows}
+        htmlPreview={htmlPreview}
+        layoutSelected={layoutSelected}
+        setShowModal={setShowModalReports}
+        showModal={showModalReports}
+        values={values}
+      />
       <Dialog
         aria-labelledby='customized-dialog-title'
         onClose={handleCloseModal}
@@ -575,6 +595,17 @@ const ModalEmployees = ({
                   </div>
                 </TabContainer4>
                 <TabContainer4 dir={theme4.direction}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                      color='primary'
+                      onClick={openModalAssignmentReport}
+                      size='large'
+                      style={{ marginBottom: '20px' }}
+                      variant='contained'
+                    >
+                      Generate Report
+                    </Button>
+                  </div>
                   <div className='profile-tab-wrapper'>
                     <AssetTable
                       assetRows={assetRows}

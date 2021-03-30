@@ -1,5 +1,4 @@
 import React from 'react';
-import { makeStyles } from '@material-ui/core/styles';
 import {
   Avatar,
   Divider,
@@ -8,6 +7,8 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
+  ListItemSecondaryAction,
+  makeStyles,
   Typography
 } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
@@ -24,8 +25,6 @@ import './Snapshot.scss';
 const useStyles = makeStyles(theme => ({
   root: {
     width: '100%',
-    minWidth: 390,
-    maxWidth: 390,
     backgroundColor: theme.palette.background.paper
   },
   subject: {

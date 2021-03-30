@@ -2,6 +2,11 @@
 import { makeStyles } from "@material-ui/core/styles";
 
 export const useStyles = makeStyles(theme => ({
+  alert: {
+    "& .MuiAlert-icon": {
+      fontSize: 30
+    }
+  },
   container: {
     display: "flex",
     flexWrap: "wrap"

@@ -1,13 +1,15 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { connect, useDispatch } from "react-redux";
 import { Tabs } from '@material-ui/core';
+import { actions } from '../../../store/ducks/general.duck';
 import {
   Portlet,
   PortletBody,
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
-
+import * as general from "../../../store/ducks/general.duck";
 // AApp Components
 import TableComponent2 from '../Components/TableComponent2';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
@@ -20,8 +22,9 @@ import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 
 const localStorageActiveTabKey = 'builderActiveTab';
-export default function Users() {
-
+function Users({ globalSearch, setGeneralSearch }) {
+  const dispatch = useDispatch();
+  const { showDeletedAlert, showErrorAlert } = actions;
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
 
@@ -132,10 +135,7 @@ export default function Users() {
     });
   };
 
-  useEffect(() => {
-    loadUsersData();
-  }, []);
-
+  
   useEffect(() => {
     loadUsersData('user');
   }, [tableControl.user.page, tableControl.user.rowsPerPage, tableControl.user.order, tableControl.user.orderBy, tableControl.user.search, tableControl.user.locationsFilter]);
@@ -143,6 +143,24 @@ export default function Users() {
   useEffect(() => {
     loadUsersData('userProfiles');
   }, [tableControl.userProfiles.page, tableControl.userProfiles.rowsPerPage, tableControl.userProfiles.order, tableControl.userProfiles.orderBy, tableControl.userProfiles.search]);
+
+  const tabIntToText = ['user', 'userProfiles'];
+
+  useEffect(() => {
+    if (globalSearch.tabIndex >= 0) {
+      setTab(globalSearch.tabIndex);
+      setTableControl(prev => ({
+        ...prev,
+        [tabIntToText[globalSearch.tabIndex]]: {
+          ...prev[tabIntToText[globalSearch.tabIndex]],
+          search: globalSearch.searchValue,
+        }
+      }))
+      setTimeout(() => {
+        setGeneralSearch({});
+      }, 800);
+    }
+  }, [globalSearch.tabIndex, globalSearch.searchValue]);
 
   const [control, setControl] = useState({
     idUserProfile: null,
@@ -187,10 +205,12 @@ export default function Users() {
         if (!id || !Array.isArray(id)) return;
         id.forEach(_id => {
           deleteDB(`${collection.name}/`, _id)
-            .then(response => console.log('success', response))
-            .catch(error => console.log('Error', error));
+            .then(response => {
+              dispatch(showDeletedAlert());
+              loadUsersData(collection.name)
+            })
+            .catch(error => dispatch(showErrorAlert()));
         });
-        loadUsersData(collection.name);
       },
       onSelect(id) {
         if (collectionName === 'userProfiles') {
@@ -358,6 +378,7 @@ export default function Users() {
                           }))
                         }}
                         title={'Users Profiles List'}
+                        tileView
                       />
                     </div>
                   </div>
@@ -386,3 +407,8 @@ export default function Users() {
     </>
   );
 }
+
+const mapStateToProps = ({ general: { globalSearch } }) => ({
+  globalSearch
+});
+export default connect(mapStateToProps, general.actions)(Users);

@@ -1,4 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { pick } from 'lodash';
+import {
+  ContentState,
+  convertToRaw,
+  EditorState,
+  Modifier
+} from 'draft-js';
+import { Editor } from 'react-draft-wysiwyg';
+import draftToHtml from 'draftjs-to-html';
+import htmlToDraft from 'html-to-draftjs';
+
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import NotificationImportantIcon from '@material-ui/icons/NotificationImportant';
 import NotificationsIcon from '@material-ui/icons/Notifications';
@@ -10,98 +22,42 @@ import ToggleButton from '@material-ui/lab/ToggleButton';
 import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import {
   Button,
-  Checkbox,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   IconButton,
-  ExpansionPanel,
-  ExpansionPanelSummary,
-  ExpansionPanelDetails,
   FormControl,
   FormControlLabel,
-  FormGroup,
-  FormLabel,
   InputLabel,
+  makeStyles,
   MenuItem,
-  Paper,
   Select,
   Switch,
   Tab,
   Tabs,
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-  TextareaAutosize,
   TextField,
-  Typography
+  Typography,
+  withStyles,
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import { withStyles, useTheme, makeStyles } from '@material-ui/core/styles';
-import { pick } from 'lodash';
 import {
-  EditorState,
-  ContentState,
-  convertToRaw,
-  convertFromHTML,
-  Modifier
-} from 'draft-js';
-import { Editor } from 'react-draft-wysiwyg';
-import SwipeableViews from 'react-swipeable-views';
-import {
-  Portlet,
   PortletBody,
-  PortletFooter,
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../../../a../../../app/partials/content/Portlet';
+import { actions } from '../../../../../store/ducks/general.duck';
 import {
-  postDBEncryptPassword,
   getDB,
   getOneDB,
   updateDB,
   postDB
 } from '../../../../../crud/api';
-import CustomFields from '../../../Components/CustomFields/CustomFields';
-import TreeView from '../../../Components/TreeViewComponent';
-import ImageUpload from '../../../Components/ImageUpload';
-import ModalYesNo from '../../../Components/ModalYesNo';
-import { getFileExtension, saveImage, getImageURL } from '../../../utils';
-import {
-  SingleLine,
-  MultiLine,
-  Date,
-  DateTime,
-  DropDown,
-  RadioButtons,
-  FileUpload,
-  Checkboxes
-} from '../../../Components/CustomFields/CustomFieldsPreview';
 import BaseFieldAccordion from '../components/BaseFieldsAccordion';
 import CustomFieldAccordion from '../components/CustomFieldsAccordion';
 import './ModalPolicies.scss';
-import draftToHtml from 'draftjs-to-html';
-import htmlToDraft from 'html-to-draftjs';
-import { Formik } from 'formik';
 
 const localStorageActiveTabKey = 'builderActiveTab';
-
-const CustomFieldsPreview = (props) => {
-  const customFieldsPreviewObj = {
-    singleLine: <SingleLine {...props} />,
-    multiLine: <MultiLine {...props} />,
-    date: <Date {...props} />,
-    dateTime: <DateTime {...props} />,
-    dropDown: <DropDown {...props} />,
-    radioButtons: <RadioButtons {...props} />,
-    checkboxes: <Checkboxes {...props} />,
-    fileUpload: <FileUpload {...props} />,
-  };
-  return customFieldsPreviewObj[props.type];
-};
 
 const styles5 = (theme) => ({
   root: {
@@ -146,13 +102,6 @@ const DialogActions5 = withStyles((theme) => ({
   },
 }))(DialogActions);
 
-const TabContainer4 = ({ children, dir }) => {
-  return (
-    <Typography component='div' dir={dir} style={{ padding: 8 * 3 }}>
-      {children}
-    </Typography>
-  );
-};
 const useStyles4 = makeStyles((theme) => ({
   root: {
     backgroundColor: theme.palette.background.paper,
@@ -194,8 +143,10 @@ const ModalPolicies = ({
   setShowModal,
   showModal
 }) => {
+  const dispatch = useDispatch();
+  const { showErrorAlert, showSavedAlert,  showSelectValuesAlert, showUpdatedAlert } = actions;
   const [alignment, setAlignment] = useState('');
-  const actions = [
+  const actionsReader = [
     { value: 'OnAdd', label: 'On Add' },
     { value: 'OnEdit', label: 'On Edit' },
     { value: 'OnDelete', label: 'On Delete' },
@@ -251,12 +202,9 @@ const ModalPolicies = ({
   const [messageTo, setMessageTo] = useState([]);
   const [notificationFrom, setNotificationFrom] = useState([]);
   const [notificationTo, setNotificationTo] = useState([]);
-  const [profileSelected, setProfileSelected] = useState(0);
   const [selectedControl, setSelectedControl] = useState(null);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
-  const theme4 = useTheme();
   const [users, setUsers] = useState([]);
-  const [value4, setValue4] = useState(0);
   const [values, setValues] = useState({
     apiDisabled: false,
     bodyAPI: '',
@@ -278,13 +226,6 @@ const ModalPolicies = ({
     setAlignment(newAlignment);
   };
 
-  const handleChange4 = (event, newValue) => {
-    setValue4(newValue);
-  };
-  const handleChangeIndex4 = (index) => {
-    setValue4(index);
-  };
-
   const handleChangeCheck = (name) => (event) => {
     setValues({ ...values, [name]: event.target.checked });
   };
@@ -303,7 +244,6 @@ const ModalPolicies = ({
   const handleCloseModal = () => {
     reset();
     setShowModal(false);
-    setValue4(0);
   };
 
   const handleOnChangeValue = (name) => (event) => {
@@ -314,7 +254,7 @@ const ModalPolicies = ({
   const handleSave = () => {
     const { selectedAction, selectedCatalogue } = values;
     if (!selectedAction || !selectedCatalogue) {
-      alert('Select values before saving...');
+      dispatch(showSelectValuesAlert());
       return;
     }
     const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
@@ -332,15 +272,17 @@ const ModalPolicies = ({
         .then((data) => data.json())
         .then((response) => {
           const { _id } = response.response[0];
+          dispatch(showSavedAlert());
           saveAndReload('policies', _id);
         })
-        .catch((error) => console.log('ERROR', error));
+        .catch((error) => dispatch(showErrorAlert()));
     } else {
       updateDB('policies/', body, id[0])
         .then((response) => {
+          dispatch(showUpdatedAlert());
           saveAndReload('policies', id[0]);
         })
-        .catch((error) => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
     handleCloseModal();
   };
@@ -420,7 +362,7 @@ const ModalPolicies = ({
         const users = data.response.map(({ _id, email, lastName, name }) => ({ _id, email, lastName, name }));
         setUsers(users);
       })
-      .catch((error) => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
 
     if (!id || !Array.isArray(id)) {
       return;
@@ -462,7 +404,7 @@ const ModalPolicies = ({
         setNotificationFrom(notificationFrom);
         setNotificationTo(notificationTo);
       })
-      .catch((error) => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [id, employeeProfileRows]);
 
   return (
@@ -502,7 +444,7 @@ const ModalPolicies = ({
                             onChange={handleOnChangeValue('selectedAction')}
                             value={values.selectedAction}
                           >
-                            {actions.map(({ value, label }) => (
+                            {actionsReader.map(({ value, label }) => (
                               <MenuItem key={value} value={value}>
                                 {label}
                               </MenuItem>
