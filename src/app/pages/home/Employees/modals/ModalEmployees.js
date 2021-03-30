@@ -208,8 +208,12 @@ const ModalEmployees = ({
     }) => {
       if (!messageDisabled) {
         return (
-          alert(
-            `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`
+          dispatch(
+            showCustomAlert({
+              open: true,
+              message: `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`,
+              type: 'info'
+            })
           ),
           postDB('messages', {
             from: messageFrom,
@@ -228,8 +232,12 @@ const ModalEmployees = ({
         )
       } else if (!notificationDisabled) {
         return (
-          alert(
-            `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`
+          dispatch(
+            showCustomAlert({
+              open: true,
+              message: `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`,
+              type: 'info'
+            })
           ),
           postDB('notifications', {
             formatDate: formatDate,
@@ -405,7 +413,7 @@ const ModalEmployees = ({
     } else {
       updateDB('employees/', body, id[0])
         .then((response) => {
-          dispatch(showUpdatedAlert);
+          dispatch(showUpdatedAlert());
           saveAndReload('employees', id[0]);
           updateAssignedEmpToAssets(id[0]);
           executePolicies('OnEdit', policies);
@@ -625,7 +633,13 @@ const ModalEmployees = ({
                                 columnIndex={colIndex}
                                 from='form'
                                 id={customField.id}
-                                onClick={() => alert(customField.content)}
+                                onClick={() => dispatch(
+                                  showCustomAlert({
+                                    open: true,
+                                    message: customField.content,
+                                    type: 'info'
+                                  })
+                                )}
                                 onDelete={() => { }}
                                 onSelect={() => { }}
                                 onUpdateCustomField={handleUpdateCustomFields}

@@ -6,14 +6,15 @@ import clsx from 'clsx';
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { FormattedMessage } from 'react-intl';
-import Badge from '@material-ui/core/Badge';
+import { Badge, IconButton, Typography } from '@material-ui/core';
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import { ReactComponent as MessageIcon } from '../../../_metronic/layout/assets/layout-svg-icons/Message.svg';
 import {
-  postDBEncryptPassword,
-  getOneDB,
+  getCountDB,
+  getDB,
+  getDBComplex,
   updateDB,
-  postDB,
-  getDB
 } from '../../crud/api';
 import HeaderDropdownToggle from '../content/CustomDropdowns/HeaderDropdownToggle';
 import Messages from '../../pages/home/Messages/Messages';
@@ -38,7 +39,7 @@ const MessagesTopBar = ({
   const [openModal, setOpenModal] = useState(false);
 
   const backGroundStyle = () => !bgImage ? ('none') : ('url(' + bgImage + ')');
-  
+
   const changeColor = (read) => (
     read ? 'firstColor' : 'secondColor'
   )
@@ -51,9 +52,8 @@ const MessagesTopBar = ({
     const notif = data.findIndex(({ _id }) => _id === id);
     const newData = data;
     newData[notif].read = true;
-    setData(newData);
-    updateCount(data);
     handleUpdate(id, read);
+    getMessagesData();
   }
 
   const handleUpdate = (id, read) => {
@@ -113,15 +113,58 @@ const MessagesTopBar = ({
     return result;
   };
 
-  useEffect(() => {
-    getDB('messages/')
+  const [control, setControl] = useState({
+    search: '',
+    rowsPerPage: 5,
+    page: 0,
+    total: 1,
+  });
+
+  const handlePageChange = (action) => {
+    if (action === 'add' && (control.page + 1) < Math.ceil(control.total / control.rowsPerPage)) {
+      setControl(prev => ({ ...prev, page: prev.page + 1 }))
+    }
+    else if (action === 'reduce' && (control.page + 1) > 1) {
+      setControl(prev => ({ ...prev, page: prev.page - 1 }))
+    }
+  }
+
+  const getMessagesData = () =>{
+    getCountDB({
+      collection: 'messages',
+    })
+      .then(response => response.json())
+      .then(data => {
+        setControl(prev => ({
+          ...prev,
+          total: data.response.count === 0 ? 1 : data.response.count
+        }))
+      });
+
+    getDB('messages')
       .then((response) => response.json())
       .then((data) => {
-        setData(data.response);
         updateCount(data.response);
       })
       .catch((error) => console.log('error>', error));
-  }, []);
+
+    getDBComplex({
+      collection: 'messages',
+      limit: control.rowsPerPage,
+      skip: control.rowsPerPage * control.page,
+      sort: [{ key: 'creationDate', value: -1 }]
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setData(data.response.reverse());
+      })
+      .catch((error) => console.log('error>', error));
+  };
+
+  useEffect(() => {
+    getMessagesData();
+  }, [control.search, control.page]);
+
 
   return (
     <Dropdown className='kt-header__topbar-item' drop='down' alignRight>
@@ -172,6 +215,26 @@ const MessagesTopBar = ({
               </Nav>
               <Tab.Content>
                 <Tab.Pane eventKey='List'>
+                  <div style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-end'
+                  }}>
+                    Page: {control.page + 1}/{Math.ceil(control.total / control.rowsPerPage)}
+                    <IconButton
+                      style={{ marginLeft: '5px' }}
+                      onClick={() => handlePageChange('reduce')}
+                    >
+                      <ChevronLeftIcon />
+                    </IconButton>
+                    <IconButton
+                      style={{ marginRight: '5px' }}
+                      onClick={() => handlePageChange('add')}
+                    >
+                      <ChevronRightIcon />
+                    </IconButton>
+                  </div>
                   <PerfectScrollbar
                     options={perfectScrollbarOptions}
                     style={{ maxHeight: '100vh', position: 'relative' }}
@@ -190,7 +253,7 @@ const MessagesTopBar = ({
                           <div style={{ display: 'flex', minHeight: '100px' }}>
                             <div className={changeBarColor(read)} />
                             <Link
-                              to={`/messages?id=${_id}`}
+                              to={`/messages?id=${_id}&page=${control.page}`}
                               className='kt-header__topbar-item'
                               drop='down'
                               style={{ width: '100%' }}
@@ -205,12 +268,12 @@ const MessagesTopBar = ({
                                 </div>
                                 <div className='kt-notification__item-time'>
                                   {formatDate ? (
-                                      <ReactTimeAgo
-                                        date={formatDate}
-                                        locale='en-EN'
-                                        timeStyle='round' 
-                                      />  
-                                    ) : ''
+                                    <ReactTimeAgo
+                                      date={formatDate}
+                                      locale='en-EN'
+                                      timeStyle='round'
+                                    />
+                                  ) : ''
                                   }
                                 </div>
                               </div>
