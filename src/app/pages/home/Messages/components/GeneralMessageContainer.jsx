@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 import { makeStyles, Divider, Typography, IconButton } from '@material-ui/core';
-import SearchIcon from '@material-ui/icons/Search';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-
-import Snapshot from './Snapshot';
-import MessageInformation from './MessageInformation';
-import './GeneralMessageContainer.scss';
+import ClearIcon from '@material-ui/icons/Clear';
+import SearchIcon from '@material-ui/icons/Search';
 import {
   getCountDB,
-  getDBComplex
+  getDBComplex,
+  getDB
 } from '../../../../crud/api';
+import MessageInformation from './MessageInformation';
+import './GeneralMessageContainer.scss';
+import Snapshot from './Snapshot';
 
 const useStyles = makeStyles(theme => ({
   search: {
@@ -33,6 +35,7 @@ const useStyles = makeStyles(theme => ({
     paddingLeft: '10px'
   },
   inputInput: {
+    width: '74%', 
     border: 'none',
     outline: 'none',
     backgroundColor: '#FFFFFF00'
@@ -44,9 +47,9 @@ const useStyles = makeStyles(theme => ({
 
 const GeneralMessageContainer = () => {
   const classes = useStyles();
+  const [currentId, setCurrentId] = useState(null);
+  const [currentUrl, setCurrentUrl] = useState(null);
   const [data, setData] = useState([]);
-  const [preview, setPreview] = useState('');
-  const [indexHovered, setIndexHovered] = useState(null);
   const [headerInfo, setHeaderInfo] = useState({
     timeStamp: '',
     img: '',
@@ -54,6 +57,12 @@ const GeneralMessageContainer = () => {
     subject: '',
     to: ''
   });
+  const [preview, setPreview] = useState('');
+
+  const changeColor = (id) => (
+    id === currentId ? 'snapshot-color' : ''
+  );
+
   const [control, setControl] = useState({
     search: '',
     rowsPerPage: 5,
@@ -68,9 +77,9 @@ const GeneralMessageContainer = () => {
     else if (action === 'reduce' && (control.page + 1) > 1) {
       setControl(prev => ({ ...prev, page: prev.page - 1 }))
     }
-  }
+  };
 
-  useEffect(() => {
+  const loadInitData = () => {
     let queryLike = ['subject', 'html'].map(key => ({ key, value: control.search }))
 
     getCountDB({
@@ -93,10 +102,54 @@ const GeneralMessageContainer = () => {
     })
       .then(response => response.json())
       .then((data) => {
-        setData(data.response);
+        setData(data.response.reverse());
       })
       .catch((error) => console.log('error>', error));
-  }, [control.search, control.page]);
+    reset();
+  };
+
+  const reset = () => {
+    setPreview('');
+    setHeaderInfo({
+      timeStamp: '',
+      img: '',
+      senderName: '',
+      subject: '',
+      to: ''
+    });
+  };
+
+  useEffect(() => {
+    loadInitData()
+  }, [control.search, control.page])
+
+  useEffect(() => {
+    setCurrentUrl(window.location.search.slice(4));
+  }, [window.location.search]);
+
+  useEffect(() => {
+    if (data.length) {
+      const messageFiltered = data.filter(({ _id }) => _id === currentUrl);
+      if (messageFiltered.length) {
+        setCurrentId(messageFiltered[0]._id);
+        const { timeStamp, img, from, subject, to, html } = messageFiltered[0];
+        setPreview(html);
+        setHeaderInfo({
+          img,
+          senderName: from[0].name,
+          subject,
+          timeStamp,
+          to: to[0].email
+        });
+      } else {
+        reset();
+      }
+    }
+  }, [currentUrl, data]);
+
+  useEffect(() => {
+    loadInitData();
+  }, []);
 
   return (
     <div className='__container-gmc'>
@@ -109,65 +162,56 @@ const GeneralMessageContainer = () => {
             className={classes.inputInput}
             key='SearchField'
             onChange={event => setControl(prev => ({ ...prev, search: event.target.value }))}
+            value = {control.search}
             placeholder='Search...'
           />
+          {
+            control.search.length > 0 && (
+              <div style={{
+                display:'flex',
+                justifyContent: 'flex-end'
+              }}>
+                <IconButton size="small" onClick={() => setControl(prev => ({ ...prev, search: '' }))}>
+                  <ClearIcon />
+                </IconButton>
+              </div>
+            )
+          }
         </div>
-        <span className='field-validator_error' style={{ display:'flex', justifyContent: 'center', width: '90%' }}>
+        <span className='field-validator_error' style={{ display: 'flex', justifyContent: 'center', width: '90%' }}>
           {control.search.length >= 3 || control.search.length === 0 ? null : 'The search value must be at least 3 characters long'}
         </span>
-        {
-          data.length > 0 ? (
-            data.map((msg, index) => (
-              <>
-                <div key={msg.id}
-                  onClick={() => setPreview(msg.html)}
-                  style={{
-                    width: '90%'
-                  }}
-                  onMouseEnter={() => setIndexHovered(index)}
-                  onMouseLeave={() => setIndexHovered(null)}
-                >
-                  <div
-                    onClick={() => (
-                      setHeaderInfo({
-                        timeStamp: msg.timeStamp,
-                        img: msg.img,
-                        senderName: msg.from,
-                        subject: msg.subject,
-                        to: msg.to[0].email
-                      })
-                    )
-                    }
-                  >
-                    <Snapshot
-                      dateTime={msg.timeStamp}
-                      name={msg.from[0].name}
-                      lastName={msg.from[0].lastName}
-                      id={msg.id}
-                      img={msg.img}
-                      senderName={msg.from[0].email}
-                      subject={msg.subject}
-                      to={msg.to[0].email}
-                      onHover={ indexHovered === index }
-                    />
-                  </div>
-                  <Divider />
+        {data.length ? data.map((msg, index) => {
+          const { html, _id, timeStamp, from, img, subject, to } = msg;
+          return (
+            <div key={msg._id} onClick={() => setPreview(html)}>
+              <Link to={`/messages?id=${_id}`}>
+                <div className={changeColor(_id)}>
+                  <Snapshot
+                    data={data}
+                    dateTime={timeStamp}
+                    name={from[0].name}
+                    lastName={from[0].lastName}
+                    id={_id}
+                    img={img}
+                    reload={loadInitData}
+                    senderName={from[0].email}
+                    subject={subject}
+                    to={to[0].email}
+                  />
                 </div>
-              </>
-            ))
-          ) : (
-            <Typography align='center' style={{ width: '90%', marginTop: '20px' }}>
-              There are no messages to display
-            </Typography>
+              </Link>
+            </div>
           )
-        }
+        }) : 'You have no messages'}
         <div style={{
           position: 'fixed',
-          bottom: 40,
-          width: '28%',
+          bottom: 18,
+          width: '49vh',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'flex-end'
+          justifyContent: 'flex-end',
+
         }}>
           Page: {control.page + 1}/{Math.ceil(control.total / control.rowsPerPage)}
           <IconButton

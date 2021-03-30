@@ -132,6 +132,7 @@ const getDBComplex = ({
 
   additionalParams = additionalParams ? `?${additionalParams}` : '';
   const reqURL = `${getAPIPath(collection)}${additionalParams}`;
+  console.log(reqURL)
   return fetch(reqURL, { method: 'GET', headers: getHeaders() });
 };
 

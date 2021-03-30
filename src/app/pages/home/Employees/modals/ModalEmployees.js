@@ -33,7 +33,7 @@ import {
 } from '../../Components/CustomFields/CustomFieldsPreview';
 import ImageUpload from '../../Components/ImageUpload';
 import Permission from '../components/Permission';
-import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import { getFileExtension, saveImage, getImageURL, getCurrentDateTime } from '../../utils';
 import {
   getOneDB,
   updateDB,
@@ -180,6 +180,77 @@ const ModalEmployees = ({
     enabled: false,
     isValidForm: {}
   });
+
+  const executePolicies = (catalogueName) => {
+    const formatDate = new Date();
+    const {dateFormatted: currentDate, timeFormatted: currentTime} = getCurrentDateTime();
+    const timeStamp = `${currentDate} ${currentTime}`;
+    const read = false;
+    const status = 'new';
+    const filteredPolicies = policies.filter(
+      (policy) => policy.selectedAction === catalogueName);
+    filteredPolicies.forEach(({
+      apiDisabled,
+      selectedIcon,
+      layout,
+      messageDisabled,
+      messageFrom,
+      messageNotification,
+      messageTo,
+      notificationDisabled,
+      notificationFrom,
+      notificationTo,
+      policyName,
+      selectedAction,
+      selectedCatalogue,
+      subjectMessage,
+      subjectNotification
+    }) => {
+      if (!messageDisabled) {
+        return (
+          alert(
+            `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`
+          ),
+          postDB('messages', {
+            from: messageFrom,
+            html: layout,
+            read: read,
+            status: status,
+            subject: subjectMessage,
+            timeStamp: timeStamp,
+            to: messageTo
+          })
+            .then(data => data.json())
+            .then((response) => {
+              const { } = response.response[0];
+            })
+            .catch((error) => console.log('ERROR', error))
+        )
+      } else if (!notificationDisabled) {
+        return (
+          alert(
+            `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`
+          ),
+          postDB('notifications', {
+            formatDate: formatDate,
+            from: notificationFrom,
+            icon: selectedIcon,
+            message: messageNotification,
+            read: read,
+            status: status,
+            subject: subjectNotification,
+            timeStamp: timeStamp,
+            to: notificationTo
+          })
+            .then(data => data.json())
+            .then((response) => {
+              const { } = response.response[0];
+            })
+            .catch((error) => console.log('ERROR', error))
+        )
+      }
+    })
+  }
 
   const handleChange = (name) => (event) => {
     setValues({ ...values, [name]: event.target.value });

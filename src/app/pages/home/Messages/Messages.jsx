@@ -45,7 +45,6 @@ export default function Messages() {
         )}
         {tab === 1 && (
           <PortletBody>
-            <h2>Villa</h2>
           </PortletBody>
         )}
       </Portlet>
