@@ -99,10 +99,19 @@ const GeneralMessageContainer = () => {
       limit: control.rowsPerPage,
       skip: control.rowsPerPage * control.page,
       queryLike: control.search.length >= 3 ? queryLike : null,
+      sort: [{ key: 'creationDate', value: -1 }]
     })
       .then(response => response.json())
       .then((data) => {
-        setData(data.response.reverse());
+        setData(data.response);
+        console.log('data', !data.response)
+        if(!data.response.length && control.page > 0){
+          console.log('no se que pedo')
+          setControl(prev => ({
+            ...prev,
+            page: prev.page - 1
+          })); 
+        }
       })
       .catch((error) => console.log('error>', error));
     reset();
@@ -124,7 +133,11 @@ const GeneralMessageContainer = () => {
   }, [control.search, control.page])
 
   useEffect(() => {
-    setCurrentUrl(window.location.search.slice(4));
+    setCurrentUrl(window.location.search.slice(4).split('&')[0]);
+    setControl(prev => ({
+      ...prev,
+      page: Number(window.location.search.slice(-1))
+    }));
   }, [window.location.search]);
 
   useEffect(() => {
@@ -185,7 +198,7 @@ const GeneralMessageContainer = () => {
           const { html, _id, timeStamp, from, img, subject, to } = msg;
           return (
             <div key={msg._id} onClick={() => setPreview(html)}>
-              <Link to={`/messages?id=${_id}`}>
+              <Link to={`/messages?id=${_id}&page=${control.page}`}>
                 <div className={changeColor(_id)}>
                   <Snapshot
                     data={data}
@@ -204,14 +217,15 @@ const GeneralMessageContainer = () => {
             </div>
           )
         }) : 'You have no messages'}
-        <div style={{
+      </div>
+      <div style={{
           position: 'fixed',
-          bottom: 18,
-          width: '49vh',
+          bottom: 20,
+          width: '40vh',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'flex-end',
-
+          justifyContent: 'flex-start',
+          backgroundColor: '#FFFFFF'
         }}>
           Page: {control.page + 1}/{Math.ceil(control.total / control.rowsPerPage)}
           <IconButton
@@ -227,7 +241,6 @@ const GeneralMessageContainer = () => {
             <ChevronRightIcon />
           </IconButton>
         </div>
-      </div>
       <div className='__container-preview'>
         <MessageInformation
           dateTime={headerInfo.timeStamp}
