@@ -1,28 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from "react-redux";
 import { Tabs } from '@material-ui/core';
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../store/ducks/general.duck';
 import {
   Portlet,
   PortletBody,
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
+import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import * as general from "../../../store/ducks/general.duck";
-// AApp Components
 import TableComponent2 from '../Components/TableComponent2';
-import ModalEmployeeProfiles from './modals/ModalEmployeeProfiles';
-import ModalEmployees from './modals/ModalEmployees';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
-
-//DB API methods
 import ModalYesNo from '../Components/ModalYesNo';
 import Policies from '../Components/Policies/Policies';
-import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
+import ModalEmployees from './modals/ModalEmployees';
+import ModalEmployeeProfiles from './modals/ModalEmployeeProfiles';
 
 const localStorageActiveTabKey = 'builderActiveTab';
 
 const Employees = ({ globalSearch, setGeneralSearch }) => {
+  const dispatch = useDispatch();
+  const { showCustomAlert, showDeletedAlert, showErrorAlert} = actions;
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
+  const [employeeLayoutSelected, setEmployeeLayoutSelected] = useState({});
+  const [policies, setPolicies] = useState(['']);
+  const [referencesSelectedId, setReferencesSelectedId] = useState(null);
+  const [
+    selectReferenceConfirmation,
+    setSelectReferenceConfirmation
+  ] = useState(false);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
 
   const createUserProfilesRow = (id, name, creator, creation_date) => {
@@ -132,22 +140,29 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
         .then(response => response.json())
         .then(data => {
           if (collectionName === 'employeeProfiles') {
-            const rows = data.response.map(row => {
-              return createUserProfilesRow(row._id, row.name, 'Admin', '11/03/2020');
+            const rows = data.response.map((row) => {
+              const { _id, name, creationUserFullName, creationDate } = row;
+              return createUserProfilesRow(
+                _id,
+                name,
+                creationUserFullName,
+                creationDate
+              );
             });
             setControl(prev => ({ ...prev, employeeProfilesRows: rows, employeeProfilesRowsSelected: [] }));
           }
           if (collectionName === 'employees') {
-            const rows = data.response.map(row => {
+            const rows = data.response.map((row) => {
+              const { _id, name, lastName, email, designation, manager, creationUserFullName, creationDate } = row;
               return createEmployeeRow(
-                row._id,
-                row.name,
-                row.lastName,
-                row.email,
-                row.designation,
-                row.manager,
-                'Admin',
-                '11/03/2020'
+                _id,
+                name,
+                lastName,
+                email,
+                designation,
+                manager,
+                creationUserFullName,
+                creationDate
               );
             });
             setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));
@@ -156,8 +171,6 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
         .catch(error => console.log('error>', error));
     });
   };
-
-  const [policies, setPolicies] = useState(['']);
 
   useEffect(() => {
     loadEmployeesData('employees');
@@ -196,12 +209,6 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
     usersRowsSelected: []
   });
 
-  const [referencesSelectedId, setReferencesSelectedId] = useState(null);
-  const [
-    selectReferenceConfirmation,
-    setSelectReferenceConfirmation
-  ] = useState(false);
-
   const collections = {
     employeeProfiles: {
       id: 'idEmployeeProfile',
@@ -237,10 +244,11 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
         id.forEach((_id) => {
           deleteDB(`${collection.name}/`, _id)
             .then((response) => {
+              dispatch(showDeletedAlert());
               executePolicies('OnDelete');
               loadEmployeesData(collection.name);
             })
-            .catch((error) => console.log('Error', error));
+            .catch((error) => dispatch(showErrorAlert()));
         });
         loadEmployeesData(collection.name);
       },
@@ -248,19 +256,24 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
         if (collectionName === 'references') {
           setReferencesSelectedId(id);
         }
-      },
+      }
     };
   };
 
   const executePolicies = (catalogueName) => {
     const filteredPolicies = policies.filter(
-      (policy) => policy.selectedAction === catalogueName
+      ({ selectedAction }) => selectedAction === catalogueName
     );
     filteredPolicies.forEach(
-      ({ policyName, selectedAction, selectedCatalogue }) =>
-        alert(
-          `Policy <${policyName}> with action <${selectedAction}> of type <${selectedCatalogue}> will be executed`
-        )
+      ({ policyName, selectedAction, selectedCatalogue }) =>{
+        dispatch(
+          showCustomAlert({
+            open: true,
+            message: `Policy <${policyName}> with action <${selectedAction}> of type <${selectedCatalogue}> will be executed`,
+            type: 'info'
+          })
+        );
+      }
     );
   };
 

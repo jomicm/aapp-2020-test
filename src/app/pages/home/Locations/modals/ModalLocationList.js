@@ -1,38 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Label } from 'reactstrap';
+import { useDispatch } from 'react-redux';
 import ImageMarker from 'react-image-marker';
 import SwipeableViews from 'react-swipeable-views';
 import {
-  AppBar,
-  Badge,
   Button,
-  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControlLabel,
   IconButton,
   InputLabel,
+  makeStyles,
   Paper,
-  Switch,
   Tab,
   Tabs,
   TextField,
-  Typography
+  Typography,
+  useTheme,
+  withStyles
 } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
 import RoomIcon from '@material-ui/icons/Room';
-import {
-  makeStyles,
-  useTheme,
-  withStyles
-} from '@material-ui/core/styles';
 import CloseIcon from '@material-ui/icons/Close';
-import {
-  Portlet,
+import { actions } from '../../../../store/ducks/general.duck';
+import {  
   PortletBody,
-  PortletFooter,
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../../partials/content/Portlet';
@@ -50,7 +42,6 @@ import {
 import { getFileExtension, getImageURL, saveImage } from '../../utils';
 import GoogleMaps from '../../Components/GoogleMaps';
 import ImageUpload from '../../Components/ImageUpload';
-import { TabsTitles } from '../../Components/Translations/tabsTitles';
 import './ModalLocationList.scss';
 
 const localStorageActiveTabKey = 'builderActiveTab';
@@ -164,13 +155,6 @@ const useStyles4 = makeStyles(theme => ({
   }
 }));
 
-// Example 5 - Tabs
-const useStyles5 = makeStyles({
-  root: {
-    flexGrow: 1
-  }
-});
-
 const ModalLocationList = ({
   dataFromParent,
   editOrNew,
@@ -185,22 +169,17 @@ const ModalLocationList = ({
   setShowModal,
   showModal
 }) => {
+  const dispatch = useDispatch();
   const [image, setImage] = useState(null);
   const [mapCenter, setMapCenter] = useState(null);
   const [markers, setMarkers] = useState([]);
   const [modalCoords, setModalCoords] = useState([]);
   const [modalMapZoom, setModalMapZoom] = useState(6);
-  const [pinMarker, setPinMarker] = useState([]);
   const [profileLabel, setProfileLabel] = useState('');
-  const [showImage, setShowImage] = useState(null);
-  const style = {
-    border: '5px solid blue',
-    minWidth: '200px',
-    minHeight: '200px'
-  }
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const [tabs, setTabs] = useState([]);
   const theme4 = useTheme();
+  const { showCustomAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const [value4, setValue4] = useState(0);
   const [values, setValues] = useState({
     categoryPic: '/media/misc/placeholder-image.jpg',
@@ -216,12 +195,6 @@ const ModalLocationList = ({
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const classes = useStyles();
   const classes4 = useStyles4();
-  const containerStyle = {
-    border: '5px dashed green',
-    position: 'relative',
-    minWidth: '200px',
-    minHeight: '200px'
-  }
 
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value });
@@ -257,6 +230,16 @@ const ModalLocationList = ({
   };
 
   const handleSave = () => {
+    if(!values.name){
+      dispatch(
+        showCustomAlert({
+          open: true,
+          message: 'Please fill the "Name" field',
+          type: 'warning'
+        })
+      );
+      return;
+    }
     const fileExt = getFileExtension(image);
     const body = {
       ...values,
@@ -269,17 +252,19 @@ const ModalLocationList = ({
       postDB('locationsReal', body)
         .then((response) => response.json())
         .then((data) => {
+          dispatch(showSavedAlert());
           const { _id } = data.response[0];
           saveAndReload('locationsReal', _id);
         })
-        .catch((error) => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     } else {
       body.parent = realParent;
       updateDB('locationsReal/', body, parent)
         .then((response) => {
+          dispatch(showUpdatedAlert());
           saveAndReload('locationsReal', parent);
         })
-        .catch((error) => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
     setModalMapZoom(modalMapZoom);
     handleCloseModal();
@@ -327,7 +312,7 @@ const ModalLocationList = ({
         setTabs(tabs);
         setValue4(0);
       })
-      .catch((error) => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
     getOneDB('locationsReal/', parent)
       .then((response) => response.json())
       .then((data) => {
@@ -335,7 +320,7 @@ const ModalLocationList = ({
         const imageURL = parent !== "root" ? getImageURL(parent, 'locationsReal', fileExt) : '';
         setValues((prev) => ({ ...prev, imageURL }));
       })
-      .catch((error) => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [showModal]);
 
   useEffect(() => {
@@ -371,8 +356,20 @@ const ModalLocationList = ({
         setTabs(tabs);
         setValue4(0);
       })
-      .catch((error) => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [showModal]);
+
+  const MapGoogle = (centerCoords) => (
+    <GoogleMaps
+      center={centerCoords}
+      coords={modalCoords}
+      edit
+      setCoords={setModalCoords}
+      setZoom={setModalMapZoom}
+      styleMap={{ marginRight: '20px', width: '95%', height: '63%' }}
+      zoom={modalMapZoom}
+    />
+  );
 
   return (
     <div style={{ width: '1000px' }}>
@@ -459,16 +456,8 @@ const ModalLocationList = ({
                           </Button>
                         </div>
                         <div className='container-map-view-modal-location-list'>
-                          <GoogleMaps
-                            center={mapCenter}
-                            coords={modalCoords}
-                            edit
-                            setCoords={setModalCoords}
-                            setZoom={setModalMapZoom}
-                            styleMap={{ marginRight: '20px', width: '95%', height: '63%' }}
-                            zoom={modalMapZoom}
-                          >
-                          </GoogleMaps>
+                          {(mapCenter && editOrNew === 'edit') && MapGoogle(mapCenter)}
+                          {editOrNew === 'new' && MapGoogle({ lat: 19.432608, lng:  -99.133209 })}
                         </div>
                       </div>
                     </PortletBody>

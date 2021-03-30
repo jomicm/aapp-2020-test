@@ -1,21 +1,11 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { connect } from "react-redux";
+import { connect } from 'react-redux';
 import ImageMarker from 'react-image-marker';
 import SwipeableViews from 'react-swipeable-views';
 import { merge } from 'lodash';
 import { Formik } from 'formik';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { Tab, Tabs } from '@material-ui/core';
-import { metronic, initLayoutConfig, LayoutConfig } from '../../../../_metronic';
-import {
-  Portlet,
-  PortletBody,
-  PortletHeader,
-  PortletHeaderToolbar
-} from '../../../partials/content/Portlet';
-import * as general from "../../../store/ducks/general.duck";
-import { getDB } from '../../../crud/api';
-import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import {
   Checkbox,
   FormControl,
@@ -24,6 +14,7 @@ import {
   FormLabel,
   IconButton,
   InputLabel,
+  makeStyles,
   Menu,
   MenuItem,
   Paper,
@@ -32,17 +23,25 @@ import {
   Select,
   TextField,
   Tooltip,
-  Typography
+  Typography,
+  useTheme,
 } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
 import RemoveIcon from '@material-ui/icons/Remove';
 import RoomIcon from '@material-ui/icons/Room';
+import { actions } from '../../../store/ducks/general.duck';
+import { metronic, initLayoutConfig, LayoutConfig } from '../../../../_metronic';
 import {
-  makeStyles,
-  useTheme,
-} from '@material-ui/core/';
+  Portlet,
+  PortletBody,
+  PortletHeader,
+  PortletHeaderToolbar
+} from '../../../partials/content/Portlet';
+import * as general from '../../../store/ducks/general.duck';
+import { getDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import GoogleMaps from '../Components/GoogleMaps';
 import TableComponent2 from '../Components/TableComponent2';
@@ -69,7 +68,9 @@ import {
   SingleLineSettings
 } from '../Components/CustomFields/CustomFieldsPreview';
 import ModalYesNo from '../Components/ModalYesNo';
-import { getImageURL } from '../utils';
+import { hosts, getImageURL } from '../utils';
+
+const { apiHost, localHost } = hosts;
 
 const Divider = () => <div style={{ width: '100%', height: '3px', backgroundColor: 'black' }}></div>;
 
@@ -84,7 +85,7 @@ const locationsTreeData = {
 };
 
 const Locations = ({ globalSearch, setGeneralSearch }) => {
-
+  const { showCustomAlert, showDeletedAlert, showErrorAlert } = actions;
   const theme4 = useTheme();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [coordinates, setCoordinates] = useState([]);
@@ -104,12 +105,13 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
   const [locationsList, setLocationsList] = useState([]);
   const [locationProfileRows, setLocationProfileRows] = useState([]);
   const [locationsTree, setLocationsTree] = useState({});
-  const [mapCenter, setMapCenter] = useState(null);
+  const [mapCenter, setMapCenter] = useState({ lat: 19.432608, lng: -99.133209 });
   const [markers, setMarkers] = useState([]);
   const [modalId, setModalId] = useState(null);
   const [parentFileExt, setParentFileExt] = useState(null);
   const [parentSelected, setParentSelected] = useState(null);
   const [profileSelected, setProfileSelected] = useState({});
+  const [profileSelectedId, setProfileSelectedId] = useState('');
   const [openListModal, setOpenListModal] = useState(false);
   const [openProfileModal, setOpenProfileModal] = useState(false);
   const [openYesNoModal, setOpenYesNoModal] = useState(false);
@@ -142,32 +144,55 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
     },
     removeLocation() {
       deleteDB('locationsReal/', parentSelected)
-        .then((response) => handleLoadLocations())
-        .catch((error) => console.log('Error', error));
+        .then((response) => {
+          dispatch(showDeletedAlert());
+          handleLoadLocations();
+        })
+        .catch((error) => dispatch(showErrorAlert()));
       setOpenYesNoModal(false);
     },
     openProfilesListBox(e) {
+      if (!parentSelected) {
+        dispatch(
+          showCustomAlert({
+            open: true,
+            message: 'Please select a valid location',
+            type: 'warning'
+          })
+        );
+        return;
+      }
       setEditOrNew('new');
       setAnchorEl(e.currentTarget);
     },
     editLocation() {
-      if (!parentSelected || parentSelected === 'root') return;
+      if (!parentSelected || parentSelected === 'root') {
+        dispatch(
+          showCustomAlert({
+            open: true,
+            message: 'Please select a valid location',
+            type: 'warning'
+          })
+        );
+        return;
+      };
       setEditOrNew('edit');
       setOpenListModal(true);
     }
   };
 
   const createLocationProfileRow = (
+    id,
     level,
     name,
     creator,
     creation_date
   ) => {
-    return { level, name, creator, creation_date };
+    return { id, level, name, creator, creation_date };
   };
 
   const CustomMarker = (MarkerComponentProps) => {
-    if (imageLayout !== 'http://localhost:3000/media/misc/placeholder-image.jpg') {
+    if (imageLayout !== `${localHost}/media/misc/placeholder-image.jpg`) {
       return (
         <RoomIcon style={{ color: 'red' }} />
       )
@@ -198,19 +223,6 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
     { id: 'name', numeric: true, disablePadding: false, label: 'Description' },
     { id: 'creator', numeric: true, disablePadding: false, label: 'Creator', searchByDisabled: true },
     { id: 'creation_date', numeric: true, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
-  ];
-
-  const locationsHeadRows = [
-    { id: 'level', numeric: true, disablePadding: false, label: 'Level' },
-    { id: 'name', numeric: true, disablePadding: false, label: 'Description' },
-    { id: 'creator', numeric: true, disablePadding: false, label: 'Creator' },
-    { id: 'creation_date', numeric: true, disablePadding: false, label: 'Creation Date' }
-  ];
-
-  const locationsRows = [
-    createLocationProfileRow('1', '0', 'CDMX', 'Admin', '11/03/2020'),
-    createLocationProfileRow('2', '1', 'Monterrey', 'Admin', '11/03/2020'),
-    createLocationProfileRow('3', '2', 'Guadalajara', 'Admin', '11/03/2020'),
   ];
 
   const TabContainer4 = ({ children, dir }) => {
@@ -249,10 +261,12 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
     if (!id || !Array.isArray(id)) return;
     id.forEach(_id => {
       deleteDB('locations/', _id)
-        .then((response) => console.log('success', response))
-        .catch((error) => console.log('Error', error));
+        .then((response) => {
+          dispatch(showDeletedAlert());
+          loadLocationsProfilesData();
+        })
+        .catch((error) => dispatch(showErrorAlert()));
     });
-    loadLocationsProfilesData();
   };
 
   const onEditProfileLocation = (_id) => {
@@ -267,7 +281,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
 
   const getImageLayout = (id) => {
     if (id === 'root') {
-      setImageLayout('http://localhost:3000/media/misc/placeholder-image.jpg')
+      setImageLayout(`${localHost}/media/misc/placeholder-image.jpg`)
     } else {
       const result = locations.filter((location) => location._id === id);
       const image = result.map((coordinate) => coordinate.fileExt);
@@ -275,7 +289,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
         const imageURLLayout = getImageURL(id, 'locationsReal', image[0]);
         setImageLayout(imageURLLayout);
       } else {
-        setImageLayout('http://localhost:3000/media/misc/placeholder-image.jpg');
+        setImageLayout(`${localHost}/media/misc/placeholder-image.jpg`);
       }
     }
   }
@@ -408,8 +422,8 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
         .then(data => {
           if (collectionName === 'locations') {
             const profileRows = data.response.map((row) => {
-              const { level, name } = row;
-              return createLocationProfileRow(level, name, 'Admin', '11/03/2020');
+              const { _id, level, name } = row;
+              return createLocationProfileRow(_id, level, name, 'Admin', '11/03/2020');
             });
             setLocationProfileRows(profileRows);
             setSelectedLocationProfileRows([]);
@@ -435,6 +449,19 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
   useEffect(() => {
     handleLoadLocations();
   }, []);
+
+  useEffect(() => {
+    if(anchorEl && !selectedLocationProfileRows.length){
+      dispatch(
+        showCustomAlert({
+          open: true,
+          message: "There aren't more profiles to add",
+          type: 'warning'
+        })
+      );
+      setAnchorEl(null);
+    }
+  }, [anchorEl])
 
   useEffect(() => {
     loadLocationsProfilesData('locations');
@@ -600,7 +627,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
                                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                                       <div style={{ height: '480px', width: '600px' }}>
                                         <ImageMarker
-                                          src={imageLayout ? imageLayout : 'http://localhost:3000/media/misc/placeholder-image.jpg'}
+                                          src={imageLayout ? imageLayout : `${localHost}/media/misc/placeholder-image.jpg`}
                                           markers={markers}
                                           markerComponent={CustomMarker}
                                         />
@@ -640,7 +667,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
                             onAdd={onAddProfileLocation}
                             onDelete={onDeleteProfileLocation}
                             onEdit={onEditProfileLocation}
-                            onSelect={(element) => console.log('onSelect:', element)}
+                            onSelect={setProfileSelectedId}
                             paginationControl={({ rowsPerPage, page }) =>
                               setTableControl(prev => ({
                                 ...prev,

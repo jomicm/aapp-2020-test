@@ -1,0 +1,27 @@
+.modal-pdf-size {
+    height: auto;
+    width: 1200px;
+}
+
+.title-pdf-bar {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.button-print-pdf {
+    display: flex;
+    justify-content: flex-end;
+    margin: 20px 20px 0 0;
+    padding: 5px;
+    position: -webkit-sticky;
+    position: sticky;
+    top: 15px;
+    z-index: 99;
+}
+
+.modal-assignment-content {
+    margin: auto;
+    width: 90%;
+}

@@ -1,7 +1,8 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
-import { connect } from "react-redux";
+import { connect, useDispatch } from "react-redux";
 import { Tabs } from '@material-ui/core';
+import { actions } from '../../../store/ducks/general.duck';
 import {
   Portlet,
   PortletBody,
@@ -22,7 +23,8 @@ import ModalYesNo from '../Components/ModalYesNo';
 
 const localStorageActiveTabKey = 'builderActiveTab';
 function Users({ globalSearch, setGeneralSearch }) {
-
+  const dispatch = useDispatch();
+  const { showDeletedAlert, showErrorAlert } = actions;
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
 
@@ -203,10 +205,12 @@ function Users({ globalSearch, setGeneralSearch }) {
         if (!id || !Array.isArray(id)) return;
         id.forEach(_id => {
           deleteDB(`${collection.name}/`, _id)
-            .then(response => console.log('success', response))
-            .catch(error => console.log('Error', error));
+            .then(response => {
+              dispatch(showDeletedAlert());
+              loadUsersData(collection.name)
+            })
+            .catch(error => dispatch(showErrorAlert()));
         });
-        loadUsersData(collection.name);
       },
       onSelect(id) {
         if (collectionName === 'userProfiles') {

@@ -1,23 +1,26 @@
 /* eslint-disable no-restricted-imports */
 import React, { useEffect, useState } from 'react';
 import { omit, isEmpty } from 'lodash';
-import { connect } from "react-redux";
+import { connect, useDispatch } from "react-redux";
+import {
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField
+} from "@material-ui/core";
+
 import { metronic } from "../../../../../_metronic";
+import { actions } from '../../../../store/ducks/general.duck';
 import { getDB, postDB, updateDB } from '../../../../crud/api';
 import { getFirstDocCollection } from '../../utils';
 import { languages } from '../../constants';
 import SaveButton from '../settings-tabs/components/SaveButton';
-
-import {
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  TextField
-} from "@material-ui/core";
 import { useStyles } from './styles';
 
-const General = props => {
+const General = (props) => {
+  const dispatch = useDispatch();
+  const { showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const classes = useStyles();
   const [values, setValues] = useState({
     languages,
@@ -44,21 +47,24 @@ const General = props => {
           postDB('settingsGeneral', body)
             .then(data => data.json())
             .then(response => {
-              // saveImages(imagesInfo);
-              window.location.reload();
+              dispatch(showSavedAlert());
             })
-            .catch(error => console.log(error));
+            .catch(error => {
+              dispatch(showErrorAlert());
+            });
         } else {
           updateDB('settingsGeneral/', body, id)
             .then(response => {
-              // saveImages(imagesInfo);
-              // saveAndReload('settingsDesign', 'logoLogin');
-              window.location.reload();
+              dispatch(showUpdatedAlert());
             })
-            .catch(error => console.log(error));
+            .catch(error => {              
+              dispatch(showErrorAlert());
+            });
         }
       })
-      .catch(ex => { console.log('error:', ex) });
+      .catch(ex => {        
+        dispatch(showErrorAlert());
+      });
   };
 
   const loadProcessesData = (collectionName = 'settingsGeneral') => {
@@ -84,7 +90,7 @@ const General = props => {
       </div>
       {fields.map(({ id, name, selected }, ix) => (
         <FormControl key={`base-field-${ix}`} className={classes.textField}>
-          <InputLabel htmlFor="age-simple">{name}</InputLabel>
+          <InputLabel htmlFor='age-simple'>{name}</InputLabel>
           <Select
             value={values[selected]}
             onChange={handleChange(selected)}

@@ -21,8 +21,8 @@ import {
 import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
 import { isEmpty } from 'lodash';
-
-import CustomFields from '../../Components/CustomFields/CustomFields';
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../../store/ducks/general.duck';
 import './ModalAssetCategories.scss';
 import ImageUpload from '../../Components/ImageUpload';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
@@ -116,33 +116,9 @@ const useStyles4 = makeStyles(theme => ({
   }
 }));
 
-// Example 5 - Tabs
-const useStyles5 = makeStyles({
-  root: {
-    flexGrow: 1
-  }
-});
-
-// Example 1 - TextField
-const useStyles = makeStyles(theme => ({
-  container: {
-    display: "flex",
-    flexWrap: "wrap"
-  },
-  textField: {
-    marginLeft: theme.spacing(1),
-    marginRight: theme.spacing(1),
-    width: 200
-  },
-  dense: {
-    marginTop: 19
-  },
-  menu: {
-    width: 200
-  }
-}));
-
 const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, categoryRows }) => {
+  const dispatch = useDispatch();
+  const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -153,21 +129,12 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
   function handleChangeIndex4(index) {
     setValue4(index);
   }
-  // Example 5 - Tabs
-  const classes5 = useStyles5();
-  const [value5, setValue5] = useState(0);
-
-  function handleChange5(event, newValue) {
-    setValue5(newValue);
-  }
 
   const [formValidation, setFormValidation] = useState({
     enabled: false,
     isValidForm: {}
   });
 
-  // Example 1 - TextField
-  const classes = useStyles();
   const [values, setValues] = useState({
     name: '',
     brand: '',
@@ -213,13 +180,13 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
         setValues(prev => ({ ...prev, depreciation }));
         setTabs(tabs);
       })
-      .catch(error => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   };
 
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
-      alert('Please fill out missing fields')
+      dispatch(showFillFieldsAlert());
       return;
     }
 
@@ -231,16 +198,18 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
       postDB('references', body)
         .then(data => data.json())
         .then(response => {
+          dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('references', _id);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('references/', body, id[0])
         .then(response => {
+          dispatch(showUpdatedAlert());
           saveAndReload('references', id[0]);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
     handleCloseModal();
   };
@@ -346,12 +315,9 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
         setCustomFieldsTab(customFieldsTab);
         setTabs(tabs);
       })
-      .catch(error => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [showModal]);
 
-  useEffect(() => {
-    setFormValidation({ ...formValidation, enabled: true });
-  }, [values])
 
   // Function to update customFields
   const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {

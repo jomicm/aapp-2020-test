@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-imports */
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import {
   makeStyles,
@@ -41,9 +41,10 @@ import ViewModuleRoundedIcon from '@material-ui/icons/ViewModuleRounded';
 import RemoveRedEye from '@material-ui/icons/RemoveRedEye';
 
 import { getDB } from '../../../crud/api';
-import ModalYesNo from '../Components/ModalYesNo';
-import TileView from '../Components/TileView';
-import TreeView from '../Components/TreeViewComponent';
+import ModalYesNo from './ModalYesNo';
+import TileView from './TileView';
+import TreeView from './TreeViewComponent';
+import CircularProgressCustom from './CircularProgressCustom';
 
 const useToolbarStyles = makeStyles(theme => ({
   root: {
@@ -169,7 +170,9 @@ const TableComponentTile = props => {
   //Selected Rows
   const [selected, setSelected] = useState([]);
   const [selectedId, setSelectedId] = useState([]);
-  const isSelected = name => selected.indexOf(name) !== -1;
+  const isSelected = name => {
+    return selected.indexOf(name) !== -1;
+  };
 
   //ExternalVariables
   const [order, setOrder] = useState(controlValues.order === 1 ? 'asc' : 'desc');
@@ -187,6 +190,8 @@ const TableComponentTile = props => {
   const [findColumn, setFindColumn] = useState('');
   const [locationsTree, setLocationsTree] = useState({});
 
+  //Loading
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!paginationControl) return;
@@ -203,6 +208,12 @@ const TableComponentTile = props => {
 
   useEffect(() => {
     loadLocationsData();
+    if (rows.length > 0 || controlValues.search.length) {
+      setLoading(false);
+    };
+    if (!rows.length && page > 0){
+      setPage(page - 1 );
+    }
   }, [rows]);
 
   const locationsTreeData = {
@@ -261,6 +272,7 @@ const TableComponentTile = props => {
 
   const handleInputChange = (event, field) => {
     if (event) {
+      setLoading(true);
       searchControl({ value: event.target.value, field: field });
     }
   }
@@ -275,8 +287,10 @@ const TableComponentTile = props => {
     }
 
     useEffect(() => {
-      if (!props.onSelect) return;
-      const selectedIdToSend = numSelected === 1 ? selectedId[0] : null;
+      if (!props.onSelect) {
+        return;
+      };
+      const selectedIdToSend = numSelected ? selectedId : null;
       props.onSelect(selectedIdToSend);
     }, [numSelected]);
 
@@ -329,11 +343,9 @@ const TableComponentTile = props => {
                 </div>
               )
             }
-             {
+            {
               (!controlValues.search.length || controlValues.searchBy) && (
-                <div style={{ width: '25px'}}>
-                 
-                </div>
+                <div style={{ width: '25px' }} />
               )
             }
           </div>
@@ -403,6 +415,7 @@ const TableComponentTile = props => {
   };
 
   const handleRequestSort = (event, property) => {
+    setLoading(true);
     const isDesc = orderBy === property && order === 'desc';
     setOrder(isDesc ? 'asc' : 'desc');
     setOrderBy(property);
@@ -410,7 +423,7 @@ const TableComponentTile = props => {
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelecteds = rows.map(n => n.name);
+      const newSelecteds = rows.map(n => n.id);
       setSelected(newSelecteds);
       return;
     }
@@ -440,12 +453,12 @@ const TableComponentTile = props => {
         selectedId.slice(selectedIndex + 1)
       );
     }
-
-    setSelected(newSelected);
+    setSelected(newSelected); 
     setSelectedId(newSelectedId);
   }
 
   const handleChangePage = (event, newPage) => {
+    setLoading(true);
     setPage(newPage);
   }
 
@@ -636,82 +649,98 @@ const TableComponentTile = props => {
                 {
                   (viewControl.table || viewControl.tree) && (
                     <>
-                      <EnhancedTableHead
-                        noEdit={noEdit}
-                        numSelected={selected.length}
-                        order={order}
-                        orderBy={orderBy}
-                        onRequestSort={handleRequestSort}
-                        onSelectAllClick={handleSelectAllClick}
-                        rowCount={rows.length}
-                      />
-                      <TableBody>
-                        {
-                          rows.length <= 0 && (
-                            <TableRow
-                              hover
-                              key={`No info`}
-                              role='checkbox'
-                              tabIndex={-1}
-                            >
-                              <TableCell
-                                align={'center'}
-                                component='th'
-                                key={`NoData`}
-                                padding={'default'}
-                                scope='row'
-                                colSpan={100}
-                              >
-                                <Typography variant='h5'>
-                                  Sorry, no matching records found
-                            </Typography>
-                              </TableCell>
-                            </TableRow>
-                          )
-                        }
-                        {
-                          rows.map((row, index) => {
-                            const isItemSelected = isSelected(row.id);
-                            const labelId = `enhanced-table-checkbox-\${index}`;
-                            return (
-                              <TableRow
-                                aria-checked={isItemSelected}
-                                hover
-                                key={`key-row-${row.id}`}
-                                onClick={event => handleClick(event, row.name, row.id)}
-                                role='checkbox'
-                                selected={isItemSelected}
-                                tabIndex={-1}
-                              >
-                                <TableCell padding='checkbox'>
-                                  <Checkbox
-                                    checked={isItemSelected}
-                                    inputProps={{ 'aria-labelledby': labelId }}
-                                  />
-                                </TableCell>
-
-                                {columnPicker.filter((column) => column.visible).map((header, ix) =>
-                                  <TableCell
-                                    align={'left'}
-                                    component='th'
-                                    key={`cell-row${index}-${ix}`}
-                                    padding={'default'}
-                                    scope='row'
+                      {
+                        loading ? (
+                          <div style={{
+                            width: '100%',
+                            height: 49 * (rowsPerPage + 2.5),
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignContent: 'center'
+                          }}>
+                            <CircularProgressCustom size={40} />
+                          </div>
+                        ) : (
+                          <>
+                            <EnhancedTableHead
+                              noEdit={noEdit}
+                              numSelected={selected.length}
+                              order={order}
+                              orderBy={orderBy}
+                              onRequestSort={handleRequestSort}
+                              onSelectAllClick={handleSelectAllClick}
+                              rowCount={rows.length}
+                            />
+                            <TableBody>
+                              {
+                                rows.length <= 0 && (
+                                  <TableRow
+                                    hover
+                                    key={`No info`}
+                                    role='checkbox'
+                                    tabIndex={-1}
                                   >
-                                    {row[header.id]}
-                                  </TableCell>
-                                )}
-                              </TableRow>
-                            );
-                          })}
-                        {
-                          rowsPerPage - rows.length > 0 && (
-                            <TableRow style={{ height: 49 * (rowsPerPage - rows.length), width: '100%' }}>
-                              <TableCell colSpan={100} />
-                            </TableRow>
-                          )
-                        }
-                      </TableBody>
+                                    <TableCell
+                                      align={'center'}
+                                      component='th'
+                                      key={`NoData`}
+                                      padding={'default'}
+                                      scope='row'
+                                      colSpan={100}
+                                    >
+                                      <Typography variant='h5'>
+                                        Sorry, no matching records found
+                                    </Typography>
+                                    </TableCell>
+                                  </TableRow>
+                                )
+                              }
+                              {
+                                rows.map((row, index) => {
+                                  const isItemSelected = isSelected(row.id);
+                                  const labelId = `enhanced-table-checkbox-\${index}`;
+                                  return (
+                                    <TableRow
+                                      aria-checked={isItemSelected}
+                                      hover
+                                      key={`key-row-${row.id}`}
+                                      onClick={event => handleClick(event, row.name, row.id)}
+                                      role='checkbox'
+                                      selected={isItemSelected}
+                                      tabIndex={-1}
+                                    >
+                                      <TableCell padding='checkbox'>
+                                        <Checkbox
+                                          checked={isItemSelected}
+                                          inputProps={{ 'aria-labelledby': labelId }}
+                                        />
+                                      </TableCell>
+
+                                      {columnPicker.filter((column) => column.visible).map((header, ix) =>
+                                        <TableCell
+                                          align={'left'}
+                                          component='th'
+                                          key={`cell-row${index}-${ix}`}
+                                          padding={'default'}
+                                          scope='row'
+                                        >
+                                          {row[header.id]}
+                                        </TableCell>
+                                      )}
+                                    </TableRow>
+                                  );
+                                })}
+                              {
+                                rowsPerPage - rows.length > 0 && (
+                                  <TableRow style={{ height: 49 * (rowsPerPage - rows.length), width: '100%' }}>
+                                    <TableCell colSpan={100} />
+                                  </TableRow>
+                                )
+                              }
+                            </TableBody>
+                          </>
+                        )
+                      }
                     </>
                   )
                 }

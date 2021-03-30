@@ -1,6 +1,7 @@
 /* eslint-disable no-restricted-imports */
 import React, { useEffect, useState } from 'react';
 import { omit, isEmpty } from 'lodash';
+import { useDispatch } from 'react-redux';
 import {
   TextField,
   IconButton,
@@ -16,11 +17,14 @@ import AddCircle from '@material-ui/icons/AddCircle';
 import Notification from '@material-ui/icons/NotificationImportant';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { ColorPicker } from 'material-ui-color';
+import { actions } from '../../../../store/ducks/general.duck';
 import { getDB, postDB, getOneDB, updateDB } from '../../../../crud/api';
 import { getFirstDocCollection } from '../../utils';
 import SaveButton from '../settings-tabs/components/SaveButton';
 
 const Processes = props => {
+  const dispatch = useDispatch();
+  const { showCustomAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const [values, setValues] = useState({ alerts: [] });
   const [color, setColor] = useState('');
   const [days, setDays] = useState(0);
@@ -29,12 +33,24 @@ const Processes = props => {
   };
   const handleAddAlert = () => {
     if (!color || !days || days < 1) {
-      alert('Days and/or color have invalid values');
+      dispatch(
+        showCustomAlert({
+          open: true,
+          message: 'Days and/or color have invalid values',
+          type: 'warning'
+        })
+      );
       return;
     }
     const found = (values.alerts || []).find(x => x.days == days);
     if (found) {
-      alert('There is already an existing alert for those days');
+      dispatch(
+        showCustomAlert({
+          open: true,
+          message: 'There is already an existing alert for those days',
+          type: 'warning'
+        })
+      );
       return;
     }
     const newAlert = { days, color: `#${color.hex}` };
@@ -56,16 +72,26 @@ const Processes = props => {
           postDB('settingsProcesses', body)
             .then(data => data.json())
             .then(response => {
+              dispatch(showSavedAlert());
             })
-            .catch(error => console.log(error));
+            .catch(error => {
+              console.log(error)
+              dispatch(showErrorAlert());
+            });
         } else {
           updateDB('settingsProcesses/', body, id)
             .then(response => {
+              dispatch(showUpdatedAlert());
             })
-            .catch(error => console.log(error));
+            .catch(error => {
+              console.log(error)
+              dispatch(showErrorAlert());
+            });
         }
       })
-      .catch(ex => {});
+      .catch(ex => {
+        dispatch(showErrorAlert());
+      });
   };
   const loadInitData = (collectionName = 'settingsProcesses') => {
     getDB(collectionName)

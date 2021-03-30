@@ -1,31 +1,30 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import SwipeableViews from "react-swipeable-views";
+import { isEmpty } from 'lodash';
 import {
   Button,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
-  Typography,
+  DialogContent,
+  DialogTitle,
   IconButton,
+  makeStyles,
+  Paper,
   Tab,
   Tabs,
-  Paper,
-} from "@material-ui/core";
-import {
-  withStyles,
+  Typography,
   useTheme,
-  makeStyles
-} from "@material-ui/core/styles";
-import SwipeableViews from "react-swipeable-views";
+  withStyles,
+} from "@material-ui/core";
 import CloseIcon from "@material-ui/icons/Close";
-import { isEmpty } from 'lodash';
 
-import CustomFields from '../../Components/CustomFields/CustomFields';
+import { actions } from '../../../../store/ducks/general.duck';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
+import CustomFields from '../../Components/CustomFields/CustomFields';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import ImageUpload from '../../Components/ImageUpload';
-import ModalYesNo from '../../Components/ModalYesNo';
 import { modules } from '../../constants';
 import Permission from '../components/Permission';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
@@ -89,26 +88,9 @@ const useStyles4 = makeStyles(theme => ({
   }
 }));
 
-// Example 1 - TextField
-const useStyles = makeStyles(theme => ({
-  container: {
-    display: "flex",
-    flexWrap: "wrap"
-  },
-  textField: {
-    marginLeft: theme.spacing(1),
-    marginRight: theme.spacing(1),
-    width: 200
-  },
-  dense: {
-    marginTop: 19
-  },
-  menu: {
-    width: 200
-  }
-}));
-
 const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
+  const dispatch = useDispatch();
+  const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -120,8 +102,6 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
     setValue4(index);
   }
 
-  // Example 1 - TextField
-  const classes = useStyles();
   const [values, setValues] = useState({
     name: "",
     categoryPic: '/media/misc/placeholder-image.jpg',
@@ -136,7 +116,7 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
-      alert('Please fill out missing fields')
+      dispatch(showFillFieldsAlert());
       return;
     }
 
@@ -146,16 +126,18 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
       postDB('userProfiles', body)
         .then(data => data.json())
         .then(response => {
+          dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('userProfiles', _id);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('userProfiles/', body, id[0])
         .then(response => {
+          dispatch(showUpdatedAlert());
           saveAndReload('userProfiles', id[0]);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
     handleCloseModal();
   };
@@ -208,12 +190,9 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
       })
-      .catch(error => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [id]);
 
-  useEffect(() => {
-    setFormValidation({ ...formValidation, enabled: true });
-  }, [values])
 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
 

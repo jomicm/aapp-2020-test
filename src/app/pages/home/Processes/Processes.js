@@ -1,7 +1,9 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { isEmpty } from 'lodash';
 import { Tabs } from '@material-ui/core';
+import { actions } from '../../../store/ducks/general.duck';
 import {
   Portlet,
   PortletBody,
@@ -23,6 +25,8 @@ import LiveProcesses from './components/LiveProcesses';
 const localStorageActiveTabKey = 'builderActiveTab';
 export default function Processes() {
 
+  const dispatch = useDispatch();
+  const { showDeletedAlert, showErrorAlert  } = actions;
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
 
@@ -200,8 +204,11 @@ export default function Processes() {
         if (!id || !Array.isArray(id)) return;
         id.forEach(_id => {
           deleteDB(`${collection.name}/`, _id)
-            .then(response => loadProcessData('processStages'))
-            .catch(error => console.log('Error', error));
+            .then(response => {
+              dispatch(showDeletedAlert());
+              loadProcessData(collection.name)
+            })
+            .catch(error => dispatch(showErrorAlert()));
         });
         loadProcessData(collection.name);
       },
