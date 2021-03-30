@@ -16,6 +16,8 @@ import {
   TextField
 } from "@material-ui/core";
 import TextFields from '@material-ui/icons/TextFields';
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../../store/ducks/general.duck';
 import { getDB, postDB, getOneDB, updateDB } from '../../../../crud/api';
 import { getFirstDocCollection } from '../../utils';
 import SaveButton from '../settings-tabs/components/SaveButton';
@@ -23,6 +25,8 @@ import { useStyles } from './styles';
 import { defaultValues, settings } from './constants'
 
 const Fields = props => {
+  const dispatch = useDispatch();
+  const { showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const classes = useStyles();
   const [values, setValues] = useState(defaultValues);
   const [selectedModule, setSelectedModule] = useState('');
@@ -55,16 +59,24 @@ const Fields = props => {
           postDB('settingsFields', body)
             .then(data => data.json())
             .then(response => {
+              dispatch(showSavedAlert());
             })
-            .catch(error => console.log(error));
+            .catch(error => {
+              dispatch(showErrorAlert());
+            });
         } else {
           updateDB('settingsFields/', body, id)
             .then(response => {
+              dispatch(showUpdatedAlert());
             })
-            .catch(error => console.log(error));
+            .catch(error => {
+              dispatch(showErrorAlert());
+            });
         }
       })
-      .catch(ex => {});
+      .catch(ex => {
+        dispatch(showErrorAlert());
+      });
   };
 
   const loadInitData = (collectionName = 'settingsFields') => {
@@ -72,7 +84,6 @@ const Fields = props => {
     .then(response => response.json())
     .then(data => {
       const _values = data.response[0] || {};
-      console.log('_values:', _values)
       if (!isEmpty(_values)) {
         setValues(omit(_values, '_id'));
       }

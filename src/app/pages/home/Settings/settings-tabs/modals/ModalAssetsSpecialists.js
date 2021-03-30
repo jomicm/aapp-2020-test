@@ -1,5 +1,7 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import Select from 'react-select';
+import { useDispatch } from 'react-redux';
 import {
   Button,
   Dialog,
@@ -8,55 +10,15 @@ import {
   DialogActions,
   Typography,
   IconButton,
+  makeStyles,
   FormLabel,
-  FormGroup
-} from "@material-ui/core";
-import Select from 'react-select';
-import {
+  FormGroup,
   withStyles,
-  useTheme,
-  makeStyles
-} from "@material-ui/core/styles";
-import SwipeableViews from "react-swipeable-views";
+} from "@material-ui/core";
 import CloseIcon from "@material-ui/icons/Close";
-import CustomFields from '../../../Components/CustomFields/CustomFields';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import { actions } from '../../../../../store/ducks/general.duck';
+import { getDB, getOneDB, updateDB, postDB } from '../../../../../crud/api';
 import TreeView from '../../../Components/TreeViewComponent';
-
-// import './ModalAssetCategories.scss';
-import ImageUpload from '../../../Components/ImageUpload';
-import { postDBEncryptPassword, getDB, getOneDB, updateDB, postDB } from '../../../../../crud/api';
-import ModalYesNo from '../../../Components/ModalYesNo';
-import Permission from '../../components/Permission';
-import { getFileExtension, saveImage, getImageURL } from '../../../utils';
-
-import {
-  SingleLine,
-  MultiLine,
-  Date,
-  DateTime,
-  DropDown,
-  RadioButtons,
-  Checkboxes,
-  FileUpload
-} from '../../../Components/CustomFields/CustomFieldsPreview';
-import { EditorState } from 'draft-js';
-
-import LocationAssignment from '../../components/LocationAssignment';
-
-const CustomFieldsPreview = (props) => {
-  const customFieldsPreviewObj = {
-    singleLine: <SingleLine { ...props } />,
-    multiLine: <MultiLine { ...props } />,
-    date: <Date { ...props } />,
-    dateTime: <DateTime { ...props } />,
-    dropDown: <DropDown { ...props } />,
-    radioButtons: <RadioButtons { ...props } />,
-    checkboxes: <Checkboxes { ...props } />,
-    fileUpload: <FileUpload { ...props } />
-  };
-  return customFieldsPreviewObj[props.type];
-};
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -102,20 +64,6 @@ const DialogActions5 = withStyles(theme => ({
   }
 }))(DialogActions);
 
-// Example 4 - Tabs
-function TabContainer4({ children, dir }) {
-  return (
-    <Typography component="div" dir={dir} style={{ padding: 8 * 3 }}>
-      {children}
-    </Typography>
-  );
-}
-const useStyles4 = makeStyles(theme => ({
-  root: {
-    backgroundColor: theme.palette.background.paper,
-    width: 1000
-  }
-}));
 
 // Example 1 - TextField
 const useStyles = makeStyles(theme => ({
@@ -137,31 +85,14 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const ModalAssetsSpecialists = ({ showModal, setShowModal, reloadTable, id, employeeProfileRows }) => {
-  // Example 4 - Tabs
-  const classes4 = useStyles4();
-  const theme4 = useTheme();
-  const [value4, setValue4] = useState(0);
-  function handleChange4(event, newValue) {
-    setValue4(newValue);
-  }
-  function handleChangeIndex4(index) {
-    setValue4(index);
-  }
-
-  // Example 1 - TextField
+  const dispatch = useDispatch();
+  const { showErrorAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
+  
   const classes = useStyles();
-  const [editor, setEditor] = useState(EditorState.createEmpty());
-  const [profileSelected, setProfileSelected] = useState(0);
-  // const [layoutSelected, setLayoutSelected] = useState(0);
-
-  const handleChange = name => event => {
-    setValues({ ...values, [name]: event.target.value });
-  };
-
   const handleSave = () => {
     const { categorySelected, userSelected, location: { locationSelected } } = values;
     if (!categorySelected || !userSelected || !locationSelected) {
-      alert('Select values before saving');
+      dispatch(showSelectValuesAlert());
       return;
     }
     const body = { ...values };
@@ -169,16 +100,18 @@ const ModalAssetsSpecialists = ({ showModal, setShowModal, reloadTable, id, empl
       postDB('settingsAssetSpecialists', body)
         .then(data => data.json())
         .then(response => {
+          dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('settingsAssetSpecialists', _id);
         })
-        .catch(error => console.log('ERROR', error));
+        .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('settingsAssetSpecialists/', body, id[0])
         .then(response => {
+          dispatch(showUpdatedAlert());
           saveAndReload('settingsAssetSpecialists', id[0]);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
     handleCloseModal();
   };
@@ -190,7 +123,6 @@ const ModalAssetsSpecialists = ({ showModal, setShowModal, reloadTable, id, empl
   const handleCloseModal = () => {
     reset();
     setShowModal(false);
-    setValue4(0);
   };
   const reset = () => {
     setValues({ 
@@ -216,7 +148,7 @@ const ModalAssetsSpecialists = ({ showModal, setShowModal, reloadTable, id, empl
         const values = data.response;
         setValues(values);
       })
-      .catch(error => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [id, employeeProfileRows]);
 
   let locations;

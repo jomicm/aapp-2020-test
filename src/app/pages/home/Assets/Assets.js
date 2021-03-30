@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-imports */
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, Tabs, Typography } from '@material-ui/core';
-import { connect } from "react-redux";
+import { connect, useDispatch } from "react-redux";
 import {
   Portlet,
   PortletBody,
@@ -29,8 +29,8 @@ import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 
 const localStorageActiveTabKey = 'builderActiveTab';
-function Assets({ globalSearch, setGeneralSearch }) {
-
+function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAlert }) {
+  const dispatch = useDispatch();
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
 
@@ -145,15 +145,6 @@ function Assets({ globalSearch, setGeneralSearch }) {
               total: data.response.count
             }
           }))
-          if (collectionName === 'assets') {
-            setAssetsKPI(prev => ({
-              ...prev,
-              total: {
-                ...prev.total,
-                number: data.response.count
-              }
-            }))
-          }
         });
 
       getDBComplex({
@@ -281,10 +272,12 @@ function Assets({ globalSearch, setGeneralSearch }) {
         if (!id || !Array.isArray(id)) return;
         id.forEach(_id => {
           deleteDB(`${collection.name}/`, _id)
-            .then(response => console.log('success', response))
-            .catch(error => console.log('Error', error));
+            .then(response => {
+              dispatch(showDeletedAlert());
+              loadAssetsData(collection.name);
+            })
+            .catch(error => showErrorAlert());
         });
-        loadAssetsData(collection.name);
       },
       onSelect(id) {
         if (collectionName === 'references') {
@@ -305,6 +298,20 @@ function Assets({ globalSearch, setGeneralSearch }) {
   useEffect(() => {
     loadAssetsData('categories');
   }, [tableControl.categories.page, tableControl.categories.rowsPerPage, tableControl.categories.order, tableControl.categories.orderBy, tableControl.categories.search]);
+
+  useEffect(() => {
+    getCountDB({ collection: 'assets' })
+      .then(response => response.json())
+      .then(data => {
+        setAssetsKPI(prev => ({
+          ...prev,
+          total: {
+            ...prev.total,
+            number: data.response.count
+          }
+        }));
+      });
+  }, []);
 
   const tabIntToText = ['assets', 'references', 'categories'];
 

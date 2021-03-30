@@ -16,6 +16,8 @@ import {
 } from '@material-ui/core';
 import { withStyles, useTheme, makeStyles } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../../store/ducks/general.duck';
 import { executePolicies } from '../../Components/Policies/utils';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import CustomFields from '../../Components/CustomFields/CustomFields';
@@ -144,6 +146,8 @@ const ModalEmployees = ({
   showModal,
   setShowModal
 }) => {
+  const dispatch = useDispatch();
+  const { showCustomAlert, showFillFieldsAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const [assetRows, setAssetRows] = useState([]);
   const classes = useStyles();
   const classes4 = useStyles4();
@@ -211,7 +215,7 @@ const ModalEmployees = ({
         setTabs(tabs);
         setIdUserProfile(e.value);
       })
-      .catch((error) => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   };
 
   const baseFieldsLocalProps = {
@@ -294,13 +298,13 @@ const ModalEmployees = ({
     setAssetRows(restRows);
     updateDB('assets/', { assigned: null }, id)
       .then((response) => { })
-      .catch((error) => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   };
 
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
-      alert('Please fill out missing fields')
+      dispatch(showFillFieldsAlert());
       return;
     }
 
@@ -320,20 +324,22 @@ const ModalEmployees = ({
       postDB('employees', body)
         .then((data) => data.json())
         .then((response) => {
+          dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('employees', _id);
           executePolicies('OnAdd', policies);
           updateAssignedEmpToAssets(_id);
         })
-        .catch((error) => console.log('ERROR', error));
+        .catch((error) => dispatch(showErrorAlert()));
     } else {
       updateDB('employees/', body, id[0])
         .then((response) => {
+          dispatch(showUpdatedAlert);
           saveAndReload('employees', id[0]);
           updateAssignedEmpToAssets(id[0]);
           executePolicies('OnEdit', policies);
         })
-        .catch((error) => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
     handleCloseModal();
   };
@@ -360,9 +366,9 @@ const ModalEmployees = ({
           const body = { ...data.response, assigned: _id };
           updateDB('assets/', { assigned: _id }, asset.id)
             .then((response) => { })
-            .catch((error) => console.log(error));
+            .catch(error => dispatch(showErrorAlert()));
         })
-        .catch((error) => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     });
   };
 
@@ -441,20 +447,23 @@ const ModalEmployees = ({
         setCustomFieldsTab(customFieldsTab);
         setTabs(tabs);
       })
-      .catch((error) => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [id, employeeProfileRows]);
 
   const openModalAssignmentReport = () => {
-    if (layoutSelected === null) {
-      alert('Please select a Responsibility Layout first');
+    if (!layoutSelected) {
+      dispatch(
+        showCustomAlert({
+          open: true,
+          message: 'Please select a Responsibility Layout first',
+          type: 'warning'
+        })
+      );
     } else {
       setShowModalReports(true);
     }
   };
 
-  useEffect(() => {
-    setFormValidation({ ...formValidation, enabled: true });
-  }, [values])
 
   return (
     <div style={{ width: '1000px' }}>

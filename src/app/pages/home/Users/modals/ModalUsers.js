@@ -1,7 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
-import Select from 'react-select';
 import SwipeableViews from 'react-swipeable-views';
 import { isEmpty } from 'lodash';
 import {
@@ -15,8 +14,6 @@ import {
   Tab,
   Tabs,
   Paper,
-  FormLabel,
-  FormGroup
 } from '@material-ui/core';
 import {
   withStyles,
@@ -24,10 +21,11 @@ import {
   makeStyles
 } from '@material-ui/core/styles';
 import CloseIcon from '@material-ui/icons/Close';
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../../store/ducks/general.duck';
 import * as auth from '../../../../store/ducks/auth.duck';
 import { postDBEncryptPassword, getOneDB, getDB, updateDB } from '../../../../crud/api';
 import ImageUpload from '../../Components/ImageUpload';
-import ModalYesNo from '../../Components/ModalYesNo';
 import { hosts, getFileExtension, saveImage, getImageURL } from '../../utils';
 import { modules } from '../../constants';
 import {
@@ -136,6 +134,8 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows, user, updateUserPic }) => {
+  const dispatch = useDispatch();
+  const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
@@ -168,7 +168,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
-      alert('Please fill out missing fields')
+      dispatch(showFillFieldsAlert());
       return;
     }
 
@@ -179,19 +179,19 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       postDBEncryptPassword('user', body)
         .then(data => data.json())
         .then(response => {
+          dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('user', _id);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('user/', body, id[0])
         .then(response => {
+          dispatch(showUpdatedAlert());
           saveAndReload('user', id[0]);
           updateCurrentUserPic(id[0], fileExt);
         })
-        .catch(error => {
-          console.log(error)
-        });
+        .catch(error => dispatch(showErrorAlert()));
     }
     handleCloseModal();
   };
@@ -274,12 +274,9 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
         setCustomFieldsTab(customFieldsTab);
         setTabs(tabs);
       })
-      .catch(error => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [id, userProfileRows]);
 
-  useEffect(() => {
-    setFormValidation({ ...formValidation, enabled: true });
-  }, [values])
 
   const loadInit = () => {
     getDB('user')
@@ -288,7 +285,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
         const users = data.response.map(({ _id: value, email: label }) => ({ value, label }));
         setAllUsers(users);
       })
-      .catch(error => console.log('error>', error));
+      .catch(error => dispatch(showErrorAlert()));
   };
 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
@@ -328,7 +325,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
         setTabs(tabs);
         setIdUserProfile(e.value);
       })
-      .catch(error => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   };
 
   // Function to update customFields

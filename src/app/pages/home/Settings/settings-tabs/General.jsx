@@ -1,19 +1,23 @@
 /* eslint-disable no-restricted-imports */
 import React, { useEffect, useState } from 'react';
 import { omit, isEmpty } from 'lodash';
-import { getDB, postDB, getOneDB, updateDB } from '../../../../crud/api';
-import SaveButton from '../settings-tabs/components/SaveButton';
-import { getFileExtension, saveImage, getImageURL, getFirstDocCollection } from '../../utils';
-
+import { useDispatch } from 'react-redux';
 import {
   FormControl,
   InputLabel,
+  MenuItem,
   Select,
-  MenuItem
-} from "@material-ui/core";
+} from '@material-ui/core';
+
+import { actions } from '../../../../store/ducks/general.duck';
+import { getDB, postDB, updateDB } from '../../../../crud/api';
+import SaveButton from '../settings-tabs/components/SaveButton';
+import { getFirstDocCollection } from '../../utils';
 import { useStyles } from './styles';
 
-const General = props => {
+const General = () => {
+  const dispatch = useDispatch();
+  const { showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const classes = useStyles();
   const [values, setValues] = useState({
     languages: [{ id: 'en', name: 'English' }, { id: 'es', name: 'Español' }],
@@ -39,32 +43,37 @@ const General = props => {
           postDB('settingsGeneral', body)
             .then(data => data.json())
             .then(response => {
-              // saveImages(imagesInfo);
+              dispatch(showSavedAlert());
             })
-            .catch(error => console.log(error));
+            .catch(error => {
+              dispatch(showErrorAlert());
+            });
         } else {
           updateDB('settingsGeneral/', body, id)
             .then(response => {
-              // saveImages(imagesInfo);
-              // saveAndReload('settingsDesign', 'logoLogin');
+              dispatch(showUpdatedAlert());
             })
-            .catch(error => console.log(error));
+            .catch(error => {              
+              dispatch(showErrorAlert());
+            });
         }
       })
-      .catch(ex => {});
+      .catch(ex => {        
+        dispatch(showErrorAlert());
+      });
   };
 
   const loadProcessesData = (collectionName = 'settingsGeneral') => {
     getDB(collectionName)
-    .then(response => response.json())
-    .then(data => {
-      const _values = data.response[0] || {};
-      console.log('_values:', _values)
-      if (!isEmpty(_values)) {
-        setValues(omit(_values, '_id'));
-      }
-    })
-    .catch(error => console.log('error>', error));
+      .then(response => response.json())
+      .then(data => {
+        const _values = data.response[0] || {};
+        console.log('_values:', _values)
+        if (!isEmpty(_values)) {
+          setValues(omit(_values, '_id'));
+        }
+      })
+      .catch(error => console.log('error>', error));
   };
 
   useEffect(() => {
@@ -73,12 +82,12 @@ const General = props => {
 
   return (
     <div>
-      <div style={{textAlign: 'end', marginBottom: '15px'}}>
-        <SaveButton handleOnClick={handleSave}/>
+      <div style={{ textAlign: 'end', marginBottom: '15px' }}>
+        <SaveButton handleOnClick={handleSave} />
       </div>
-      {fields.map(({id, name, selected}, ix) => (
+      {fields.map(({ id, name, selected }, ix) => (
         <FormControl key={`base-field-${ix}`} className={classes.textField}>
-          <InputLabel htmlFor="age-simple">{name}</InputLabel>
+          <InputLabel htmlFor='age-simple'>{name}</InputLabel>
           <Select
             value={values[selected]}
             onChange={handleChange(selected)}

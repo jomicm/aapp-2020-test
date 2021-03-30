@@ -13,7 +13,6 @@ import {
   Paper,
   Switch,
   Tab,
-  TextField,
   Tabs,
   Typography
 } from '@material-ui/core';
@@ -23,7 +22,9 @@ import {
   makeStyles
 } from '@material-ui/core/styles';
 import CloseIcon from '@material-ui/icons/Close';
-import { postDB, getOneDB, updateDB, postFILE } from '../../../../crud/api';
+import { useDispatch } from 'react-redux';
+import { actions } from '../../../../store/ducks/general.duck';
+import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import CustomFields from '../../Components/CustomFields/CustomFields';
 import ImageUpload from '../../Components/ImageUpload';
@@ -105,6 +106,8 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
+  const dispatch = useDispatch();
+  const { showFillFieldsAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
@@ -144,7 +147,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
-      alert('Please fill out missing fields')
+      dispatch(showFillFieldsAlert());
       return;
     }
 
@@ -154,17 +157,19 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
       postDB('employeeProfiles', body)
         .then(data => data.json())
         .then(response => {
+          dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('employeeProfiles', _id);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('employeeProfiles/', body, id[0])
         .then(data => data.json())
         .then(response => {
+          dispatch(showUpdatedAlert());
           saveAndReload('employeeProfiles', id[0]);
         })
-        .catch(error => console.log(error));
+        .catch(error => dispatch(showErrorAlert()));
     }
 
     handleCloseModal();
@@ -210,12 +215,9 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
         setIsAssetRepository(isAssetRepository);
         setProfilePermissions(profilePermissions);
       })
-      .catch(error => console.log(error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [id]);
 
-  useEffect(() => {
-    setFormValidation({ ...formValidation, enabled: true });
-  }, [values])
 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
 
@@ -278,7 +280,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
                     <div className='profile-tab-wrapper__content'>
                       <BaseFields
                         catalogue={'employeeReferences'}
-                        collection={'employeeProfiles'}
+                        collection={'employeeReferences'}
                         formState={[formValidation, setFormValidation]}
                         localProps={baseFieldsLocalProps}
                         values={values}
