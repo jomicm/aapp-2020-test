@@ -9,9 +9,9 @@ import {
   TextField
 } from "@material-ui/core";
 import { makeStyles } from '@material-ui/core';
-import { useDispatch } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 import { actions } from '../../../store/ducks/general.duck';
-import { getDB, deleteDB, updateDB, postDB, getOneDB, getCountDB, getDBComplex } from '../../../crud/api';
+import { postDB, getCountDB, getDBComplex } from '../../../crud/api';
 import TableReportsGeneral from '../Components/TableReportsGeneral';
 import { formatData } from './reportsHelpers';
 import ChangeReportName from './modals/ChangeReportName';
@@ -48,9 +48,9 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
+const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
   const dispatch = useDispatch();
-  const { showErrorAlert, showSavedAlert, showSelectValuesAlert} = actions;
+  const { showErrorAlert, showSavedAlert, showSelectValuesAlert } = actions;
   const classes = useStyles();
   const [control, setControl] = useState(false);
   const [collectionName, setCollectionName] = useState(null);
@@ -62,6 +62,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
     enabled: false,
     reportName: ''
   });
+  const permissions = user.profilePermissions.reports || [];
 
   const handleChange = (name) => (event) => {
     const { value } = event.target;
@@ -220,15 +221,18 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
           >
             Generate Report
           </Button>
-          <Button
-            className={classes.button}
-            color="primary"
-            onClick={handleChangeReportName}
-            size="large"
-            variant="contained"
-          >
-            Save
-          </Button>
+          {
+            permissions.includes('add') &&
+            <Button
+              className={classes.button}
+              color="primary"
+              onClick={handleChangeReportName}
+              size="large"
+              variant="contained"
+            >
+              Save
+            </Button>
+          }
         </div>
       </div>
       <div
@@ -331,4 +335,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData }) => {
   )
 }
 
-export default TabGeneral;
+const mapStateToProps = ({ auth: { user } }) => ({
+  user
+});
+export default connect(mapStateToProps)(TabGeneral);

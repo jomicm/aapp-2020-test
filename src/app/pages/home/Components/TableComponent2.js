@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useEffect, useState } from 'react';
+import { connect } from 'react-redux';
 import clsx from 'clsx';
 import {
   makeStyles,
@@ -45,6 +46,7 @@ import ModalYesNo from './ModalYesNo';
 import TileView from './TileView';
 import TreeView from './TreeViewComponent';
 import CircularProgressCustom from './CircularProgressCustom';
+import { collections } from '../constants';
 
 const useToolbarStyles = makeStyles(theme => ({
   root: {
@@ -164,6 +166,7 @@ const TableComponentTile = props => {
     tileView = false,
     onView,
     disableSearchBy = false,
+    user
   } = props;
   const classes = useStyles();
 
@@ -193,6 +196,10 @@ const TableComponentTile = props => {
   //Loading
   const [loading, setLoading] = useState(true);
 
+  //Permissions
+  const module = collections[controlValues.collection]?.module;
+  const permissions = user.profilePermissions[module] || [];
+
   useEffect(() => {
     if (!paginationControl) return;
     paginationControl({ rowsPerPage, page });
@@ -211,8 +218,8 @@ const TableComponentTile = props => {
     if (rows.length > 0 || controlValues.search.length) {
       setLoading(false);
     };
-    if (!rows.length && page > 0){
-      setPage(page - 1 );
+    if (!rows.length && page > 0) {
+      setPage(page - 1);
     }
   }, [rows]);
 
@@ -305,18 +312,21 @@ const TableComponentTile = props => {
                 </IconButton>
               </Tooltip>
             }
-            { numSelected === 1 && !noEdit &&
+            { numSelected === 1 && !noEdit && permissions.includes('edit') &&
               <Tooltip title='Edit'>
                 <IconButton aria-label='Edit' onClick={props.onEdit}>
                   <EditIcon />
                 </IconButton>
               </Tooltip>
             }
-            <Tooltip title='Delete'>
-              <IconButton aria-label='Delete' onClick={onDelete}>
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
+            {
+              permissions.includes('delete') &&
+              <Tooltip title='Delete'>
+                <IconButton aria-label='Delete' onClick={onDelete}>
+                  <DeleteIcon />
+                </IconButton>
+              </Tooltip>
+            }
           </div>
         )
       }
@@ -378,7 +388,7 @@ const TableComponentTile = props => {
             </IconButton>
           </Tooltip>
           {
-            typeof onAdd == 'function' && (
+            typeof onAdd == 'function' && permissions.includes('add') && (
               <Tooltip title='Add'>
                 <IconButton aria-label='Add' onClick={onAdd}>
                   <AddIcon />
@@ -453,7 +463,7 @@ const TableComponentTile = props => {
         selectedId.slice(selectedIndex + 1)
       );
     }
-    setSelected(newSelected); 
+    setSelected(newSelected);
     setSelectedId(newSelectedId);
   }
 
@@ -782,4 +792,7 @@ const TableComponentTile = props => {
   );
 };
 
-export default TableComponentTile;
+const mapStateToProps = ({ auth: { user } }) => ({
+  user
+});
+export default connect(mapStateToProps)(TableComponentTile);
