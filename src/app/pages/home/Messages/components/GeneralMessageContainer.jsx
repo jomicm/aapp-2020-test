@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
-import { makeStyles, Divider, Typography, IconButton } from '@material-ui/core';
+import { BrowserRouter as Link } from 'react-router-dom';
+import { makeStyles, IconButton } from '@material-ui/core';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ClearIcon from '@material-ui/icons/Clear';
 import SearchIcon from '@material-ui/icons/Search';
 import {
-  getCountDB,
-  getDBComplex,
-  getDB
+  getMessages,
+  getTotalMessages,
 } from '../../../../crud/api';
 import MessageInformation from './MessageInformation';
 import './GeneralMessageContainer.scss';
@@ -35,7 +34,7 @@ const useStyles = makeStyles(theme => ({
     paddingLeft: '10px'
   },
   inputInput: {
-    width: '74%', 
+    width: '74%',
     border: 'none',
     outline: 'none',
     backgroundColor: '#FFFFFF00'
@@ -45,7 +44,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const GeneralMessageContainer = () => {
+const GeneralMessageContainer = ({ user }) => {
   const classes = useStyles();
   const [currentId, setCurrentId] = useState(null);
   const [currentUrl, setCurrentUrl] = useState(null);
@@ -82,9 +81,10 @@ const GeneralMessageContainer = () => {
   const loadInitData = () => {
     let queryLike = ['subject', 'html'].map(key => ({ key, value: control.search }))
 
-    getCountDB({
+    getTotalMessages({
       collection: 'messages',
       queryLike: control.search.length >= 3 ? queryLike : null,
+      userId: user.id
     })
       .then(response => response.json())
       .then(data => {
@@ -93,24 +93,23 @@ const GeneralMessageContainer = () => {
           total: data.response.count === 0 ? 1 : data.response.count
         }))
       });
-
-    getDBComplex({
-      collection: 'messages',
+  
+    getMessages({
       limit: control.rowsPerPage,
       skip: control.rowsPerPage * control.page,
       queryLike: control.search.length >= 3 ? queryLike : null,
-      sort: [{ key: 'creationDate', value: -1 }]
+      sort: [{ key: 'creationDate', value: -1 }],
+      userId: user.id
     })
       .then(response => response.json())
       .then((data) => {
         setData(data.response);
         console.log('data', !data.response)
-        if(!data.response.length && control.page > 0){
-          console.log('no se que pedo')
+        if (!data.response.length && control.page > 0) {
           setControl(prev => ({
             ...prev,
             page: prev.page - 1
-          })); 
+          }));
         }
       })
       .catch((error) => console.log('error>', error));
@@ -175,13 +174,13 @@ const GeneralMessageContainer = () => {
             className={classes.inputInput}
             key='SearchField'
             onChange={event => setControl(prev => ({ ...prev, search: event.target.value }))}
-            value = {control.search}
+            value={control.search}
             placeholder='Search...'
           />
           {
             control.search.length > 0 && (
               <div style={{
-                display:'flex',
+                display: 'flex',
                 justifyContent: 'flex-end'
               }}>
                 <IconButton size="small" onClick={() => setControl(prev => ({ ...prev, search: '' }))}>
@@ -219,28 +218,28 @@ const GeneralMessageContainer = () => {
         }) : 'You have no messages'}
       </div>
       <div style={{
-          position: 'fixed',
-          bottom: 20,
-          width: '40vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          backgroundColor: '#FFFFFF'
-        }}>
-          Page: {control.page + 1}/{Math.ceil(control.total / control.rowsPerPage)}
-          <IconButton
-            style={{ marginLeft: '5px' }}
-            onClick={() => handlePageChange('reduce')}
-          >
-            <ChevronLeftIcon />
-          </IconButton>
-          <IconButton
-            style={{ marginRight: '5px' }}
-            onClick={() => handlePageChange('add')}
-          >
-            <ChevronRightIcon />
-          </IconButton>
-        </div>
+        position: 'fixed',
+        bottom: 20,
+        width: '40vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        backgroundColor: '#FFFFFF'
+      }}>
+        Page: {control.page + 1}/{Math.ceil(control.total / control.rowsPerPage)}
+        <IconButton
+          style={{ marginLeft: '5px' }}
+          onClick={() => handlePageChange('reduce')}
+        >
+          <ChevronLeftIcon />
+        </IconButton>
+        <IconButton
+          style={{ marginRight: '5px' }}
+          onClick={() => handlePageChange('add')}
+        >
+          <ChevronRightIcon />
+        </IconButton>
+      </div>
       <div className='__container-preview'>
         <MessageInformation
           dateTime={headerInfo.timeStamp}

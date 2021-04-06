@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { FormHelperText, Switch, Tab, Tabs, Styles } from '@material-ui/core';
+import React, { useState  } from 'react';
+import { connect } from 'react-redux';
+import { Tab, Tabs } from '@material-ui/core';
 import {
   Portlet,
   PortletBody,
@@ -9,7 +10,7 @@ import {
 } from '../../../../app/partials/content/Portlet';
 import GeneralMessageContainer from './components/GeneralMessageContainer';
 
-export default function Messages() {
+function Messages({user}) {
 
   const localStorageActiveTabKey = 'builderActiveTab';
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
@@ -38,16 +39,20 @@ export default function Messages() {
         />
         {tab === 0 && (
           <PortletBody className='portlet-body'>
-            <div>
-              <GeneralMessageContainer />
-            </div>
+              <GeneralMessageContainer user={user} />
           </PortletBody>
         )}
         {tab === 1 && (
           <PortletBody>
+            <GeneralMessageContainer user={user} />
           </PortletBody>
         )}
       </Portlet>
     </div>
   );
 }
+
+const mapStateToProps = ({ auth: { user } }) => ({
+  user
+});
+export default connect(mapStateToProps)(Messages);
