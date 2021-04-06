@@ -11,6 +11,12 @@ export const modules = [
   { key: 'settings', name: 'Settings' },
 ];
 
+export const collections = {
+  messages: 'messages',
+  notifications: 'notifications',
+  processApprovals: 'processApprovals'
+};
+
 export const allBaseFields = {
   userList: {
     userProfile: {
@@ -56,7 +62,7 @@ export const allBaseFields = {
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     lastName: { validationId: 'lastName', component: 'textField', compLabel: 'Last Name' },
     email: { validationId: 'email', component: 'textField', compLabel: 'Email' },
-    responsibilityLayout: { validationId: 'responsibilityLayout', component: 'dropSelect', compLabel: 'Responsability Layout' },
+    responsibilityLayout: { validationId: 'responsibilityLayout', component: 'dropSelect', compLabel: 'Responsibility Layout' },
   },
   employeeReferences: {
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },

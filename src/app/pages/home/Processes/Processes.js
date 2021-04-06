@@ -23,8 +23,8 @@ import ModalYesNo from '../Components/ModalYesNo';
 import LiveProcesses from './components/LiveProcesses';
 
 const localStorageActiveTabKey = 'builderActiveTab';
-export default function Processes() {
 
+const Processes = (props) => {
   const dispatch = useDispatch();
   const { showDeletedAlert, showErrorAlert  } = actions;
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
@@ -408,4 +408,6 @@ export default function Processes() {
       </div>
     </>
   );
-}
+};
+
+export default Processes;

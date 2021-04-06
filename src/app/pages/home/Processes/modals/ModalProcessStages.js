@@ -237,7 +237,8 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
     getDB('user')
     .then(response => response.json())
     .then(data => {
-      const users = data.response.map(({ _id, email }) => ({ _id, email }));
+      // const users = data.response.map(({ _id, email }) => ({ _id, email }));
+      const users = data.response.map((user) => pick(user, ['_id', 'email', 'name', 'lastName']));
       setUsers(users);
     })
     .catch(error => console.log(error));
@@ -265,7 +266,7 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
   const [image, setImage] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [approvals, setApprovals] = useState([]);
-  const onChangeNotificationsApprovals = name => (event, values) => {
+  const onChangeNotificationsApprovals = name => (_, values) => {
     if (name === 'notifications') {
       setNotifications(values);
     } else if (name === 'approvals')
@@ -316,7 +317,7 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
                         onChange={handleChange("name")}
                         margin="normal"
                       />
-                      <FormControl className={classes.textField}>
+                      <FormControl className={classes.textField} style={{ marginTop: '10px' }}>
                         <InputLabel htmlFor="age-simple">Function</InputLabel>
                         <Select
                           value={values.selectedFunction}
@@ -327,7 +328,7 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
                           ))}
                         </Select>
                       </FormControl>
-                      <FormControl className={classes.textField}>
+                      <FormControl className={classes.textField} style={{ marginTop: '15px' }}>
                         <InputLabel htmlFor="age-simple">Type</InputLabel>
                         <Select
                           value={values.selectedType}
@@ -339,13 +340,13 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
                         </Select>
                       </FormControl>
                       <Autocomplete
+                        style={{ marginTop: '15px' }}
                         className={classes.textField}
                         multiple
                         id="tags-standard"
                         options={users}
-                        getOptionLabel={(option) => option.email}
+                        getOptionLabel={({email, name, lastName}) => `${name} ${lastName} (${email})`}
                         onChange={onChangeNotificationsApprovals('notifications')}
-                        // defaultValue={[users[13]]}
                         defaultValue={notifications}
                         value={notifications}
                         renderInput={(params) => (
@@ -358,13 +359,13 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
                         )}
                       />
                       <Autocomplete
+                        style={{ marginTop: '15px' }}
                         className={classes.textField}
                         multiple
                         id="tags-standard"
                         options={users}
-                        getOptionLabel={(option) => option.email}
+                        getOptionLabel={({email, name, lastName}) => `${name} ${lastName} (${email})`}
                         onChange={onChangeNotificationsApprovals('approvals')}
-                        // defaultValue={[users[13]]}
                         defaultValue={approvals}
                         value={approvals}
                         renderInput={(params) => (

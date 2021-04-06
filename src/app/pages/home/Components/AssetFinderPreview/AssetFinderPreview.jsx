@@ -6,6 +6,7 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Chip,
   Card,
   CardContent,
   IconButton,
@@ -14,28 +15,33 @@ import {
 } from '@material-ui/core';
 import SearchIcon from '@material-ui/icons/Search';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import ThumbUpIcon from '@material-ui/icons/ThumbUp';
+import ThumbDownIcon from '@material-ui/icons/ThumbDown';
 import { getDBComplex } from '../../../../crud/api';
 import { getImageURL } from '../../utils';
 import LocationsTreeView from '../LocationsTreeView/LocationsTreeView';
 import Table from './Table';
 import AssetPreviewBox from './AssetPreviewBox';
+import { ThumbDown } from '@material-ui/icons';
 
 const AssetFinder = ({
   isAssetReference = false,
   isSelectionTable = false,
+  showSearchBar = true,
   onSelectionChange = () => {},
   rows = [],
-  onSetRows = () => {}
+  onSetRows = () => {},
+  isPreviewTable = false
 }) => {
   const collection = isAssetReference ? 'references' : 'assets';
   const classes = useStyles();
   const [searchText, setSearchText] = useState('');
-  const [assetRows, setAssetRows] = useState([]);
+  const [assetRows, setAssetRows] = useState(rows);
   const [selectedRows, setSelectedRows] = useState([]); 
   const [selectedAsset, setSelectedAsset] = useState(defaultAsset);
 
   const handleOnSearchClick = () => {
-    const queryLike = ['name', 'brand', 'model'].map(key => ({ key, value: searchText }))
+    const queryLike = ['name', 'brand', 'model'].map(key => ({ key, value: searchText }));
 
     getDBComplex({ collection, queryLike })
       .then(response => response.json())
@@ -109,12 +115,23 @@ const AssetFinder = ({
                 <AccordionSummary expandIcon={<ExpandMoreIcon />} >
                   <Typography>Set Location</Typography>
                 </AccordionSummary>
-                <AccordionDetails>
+                <AccordionDetails style={{ overflow: 'hidden', height: '275px' }}>
                   <LocationsTreeView onTreeElementClick={handleTreeElement} />
                 </AccordionDetails>
               </Accordion>
             </div>
           </div>
+        </div>
+      );
+    } else if (isPreviewTable) {
+      return (
+        <div style={{ display: 'flex' }}>
+          <Table columns={[...getColumns(isAssetReference), ...processColumns]} rows={rows} setTableRowsInner={handleSelectionChange} />
+          <Card style={{ width: '350px', marginLeft: '15px' }}>
+            <CardContent style={{ display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
+              <AssetPreviewBox selectedAsset={selectedAsset} />
+            </CardContent>
+          </Card>
         </div>
       );
     } else {
@@ -133,7 +150,7 @@ const AssetFinder = ({
 
   return (
     <div>
-      {!isSelectionTable && (
+      {(!isSelectionTable && showSearchBar) && (
         <Paper className={classes.root} style={{ marginTop: '10px', width: '100%' }}>
           <InputBase
             value={searchText}
@@ -172,6 +189,28 @@ const getColumns = (isAssetReference) => {
 }; 
 
 const locationColumn = { field: 'locationName', headerName: 'Location', width: 130 };
+
+const processColumns = [
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 130,
+    renderCell: (params) => {
+      const { value } = params;
+
+      return value ? (
+        <Chip
+          icon={ value.toLowerCase() === 'rejected' ? <ThumbDownIcon /> : <ThumbUpIcon />}
+          label={params.value}
+          style={{ backgroundColor: value.toLowerCase() === 'rejected' ? '#DC2424' : '#1A9550' }}
+          // clickable
+          color='secondary'
+        />
+      ) : null;
+    }
+  },
+  { field: 'message', headerName: 'Message', width: 130 },
+];
 
 const useStyles = makeStyles((theme) => ({
   root: {

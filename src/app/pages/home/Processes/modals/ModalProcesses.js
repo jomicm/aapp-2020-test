@@ -192,6 +192,13 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     notifications: [{name: 'un msg'}, {name: 'dos msg'}, {name: 'tres mng'}],
     approvals: [{name: 'un notif'}, {name: 'dos notif'}, {name: 'tres notif'}],
   };
+  const processTypes = [
+    { id: 'creation', label: 'Creation' },
+    { id: 'movement', label: 'Movement'},
+    { id: 'short', label: 'Short Movement' },
+    { id: 'decommission', label: 'Decommission' },
+    { id: 'maintenance', label: 'Maintenance'}
+  ];
   const classes = useStyles();
   const [values, setValues] = useState({
     name: "",
@@ -200,7 +207,8 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     layoutMessageName: '',
     selectedUserNotification: '',
     selectedUserApprovals: '',
-    notificationsForUsers: {}
+    notificationsForUsers: {},
+    selectedProcessType: ''
   });
 
   const [validMessages, setValidMessages] = useState({
@@ -253,7 +261,9 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
   });
   const handleChangeUserNotifApp = name => event => {
     const { target: { value: selectedUser } } = event;
-    if (!selectedUser || !selectedStage) return;
+    if (!selectedUser || !selectedStage) {
+      return;
+    }
     setUsersProcess(prev => ({
       ...prev,
       [name]: event.target.value,
@@ -267,18 +277,11 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
         name: 'notifications',
         user: 'selectedUserNotifications'
       };
-      // if (event.target.value === '') {
-      //   setUsersProcess(prev => ({ ...prev, notificationsDisabled: true }));
-      // }
     } else if (name === 'selectedUserApproval') {
       typeInfo = {
         name: 'approvals',
         user: 'selectedUserApprovals'
       };
-      // setValidMessages(prev => ({ ...prev, selectedUserApprovals: selectedUser || 'none' }))
-      // if (event.target.value === '') {
-      //   setUsersProcess(prev => ({ ...prev, approvalsDisabled: true }));
-      // }
     }
     const tmpMessages = validMessages[typeInfo.name];
     let selectedLayouts = tmpMessages[selectedStage][selectedUser];
@@ -555,13 +558,24 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                       <TextField
                         id="standard-name"
                         label="Name"
-                        className={classes.root}
+                        className={classes.textField}
                         value={values.name}
                         onChange={handleChange("name")}
                         margin="normal"
                       />
+                       <FormControl className={classes.textField} style={{ marginTop: '10px' }}>
+                        <InputLabel htmlFor="age-simple">Process Type</InputLabel>
+                        <Select
+                          value={values.selectedProcessType}
+                          onChange={handleChange('selectedProcessType')}
+                        >
+                          {(processTypes || []).map(({ id, label }, ix) => (
+                            <MenuItem key={`opt-${ix}`} value={id}>{label}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
                       <List
-                        style={{width: '100%'}}
+                        style={{ width: '100%', marginTop: '10px' }}
                         component="nav"
                         className={classes.root}
                         aria-labelledby="nested-list-subheader"
@@ -660,7 +674,9 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                                       <MenuItem value=''>
                                         <em>None</em>
                                       </MenuItem>
-                                      {notifications.map(({ _id, email }) => (<MenuItem value={_id} name={email}>{email}</MenuItem>))}
+                                      {notifications.map(({ _id, email, name, lastName }) => (
+                                        <MenuItem value={_id} name={email}>{`${name} ${lastName} (${email})`}</MenuItem>
+                                      ))}
                                     </Select>
                                   </FormControl>
                                   <List
@@ -703,7 +719,9 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                                       <MenuItem value="">
                                         <em>None</em>
                                       </MenuItem>
-                                      {approvals.map(({ _id, email }) => (<MenuItem value={_id} name={email}>{email}</MenuItem>))}
+                                      {approvals.map(({ _id, email, name, lastName }) => (
+                                        <MenuItem value={_id} name={email}>{`${name} ${lastName} (${email})`}</MenuItem>
+                                      ))}
                                     </Select>
                                   </FormControl>
                                   <List

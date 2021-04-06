@@ -91,7 +91,7 @@ function Login(props) {
                       `${apiHost}/uploads/user/${id}.${fileExt}` :
                       `${localHost}/media/misc/placeholder-image.jpg`;
                     // const pic = 'https://i2.wp.com/float8ion.com/wp-content/uploads/2015/12/random-user-31.jpg';
-                    const user = { id, fullname: `${response.name} ${response.lastName}`, email, accessToken, pic, profilePermissions };
+                    const user = { id, name: response.name, lastName: response.lastName, fullname: `${response.name} ${response.lastName}`, email, accessToken, pic, profilePermissions };
                     props.fulfillUser(user);
                   })
                   .catch((err) => {

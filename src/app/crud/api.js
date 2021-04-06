@@ -96,7 +96,8 @@ const getDBComplex = ({
   sort,
   limit,
   skip,
-  fields
+  fields,
+  operator = '$or'
 }) => {
   let count = 0;
   let additionalParams = '';
@@ -107,7 +108,20 @@ const getDBComplex = ({
       res[key] = isValueBool ? value : { "$regex": `(?i).*${value}.*` };
       return res;
     });
-    const queryString = JSON.stringify({ "$or": qLike });
+    const str = {};
+    str[operator] = qLike;
+    const queryString = JSON.stringify(str);
+    additionalParams += `query=${queryString}`;
+    count++;
+  } else if (queryExact) {
+    const qExact = queryExact.map(({ key, value }) => {
+      const res = {};
+      res[key] = value;
+      return res;
+    });
+    const str = {};
+    str[operator] = qExact;
+    const queryString = JSON.stringify(str);
     additionalParams += `query=${queryString}`;
     count++;
   }

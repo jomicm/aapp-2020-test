@@ -380,9 +380,7 @@ function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAle
                               >
                                 {val.icon}
                               </div>
-                              <div
-                                style={{ width: '135px' }}
-                              >
+                              <div style={{ width: '135px' }}>
                                 <CardContent style={{ padding: '12px' }}>
                                   <center>
                                     <Typography variant='subtitle'>
