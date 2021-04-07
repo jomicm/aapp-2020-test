@@ -78,11 +78,8 @@ import SaveButton from './settings-tabs/components/SaveButton';
 
 import Example from './Example';
 
-const localStorageActiveTabKey = "builderActiveTab";
 export default function Settings() {
-
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [tab, setTab] = useState(0);
   const dispatch = useDispatch();
   const { layoutConfig } = useSelector(
     ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
@@ -288,7 +285,6 @@ export default function Settings() {
                       value={tab}
                       onChange={(_, nextTab) => {
                         setTab(nextTab);
-                        localStorage.setItem(localStorageActiveTabKey, nextTab);
                       }}
                     >
                       {TabsTitles('settings')}

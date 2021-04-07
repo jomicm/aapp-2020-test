@@ -75,7 +75,6 @@ const { apiHost, localHost } = hosts;
 const Divider = () => <div style={{ width: '100%', height: '3px', backgroundColor: 'black' }}></div>;
 
 let locations;
-const localStorageActiveTabKey = 'builderActiveTab';
 
 const locationsTreeData = {
   id: 'root',
@@ -117,14 +116,13 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
   const [openYesNoModal, setOpenYesNoModal] = useState(false);
   const [realParentSelected, setRealParentSelected] = useState(null);
   const [selectedLocationProfileRows, setSelectedLocationProfileRows] = useState([]);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [tab, setTab] = useState(0);
   const [value4, setValue4] = useState(0);
   const { layoutConfig } = useSelector(
     ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
     shallowEqual
   );
 
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const dispatch = useDispatch();
   const initialValues = useMemo(
     () =>
@@ -509,7 +507,6 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
                       component='div'
                       onChange={(_, nextTab) => {
                         setTab(nextTab);
-                        localStorage.setItem(localStorageActiveTabKey, nextTab);
                       }}
                       value={tab}
                     >

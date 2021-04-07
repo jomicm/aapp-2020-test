@@ -21,12 +21,10 @@ import ModalUsers from './modals/ModalUsers';
 import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 
-const localStorageActiveTabKey = 'builderActiveTab';
 function Users({ globalSearch, setGeneralSearch }) {
   const dispatch = useDispatch();
   const { showDeletedAlert, showErrorAlert } = actions;
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [tab, setTab] = useState(0);
 
   const createUserProfilesRow = (id, name, creator, creation_date) => {
     return { id, name, creator, creation_date };
@@ -240,7 +238,6 @@ function Users({ globalSearch, setGeneralSearch }) {
                   value={tab}
                   onChange={(_, nextTab) => {
                     setTab(nextTab);
-                    localStorage.setItem(localStorageActiveTabKey, nextTab);
                   }}
                 >
                   {TabsTitles('users')}

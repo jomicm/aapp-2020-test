@@ -14,10 +14,7 @@ import ModalYesNo from '../Components/ModalYesNo';
 import TabGeneral from './TabGeneral';
 import ModalReportsSaved from './modals/ModalReportsSaved'
 
-const localStorageActiveTabKey = "builderActiveTab";
-
 const Reports = () => {
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [control, setControl] = useState({
     idReports: null,
     openReportsModal: false,
@@ -28,7 +25,7 @@ const Reports = () => {
   const [dataModal, setDataModal] = useState({});
   const [reportToGenerate, setReportToGenerate] = useState([]);
   const [selectReferenceConfirmation, setSelectReferenceConfirmation] = useState(false);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [tab, setTab] = useState(0);
   const { layoutConfig } = useSelector(
     ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
     shallowEqual
@@ -211,7 +208,6 @@ const Reports = () => {
                   component="div"
                   onChange={(_, nextTab) => {
                     setTab(nextTab);
-                    localStorage.setItem(localStorageActiveTabKey, nextTab);
                   }}
                   value={tab}
                 >

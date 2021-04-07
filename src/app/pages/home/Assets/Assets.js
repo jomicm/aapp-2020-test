@@ -28,11 +28,9 @@ import './Assets.scss';
 import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 
-const localStorageActiveTabKey = 'builderActiveTab';
 function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAlert }) {
   const dispatch = useDispatch();
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [tab, setTab] = useState(0);
 
   const createAssetCategoryRow = (id, name, depreciation, creator, creation_date, fileExt) => {
     return { id, name, depreciation, creator, creation_date, fileExt };
@@ -349,7 +347,6 @@ function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAle
                   value={tab}
                   onChange={(_, nextTab) => {
                     setTab(nextTab);
-                    localStorage.setItem(localStorageActiveTabKey, nextTab);
                   }}
                 >
                   {TabsTitles('assets')}

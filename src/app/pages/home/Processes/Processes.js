@@ -22,13 +22,11 @@ import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 import LiveProcesses from './components/LiveProcesses';
 
-const localStorageActiveTabKey = 'builderActiveTab';
 export default function Processes() {
 
   const dispatch = useDispatch();
   const { showDeletedAlert, showErrorAlert  } = actions;
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [tab, setTab] = useState(0);
 
   const createProcessStageRow = (id, name, fn, type, custom, notification, creator, creation_date) => {
     return { id, name, function: fn, type, custom, notification, creator, creation_date };
@@ -240,7 +238,6 @@ export default function Processes() {
                   value={tab}
                   onChange={(_, nextTab) => {
                     setTab(nextTab);
-                    localStorage.setItem(localStorageActiveTabKey, nextTab);
                   }}
                 >
                   {TabsTitles('processes')}
