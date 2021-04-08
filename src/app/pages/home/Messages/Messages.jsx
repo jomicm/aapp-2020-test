@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { FormHelperText, Switch, Tab, Tabs, Styles } from '@material-ui/core';
+import React, { useState } from 'react';
+import { Tabs, Tab } from '@material-ui/core';
+
 import {
   Portlet,
   PortletBody,
-  PortletFooter,
   PortletHeader,
-  PortletHeaderToolbar
+  PortletHeaderToolbar,
 } from '../../../../app/partials/content/Portlet';
-import GeneralMessageContainer from './components/GeneralMessageContainer';
-import TrashMessagesContainer from './components/TrashMessagesContainer';
+
+import MessagesContainer from './components/MessagesContainer';
 
 export default function Messages() {
 
@@ -39,14 +39,12 @@ export default function Messages() {
         />
         {tab === 0 && (
           <PortletBody className='portlet-body'>
-            <div>
-              <GeneralMessageContainer />
-            </div>
+            <MessagesContainer />
           </PortletBody>
         )}
         {tab === 1 && (
           <PortletBody className='portlet-body'>
-            <TrashMessagesContainer />
+            <MessagesContainer />
           </PortletBody>
         )}
       </Portlet>

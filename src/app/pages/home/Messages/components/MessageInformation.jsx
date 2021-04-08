@@ -9,70 +9,52 @@ import {
   Typography
 } from '@material-ui/core';
 import Preview from './Preview';
-import './MessageInformation.scss';
 
-const useStyles = makeStyles(theme => ({
-  card: {
-    width: '100%',
-    height: '100%'
+const useStyles = makeStyles((theme) => ({
+  root: {
+    flex: 1,
+    height: '100%',
+    [theme.breakpoints.up('md')]: {
+      marginLeft: '20px',
+      marginBottom: '40px',
+    },
   },
-  media: {
-    height: 0,
-    paddingTop: '56.25%'
-  },
-  avatar: {
-    height: 60,
-    width: 60
-  },
-  subject: {
-    fontSize: 30
-  },
-  dateTime: {
-    fontSize: 15
-  },
-  preview: {
-    fontSize: 20
-  }
 }));
 
-const MessageInformation = ({ dateTime, img, preview, senderName, subject, to }) => {
+export default function MessageInformation({ headerInfo, preview }) {
   const classes = useStyles();
-
+  const {
+    timeStamp,
+    img,
+    senderName,
+    subject,
+    to,
+  } = headerInfo;
   return (
-    <Card className={classes.card}>
+    <Card className={classes.root}>
       <CardHeader
-        avatar={<Avatar alt='Remy Sharp' src={img} />}
+        avatar={<Avatar alt="user image" src={img} />}
         title={
-          <Typography
-            className={classes.subject}
-            color='textSecondary'
-            component='h2'
-            variant='body2'
-          >
+          <Typography variant="h5">
             {subject}
           </Typography>
         }
         subheader={
-          <Typography
-            className={classes.dateTime}
-            color='textSecondary'
-            component='div'
-            variant='body2'
-          >
-            {dateTime}
+          <Typography>
+            {timeStamp}
           </Typography>
         }
       />
       <Divider />
       <CardContent>
-        <Typography className={classes.preview} variant='body2' color='p'>
-          <div className='container-messages-preview'>
-            <Preview preview={preview} />
-          </div>
+        <Typography
+          style={{ fontSize: '20px' }}
+          variant="body2"
+          color="primary"
+        >
+          <Preview preview={preview} />
         </Typography>
       </CardContent>
     </Card>
   );
-};
-
-export default MessageInformation;
+}

@@ -2,11 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Nav, Tab, Dropdown } from 'react-bootstrap';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import ReactTimeAgo from 'react-time-ago';
-import clsx from 'clsx';
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
-import { OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { FormattedMessage } from 'react-intl';
-import { Badge, IconButton, Typography } from '@material-ui/core';
+import { Badge, IconButton } from '@material-ui/core';
+
+import PersonIcon from '@material-ui/icons/Person';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import { ReactComponent as MessageIcon } from '../../../_metronic/layout/assets/layout-svg-icons/Message.svg';
@@ -17,7 +16,6 @@ import {
   updateDB,
 } from '../../crud/api';
 import HeaderDropdownToggle from '../content/CustomDropdowns/HeaderDropdownToggle';
-import Messages from '../../pages/home/Messages/Messages';
 
 const perfectScrollbarOptions = {
   wheelSpeed: 2,
@@ -129,7 +127,7 @@ const MessagesTopBar = ({
     }
   }
 
-  const getMessagesData = () =>{
+  const getMessagesData = () => {
     getCountDB({
       collection: 'messages',
     })
@@ -249,7 +247,7 @@ const MessagesTopBar = ({
                         data-height='300'
                         data-mobile-height='200'
                       >
-                        {data.length ? data.map(({ _id, from, html, formatDate, read, subject }) => (
+                        {data.length ? data.map(({ _id, from, formatDate, read, subject }) => (
                           <div style={{ display: 'flex', minHeight: '100px' }}>
                             <div className={changeBarColor(read)} />
                             <Link
@@ -259,11 +257,26 @@ const MessagesTopBar = ({
                               style={{ width: '100%' }}
                             >
                               <div
-                                style={{ padding: '20px' }}
+                                style={{
+                                  padding: '20px',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                }}
                                 className={changeColor(read)}
                                 onClick={() => checkStatus(_id, read)}
                               >
-                                <div style={{ color: 'black', fontSize: '1.3rem' }}>
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    flexDirection: 'row'
+                                  }}
+                                >
+                                  <PersonIcon />
+                                  <div style={{ fontWeight: 'bold', paddingLeft: '5px' }}>
+                                    {from[0].email}
+                                  </div>
+                                </div>
+                                <div style={{ color: 'black' }}>
                                   {subject}
                                 </div>
                                 <div className='kt-notification__item-time'>
@@ -273,7 +286,7 @@ const MessagesTopBar = ({
                                       locale='en-EN'
                                       timeStyle='round'
                                     />
-                                  ) : ''
+                                  ) : 'Unreadable date'
                                   }
                                 </div>
                               </div>
