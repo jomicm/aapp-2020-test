@@ -104,16 +104,14 @@ const GeneralMessageContainer = () => {
       .then(response => response.json())
       .then((data) => {
         setData(data.response);
-        console.log('data', !data.response)
         if(!data.response.length && control.page > 0){
-          console.log('no se que pedo')
           setControl(prev => ({
             ...prev,
             page: prev.page - 1
           })); 
         }
       })
-      .catch((error) => console.log('error>', error));
+      .catch((error) => {});
     reset();
   };
 

@@ -8,6 +8,7 @@ import {
   PortletHeaderToolbar
 } from '../../../../app/partials/content/Portlet';
 import GeneralMessageContainer from './components/GeneralMessageContainer';
+import TrashMessagesContainer from './components/TrashMessagesContainer';
 
 export default function Messages() {
 
@@ -44,7 +45,8 @@ export default function Messages() {
           </PortletBody>
         )}
         {tab === 1 && (
-          <PortletBody>
+          <PortletBody className='portlet-body'>
+            <TrashMessagesContainer />
           </PortletBody>
         )}
       </Portlet>
