@@ -10,9 +10,9 @@ import {
 } from '@material-ui/core';
 
 import {
-  getCountDB,
-  getDBComplex,
   updateDB,
+  getMessages,
+  getTotalMessages,
 } from '../../../../crud/api';
 
 import SearchIcon from '@material-ui/icons/Search';
@@ -22,9 +22,13 @@ import ClearIcon from '@material-ui/icons/Clear';
 import MessageInformation from './MessageInformation';
 import MessageSnapshot from './MessageSnapshot';
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles((theme) => ({
   root: {
-    minHeight: '500px',
+    height: '500px',
+    [theme.breakpoints.down('md')]: {
+      minHeight: '500px',
+      height: 'auto',
+    },
   },
   searchBox: {
     width: '100%;',
@@ -65,7 +69,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-export default function MessagesContainer() {
+export default function MessagesContainer({ user }) {
   const classes = useStyles();
 
   /* React states */
@@ -93,24 +97,25 @@ export default function MessagesContainer() {
   const loadMessages = () => {
     let queryLike = ['subject', 'html'].map(key => ({ key, value: control.search }))
 
-    getCountDB({
+    getTotalMessages({
       collection: 'messages',
       queryLike: control.search.length >= 3 ? queryLike : null,
+      userId: user.id,
     })
       .then(response => response.json())
       .then(data => {
         setControl(prev => ({
           ...prev,
-          total: data.response.count === 0 ? 1 : data.response.count
+          total: data.response.count === 0 ? 1 : data.response.count,
         }))
       });
 
-    getDBComplex({
-      collection: 'messages',
+    getMessages({
       limit: control.rowsPerPage,
       skip: control.rowsPerPage * control.page,
       queryLike: control.search.length >= 3 ? queryLike : null,
-      sort: [{ key: 'creationDate', value: -1 }]
+      sort: [{ key: 'creationDate', value: -1 }],
+      userId: user.id,
     })
       .then(response => response.json())
       .then((data) => {
@@ -118,7 +123,7 @@ export default function MessagesContainer() {
         if (!data.response.length && control.page > 0) {
           setControl(prev => ({
             ...prev,
-            page: prev.page - 1
+            page: prev.page - 1,
           }));
         }
       })
@@ -208,7 +213,7 @@ export default function MessagesContainer() {
       }
     }
   }, [currentUrl, messages]);
-
+  
   return (
     <Grid container className={classes.root} direction="row">
       <Grid container item md={6} direction="column">
@@ -279,7 +284,8 @@ export default function MessagesContainer() {
                             style={{
                               display: 'flex',
                               flex: 1,
-                              backgroundColor: currentId == message._id ? 'rgba(0, 0, 0, 0.1)' : null
+                              backgroundColor: currentId == message._id ? 'rgba(0, 0, 0, 0.1)' : null,
+                              borderRadius: '10px',
                             }}
                             onClick={() => {
                               handleMessageStatus(message);
@@ -291,6 +297,7 @@ export default function MessagesContainer() {
                               message={message}
                               currentId={currentId}
                               loadMessages={loadMessages}
+                              controlPage={control.page}
                             />
                           </Link>
                         ))

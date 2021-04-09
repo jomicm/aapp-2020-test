@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { connect } from 'react-redux';
 import { Nav, Tab, Dropdown } from 'react-bootstrap';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import ReactTimeAgo from 'react-time-ago';
@@ -13,6 +14,8 @@ import {
   getCountDB,
   getDB,
   getDBComplex,
+  getMessages,
+  getTotalMessages,
   updateDB,
 } from '../../crud/api';
 import HeaderDropdownToggle from '../content/CustomDropdowns/HeaderDropdownToggle';
@@ -29,7 +32,8 @@ const MessagesTopBar = ({
   pulse,
   skin,
   type,
-  useSVG
+  useSVG,
+  user,
 }) => {
   const [countNotifications, setCountNotifications] = useState(0);
   const [data, setData] = useState([]);
@@ -128,8 +132,9 @@ const MessagesTopBar = ({
   }
 
   const getMessagesData = () => {
-    getCountDB({
+    getTotalMessages({
       collection: 'messages',
+      userId: user.id,
     })
       .then(response => response.json())
       .then(data => {
@@ -139,18 +144,11 @@ const MessagesTopBar = ({
         }))
       });
 
-    getDB('messages')
-      .then((response) => response.json())
-      .then((data) => {
-        updateCount(data.response);
-      })
-      .catch((error) => console.log('error>', error));
-
-    getDBComplex({
-      collection: 'messages',
+    getMessages({
       limit: control.rowsPerPage,
       skip: control.rowsPerPage * control.page,
-      sort: [{ key: 'creationDate', value: -1 }]
+      sort: [{ key: 'creationDate', value: -1 }],
+      userId: user.id,
     })
       .then((response) => response.json())
       .then((data) => {
@@ -305,4 +303,9 @@ const MessagesTopBar = ({
     </Dropdown >
   );
 }
-export default MessagesTopBar;
+
+const mapStateToProps = ({ auth: { user } }) => ({
+  user
+});
+
+export default connect(mapStateToProps)(MessagesTopBar);

@@ -7,7 +7,6 @@ import HeaderMobile from "./header/HeaderMobile";
 import AsideLeft from "./aside/AsideLeft";
 import Footer from "./footer/Footer";
 import ScrollTop from "../../app/partials/layout/ScrollTop";
-import StickyToolbar from "../../app/partials/layout/StickyToolbar";
 import HTMLClassService from "./HTMLClassService";
 import LayoutConfig from "./LayoutConfig";
 import MenuConfig from "./MenuConfig";
@@ -87,7 +86,6 @@ function Layout({
       </div>
       <QuickPanel />
       <ScrollTop />
-      <StickyToolbar />
     </LayoutInitializer>
   ) : (
     // BLANK LAYOUT
