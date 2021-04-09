@@ -84,7 +84,7 @@ const locationsTreeData = {
   parent: null
 };
 
-const Locations = ({ globalSearch, setGeneralSearch }) => {
+const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   const { showCustomAlert, showDeletedAlert, showErrorAlert } = actions;
   const theme4 = useTheme();
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -451,7 +451,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
   }, []);
 
   useEffect(() => {
-    if(anchorEl && !selectedLocationProfileRows.length){
+    if (anchorEl && !selectedLocationProfileRows.length) {
       dispatch(
         showCustomAlert({
           open: true,
@@ -568,21 +568,27 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
                           <div className='locations-list'>
                             <div className='locations-list__left-content'>
                               <div>
-                                <Tooltip placement='top' title='Add Location'>
-                                  <IconButton aria-label='Filter list' onClick={locationActions.openProfilesListBox}>
-                                    <AddIcon />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip placement='top' title='Edit Location'>
-                                  <IconButton aria-label='Filter list' onClick={locationActions.editLocation}>
-                                    <EditIcon />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip placement='top' title='Remove Location'>
-                                  <IconButton aria-label='Filter list' onClick={locationActions.openYesNoModal}>
-                                    <RemoveIcon />
-                                  </IconButton>
-                                </Tooltip>
+                                {user.profilePermissions.locations.includes('add') && (
+                                  <Tooltip placement='top' title='Add Location'>
+                                    <IconButton aria-label='Filter list' onClick={locationActions.openProfilesListBox}>
+                                      <AddIcon />
+                                    </IconButton>
+                                  </Tooltip>                                
+                                )}
+                                {user.profilePermissions.locations.includes('edit') && (
+                                  <Tooltip placement='top' title='Edit Location'>
+                                    <IconButton aria-label='Filter list' onClick={locationActions.editLocation}>
+                                      <EditIcon />
+                                    </IconButton>
+                                  </Tooltip>
+                                )}
+                                {user.profilePermissions.locations.includes('delete') && (
+                                  <Tooltip placement='top' title='Remove Location'>
+                                    <IconButton aria-label='Filter list' onClick={locationActions.openYesNoModal}>
+                                      <RemoveIcon />
+                                    </IconButton>
+                                  </Tooltip>
+                                )}
                               </div>
                               <TreeView data={locationsTree} onClick={handleSetProfileLocationFilter} />
                             </div>
@@ -896,7 +902,8 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
   );
 };
 
-const mapStateToProps = ({ general: { globalSearch } }) => ({
-  globalSearch
+const mapStateToProps = ({ general: { globalSearch }, auth: { user } }) => ({
+  globalSearch,
+  user
 });
 export default connect(mapStateToProps, general.actions)(Locations);

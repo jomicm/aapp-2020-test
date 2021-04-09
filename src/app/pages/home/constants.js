@@ -11,6 +11,53 @@ export const modules = [
   { key: 'settings', name: 'Settings' },
 ];
 
+export const collections = {
+  assets:{
+    module: 'assets',
+    name: 'assets'
+  },
+  references:{
+    module: 'assets',
+    name: 'references',
+  },
+  categories: {
+    module: 'assets',
+    name: 'categories'
+  },
+  user: {
+    module: 'users',
+    name: 'user'
+  },
+  userProfiles: {
+    module: 'users',
+    name: 'userProfiles'
+  },
+  employees: {
+    module: 'employees',
+    name: 'employees'
+  },
+  employeeProfiles: {
+    module: 'employees',
+    name: 'employeeProfiles'
+  },
+  processes: {
+    module: 'processes',
+    name: 'processes'
+  },
+  processStages: {
+    module: 'processes',
+    name: 'processStages'
+  },
+  locations: {
+    module: 'locations',
+    name: 'locations'
+  },
+  reports: {
+    module: 'reports',
+    name: 'reports'
+  }
+};
+
 export const allBaseFields = {
   userList: {
     userProfile: {
