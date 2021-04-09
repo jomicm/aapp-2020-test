@@ -221,8 +221,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
           >
             Generate Report
           </Button>
-          {
-            permissions.includes('add') &&
+          {permissions.includes('add') && (
             <Button
               className={classes.button}
               color="primary"
@@ -232,7 +231,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
             >
               Save
             </Button>
-          }
+          )}
         </div>
       </div>
       <div

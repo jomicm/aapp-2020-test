@@ -568,30 +568,27 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
                           <div className='locations-list'>
                             <div className='locations-list__left-content'>
                               <div>
-                                {
-                                  user.profilePermissions.locations.includes('add') &&
+                                {user.profilePermissions.locations.includes('add') && (
                                   <Tooltip placement='top' title='Add Location'>
                                     <IconButton aria-label='Filter list' onClick={locationActions.openProfilesListBox}>
                                       <AddIcon />
                                     </IconButton>
-                                  </Tooltip>
-                                }
-                                {
-                                  user.profilePermissions.locations.includes('edit') &&
+                                  </Tooltip>                                
+                                )}
+                                {user.profilePermissions.locations.includes('edit') && (
                                   <Tooltip placement='top' title='Edit Location'>
                                     <IconButton aria-label='Filter list' onClick={locationActions.editLocation}>
                                       <EditIcon />
                                     </IconButton>
                                   </Tooltip>
-                                }
-                                {
-                                  user.profilePermissions.locations.includes('delete') &&
+                                )}
+                                {user.profilePermissions.locations.includes('delete') && (
                                   <Tooltip placement='top' title='Remove Location'>
                                     <IconButton aria-label='Filter list' onClick={locationActions.openYesNoModal}>
                                       <RemoveIcon />
                                     </IconButton>
                                   </Tooltip>
-                                }
+                                )}
                               </div>
                               <TreeView data={locationsTree} onClick={handleSetProfileLocationFilter} />
                             </div>

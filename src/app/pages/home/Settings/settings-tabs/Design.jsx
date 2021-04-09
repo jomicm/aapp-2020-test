@@ -170,8 +170,7 @@ const Design = props => {
                 </Tabs>
               </div>
               <div style={{ textAlign: 'end', display: 'flex' }}>
-                {
-                  props.permissions.includes('edit') &&
+                {props.permissions.includes('edit') && (
                   <SaveButton
                   loading={loading}
                   handleOnClick={() => {
@@ -181,7 +180,7 @@ const Design = props => {
                       builderRef.current.update(layoutValues)
                     }
                   }} />
-                }
+                )}
                 {
                   tab === 1 && (
                     <button
