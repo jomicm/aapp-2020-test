@@ -11,9 +11,6 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import { ReactComponent as MessageIcon } from '../../../_metronic/layout/assets/layout-svg-icons/Message.svg';
 import {
-  getCountDB,
-  getDB,
-  getDBComplex,
   getMessages,
   getTotalMessages,
   updateDB,

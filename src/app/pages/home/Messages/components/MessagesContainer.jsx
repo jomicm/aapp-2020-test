@@ -21,14 +21,11 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import ClearIcon from '@material-ui/icons/Clear';
 import MessageInformation from './MessageInformation';
 import MessageSnapshot from './MessageSnapshot';
+import SnapshotDropdown from './SnapshotDropdown';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(() => ({
   root: {
-    height: '500px',
-    [theme.breakpoints.down('md')]: {
-      minHeight: '500px',
-      height: 'auto',
-    },
+    minHeight: '500px',
   },
   searchBox: {
     width: '100%;',
@@ -182,7 +179,7 @@ export default function MessagesContainer({ user, trash = false }) {
     setMessages(null);
     const timer = setTimeout(() => {
       loadMessages();
-    }, 600);
+    }, 200);
     return () => clearTimeout(timer);
   }, [control.search, control.page]);
 
@@ -215,7 +212,7 @@ export default function MessagesContainer({ user, trash = false }) {
       }
     }
   }, [currentUrl, messages]);
-  
+
   return (
     <Grid container className={classes.root} direction="row">
       <Grid container item md={6} direction="column">
@@ -274,35 +271,44 @@ export default function MessagesContainer({ user, trash = false }) {
                 ? (
                   <CircularProgress className={classes.progressIndicator} />
                 )
-                : messages.length == 0
-                  ? <span>No Messages Found</span>
+                : messages.length === 0
+                  ? <span style={{ alignSelf: 'center' }}> No Messages Found </span>
                   : (
                     <div className={classes.messagesList}>
                       {
                         messages.map(message => (
-                          <Link
-                            key={message._id}
-                            to={`/messages?id=${message._id}&page=${control.page}`}
-                            style={{
-                              display: 'flex',
-                              flex: 1,
-                              backgroundColor: currentId == message._id ? 'rgba(0, 0, 0, 0.1)' : null,
-                              borderRadius: '10px',
-                            }}
-                            onClick={() => {
-                              handleMessageStatus(message);
-                              setPreview(message.html);
-                              setCurrentId(message._id);
-                            }}
-                          >
-                            <MessageSnapshot
-                              message={message}
-                              currentId={currentId}
+                          <Grid style={{ flex: messages.length < 5 ? null : 1, position: 'relative', }} container item>
+                            <Link
+                              key={message._id}
+                              to={`/messages?id=${message._id}&page=${control.page}`}
+                              style={{
+                                display: 'flex',
+                                flex: 1,
+                                minHeight: messages.length < 5 ? '80px' : null,
+                                backgroundColor: currentId === message._id ? 'rgba(0, 0, 0, 0.1)' : null,
+                                borderRadius: '10px',
+                                position: 'relative',
+                              }}
+                              onClick={() => {
+                                handleMessageStatus(message);
+                                setPreview(message.html);
+                                setCurrentId(message._id);
+                              }}
+                            >
+                              <MessageSnapshot
+                                message={message}
+                                currentId={currentId}
+                                loadMessages={loadMessages}
+                                controlPage={control.page}
+                                trash={trash}
+                              />
+                            </Link>
+                            <SnapshotDropdown
+                              id={message._id}
                               loadMessages={loadMessages}
-                              controlPage={control.page}
                               trash={trash}
                             />
-                          </Link>
+                          </Grid>
                         ))
                       }
                     </div>

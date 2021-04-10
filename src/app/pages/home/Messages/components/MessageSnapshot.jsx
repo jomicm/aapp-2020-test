@@ -1,20 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Dropdown, ButtonGroup } from 'react-bootstrap';
 
 import {
   makeStyles,
   Grid,
   Typography,
   Avatar,
-  IconButton,
 } from '@material-ui/core';
-
-import { updateDB, deleteDB } from '../../../../crud/api';
-import SnapshotToggle from './SnapshotToggle';
-import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
-import DeleteIcon from '@material-ui/icons/Delete';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -69,43 +60,12 @@ const useStyles = makeStyles((theme) => ({
 export default function MessageSnapshot({ message, loadMessages, controlPage, trash = false }) {
   const classes = useStyles();
   const {
-    _id,
     img,
     subject,
     timeStamp,
     from,
     read,
   } = message;
-
-  const handleDelete = () => {
-    const body = { "status": "deleted" };
-    updateDB('messages/', body, _id)
-      .then(response => {
-        console.log(response);
-        loadMessages();
-      })
-      .catch(error => console.log('Error', error));
-  };
-
-  const moveToTrash = () => {
-    const body = { "status": "trash" };
-    updateDB('messages/', body, _id)
-      .then(response => {
-        console.log(response);
-        loadMessages();
-      })
-      .catch(error => console.log('Error', error));
-  };
-
-  const backToMain = () => {
-    const body = { "status": "new" };
-    updateDB('messages/', body, _id)
-      .then(response => {
-        console.log(response);
-        loadMessages();
-      })
-      .catch(error => console.log('Error', error));
-  };
 
   return (
     <div className={classes.root}>
@@ -131,53 +91,10 @@ export default function MessageSnapshot({ message, loadMessages, controlPage, tr
             justify="space-between"
           >
             <Typography className={classes.text} style={{ fontWeight: 'bold' }} variant="subtitle2">
-              {`${from[0].name} ${from[0].lastName}`}
+              {
+                from[0].name ? `${from[0].name} ${from[0].lastName}` : from[0].email
+              }
             </Typography>
-            <Dropdown as={ButtonGroup} drop="left">
-              <Dropdown.Toggle as={SnapshotToggle}>
-                <Link
-                  to={`/messages?id=${message._id}&page=${controlPage}`}
-                >
-                  <IconButton style={{ padding: '5px' }}>
-                    <ExpandMoreIcon fontSize="small" />
-                  </IconButton>
-                </Link>
-              </Dropdown.Toggle>
-              <Dropdown.Menu>
-                <Dropdown.Item onClick={ trash ? handleDelete : moveToTrash }>
-                  <Grid
-                    style={{ flex: 1 }}
-                    container
-                    item
-                    direction="row"
-                    alignItems="center"
-                  >
-                    <DeleteIcon style={{ marginRight: '10px' }} color="black" />
-                    <Typography>
-                      { trash ? 'Delete message' : 'Move to trash' }
-                    </Typography>
-                  </Grid>
-                </Dropdown.Item>
-                {
-                  trash && (
-                    <Dropdown.Item onClick={backToMain}>
-                      <Grid
-                        style={{ flex: 1 }}
-                        container
-                        item
-                        direction="row"
-                        alignItems="center"
-                      >
-                        <KeyboardBackspaceIcon style={{ marginRight: '10px' }} color="black" />
-                        <Typography>
-                          Back to Inbox
-                    </Typography>
-                      </Grid>
-                    </Dropdown.Item>
-                  )
-                }
-              </Dropdown.Menu>
-            </Dropdown>
           </Grid>
           <Grid style={{ flex: 1 }} item>
             <Typography

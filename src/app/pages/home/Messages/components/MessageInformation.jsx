@@ -1,6 +1,6 @@
 import React from 'react';
-import { makeStyles } from '@material-ui/core/styles';
 import {
+  makeStyles,
   Avatar,
   Card,
   CardContent,
@@ -18,6 +18,7 @@ const useStyles = makeStyles((theme) => ({
       marginLeft: '20px',
       marginBottom: '40px',
     },
+    border: '1px solid lightGrey',
   },
 }));
 
@@ -31,7 +32,7 @@ export default function MessageInformation({ headerInfo, preview }) {
     to,
   } = headerInfo;
   return (
-    <Card className={classes.root}>
+    <Card className={classes.root} elevation={0}>
       <CardHeader
         avatar={<Avatar alt="user image" src={img} />}
         title={
