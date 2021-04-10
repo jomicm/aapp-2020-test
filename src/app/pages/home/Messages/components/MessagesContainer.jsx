@@ -69,7 +69,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function MessagesContainer({ user }) {
+export default function MessagesContainer({ user, trash = false }) {
   const classes = useStyles();
 
   /* React states */
@@ -95,11 +95,12 @@ export default function MessagesContainer({ user }) {
   /* Functions */
 
   const loadMessages = () => {
-    let queryLike = ['subject', 'html'].map(key => ({ key, value: control.search }))
+    let queryLike = ['subject', 'html'].map(key => ({ key, value: control.search }));
 
     getTotalMessages({
       collection: 'messages',
       queryLike: control.search.length >= 3 ? queryLike : null,
+      trash,
       userId: user.id,
     })
       .then(response => response.json())
@@ -115,6 +116,7 @@ export default function MessagesContainer({ user }) {
       skip: control.rowsPerPage * control.page,
       queryLike: control.search.length >= 3 ? queryLike : null,
       sort: [{ key: 'creationDate', value: -1 }],
+      trash,
       userId: user.id,
     })
       .then(response => response.json())
@@ -148,13 +150,13 @@ export default function MessagesContainer({ user }) {
       const newMessage = messages;
       newMessage[index].read = true;
       handleUpdate(_id, read);
-      loadMessages();
     }
   }
 
   const handleUpdate = (id, read) => {
     const body = { read: true };
     updateDB('messages/', body, id)
+      .then(response => loadMessages())
       .catch(error => console.log('Error', error));
   }
 
@@ -298,6 +300,7 @@ export default function MessagesContainer({ user }) {
                               currentId={currentId}
                               loadMessages={loadMessages}
                               controlPage={control.page}
+                              trash={trash}
                             />
                           </Link>
                         ))

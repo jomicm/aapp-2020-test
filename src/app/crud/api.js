@@ -160,6 +160,7 @@ const getMessages = ({
   limit,
   skip,
   fields,
+  trash,
   userId
 }) => {
   let collection = 'messages';
@@ -172,12 +173,13 @@ const getMessages = ({
       res[key] = isValueBool ? value : { "$regex": `(?i).*${value}.*` };
       return res;
     });
-    const queryString = JSON.stringify({ "$and" : [{"$or": qLike }, {"to": {"$elemMatch": {"_id": userId }}}]});
+    const queryString = JSON.stringify({ "$and" : [{"$or": qLike }, {"to": {"$elemMatch": {"_id": userId }}}, {"status" : trash ? "trash" : "new"}]});
     additionalParams += `query=${queryString}`;
     count++;
   }
   else {
-    const queryString = JSON.stringify({"to": {"$elemMatch": {"_id": userId }}});
+    // const queryString = JSON.stringify({"to": {"$elemMatch": {"_id": userId }}});
+    const queryString = JSON.stringify({ "$and" : [{"to": {"$elemMatch": {"_id": userId }}}, {"status" : trash ? "trash" : "new"}]});
     additionalParams += `query=${queryString}`;
     count++;
   }
@@ -207,9 +209,9 @@ const getMessages = ({
 
 const getTotalMessages = ({
   queryLike,
+  trash,
   userId
 }) => {
-  let count = 0;
   let collection = 'messages';
   let additionalParams = '';
   if (queryLike) {
@@ -218,13 +220,14 @@ const getTotalMessages = ({
       res[key] = { "$regex": `(?i).*${value}.*` };
       return res;
     });
-    const queryString = JSON.stringify({ "$and" : [{"$or": qLike }, {"to": {"$elemMatch": {"_id": userId }}}] });
+    //const queryString = JSON.stringify({ "$and" : [{"$or": qLike }, {"to": {"$elemMatch": {"_id": userId }}}] });
+    const queryString = JSON.stringify({ "$and" : [{"$or": qLike }, {"to": {"$elemMatch": {"_id": userId }}}, {"status" : trash ? "trash" : "new"}]});
     additionalParams += `query=${queryString}`;
   }
   else {
-    const queryString = JSON.stringify({"to": {"$elemMatch": {"_id": userId }}});
+    // const queryString = JSON.stringify({"to": {"$elemMatch": {"_id": userId }}});
+    const queryString = JSON.stringify({ "$and" : [{"to": {"$elemMatch": {"_id": userId }}}, {"status" : trash ? "trash" : "new"}]});
     additionalParams += `query=${queryString}`;
-    count++;
   }
   additionalParams = additionalParams ? `?${additionalParams}` : '';
   const reqURL = `${getAPIPath(collection, '', false, false, count)}${additionalParams}`;

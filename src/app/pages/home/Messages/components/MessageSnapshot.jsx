@@ -10,8 +10,9 @@ import {
   IconButton,
 } from '@material-ui/core';
 
-import { deleteDB } from '../../../../crud/api';
+import { updateDB, deleteDB } from '../../../../crud/api';
 import SnapshotToggle from './SnapshotToggle';
+import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
 import DeleteIcon from '@material-ui/icons/Delete';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
@@ -65,7 +66,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function MessageSnapshot({ message, loadMessages, controlPage }) {
+export default function MessageSnapshot({ message, loadMessages, controlPage, trash = false }) {
   const classes = useStyles();
   const {
     _id,
@@ -77,12 +78,33 @@ export default function MessageSnapshot({ message, loadMessages, controlPage }) 
   } = message;
 
   const handleDelete = () => {
-    deleteDB('messages/', _id)
-      .then(response => console.log('success', response))
+    const body = { "status": "deleted" };
+    updateDB('messages/', body, _id)
+      .then(response => {
+        console.log(response);
+        loadMessages();
+      })
       .catch(error => console.log('Error', error));
-    setTimeout(() => {
-      loadMessages();
-    }, 100);
+  };
+
+  const moveToTrash = () => {
+    const body = { "status": "trash" };
+    updateDB('messages/', body, _id)
+      .then(response => {
+        console.log(response);
+        loadMessages();
+      })
+      .catch(error => console.log('Error', error));
+  };
+
+  const backToMain = () => {
+    const body = { "status": "new" };
+    updateDB('messages/', body, _id)
+      .then(response => {
+        console.log(response);
+        loadMessages();
+      })
+      .catch(error => console.log('Error', error));
   };
 
   return (
@@ -122,7 +144,7 @@ export default function MessageSnapshot({ message, loadMessages, controlPage }) 
                 </Link>
               </Dropdown.Toggle>
               <Dropdown.Menu>
-                <Dropdown.Item onClick={handleDelete}>
+                <Dropdown.Item onClick={ trash ? handleDelete : moveToTrash }>
                   <Grid
                     style={{ flex: 1 }}
                     container
@@ -132,10 +154,28 @@ export default function MessageSnapshot({ message, loadMessages, controlPage }) 
                   >
                     <DeleteIcon style={{ marginRight: '10px' }} color="black" />
                     <Typography>
-                      To trash
+                      { trash ? 'Delete message' : 'Move to trash' }
                     </Typography>
                   </Grid>
                 </Dropdown.Item>
+                {
+                  trash && (
+                    <Dropdown.Item onClick={backToMain}>
+                      <Grid
+                        style={{ flex: 1 }}
+                        container
+                        item
+                        direction="row"
+                        alignItems="center"
+                      >
+                        <KeyboardBackspaceIcon style={{ marginRight: '10px' }} color="black" />
+                        <Typography>
+                          Back to Inbox
+                    </Typography>
+                      </Grid>
+                    </Dropdown.Item>
+                  )
+                }
               </Dropdown.Menu>
             </Dropdown>
           </Grid>
