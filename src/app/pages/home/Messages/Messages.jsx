@@ -10,7 +10,10 @@ import {
 import GeneralMessageContainer from './components/GeneralMessageContainer';
 
 export default function Messages() {
-  const [tab, setTab] = useState(0);
+
+  const localStorageActiveTabKey = 'builderActiveTab';
+  const activeTab = localStorage.getItem(localStorageActiveTabKey);
+  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
 
   return (
     <div className='kt-form kt-form--label-right'>
@@ -21,7 +24,10 @@ export default function Messages() {
               <Tabs
                 className='builder-tabs'
                 component='div'
-                onChange={(_, nextTab) => setTab(nextTab)}
+                onChange={(_, nextTab) => {
+                  setTab(nextTab);
+                  localStorage.setItem(localStorageActiveTabKey, nextTab);
+                }}
                 value={tab}
               >
                 <Tab label='Inbox' />
