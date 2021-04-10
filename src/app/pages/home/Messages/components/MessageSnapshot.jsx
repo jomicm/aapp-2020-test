@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import {
   makeStyles,
@@ -57,7 +58,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function MessageSnapshot({ message, loadMessages, controlPage, trash = false }) {
+export default function MessageSnapshot({ message }) {
   const classes = useStyles();
   const {
     img,
@@ -120,3 +121,7 @@ export default function MessageSnapshot({ message, loadMessages, controlPage, tr
     </div>
   );
 }
+
+MessageSnapshot.propTypes = {
+  message: PropTypes.shape.isRequired,
+};

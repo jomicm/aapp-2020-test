@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import PropTypes from 'prop-types';
 
 import {
   Grid,
@@ -66,7 +67,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-export default function MessagesContainer({ user, trash = false }) {
+export default function MessagesContainer({ user, trash }) {
   const classes = useStyles();
 
   /* React states */
@@ -276,7 +277,7 @@ export default function MessagesContainer({ user, trash = false }) {
                   : (
                     <div className={classes.messagesList}>
                       {
-                        messages.map(message => (
+                        messages.map((message, index) => (
                           <Grid style={{ flex: messages.length < 5 ? null : 1, position: 'relative', }} container item>
                             <Link
                               key={message._id}
@@ -304,6 +305,7 @@ export default function MessagesContainer({ user, trash = false }) {
                               />
                             </Link>
                             <SnapshotDropdown
+                              key={index.toString()}
                               id={message._id}
                               loadMessages={loadMessages}
                               trash={trash}
@@ -344,3 +346,12 @@ export default function MessagesContainer({ user, trash = false }) {
     </Grid>
   )
 }
+
+MessagesContainer.defaultProps = {
+  trash: false,
+};
+
+MessagesContainer.propTypes = {
+  user: PropTypes.shape.isRequired,
+  trash: PropTypes.bool,
+};

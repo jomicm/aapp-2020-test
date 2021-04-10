@@ -149,6 +149,7 @@ const MessagesTopBar = ({
     })
       .then((response) => response.json())
       .then((data) => {
+        updateCount(data.response);
         setData(data.response.reverse());
       })
       .catch((error) => console.log('error>', error));

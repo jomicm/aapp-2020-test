@@ -1,5 +1,6 @@
 import React from 'react';
 import { Dropdown, ButtonGroup } from 'react-bootstrap';
+import PropTypes from 'prop-types';
 
 import {
   Grid,
@@ -15,35 +16,12 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 export default function SnapshotDropdown({ trash, loadMessages, id }) {
 
-  const handleDelete = () => {
-    const body = { "status": "deleted" };
+  const handleStatus = (newStatus) => {
+    const body = { "status": newStatus };
     updateDB('messages/', body, id)
-      .then(response => {
-        console.log(response);
-        loadMessages();
-      })
+      .then(_ => loadMessages())
       .catch(error => console.log('Error', error));
-  };
-
-  const moveToTrash = () => {
-    const body = { "status": "trash" };
-    updateDB('messages/', body, id)
-      .then(response => {
-        console.log(response);
-        loadMessages();
-      })
-      .catch(error => console.log('Error', error));
-  };
-
-  const backToMain = () => {
-    const body = { "status": "new" };
-    updateDB('messages/', body, id)
-      .then(response => {
-        console.log(response);
-        loadMessages();
-      })
-      .catch(error => console.log('Error', error));
-  };
+  }
 
   return (
     <div style={{ position: 'absolute', right: '20px' }}>
@@ -54,7 +32,9 @@ export default function SnapshotDropdown({ trash, loadMessages, id }) {
           </IconButton>
         </Dropdown.Toggle>
         <Dropdown.Menu>
-          <Dropdown.Item onClick={trash ? handleDelete : moveToTrash}>
+          <Dropdown.Item onClick={() => (
+            trash ? handleStatus("deleted") : handleStatus("trash")
+          )}>
             <Grid
               style={{ flex: 1 }}
               container
@@ -70,7 +50,7 @@ export default function SnapshotDropdown({ trash, loadMessages, id }) {
           </Dropdown.Item>
           {
             trash && (
-              <Dropdown.Item onClick={backToMain}>
+              <Dropdown.Item onClick={() => handleStatus("new")}>
                 <Grid
                   style={{ flex: 1 }}
                   container
@@ -89,5 +69,11 @@ export default function SnapshotDropdown({ trash, loadMessages, id }) {
         </Dropdown.Menu>
       </Dropdown>
     </div>
-  )
+  );
 }
+
+SnapshotDropdown.propTypes = {
+  trash: PropTypes.bool.isRequired,
+  loadMessages: PropTypes.func.isRequired,
+  id: PropTypes.string.isRequired,
+};

@@ -1,4 +1,6 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+
 import {
   makeStyles,
   Avatar,
@@ -8,6 +10,7 @@ import {
   Divider,
   Typography
 } from '@material-ui/core';
+
 import Preview from './Preview';
 
 const useStyles = makeStyles((theme) => ({
@@ -59,3 +62,14 @@ export default function MessageInformation({ headerInfo, preview }) {
     </Card>
   );
 }
+
+MessageInformation.propTypes = {
+  headerInfo: PropTypes.shape({
+    img: PropTypes.string,
+    senderName: PropTypes.string,
+    subject: PropTypes.string,
+    timeStamp: PropTypes.string,
+    to: PropTypes.string,
+  }).isRequired,
+  preview: PropTypes.string.isRequired,
+};

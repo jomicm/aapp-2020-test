@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import { Tabs, Tab } from '@material-ui/core';
+import PropTypes from 'prop-types';
 
 import {
   Portlet,
@@ -59,5 +60,9 @@ function Messages({ user }) {
 const mapStateToProps = ({ auth: { user } }) => ({
   user,
 });
+
+Messages.propTypes = {
+  user: PropTypes.shape.isRequired,
+};
 
 export default connect(mapStateToProps)(Messages);
