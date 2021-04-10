@@ -75,7 +75,6 @@ const { apiHost, localHost } = hosts;
 const Divider = () => <div style={{ width: '100%', height: '3px', backgroundColor: 'black' }}></div>;
 
 let locations;
-const localStorageActiveTabKey = 'builderActiveTab';
 
 const locationsTreeData = {
   id: 'root',
@@ -84,7 +83,7 @@ const locationsTreeData = {
   parent: null
 };
 
-const Locations = ({ globalSearch, setGeneralSearch }) => {
+const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   const { showCustomAlert, showDeletedAlert, showErrorAlert } = actions;
   const theme4 = useTheme();
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -117,14 +116,13 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
   const [openYesNoModal, setOpenYesNoModal] = useState(false);
   const [realParentSelected, setRealParentSelected] = useState(null);
   const [selectedLocationProfileRows, setSelectedLocationProfileRows] = useState([]);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [tab, setTab] = useState(0);
   const [value4, setValue4] = useState(0);
   const { layoutConfig } = useSelector(
     ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
     shallowEqual
   );
 
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const dispatch = useDispatch();
   const initialValues = useMemo(
     () =>
@@ -451,7 +449,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
   }, []);
 
   useEffect(() => {
-    if(anchorEl && !selectedLocationProfileRows.length){
+    if (anchorEl && !selectedLocationProfileRows.length) {
       dispatch(
         showCustomAlert({
           open: true,
@@ -507,10 +505,7 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
                     <Tabs
                       className='builder-tabs'
                       component='div'
-                      onChange={(_, nextTab) => {
-                        setTab(nextTab);
-                        localStorage.setItem(localStorageActiveTabKey, nextTab);
-                      }}
+                      onChange={(_, nextTab) => setTab(nextTab)}
                       value={tab}
                     >
                       {TabsTitles('locations')}
@@ -568,21 +563,27 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
                           <div className='locations-list'>
                             <div className='locations-list__left-content'>
                               <div>
-                                <Tooltip placement='top' title='Add Location'>
-                                  <IconButton aria-label='Filter list' onClick={locationActions.openProfilesListBox}>
-                                    <AddIcon />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip placement='top' title='Edit Location'>
-                                  <IconButton aria-label='Filter list' onClick={locationActions.editLocation}>
-                                    <EditIcon />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip placement='top' title='Remove Location'>
-                                  <IconButton aria-label='Filter list' onClick={locationActions.openYesNoModal}>
-                                    <RemoveIcon />
-                                  </IconButton>
-                                </Tooltip>
+                                {user.profilePermissions.locations.includes('add') && (
+                                  <Tooltip placement='top' title='Add Location'>
+                                    <IconButton aria-label='Filter list' onClick={locationActions.openProfilesListBox}>
+                                      <AddIcon />
+                                    </IconButton>
+                                  </Tooltip>                                
+                                )}
+                                {user.profilePermissions.locations.includes('edit') && (
+                                  <Tooltip placement='top' title='Edit Location'>
+                                    <IconButton aria-label='Filter list' onClick={locationActions.editLocation}>
+                                      <EditIcon />
+                                    </IconButton>
+                                  </Tooltip>
+                                )}
+                                {user.profilePermissions.locations.includes('delete') && (
+                                  <Tooltip placement='top' title='Remove Location'>
+                                    <IconButton aria-label='Filter list' onClick={locationActions.openYesNoModal}>
+                                      <RemoveIcon />
+                                    </IconButton>
+                                  </Tooltip>
+                                )}
                               </div>
                               <TreeView data={locationsTree} onClick={handleSetProfileLocationFilter} />
                             </div>
@@ -896,7 +897,8 @@ const Locations = ({ globalSearch, setGeneralSearch }) => {
   );
 };
 
-const mapStateToProps = ({ general: { globalSearch } }) => ({
-  globalSearch
+const mapStateToProps = ({ general: { globalSearch }, auth: { user } }) => ({
+  globalSearch,
+  user
 });
 export default connect(mapStateToProps, general.actions)(Locations);

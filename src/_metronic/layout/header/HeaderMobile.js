@@ -16,7 +16,6 @@ class HeaderMobile extends React.Component {
     const {
       headerLogo,
       asideDisplay,
-      headerMenuSelfDisplay,
       headerMobileCssClasses,
       headerMobileAttributes
     } = this.props;
@@ -37,15 +36,6 @@ class HeaderMobile extends React.Component {
             <button
               className="kt-header-mobile__toggler kt-header-mobile__toggler--left"
               id="kt_aside_mobile_toggler"
-            >
-              <span />
-            </button>
-          )}
-
-          {headerMenuSelfDisplay && (
-            <button
-              className="kt-header-mobile__toggler"
-              id="kt_header_mobile_toggler"
             >
               <span />
             </button>

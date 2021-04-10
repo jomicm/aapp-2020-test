@@ -2,7 +2,6 @@ import React from "react";
 import { connect } from "react-redux";
 import objectPath from "object-path";
 import Topbar from "./Topbar";
-import HMenu from "./HMenu/HMenu";
 import AnimateLoading from "../../../app/partials/layout/AnimateLoading";
 import KTHeader from "../../_assets/js/header";
 import * as builder from "../../ducks/builder";
@@ -33,13 +32,13 @@ class Header extends React.Component {
     return (
       <div
         className={`kt-header kt-grid__item ${headerClasses}`}
+        style={{ justifyContent: 'flex-end' }}
         id="kt_header"
         ref={this.headerCommonRef}
         {...headerAttributes}
       >
         <AnimateLoading />
         {/* <!-- begin: Header Menu --> */}
-        {menuHeaderDisplay && <HMenu />}
         {/* <!-- end: Header Menu --> */}
         {/* <!-- begin:: Header Topbar --> */}
         {/* <!-- empty div to fix topbar to stay on the right when menu-horizontal is hidden --> */}

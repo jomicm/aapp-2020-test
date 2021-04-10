@@ -72,7 +72,7 @@ export default function Dashboard() {
   return (
     <>
       <div className="row">
-        <div className="col-xl-6">
+        <div className="col-xl-6" style={{ marginTop: '20px' }}>
           <div className="row row-full-height">
             <div className="col-sm-12 col-md-12 col-lg-6">
               <Portlet className="kt-portlet--height-fluid-half kt-portlet--border-bottom-brand">

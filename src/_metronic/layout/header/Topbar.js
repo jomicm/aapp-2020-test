@@ -1,13 +1,9 @@
 import React from "react";
 import SearchDropdown from "../../../app/partials/layout/SearchDropdown";
 import UserNotifications from "../../../app/partials/layout/functional/UserNotifications";
-import MyCart from "../../../app/partials/layout/MyCart";
-import QuickActionsPanel from "../../../app/partials/layout/QuickActionsPanel";
-import QuickPanelToggler from "./QuickPanelToggle";
 import LanguageSelector from "../../../app/partials/layout/LanguageSelector";
 import UserProfile from "../../../app/partials/layout/UserProfile";
 import Help from '../../../app/partials/layout/HelpTopBar'
-import Messages from '../../../app/partials/layout/MessagesTopBar'
 import MessagesTopBar from '../../../app/partials/layout/MessagesTopBar'
 import { toAbsoluteUrl } from "../../utils/utils";
 
