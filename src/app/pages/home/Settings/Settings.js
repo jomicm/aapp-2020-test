@@ -90,10 +90,7 @@ function Settings({ user }) {
                       component="div"
                       className="builder-tabs"
                       value={tab}
-                      onChange={(_, nextTab) => {
-                        setTab(nextTab);
-                        localStorage.setItem(localStorageActiveTabKey, nextTab);
-                      }}
+                      onChange={(_, nextTab) => setTab(nextTab)}
                     >
                       {TabsTitles('settings')}
                     </Tabs>

@@ -18,12 +18,9 @@ import Policies from '../Components/Policies/Policies';
 import ModalEmployees from './modals/ModalEmployees';
 import ModalEmployeeProfiles from './modals/ModalEmployeeProfiles';
 
-const localStorageActiveTabKey = 'builderActiveTab';
-
 const Employees = ({ globalSearch, setGeneralSearch }) => {
   const dispatch = useDispatch();
   const { showCustomAlert, showDeletedAlert, showErrorAlert} = actions;
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [employeeLayoutSelected, setEmployeeLayoutSelected] = useState({});
   const [policies, setPolicies] = useState(['']);
   const [referencesSelectedId, setReferencesSelectedId] = useState(null);
@@ -31,7 +28,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
     selectReferenceConfirmation,
     setSelectReferenceConfirmation
   ] = useState(false);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [tab, setTab] = useState(0);
 
   const createUserProfilesRow = (id, name, creator, creation_date) => {
     return { id, name, creator, creation_date };
@@ -294,10 +291,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
                 <Tabs
                   className='builder-tabs'
                   component='div'
-                  onChange={(_, nextTab) => {
-                    setTab(nextTab);
-                    localStorage.setItem(localStorageActiveTabKey, nextTab);
-                  }}
+                  onChange={(_, nextTab) => setTab(nextTab)}
                   value={tab}
                 >
                   {TabsTitles('employees')}
