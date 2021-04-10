@@ -236,9 +236,7 @@ function Users({ globalSearch, setGeneralSearch }) {
                   component='div'
                   className='builder-tabs'
                   value={tab}
-                  onChange={(_, nextTab) => {
-                    setTab(nextTab);
-                  }}
+                  onChange={(_, nextTab) => setTab(nextTab)}
                 >
                   {TabsTitles('users')}
                 </Tabs>

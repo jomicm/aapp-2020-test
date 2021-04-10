@@ -236,9 +236,7 @@ export default function Processes() {
                   component='div'
                   className='builder-tabs'
                   value={tab}
-                  onChange={(_, nextTab) => {
-                    setTab(nextTab);
-                  }}
+                  onChange={(_, nextTab) => setTab(nextTab)}
                 >
                   {TabsTitles('processes')}
                 </Tabs>

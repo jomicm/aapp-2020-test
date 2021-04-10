@@ -291,9 +291,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
                 <Tabs
                   className='builder-tabs'
                   component='div'
-                  onChange={(_, nextTab) => {
-                    setTab(nextTab);
-                  }}
+                  onChange={(_, nextTab) => setTab(nextTab)}
                   value={tab}
                 >
                   {TabsTitles('employees')}

@@ -345,9 +345,7 @@ function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAle
                   component='div'
                   className='builder-tabs'
                   value={tab}
-                  onChange={(_, nextTab) => {
-                    setTab(nextTab);
-                  }}
+                  onChange={(_, nextTab) => setTab(nextTab)}
                 >
                   {TabsTitles('assets')}
                 </Tabs>
