@@ -1,64 +1,19 @@
 /* eslint-disable no-restricted-imports */
 import React, { useMemo, useState, useEffect } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
-import { Formik, setNestedObjectValues } from "formik";
-import { get, merge, isEmpty } from "lodash";
-import { FormHelperText, Switch, Tab, Tabs, Styles } from "@material-ui/core";
-import clsx from "clsx";
+import { Formik } from "formik";
+import { merge, isEmpty } from "lodash";
+import { Tabs } from "@material-ui/core";
 import { metronic, initLayoutConfig, LayoutConfig } from "../../../../_metronic";
 import {
   Portlet,
   PortletBody,
-  PortletFooter,
   PortletHeader,
   PortletHeaderToolbar
 } from "../../../partials/content/Portlet";
-import { CodeBlock } from "../../../partials/content/CodeExample";
-import Notice from "../../../partials/content/Notice";
-
-import CodeExample from '../../../partials/content/CodeExample';
-
-import {
-  makeStyles,
-  lighten,
-  withStyles,
-  useTheme
-} from "@material-ui/core/styles";
-import {
-  Checkbox,
-  Card,
-  CardHeader,
-  Grid,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Button,
-  Divider,
-} from "@material-ui/core";
 
 // AApp Components
 import { TabsTitles } from '../Components/Translations/tabsTitles';
-import TableComponent from '../Components/TableComponent';
-import ModalProcessStages from './modals/ModalProcessStages';
-import Autocomplete from '../Components/Inputs/Autocomplete';
-import ModalProcesses from './modals/ModalProcesses';
-
-import TreeView from '../Components/TreeViewComponent';
-// import GoogleMaps from '../Components/GoogleMaps';
-// import './Assets.scss';
-
-//Icons
-import CloseIcon from "@material-ui/icons/Close";
-import DeleteIcon from '@material-ui/icons/Delete';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
-import DraftsIcon from '@material-ui/icons/Drafts';
-import SendIcon from '@material-ui/icons/Send';
-import ExpandLess from '@material-ui/icons/ExpandLess';
-import ExpandMore from '@material-ui/icons/ExpandMore';
-import StarBorder from '@material-ui/icons/StarBorder';
-
-
 //DB API methods
 import { getDB, deleteDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
@@ -73,10 +28,6 @@ import {
   Users,
   Processes
 } from './settings-tabs';
-import ProcessFlow from "../Processes/components/ProcessFlow";
-import SaveButton from './settings-tabs/components/SaveButton';
-
-import Example from './Example';
 
 export default function Settings() {
   const [tab, setTab] = useState(0);
@@ -283,9 +234,7 @@ export default function Settings() {
                       component="div"
                       className="builder-tabs"
                       value={tab}
-                      onChange={(_, nextTab) => {
-                        setTab(nextTab);
-                      }}
+                      onChange={(_, nextTab) => setTab(nextTab)}
                     >
                       {TabsTitles('settings')}
                     </Tabs>
