@@ -29,12 +29,8 @@ import {
   Processes
 } from './settings-tabs';
 
-
-const localStorageActiveTabKey = "builderActiveTab";
 function Settings({ user }) {
-
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [tab, setTab] = useState(0);
   const dispatch = useDispatch();
   const { layoutConfig } = useSelector(
     ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
