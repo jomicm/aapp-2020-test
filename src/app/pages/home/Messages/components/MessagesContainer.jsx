@@ -67,7 +67,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-export default function MessagesContainer({ user, trash }) {
+export default function MessagesContainer({ user, trash, tab, setTab }) {
   const classes = useStyles();
 
   /* React states */
@@ -129,7 +129,7 @@ export default function MessagesContainer({ user, trash }) {
       })
       .catch((error) => { });
     reset();
-  }
+  };
 
   const reset = () => {
     setPreview('');
@@ -140,7 +140,7 @@ export default function MessagesContainer({ user, trash }) {
       subject: '',
       to: ''
     });
-  }
+  };
 
   const handleMessageStatus = ({ _id, read }) => {
     if (!read) {
@@ -149,14 +149,14 @@ export default function MessagesContainer({ user, trash }) {
       newMessage[index].read = true;
       handleUpdate(_id, read);
     }
-  }
+  };
 
   const handleUpdate = (id, read) => {
     const body = { read: true };
     updateDB('messages/', body, id)
       .then(response => loadMessages())
       .catch(error => console.log('Error', error));
-  }
+  };
 
   const handlePageChange = (action) => {
     if (action === 'add' && (control.page + 1) < Math.ceil(control.total / control.rowsPerPage)) {
@@ -174,6 +174,28 @@ export default function MessagesContainer({ user, trash }) {
     }));
   };
 
+  const handleUrl = (urls) => {
+    if (urls.length === 1) {
+      reset();
+      setTab(trash ? 1 : 0);
+      setControl(prev => ({
+        ...prev,
+        page: 0,
+      }));
+    } else {
+      const currentControlPage = urls[1].split('=')[1];
+      setCurrentUrl(urls[0]);
+      setControl(prev => ({
+        ...prev,
+        page: Number(currentControlPage),
+      }));
+      // const currentTab = urls[2].split('=')[1];
+      // if (Number(currentTab) !== tab) {
+      //   setTab(currentTab);
+      // }
+    }
+  };
+
   /* Component mounts */
 
   useEffect(() => {
@@ -185,11 +207,8 @@ export default function MessagesContainer({ user, trash }) {
   }, [control.search, control.page]);
 
   useEffect(() => {
-    setCurrentUrl(window.location.search.slice(4).split('&')[0]);
-    setControl(prev => ({
-      ...prev,
-      page: Number(window.location.search.slice(-1))
-    }));
+    const urls = window.location.search.slice(4).split('&');
+    handleUrl(urls);
   }, [window.location.search]);
 
   useEffect(() => {
@@ -216,7 +235,7 @@ export default function MessagesContainer({ user, trash }) {
 
   return (
     <Grid container className={classes.root} direction="row">
-      <Grid container item md={6} direction="column">
+      <Grid container item md={3} direction="column">
         {/* Search */}
         <Grid
           container
@@ -281,7 +300,7 @@ export default function MessagesContainer({ user, trash }) {
                           <Grid style={{ flex: messages.length < 5 ? null : 1, position: 'relative', }} container item>
                             <Link
                               key={message._id}
-                              to={`/messages?id=${message._id}&page=${control.page}`}
+                              to={`/messages?id=${message._id}&page=${control.page}&tab=${tab}`}
                               style={{
                                 display: 'flex',
                                 flex: 1,
@@ -297,10 +316,10 @@ export default function MessagesContainer({ user, trash }) {
                               }}
                             >
                               <MessageSnapshot
-                                message={message}
+                                controlPage={control.page}
                                 currentId={currentId}
                                 loadMessages={loadMessages}
-                                controlPage={control.page}
+                                message={message}
                                 trash={trash}
                               />
                             </Link>
@@ -337,7 +356,7 @@ export default function MessagesContainer({ user, trash }) {
         </Grid>
       </Grid>
       {/* Preview Container */}
-      <Grid container item md={6} alignItems="center" justify="center">
+      <Grid container item md={9} alignItems="center" justify="center">
         <MessageInformation
           headerInfo={headerInfo}
           preview={preview}
@@ -354,4 +373,6 @@ MessagesContainer.defaultProps = {
 MessagesContainer.propTypes = {
   user: PropTypes.shape.isRequired,
   trash: PropTypes.bool,
+  tab: PropTypes.number.isRequired,
+  setTab: PropTypes.func.isRequired,
 };

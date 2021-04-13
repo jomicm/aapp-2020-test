@@ -247,7 +247,7 @@ const MessagesTopBar = ({
                           <div style={{ display: 'flex', minHeight: '100px' }}>
                             <div className={changeBarColor(read)} />
                             <Link
-                              to={`/messages?id=${_id}&page=${control.page}`}
+                              to={`/messages?id=${_id}&page=${control.page}&tab=0`}
                               className='kt-header__topbar-item'
                               drop='down'
                               style={{ width: '100%' }}

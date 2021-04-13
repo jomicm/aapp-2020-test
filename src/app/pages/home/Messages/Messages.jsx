@@ -38,12 +38,21 @@ function Messages({ user }) {
         />
         {tab === 0 && (
           <PortletBody className='portlet-body'>
-            <MessagesContainer user={user} />
+            <MessagesContainer
+              setTab={setTab}
+              tab={tab}
+              user={user}
+            />
           </PortletBody>
         )}
         {tab === 1 && (
           <PortletBody className='portlet-body'>
-            <MessagesContainer user={user} trash />
+            <MessagesContainer
+              setTab={setTab}
+              tab={tab}
+              trash
+              user={user}
+            />
           </PortletBody>
         )}
       </Portlet>
