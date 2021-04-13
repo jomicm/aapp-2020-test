@@ -11,6 +11,7 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import { ReactComponent as MessageIcon } from '../../../_metronic/layout/assets/layout-svg-icons/Message.svg';
 import {
+  getDB,
   getMessages,
   getTotalMessages,
   updateDB,
@@ -141,6 +142,14 @@ const MessagesTopBar = ({
         }))
       });
 
+    getDB('messages')
+      .then(response => response.json())
+      .then((data) => {
+        const filteredData = data.response.filter(message => message.status === "new");
+        updateCount(filteredData);
+      })
+      .catch((error) => console.log('error:', error));
+
     getMessages({
       limit: control.rowsPerPage,
       skip: control.rowsPerPage * control.page,
@@ -148,10 +157,7 @@ const MessagesTopBar = ({
       userId: user.id,
     })
       .then((response) => response.json())
-      .then((data) => {
-        updateCount(data.response);
-        setData(data.response.reverse());
-      })
+      .then((data) => setData(data.response.reverse()))
       .catch((error) => console.log('error>', error));
   };
 
