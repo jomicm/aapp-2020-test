@@ -196,7 +196,8 @@ function CustomFields(props) {
     ],
     [
       { id: 'formula', name: 'Num Formula', icon: <Typography style={{color: 'grey', fontSize: 16, fontWeight: 'bolder'}}>f(x)</Typography> },
-      { id: 'formula', name: 'Date Formula', icon: <Typography style={{color: 'grey', fontSize: 16, fontWeight: 'bolder'}}>f(t)</Typography> },
+      //Date Formula will be implemented in another ticket
+      // { id: 'dateGormula', name: 'Date Formula', icon: <Typography style={{color: 'grey', fontSize: 16, fontWeight: 'bolder'}}>f(t)</Typography> },
     ],
   ];
 
