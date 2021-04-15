@@ -68,6 +68,12 @@
   }
 }
 
+.error-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
 .custom-field-settings-wrapper {
   display: flex;
   flex-direction: row;
@@ -139,5 +145,20 @@
     &__single:nth-child(even) {
       background-color: #fcfcfc;
     }
+  }
+
+  &__field-id {
+    font-size: 16px !important;
+    color: #000000D9;
+  }
+
+  &__field-id-wrapper {
+    background-color: #8080801A;
+    padding: 10px 12px;
+    border: solid;
+    border-width: 1px !important;
+    border-radius: 8px;
+    border-color: #80808040;
+    width: fit-content;
   }
 }

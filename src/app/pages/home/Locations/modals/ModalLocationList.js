@@ -29,36 +29,13 @@ import {
   PortletHeaderToolbar
 } from '../../../../partials/content/Portlet';
 import { getOneDB, postDB, updateDB } from '../../../../crud/api';
-import {
-  Checkboxes,
-  Date,
-  DateTime,
-  DropDown,
-  FileUpload,
-  MultiLine,
-  RadioButtons,
-  SingleLine
-} from '../../Components/CustomFields/CustomFieldsPreview';
+import { CustomFieldsPreview } from '../../constants';
 import { getFileExtension, getImageURL, saveImage } from '../../utils';
 import GoogleMaps from '../../Components/GoogleMaps';
 import ImageUpload from '../../Components/ImageUpload';
 import './ModalLocationList.scss';
 
 const localStorageActiveTabKey = 'builderActiveTab';
-
-const CustomFieldsPreview = (props) => {
-  const customFieldsPreviewObj = {
-    checkboxes: <Checkboxes {...props} />,
-    date: <Date {...props} />,
-    dateTime: <DateTime {...props} />,
-    dropDown: <DropDown {...props} />,
-    fileUpload: <FileUpload {...props} />,
-    multiLine: <MultiLine {...props} />,
-    radioButtons: <RadioButtons {...props} />,
-    singleLine: <SingleLine {...props} />
-  };
-  return customFieldsPreviewObj[props.type];
-};
 
 const DialogActions5 = withStyles(theme => ({
   root: {
@@ -192,6 +169,10 @@ const ModalLocationList = ({
     parent: ''
   });
 
+  const defaultCoords = {
+    lat: 19.432608,
+    lng: -99.133209 
+  }
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const classes = useStyles();
   const classes4 = useStyles4();
@@ -290,7 +271,7 @@ const ModalLocationList = ({
   };
 
   useEffect(() => {
-    if (!profile || !profile.id || editOrNew === 'edit' || !showModal) {
+    if (!profile || !profile.id || editOrNew === 'edit' || !showModal || parent === 'root') {
       return;
     }
     getOneDB('locations/', profile.id)
@@ -343,10 +324,10 @@ const ModalLocationList = ({
         } = data.response;
         const imageURL = realParent !== "root" ? getImageURL(realParent, 'locationsReal', parentExt) : '';
         setValues({ ...values, name, profileId, profileLevel, profileName, customFieldsTab, imageURL });
-        setMarkers(imageInfo !== null ? [{ top: imageInfo.top, left: imageInfo.left }] : []);
-        setMapCenter({ lat: mapInfo.lat, lng: mapInfo.lng });
-        setModalCoords([{ lat: mapInfo.lat, lng: mapInfo.lng }]);
-        setModalMapZoom(mapInfo.zoom);
+        setMarkers(imageInfo !== null ? mapInfo ? [{ top: imageInfo.top, left: imageInfo.left }] :[] : []);
+        setMapCenter(mapInfo ? { lat: mapInfo.lat, lng: mapInfo.lng } : defaultCoords);
+        setModalCoords([mapInfo ? { lat: mapInfo.lat, lng: mapInfo.lng }: []]);
+        setModalMapZoom(mapInfo ? mapInfo.zoom : 6);
         setProfileLabel(profileName);
         const tabs = Object.keys(customFieldsTab).map((key) => ({
           key,
@@ -506,6 +487,7 @@ const ModalLocationList = ({
                               tab={tab}
                               type={customField.content}
                               values={customField.values}
+                              data={tab.content[colIndex]}
                             />
                           ))}
                         </div>
