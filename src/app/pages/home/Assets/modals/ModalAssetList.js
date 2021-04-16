@@ -49,7 +49,7 @@ import {
   FileUpload
 } from '../../Components/CustomFields/CustomFieldsPreview';
 import './ModalAssetList.scss';
-import OtherPinContainer from '../components/OtherPinContainer';
+import OtherModalTabs from '../components/OtherModalTabs';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -158,6 +158,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   // Other Tab
   const [assetLocation, setAssetLocation] = useState('');
   const [locationReal, setLocationReal] = useState('');
+  const [layoutMarker, setLayoutMarker] = useState();
 
   // Example 4 - Tabs
   const classes4 = useStyles4();
@@ -430,7 +431,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     }
 
     const fileExt = getFileExtension(image);
-    const body = { ...values, customFieldsTab, fileExt };
+    const body = { ...values, customFieldsTab, fileExt, layoutCoords: layoutMarker ? layoutMarker : null };
     console.log('body:', body)
     // console.log('isNew:', isNew)
     if (!id) {
@@ -501,7 +502,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
         .then(data => setLocationReal(data.response))
         .catch(error => console.log(`Error: ${error}`))
     }
-  }, [assetLocation]);
+  }, [assetLocation, id]);
 
   useEffect(() => {
     if (!showModal) return;
@@ -534,8 +535,9 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     getOneDB('assets/', id[0])
       .then(response => response.json())
       .then(data => {
-        const { name, brand, model, category, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt, assigned } = data.response;
+        const { name, brand, model, category, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt, assigned, layoutCoords } = data.response;
         setAssetLocation(location);
+        setLayoutMarker(layoutCoords) //* null if not specified
         if (assigned) {
           getOneDB('employees/', assigned)
             .then(response => response.json())
@@ -749,18 +751,12 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                   </div>
                 </TabContainer4>
                 <TabContainer4 dir={theme4.direction}>
-                  {
-                    locationReal === null
-                      ? null
-                      : locationReal === ''
-                        ? null
-                        : <OtherPinContainer locationReal={locationReal} />
-                  }
-                  <Grid container style={{ alignItems: 'center', justifyContent: 'center', height: '400px' }}>
-                    <Typography>
-                      Children Table
-                    </Typography>
-                  </Grid>
+                  <OtherModalTabs
+                    key={locationReal ? locationReal : 'other-modal-tabs'}
+                    locationReal={locationReal}
+                    layoutMarker={layoutMarker}
+                    setLayoutMarker={setLayoutMarker}
+                  />
                 </TabContainer4>
                 {tabs.map(tab => (
                   <TabContainer4 dir={theme4.direction}>
