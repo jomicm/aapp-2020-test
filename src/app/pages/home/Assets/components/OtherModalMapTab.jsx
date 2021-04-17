@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import {
   Grid,
@@ -22,9 +22,17 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-export default function OtherModalMapTab({ mapInfo }) {
+export default function OtherModalMapTab({ mapInfo, mapMarker, setMapMarker }) {
+
+  /* States */
+
   const classes = useStyles();
-  const [marker, setMarker] = useState();
+  const [marker, setMarker] = useState(mapMarker ? [mapMarker] : []);
+  const [zoom, setZoom] = useState(17);
+
+  /* Component Mounts */
+
+  useEffect(() => setMapMarker(marker[0]), [marker]);
 
   return (
     <Grid className={classes.root} container>
@@ -33,24 +41,20 @@ export default function OtherModalMapTab({ mapInfo }) {
           ? (
             <>
               <GoogleMaps
+                edit
                 styleMap={{ height: PIN_HEIGHT, width: '90%', position: 'relative' }}
                 center={mapInfo}
-                coords={[]}
-                zoom={17}
-                setCoords={({ lat, lng }) => { }}
-                setZoom={(val) => { }}
-              />
-              <RoomIcon
-                className={classes.pin}
-                fontSize="large"
-                htmlColor="#C70039"
+                coords={marker ? marker : []}
+                zoom={zoom}
+                setCoords={setMarker}
+                setZoom={setZoom}
               />
             </>
           )
           : (
             <Grid style={{ flex: 1 }} item container alignItems="center" justify="center">
               <h6 style={{ alignSelf: 'center' }}>
-                No Map Informtation Found
+                No Map Information Found
               </h6>
             </Grid>
           )

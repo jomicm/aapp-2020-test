@@ -32,7 +32,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 export default function OtherModalLayoutTab({ layoutMarker, setLayoutMarker, realImageURL }) {
-  
+
   /* State */
 
   const classes = useStyles();
@@ -54,7 +54,7 @@ export default function OtherModalLayoutTab({ layoutMarker, setLayoutMarker, rea
 
     setTemporalMarker(marker);
     setLayoutMarker(marker);
-    setMarkers(prev => [ ...prev, marker ]);
+    setMarkers(prev => [...prev, marker]);
   };
 
   useEffect(() => { }, [markers]);
@@ -62,24 +62,32 @@ export default function OtherModalLayoutTab({ layoutMarker, setLayoutMarker, rea
   return (
     <Grid className={classes.root} container>
       {
-        realImageURL && (
-          <Grid style={{ flex: 1 }} container item direction="column" alignItems="left" justify="left">
-            <OtherPinContent title="Location Layout Pin">
-              <ImageMarker
-                src={realImageURL}
-                extraClass={classes.layoutPin}
-                markers={markers}
-                markerComponent={() => <RoomIcon htmlColor="#C70039" fontSize="large" />}
-                alt="Location Layout Pin"
-                onAddMarker={marker => {
-                  if (realImageURL !== `${localHost}/media/misc/placeholder-image.jpg`) {
-                    handleMarkers(marker);
-                  }
-                }}
-              />
-            </OtherPinContent>
-          </Grid>
-        )
+        realImageURL
+          ? (
+            <Grid style={{ flex: 1 }} container item direction="column">
+              <OtherPinContent title="Location Layout Pin">
+                <ImageMarker
+                  src={realImageURL}
+                  extraClass={classes.layoutPin}
+                  markers={markers}
+                  markerComponent={() => <RoomIcon htmlColor="#C70039" fontSize="large" />}
+                  alt="Location Layout Pin"
+                  onAddMarker={marker => {
+                    if (realImageURL !== `${localHost}/media/misc/placeholder-image.jpg`) {
+                      handleMarkers(marker);
+                    }
+                  }}
+                />
+              </OtherPinContent>
+            </Grid>
+          )
+          : (
+            <Grid style={{ flex: 1 }} container item direction="column" alignItems="center" justify="center">
+              <h6 style={{ alignSelf: 'center' }}>
+                No Layout Information Found
+              </h6>
+            </Grid>
+          )
       }
     </Grid>
   )

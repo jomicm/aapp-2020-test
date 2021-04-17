@@ -12,10 +12,15 @@ import { hosts, getImageURL } from '../../utils';
 import { getDB } from '../../../../crud/api';
 import OtherModalLayoutTab from './OtherModalLayoutTab';
 import OtherModalMapTab from './OtherModalMapTab';
+import OtherModalChildrenTab from './OtherModalChildrenTab';
 
 const { localHost } = hosts;
 
-export default function OtherModalTabs({ locationReal, layoutMarker, setLayoutMarker }) {
+export default function OtherModalTabs({
+  locationReal, layoutMarker, setLayoutMarker,
+  mapMarker, setMapMarker, assetRows,
+  onAssetFinderSubmit, onDeleteAssetAssigned,
+}) {
 
   /* States */
 
@@ -36,7 +41,7 @@ export default function OtherModalTabs({ locationReal, layoutMarker, setLayoutMa
 
   const getImageUrl = (id) => {
     if (id === 'root') {
-      setRealImageURL(`${localHost}/media/misc/placeholder-image.jpg`)
+      setRealImageURL()
     } else {
       const result = locations.filter((location) => location._id === id);
       const image = result.map((coordinate) => coordinate.fileExt);
@@ -44,7 +49,7 @@ export default function OtherModalTabs({ locationReal, layoutMarker, setLayoutMa
         const imageURLLayout = getImageURL(id, 'locationsReal', image[0]);
         setRealImageURL(imageURLLayout);
       } else {
-        setRealImageURL(`${localHost}/media/misc/placeholder-image.jpg`);
+        setRealImageURL();
       }
     }
   };
@@ -81,7 +86,11 @@ export default function OtherModalTabs({ locationReal, layoutMarker, setLayoutMa
       />
       {tab === 0 && (
         <PortletBody>
-          <OtherModalMapTab mapInfo={locationReal.mapInfo}/>
+          <OtherModalMapTab
+            mapInfo={locationReal ? locationReal.mapInfo : null}
+            mapMarker={mapMarker}
+            setMapMarker={setMapMarker}
+          />
         </PortletBody>
       )}
 
@@ -97,7 +106,11 @@ export default function OtherModalTabs({ locationReal, layoutMarker, setLayoutMa
 
       {tab === 2 && (
         <PortletBody>
-          <div>Children</div>
+          <OtherModalChildrenTab
+            assetRows={assetRows}
+            onAssetFinderSubmit={onAssetFinderSubmit}
+            onDeleteAssetAssigned={onDeleteAssetAssigned}
+          />
         </PortletBody>
       )}
     </Portlet>

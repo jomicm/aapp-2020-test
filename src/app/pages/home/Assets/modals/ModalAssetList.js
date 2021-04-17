@@ -34,7 +34,7 @@ import TimelineIcon from '@material-ui/icons/Timeline';
 import CloseIcon from "@material-ui/icons/Close";
 
 import { actions } from '../../../../store/ducks/general.duck';
-import { postDB, getOneDB, updateDB } from '../../../../crud/api';
+import { postDB, getDB, getOneDB, updateDB } from '../../../../crud/api';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import ImageUpload from '../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
@@ -159,6 +159,9 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   const [assetLocation, setAssetLocation] = useState('');
   const [locationReal, setLocationReal] = useState('');
   const [layoutMarker, setLayoutMarker] = useState();
+  const [mapMarker, setMapMarker] = useState();
+  const [validAssetRow, setValidAssetRow] = useState();
+  const [assetRows, setAssetRows] = useState([]);
 
   // Example 4 - Tabs
   const classes4 = useStyles4();
@@ -189,6 +192,53 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     }
   };
 
+  const handleOnAssetFinderSubmit = (filteredRows) => {
+    filteredRows.rows.map((rowTR) => {
+      if (!assetRows.find((row) => row.id === rowTR.id)) {
+        getOneDB('assets/', rowTR.id)
+          .then(response => response.json())
+          .then(data => {
+            setValidAssetRow(data.response);
+            
+            if (!data.response.parent) {
+              updateDB('assets/', { parent: id[0] }, rowTR.id)
+                .then(response => {
+                  getDB('assets')
+                  .then(response => response.json())
+                  .then(data => {
+                    const validRows = data.response.map(e => {
+                      if (e.parent === id[0]) {
+                        return {
+                          id: e._id,
+                          name: e.name,
+                          brand: e.brand,
+                          model: e.model,
+                          serial: e.serial,
+                          EPC: e.EPC,
+                        };
+                      }
+                    }).filter(e => e);
+                    setAssetRows(validRows);
+                  });
+                })
+                .catch(error => dispatch(showErrorAlert()));
+              return;
+            }
+              
+            dispatch(showErrorAlert());
+          })
+          .catch(error => { })
+      }
+    });
+  };
+
+  const handleOnDeleteAssetAssigned = (id) => {
+    const restRows = assetRows.filter((row) => row.id !== id);
+    setAssetRows(restRows);
+    updateDB('assets/', { parent: null }, id)
+      .then((response) => { })
+      .catch(error => dispatch(showErrorAlert()));
+  };
 
   const [formValidation, setFormValidation] = useState({
     enabled: false,
@@ -431,7 +481,14 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     }
 
     const fileExt = getFileExtension(image);
-    const body = { ...values, customFieldsTab, fileExt, layoutCoords: layoutMarker ? layoutMarker : null };
+    const body = {
+      ...values,
+      customFieldsTab,
+      fileExt,
+      layoutCoords: layoutMarker ? layoutMarker : null,
+      mapCoords: mapMarker ? mapMarker : null,
+      children: assetRows,
+    };
     console.log('body:', body)
     // console.log('isNew:', isNew)
     if (!id) {
@@ -493,6 +550,11 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       enabled: false,
       isValidForm: false
     });
+    setMapMarker([]);
+    setLayoutMarker([]);
+    setLocationReal([]);
+    setAssetLocation([]);
+    setAssetRows([]);
   };
 
   useEffect(() => {
@@ -535,9 +597,11 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     getOneDB('assets/', id[0])
       .then(response => response.json())
       .then(data => {
-        const { name, brand, model, category, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt, assigned, layoutCoords } = data.response;
+        const { name, brand, model, category, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt, assigned, layoutCoords, mapCoords, children } = data.response;
         setAssetLocation(location);
         setLayoutMarker(layoutCoords) //* null if not specified
+        setMapMarker(mapCoords) //* null if not specified
+        setAssetRows(children ? children : []) //* null if not specified
         if (assigned) {
           getOneDB('employees/', assigned)
             .then(response => response.json())
@@ -756,6 +820,11 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                     locationReal={locationReal}
                     layoutMarker={layoutMarker}
                     setLayoutMarker={setLayoutMarker}
+                    mapMarker={mapMarker}
+                    setMapMarker={setMapMarker}
+                    assetRows={assetRows}
+                    onAssetFinderSubmit={handleOnAssetFinderSubmit}
+                    onDeleteAssetAssigned={handleOnDeleteAssetAssigned}
                   />
                 </TabContainer4>
                 {tabs.map(tab => (
