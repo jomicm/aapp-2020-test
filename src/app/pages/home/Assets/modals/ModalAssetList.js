@@ -161,7 +161,8 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   const [layoutMarker, setLayoutMarker] = useState();
   const [mapMarker, setMapMarker] = useState();
   const [validAssetRow, setValidAssetRow] = useState();
-  const [assetRows, setAssetRows] = useState([]);
+  const [assetsBeforeSaving, setAssetsBeforeSaving] = useState([]);
+  const [assetsToDelete, setAssetsToDelete] = useState([]);
 
   // Example 4 - Tabs
   const classes4 = useStyles4();
@@ -192,39 +193,41 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     }
   };
 
+  const handleChildrenOnSaving = () => {
+    assetsToDelete.map(asset => {
+      updateDB('assets/', { parent: null }, asset.id)
+        .then((response) => { })
+        .catch(error => dispatch(showErrorAlert()));
+    });
+    assetsBeforeSaving.map(asset => {
+      updateDB('assets/', { parent: id[0] }, asset.id)
+        .then(response => { })
+        .catch(error => dispatch(showErrorAlert()));
+    });
+  };
+
   const handleOnAssetFinderSubmit = (filteredRows) => {
     filteredRows.rows.map((rowTR) => {
-      if (!assetRows.find((row) => row.id === rowTR.id)) {
+      if (!assetsBeforeSaving.find((row) => row.id === rowTR.id)) {
         getOneDB('assets/', rowTR.id)
           .then(response => response.json())
           .then(data => {
-            setValidAssetRow(data.response);
-            
+            const res = data.response;
             if (!data.response.parent) {
-              updateDB('assets/', { parent: id[0] }, rowTR.id)
-                .then(response => {
-                  getDB('assets')
-                  .then(response => response.json())
-                  .then(data => {
-                    const validRows = data.response.map(e => {
-                      if (e.parent === id[0]) {
-                        return {
-                          id: e._id,
-                          name: e.name,
-                          brand: e.brand,
-                          model: e.model,
-                          serial: e.serial,
-                          EPC: e.EPC,
-                        };
-                      }
-                    }).filter(e => e);
-                    setAssetRows(validRows);
-                  });
-                })
-                .catch(error => dispatch(showErrorAlert()));
+              setAssetsBeforeSaving(prev => [
+                ...prev,
+                {
+                  id: res._id,
+                  name: res.name,
+                  brand: res.brand,
+                  model: res.model,
+                  serial: res.serial,
+                  EPC: res.EPC,
+                }
+              ]);
               return;
             }
-              
+
             dispatch(showErrorAlert());
           })
           .catch(error => { })
@@ -233,11 +236,13 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   };
 
   const handleOnDeleteAssetAssigned = (id) => {
-    const restRows = assetRows.filter((row) => row.id !== id);
-    setAssetRows(restRows);
-    updateDB('assets/', { parent: null }, id)
-      .then((response) => { })
-      .catch(error => dispatch(showErrorAlert()));
+    const restRows = assetsBeforeSaving.filter(row => {
+      if (row.id !== id) {
+        return row;
+      }
+      setAssetsToDelete(prev => [...prev, row]);
+    });
+    setAssetsBeforeSaving(restRows);
   };
 
   const [formValidation, setFormValidation] = useState({
@@ -480,6 +485,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       return;
     }
 
+    handleChildrenOnSaving();
     const fileExt = getFileExtension(image);
     const body = {
       ...values,
@@ -487,7 +493,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       fileExt,
       layoutCoords: layoutMarker ? layoutMarker : null,
       mapCoords: mapMarker ? mapMarker : null,
-      children: assetRows,
+      children: assetsBeforeSaving,
     };
     console.log('body:', body)
     // console.log('isNew:', isNew)
@@ -554,7 +560,8 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     setLayoutMarker([]);
     setLocationReal([]);
     setAssetLocation([]);
-    setAssetRows([]);
+    setAssetsBeforeSaving([]);
+    setAssetsToDelete([]);
   };
 
   useEffect(() => {
@@ -601,7 +608,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
         setAssetLocation(location);
         setLayoutMarker(layoutCoords) //* null if not specified
         setMapMarker(mapCoords) //* null if not specified
-        setAssetRows(children ? children : []) //* null if not specified
+        setAssetsBeforeSaving(children ? children : []) //* null if not specified
         if (assigned) {
           getOneDB('employees/', assigned)
             .then(response => response.json())
@@ -822,7 +829,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                     setLayoutMarker={setLayoutMarker}
                     mapMarker={mapMarker}
                     setMapMarker={setMapMarker}
-                    assetRows={assetRows}
+                    assetRows={assetsBeforeSaving}
                     onAssetFinderSubmit={handleOnAssetFinderSubmit}
                     onDeleteAssetAssigned={handleOnDeleteAssetAssigned}
                   />
