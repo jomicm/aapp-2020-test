@@ -1,15 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { FormHelperText, Switch, Tab, Tabs, Styles } from '@material-ui/core';
+import React, { useState } from 'react';
+import { connect } from 'react-redux';
+import { Tabs, Tab } from '@material-ui/core';
+import PropTypes from 'prop-types';
+
 import {
   Portlet,
   PortletBody,
-  PortletFooter,
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../../app/partials/content/Portlet';
-import GeneralMessageContainer from './components/GeneralMessageContainer';
 
-export default function Messages() {
+import MessagesContainer from './components/MessagesContainer';
+
+const Messages = ({ user }) => {
+
+  /* States */
+
   const [tab, setTab] = useState(0);
 
   return (
@@ -32,16 +38,34 @@ export default function Messages() {
         />
         {tab === 0 && (
           <PortletBody className='portlet-body'>
-            <div>
-              <GeneralMessageContainer />
-            </div>
+            <MessagesContainer
+              setTab={setTab}
+              tab={tab}
+              user={user}
+            />
           </PortletBody>
         )}
         {tab === 1 && (
-          <PortletBody>
+          <PortletBody className='portlet-body'>
+            <MessagesContainer
+              setTab={setTab}
+              tab={tab}
+              trash
+              user={user}
+            />
           </PortletBody>
         )}
       </Portlet>
     </div>
   );
 }
+
+const mapStateToProps = ({ auth: { user } }) => ({
+  user,
+});
+
+Messages.propTypes = {
+  user: PropTypes.shape.isRequired,
+};
+
+export default connect(mapStateToProps)(Messages);

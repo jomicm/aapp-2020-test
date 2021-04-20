@@ -216,6 +216,7 @@ const ModalEmployees = ({
             })
           ),
           postDB('messages', {
+            formatDate: formatDate,
             from: messageFrom,
             html: layout,
             read: read,
