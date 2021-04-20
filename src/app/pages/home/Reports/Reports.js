@@ -134,6 +134,7 @@ const Reports = () => {
       })
         .then(response => response.json())
         .then(data => {
+          setData(data.response);
           const rows = data.response.map((row) => {
             const { _id, selectReport, reportName, enabled, creationUserFullName, creationDate } = row;
             const cast = enabled ? 'Yes' : 'No';

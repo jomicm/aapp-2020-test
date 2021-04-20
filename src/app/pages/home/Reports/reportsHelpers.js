@@ -9,12 +9,12 @@ const _types = {
 };
 
 const _generalFields = {
-  user: ['name', 'lastName', 'email', 'boss', 'groups'],
-  employees: ['name', 'lastName', 'email'],
-  locations: ['name', 'level'],
-  categories: ['name', 'depreciation'],
-  references: ['name', 'brand', 'model', 'price'],
-  assets: ['name', 'brand', 'model', 'category', 'status', 'serial', 'responsible', 'notes', 'quantity', 'purchase_date', 'purchase_price', 'price', 'total_price', 'EPC', 'location', 'creator', 'creation_date', 'labeling_user', 'labeling_date'],
+  user: ['_id', 'name', 'lastName', 'email', 'boss', 'groups'],
+  employees: ['_id', 'name', 'lastName', 'email'],
+  locations: ['_id', 'name', 'level'],
+  categories: ['_id', 'name', 'depreciation'],
+  references: ['_id', 'name', 'brand', 'model', 'price'],
+  assets: ['_id', 'name', 'brand', 'model', 'category', 'status', 'serial', 'responsible', 'notes', 'quantity', 'purchase_date', 'purchase_price', 'price', 'total_price', 'EPC', 'location', 'creator', 'creation_date', 'labeling_user', 'labeling_date'],
   depreciation: []
 };
 
@@ -49,7 +49,7 @@ export const formatData = (collectionName, completeFields) => {
     // Extract Custom Fields with formatting
     let filteredCustomFields = {};
     const { customFieldsTab } = row;
-    Object.values(customFieldsTab).forEach(tab => {
+    Object.values(customFieldsTab || {}).forEach(tab => {
       const allCustomFields = [...tab.left, ...tab.right];
       allCustomFields.map(field => {
         filteredCustomFields = { ...filteredCustomFields, ...extractCustomField(field) };
@@ -58,13 +58,13 @@ export const formatData = (collectionName, completeFields) => {
     customFieldNames = { ...customFieldNames, ...filteredCustomFields };
     return { ...filteredGeneralFields, ...filteredCustomFields };
   });
-  // Make all rows homogenous filling missing custom fields
+  // Make all rows homogenous filling missing custom field
   const normalizedRows = normalizeRows(rowToObjects, customFieldNames);
   // Convert rows to table presentation (Array for headers and every data row in an array)
   return convertRowsToDataTableObjects(normalizedRows);
 };
 
-const extractGeneralField = (collectionName, row) => {
+export const extractGeneralField = (collectionName, row) => {
   let filteredGeneralFields = {};
   _generalFields[collectionName].map(field => {
     filteredGeneralFields = { ...filteredGeneralFields, [field]: row[field] || '' }
@@ -72,7 +72,7 @@ const extractGeneralField = (collectionName, row) => {
   return filteredGeneralFields;
 };
 
-const extractCustomField = field => {
+export const extractCustomField = field => {
   const { content, values } = field;
   if (isEmpty(values)) {
     return { [content]: '' };
@@ -94,7 +94,7 @@ const extractCustomField = field => {
   }
 };
 
-const normalizeRows = (rows, allCustomFields) => {
+export const normalizeRows = (rows, allCustomFields) => {
   return rows.map(row => {
     const missingCustomFields = difference(Object.keys(allCustomFields), Object.keys(row))
     let missingCustomFieldsFormatted = {};
@@ -110,7 +110,7 @@ const convertRowsToDataTable = rows => {
   return { header, tableRows }
 };
 
-const convertRowsToDataTableObjects = rows => {
+export const convertRowsToDataTableObjects = rows => {
   if (!rows || !Array.isArray(rows) || !rows.length) return { header: [], tableRows: [] };
   const header = Object.keys(rows[0]);
   // eslint-disable-next-line no-labels
