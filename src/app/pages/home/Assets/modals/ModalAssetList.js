@@ -50,6 +50,7 @@ import {
 } from '../../Components/CustomFields/CustomFieldsPreview';
 import './ModalAssetList.scss';
 import OtherModalTabs from '../components/OtherModalTabs';
+import { pick } from 'lodash';
 
 const CustomFieldsPreview = (props) => {
   const customFieldsPreviewObj = {
@@ -153,7 +154,7 @@ const useStyles = makeStyles(theme => ({
 
 const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadTable, id }) => {
   const dispatch = useDispatch();
-  const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
+  const { showCustomAlert, showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
 
   // Other Tab
   const [assetLocation, setAssetLocation] = useState('');
@@ -206,13 +207,14 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   };
 
   const handleOnAssetFinderSubmit = (filteredRows) => {
+    const errors = [];
     filteredRows.rows.map((rowTR) => {
       if (!assetsBeforeSaving.find((row) => row.id === rowTR.id)) {
         getOneDB('assets/', rowTR.id)
           .then(response => response.json())
           .then(data => {
             const res = data.response;
-            if (!data.response.parent) {
+            if (!res.parent) {
               setAssetsBeforeSaving(prev => [
                 ...prev,
                 {
@@ -224,14 +226,24 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                   EPC: res.EPC,
                 }
               ]);
-              return;
+            } else {
+              errors.push(res);
             }
-
-            dispatch(showErrorAlert());
           })
           .catch(error => { })
       }
     });
+    debugger
+    setTimeout(() => {
+      if (errors.length) {
+        const assetsWithError = errors.map((asset) => Object.values(pick(asset, ['name', 'brand', 'model', 'serial', 'EPC'])).join(', '));
+        dispatch(showCustomAlert({
+          type: 'warning',
+          open: true,
+          message: `The following assets ${assetsWithError} already have a parent assigned`
+        }));
+      }
+    }, 500);
   };
 
   const handleOnDeleteAssetAssigned = (id) => {
@@ -768,7 +780,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                   variant="fullWidth"
                 >
                   <Tab label="Asset" />
-                  <Tab label="Other" />
+                  <Tab label="More" />
                   {tabs.map((tab, index) => (
                     <Tab key={`tab-reference-${index}`} label={tab.info.name} />
                   ))}
