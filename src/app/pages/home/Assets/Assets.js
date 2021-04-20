@@ -9,6 +9,7 @@ import {
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
 
+import { utcToZonedTime } from 'date-fns-tz';
 import LanguageIcon from '@material-ui/icons/Language';
 import CheckIcon from '@material-ui/icons/Check';
 import BuildIcon from '@material-ui/icons/Build';
@@ -156,19 +157,22 @@ function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAle
         .then(data => {
           if (collectionName === 'assets') {
             const rows = data.response.map(row => {
-              return createAssetListRow(row._id, row.name, row.brand, row.model, row.category, row.serial, row.EPC, 'Admin', '11/03/2020', row.location);
+              const creationDate = utcToZonedTime(row.creationDate).toLocaleString();
+              return createAssetListRow(row._id, row.name, row.brand, row.model, row.category, row.serial, row.EPC, row.creationUserFullName, creationDate, row.location);
             });
             setControl(prev => ({ ...prev, assetRows: rows, assetRowsSelected: [] }));
           }
           if (collectionName === 'references') {
             const rows = data.response.map(row => {
-              return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.category, 'Admin', '11/03/2020', row.price);
+              const creationDate = utcToZonedTime(row.creationDate).toLocaleString();
+              return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.category, row.creationUserFullName, creationDate, row.price);
             });
             setControl(prev => ({ ...prev, referenceRows: rows, referenceRowsSelected: [] }));
           }
           if (collectionName === 'categories') {
             const rows = data.response.map(row => {
-              return createAssetCategoryRow(row._id, row.name, row.depreciation, 'Admin', '11/03/2020', row.fileExt);
+              const creationDate = utcToZonedTime(row.creationDate).toLocaleString();
+              return createAssetCategoryRow(row._id, row.name, row.depreciation, row.creationUserFullName, creationDate, row.fileExt);
             });
             setControl(prev => ({ ...prev, categoryRows: rows, categoryRowsSelected: [] }));
           }

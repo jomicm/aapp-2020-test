@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { utcToZonedTime } from 'date-fns-tz';
 import { Tab, Tabs } from "@material-ui/core";
 import { getDB, postDB, getOneDB, updateDB, deleteDB } from '../../../../crud/api';
 import {
@@ -117,10 +118,9 @@ const LiveProcesses = (props) => {
       .then(response => response.json())
       .then(data => {
         const rows = data.response.map(row => {
-          const { _id: id, processData: { name, processStages } } = row;
-          return createLiveProcessesHeadRows(id, id.slice(-6), name, 'Type', '12/12/12', 'Approvals', processStages.length, 'Admin', '11/03/2020');
-          // return { id, folio, name, type, date, approvals, status, creator, creation_date };
-          // return createLayoutsEmployeeRow(row._id, row.name, 99, 'Admin', '11/03/2020');
+          const { _id: id, processData: { name, processStages }, creationUserFullName, creationDate } = row;
+          const date = utcToZonedTime(creationDate).toLocaleString();
+          return createLiveProcessesHeadRows(id, id.slice(-6), name, 'Type', '12/12/12', 'Approvals', processStages.length, creationUserFullName, date);
         });
         setControl(prev => ({ ...prev, processLiveRows: rows, ProcessLiveRowsSelected: [] }));
       })

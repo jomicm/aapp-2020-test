@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from "react-redux";
+import { utcToZonedTime } from 'date-fns-tz';
 import { Tabs } from '@material-ui/core';
 import { useDispatch } from 'react-redux';
 import { actions } from '../../../store/ducks/general.duck';
@@ -139,11 +140,12 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
           if (collectionName === 'employeeProfiles') {
             const rows = data.response.map((row) => {
               const { _id, name, creationUserFullName, creationDate } = row;
+              const date = utcToZonedTime(creationDate).toLocaleString();
               return createUserProfilesRow(
                 _id,
                 name,
                 creationUserFullName,
-                creationDate
+                date
               );
             });
             setControl(prev => ({ ...prev, employeeProfilesRows: rows, employeeProfilesRowsSelected: [] }));
@@ -151,6 +153,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
           if (collectionName === 'employees') {
             const rows = data.response.map((row) => {
               const { _id, name, lastName, email, designation, manager, creationUserFullName, creationDate } = row;
+              const date = utcToZonedTime(creationDate).toLocaleString();
               return createEmployeeRow(
                 _id,
                 name,
@@ -159,7 +162,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
                 designation,
                 manager,
                 creationUserFullName,
-                creationDate
+                date
               );
             });
             setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));

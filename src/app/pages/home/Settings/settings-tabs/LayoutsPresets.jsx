@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { utcToZonedTime } from 'date-fns-tz';
 import { Tab, Tabs } from "@material-ui/core";
 import { getDB, postDB, getOneDB, updateDB, deleteDB } from '../../../../crud/api';
 import {
@@ -94,13 +95,15 @@ const LayoutsPresets = props => {
       .then(data => {
         if (collectionName === 'settingsLayoutsEmployees') {
           const rows = data.response.map(row => {
-            return createLayoutsEmployeeRow(row._id, row.name, 99, 'Admin', '11/03/2020');
+            const date = utcToZonedTime(row.creationDate).toLocaleString();
+            return createLayoutsEmployeeRow(row._id, row.name, 99, row.creationUserFullName, date);
           });
           setControl(prev => ({ ...prev, layoutEmployeesRows: rows, layoutEmployeesRowsSelected: [] }));
         }
         if (collectionName === 'settingsLayoutsStages') {
           const rows = data.response.map(row => {
-            return createLayoutsStageRow(row._id, row.name, row.stageName, 99, 'Admin', '11/03/2020');
+            const date = utcToZonedTime(row.creationDate).toLocaleString();
+            return createLayoutsStageRow(row._id, row.name, row.stageName, 99, row.creationUserFullName, date);
           });
           setControl(prev => ({ ...prev, layoutStagesRows: rows, layoutStagesRowsSelected: [] }));
         }
