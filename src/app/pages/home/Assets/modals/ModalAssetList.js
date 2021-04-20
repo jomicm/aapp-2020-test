@@ -14,6 +14,7 @@ import {
 } from '@material-ui/lab';
 
 import {
+  Grid,
   Button,
   Dialog,
   DialogTitle,
@@ -33,12 +34,14 @@ import TimelineIcon from '@material-ui/icons/Timeline';
 import CloseIcon from "@material-ui/icons/Close";
 
 import { actions } from '../../../../store/ducks/general.duck';
-import { postDB, getOneDB, updateDB } from '../../../../crud/api';
+import { postDB, getDB, getOneDB, updateDB } from '../../../../crud/api';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import ImageUpload from '../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetList.scss';
+import OtherModalTabs from '../components/OtherModalTabs';
+import { pick } from 'lodash';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -123,12 +126,21 @@ const useStyles = makeStyles(theme => ({
   },
   menu: {
     width: 200
-  }
+  },
 }));
 
 const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadTable, id }) => {
   const dispatch = useDispatch();
-  const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
+  const { showCustomAlert, showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
+
+  // Other Tab
+  const [assetLocation, setAssetLocation] = useState('');
+  const [locationReal, setLocationReal] = useState('');
+  const [layoutMarker, setLayoutMarker] = useState();
+  const [mapMarker, setMapMarker] = useState();
+  const [assetsBeforeSaving, setAssetsBeforeSaving] = useState([]);
+  const [assetsToDelete, setAssetsToDelete] = useState([]);
+
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -136,9 +148,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   function handleChange4(event, newValue) {
     setValue4(newValue);
   }
-  function handleChangeIndex4(index) {
-    setValue4(index);
-  }
+  const handleChangeIndex4 = (index) => setValue4(index);
   // Example 5 - Tabs
   const classes5 = useStyles5();
   const [value5, setValue5] = useState(0);
@@ -157,6 +167,67 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     }
   };
 
+  const handleChildrenOnSaving = () => {
+    assetsToDelete.map(asset => {
+      updateDB('assets/', { parent: null }, asset.id)
+        .then((response) => { })
+        .catch(error => dispatch(showErrorAlert()));
+    });
+    assetsBeforeSaving.map(asset => {
+      updateDB('assets/', { parent: id[0] }, asset.id)
+        .then(response => { })
+        .catch(error => dispatch(showErrorAlert()));
+    });
+  };
+
+  const handleOnAssetFinderSubmit = (filteredRows) => {
+    const errors = [];
+    filteredRows.rows.map((rowTR) => {
+      if (!assetsBeforeSaving.find((row) => row.id === rowTR.id)) {
+        getOneDB('assets/', rowTR.id)
+          .then(response => response.json())
+          .then(data => {
+            const res = data.response;
+            if (!res.parent) {
+              setAssetsBeforeSaving(prev => [
+                ...prev,
+                {
+                  id: res._id,
+                  name: res.name,
+                  brand: res.brand,
+                  model: res.model,
+                  serial: res.serial,
+                  EPC: res.EPC,
+                }
+              ]);
+            } else {
+              errors.push(res);
+            }
+          })
+          .catch(error => { })
+      }
+    });
+    setTimeout(() => {
+      if (errors.length) {
+        const assetsWithError = errors.map((asset) => Object.values(pick(asset, ['name', 'brand', 'model', 'serial', 'EPC'])).join(', '));
+        dispatch(showCustomAlert({
+          type: 'warning',
+          open: true,
+          message: `The following assets ${assetsWithError} already have a parent assigned`
+        }));
+      }
+    }, 500);
+  };
+
+  const handleOnDeleteAssetAssigned = (id) => {
+    const restRows = assetsBeforeSaving.filter(row => {
+      if (row.id !== id) {
+        return row;
+      }
+      setAssetsToDelete(prev => [...prev, row]);
+    });
+    setAssetsBeforeSaving(restRows);
+  };
 
   const [formValidation, setFormValidation] = useState({
     enabled: false,
@@ -398,8 +469,16 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       return;
     }
 
+    handleChildrenOnSaving();
     const fileExt = getFileExtension(image);
-    const body = { ...values, customFieldsTab, fileExt };
+    const body = {
+      ...values,
+      customFieldsTab,
+      fileExt,
+      layoutCoords: layoutMarker ? layoutMarker : null,
+      mapCoords: mapMarker ? mapMarker : null,
+      children: assetsBeforeSaving,
+    };
     console.log('body:', body)
     // console.log('isNew:', isNew)
     if (!id) {
@@ -430,7 +509,6 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   };
 
   const handleCloseModal = () => {
-    console.log('HANDLE CLOSE MODAL!')
     setCustomFieldsTab({});
     setValues({
       name: '',
@@ -461,7 +539,22 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       enabled: false,
       isValidForm: false
     });
+    setMapMarker([]);
+    setLayoutMarker([]);
+    setLocationReal([]);
+    setAssetLocation([]);
+    setAssetsBeforeSaving([]);
+    setAssetsToDelete([]);
   };
+
+  useEffect(() => {
+    if (assetLocation.length) {
+      getOneDB('locationsReal/', assetLocation)
+        .then(response => response.json())
+        .then(data => setLocationReal(data.response))
+        .catch(error => console.log(`Error: ${error}`))
+    }
+  }, [assetLocation, id]);
 
   useEffect(() => {
     if (!showModal) return;
@@ -494,8 +587,11 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     getOneDB('assets/', id[0])
       .then(response => response.json())
       .then(data => {
-        console.log(data.response);
-        const { name, brand, model, category, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt, assigned } = data.response;
+        const { name, brand, model, category, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt, assigned, layoutCoords, mapCoords, children } = data.response;
+        setAssetLocation(location);
+        setLayoutMarker(layoutCoords) //* null if not specified
+        setMapMarker(mapCoords) //* null if not specified
+        setAssetsBeforeSaving(children ? children : []) //* null if not specified
         if (assigned) {
           getOneDB('employees/', assigned)
             .then(response => response.json())
@@ -656,6 +752,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                   variant="fullWidth"
                 >
                   <Tab label="Asset" />
+                  <Tab label="More" />
                   {tabs.map((tab, index) => (
                     <Tab key={`tab-reference-${index}`} label={tab.info.name} />
                   ))}
@@ -706,6 +803,19 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                       />
                     </div>
                   </div>
+                </TabContainer4>
+                <TabContainer4 dir={theme4.direction}>
+                  <OtherModalTabs
+                    key={locationReal ? locationReal : 'other-modal-tabs'}
+                    locationReal={locationReal}
+                    layoutMarker={layoutMarker}
+                    setLayoutMarker={setLayoutMarker}
+                    mapMarker={mapMarker}
+                    setMapMarker={setMapMarker}
+                    assetRows={assetsBeforeSaving}
+                    onAssetFinderSubmit={handleOnAssetFinderSubmit}
+                    onDeleteAssetAssigned={handleOnDeleteAssetAssigned}
+                  />
                 </TabContainer4>
                 {tabs.map(tab => (
                   <TabContainer4 dir={theme4.direction}>

@@ -395,6 +395,7 @@ function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAle
                       </div>
                     </span>
                     <ModalAssetList
+                      key={control.idAsset}
                       showModal={control.openAssetsModal}
                       setShowModal={(onOff) => setControl({ ...control, openAssetsModal: onOff })}
                       reloadTable={() => loadAssetsData('assets')}
