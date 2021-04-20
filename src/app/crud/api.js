@@ -176,9 +176,7 @@ const getMessages = ({
     const queryString = JSON.stringify({ "$and" : [{"$or": qLike }, {"to": {"$elemMatch": {"_id": userId }}}, {"status" : trash ? "trash" : "new"}]});
     additionalParams += `query=${queryString}`;
     count++;
-  }
-  else {
-    // const queryString = JSON.stringify({"to": {"$elemMatch": {"_id": userId }}});
+  } else {
     const queryString = JSON.stringify({ "$and" : [{"to": {"$elemMatch": {"_id": userId }}}, {"status" : trash ? "trash" : "new"}]});
     additionalParams += `query=${queryString}`;
     count++;
@@ -220,12 +218,9 @@ const getTotalMessages = ({
       res[key] = { "$regex": `(?i).*${value}.*` };
       return res;
     });
-    //const queryString = JSON.stringify({ "$and" : [{"$or": qLike }, {"to": {"$elemMatch": {"_id": userId }}}] });
     const queryString = JSON.stringify({ "$and" : [{"$or": qLike }, {"to": {"$elemMatch": {"_id": userId }}}, {"status" : trash ? "trash" : "new"}]});
     additionalParams += `query=${queryString}`;
-  }
-  else {
-    // const queryString = JSON.stringify({"to": {"$elemMatch": {"_id": userId }}});
+  } else {
     const queryString = JSON.stringify({ "$and" : [{"to": {"$elemMatch": {"_id": userId }}}, {"status" : trash ? "trash" : "new"}]});
     additionalParams += `query=${queryString}`;
   }

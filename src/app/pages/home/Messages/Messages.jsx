@@ -7,12 +7,12 @@ import {
   Portlet,
   PortletBody,
   PortletHeader,
-  PortletHeaderToolbar,
+  PortletHeaderToolbar
 } from '../../../../app/partials/content/Portlet';
 
 import MessagesContainer from './components/MessagesContainer';
 
-function Messages({ user }) {
+const Messages = ({ user }) => {
 
   /* States */
 

@@ -1,18 +1,16 @@
 import React from 'react';
 import { Dropdown, ButtonGroup } from 'react-bootstrap';
 import PropTypes from 'prop-types';
-
 import {
   Grid,
   Typography,
   IconButton,
 } from '@material-ui/core';
-
 import { updateDB } from '../../../../crud/api';
 import SnapshotToggle from './SnapshotToggle';
-import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
 import DeleteIcon from '@material-ui/icons/Delete';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
 
 export default function SnapshotDropdown({ trash, loadMessages, id }) {
 
@@ -21,7 +19,7 @@ export default function SnapshotDropdown({ trash, loadMessages, id }) {
     updateDB('messages/', body, id)
       .then(_ => loadMessages())
       .catch(error => console.log('Error', error));
-  }
+  };
 
   return (
     <div style={{ position: 'absolute', right: '20px' }}>

@@ -62,10 +62,8 @@ const UserNotifications = ({
   /* Functions */
 
   const loadNotifications = () => {
-    getCountDB({
-      collection: 'notifications',
-    })
-      .then(response => response.json())
+    getCountDB({ collection: 'notifications' })
+      .then((response) => response.json())
       .then(data => {
         setControl(prev => ({
           ...prev,

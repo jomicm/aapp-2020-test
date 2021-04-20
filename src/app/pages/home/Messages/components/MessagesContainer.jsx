@@ -16,6 +16,7 @@ import {
   getTotalMessages,
 } from '../../../../crud/api';
 
+import { isNil } from 'lodash';
 import SearchIcon from '@material-ui/icons/Search';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
@@ -189,10 +190,6 @@ export default function MessagesContainer({ user, trash, tab, setTab }) {
         ...prev,
         page: Number(currentControlPage),
       }));
-      // const currentTab = urls[2].split('=')[1];
-      // if (Number(currentTab) !== tab) {
-      //   setTab(currentTab);
-      // }
     }
   };
 
@@ -250,35 +247,31 @@ export default function MessagesContainer({ user, trash, tab, setTab }) {
             value={control.search}
             onChange={handleChange}
           />
-          {
-            control.search.length > 0 && (
-              <div style={{
-                display: 'flex',
-                justifyContent: 'flex-end'
-              }}>
-                <IconButton size="small" onClick={() => setControl(prev => ({ ...prev, search: '' }))}>
-                  <ClearIcon />
-                </IconButton>
-              </div>
-            )
-          }
+          {control.search.length > 0 && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'flex-end'
+            }}>
+              <IconButton size="small" onClick={() => setControl(prev => ({ ...prev, search: '' }))}>
+                <ClearIcon />
+              </IconButton>
+            </div>
+          )}
         </Grid>
-        {
-          control.search.length < 3 && control.search.length !== 0 && (
-            <span
-              style={{
-                color: 'red',
-                fontSize: '8px',
-                display: 'flex',
-                justifyContent: 'flex-start',
-                width: '90%',
-                marginTop: '-10px',
-              }}
-            >
-              The search value must be at least 3 characters long
-            </span>
-          )
-        }
+        {control.search.length < 3 && control.search.length !== 0 && (
+          <span
+            style={{
+              color: 'red',
+              fontSize: '8px',
+              display: 'flex',
+              justifyContent: 'flex-start',
+              width: '90%',
+              marginTop: '-10px',
+            }}
+          >
+            The search value must be at least 3 characters long
+          </span>
+        )}
         <Grid className={classes.messagesContainer} container item direction="column">
           <Grid
             style={{ flex: 11, justifyContent: 'center' }}
@@ -286,55 +279,50 @@ export default function MessagesContainer({ user, trash, tab, setTab }) {
             item
             direction="column"
           >
-            {
-              messages == null
-                ? (
-                  <CircularProgress className={classes.progressIndicator} />
-                )
-                : messages.length === 0
-                  ? <span style={{ alignSelf: 'center' }}> No Messages Found </span>
-                  : (
-                    <div className={classes.messagesList}>
-                      {
-                        messages.map((message, index) => (
-                          <Grid style={{ flex: messages.length < 5 ? null : 1, position: 'relative', }} container item>
-                            <Link
-                              key={message._id}
-                              to={`/messages?id=${message._id}&page=${control.page}&tab=${tab}`}
-                              style={{
-                                display: 'flex',
-                                flex: 1,
-                                minHeight: messages.length < 5 ? '80px' : null,
-                                backgroundColor: currentId === message._id ? 'rgba(0, 0, 0, 0.1)' : null,
-                                borderRadius: '10px',
-                                position: 'relative',
-                              }}
-                              onClick={() => {
-                                handleMessageStatus(message);
-                                setPreview(message.html);
-                                setCurrentId(message._id);
-                              }}
-                            >
-                              <MessageSnapshot
-                                controlPage={control.page}
-                                currentId={currentId}
-                                loadMessages={loadMessages}
-                                message={message}
-                                trash={trash}
-                              />
-                            </Link>
-                            <SnapshotDropdown
-                              key={index.toString()}
-                              id={message._id}
-                              loadMessages={loadMessages}
-                              trash={trash}
-                            />
-                          </Grid>
-                        ))
-                      }
-                    </div>
-                  )
-            }
+            {isNil(messages) ? (
+              <CircularProgress className={classes.progressIndicator} />
+            ) : messages.length === 0
+              ? <span style={{ alignSelf: 'center' }}> No Messages Found </span>
+              : (<div className={classes.messagesList}>
+                {
+                  messages.map((message, index) => (
+                    <Grid style={{ flex: messages.length < 5 ? null : 1, position: 'relative', }} container item>
+                      <Link
+                        key={message._id}
+                        to={`/messages?id=${message._id}&page=${control.page}&tab=${tab}`}
+                        style={{
+                          display: 'flex',
+                          flex: 1,
+                          minHeight: messages.length < 5 ? '80px' : null,
+                          backgroundColor: currentId === message._id ? 'rgba(0, 0, 0, 0.1)' : null,
+                          borderRadius: '10px',
+                          position: 'relative',
+                        }}
+                        onClick={() => {
+                          handleMessageStatus(message);
+                          setPreview(message.html);
+                          setCurrentId(message._id);
+                        }}
+                      >
+                        <MessageSnapshot
+                          controlPage={control.page}
+                          currentId={currentId}
+                          loadMessages={loadMessages}
+                          message={message}
+                          trash={trash}
+                        />
+                      </Link>
+                      <SnapshotDropdown
+                        key={index.toString()}
+                        id={message._id}
+                        loadMessages={loadMessages}
+                        trash={trash}
+                      />
+                    </Grid>
+                  ))
+                }
+              </div>
+              )}
           </Grid>
           <Grid className={classes.controllerContainer} container item>
             <Typography>
@@ -355,7 +343,6 @@ export default function MessagesContainer({ user, trash, tab, setTab }) {
           </Grid>
         </Grid>
       </Grid>
-      {/* Preview Container */}
       <Grid container item md={9} alignItems="center" justify="center">
         <MessageInformation
           headerInfo={headerInfo}

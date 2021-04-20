@@ -25,7 +25,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function MessageInformation({ headerInfo, preview }) {
+const MessageInformation = ({ headerInfo, preview }) => {
   const classes = useStyles();
   const {
     timeStamp,
@@ -52,9 +52,9 @@ export default function MessageInformation({ headerInfo, preview }) {
       <Divider />
       <CardContent>
         <Typography
+          color="primary"
           style={{ fontSize: '20px' }}
           variant="body2"
-          color="primary"
         >
           <Preview preview={preview} />
         </Typography>
@@ -73,3 +73,5 @@ MessageInformation.propTypes = {
   }).isRequired,
   preview: PropTypes.string.isRequired,
 };
+
+export default MessageInformation;
