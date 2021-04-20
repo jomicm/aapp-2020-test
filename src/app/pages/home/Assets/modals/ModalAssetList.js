@@ -160,7 +160,6 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   const [locationReal, setLocationReal] = useState('');
   const [layoutMarker, setLayoutMarker] = useState();
   const [mapMarker, setMapMarker] = useState();
-  const [validAssetRow, setValidAssetRow] = useState();
   const [assetsBeforeSaving, setAssetsBeforeSaving] = useState([]);
   const [assetsToDelete, setAssetsToDelete] = useState([]);
 
