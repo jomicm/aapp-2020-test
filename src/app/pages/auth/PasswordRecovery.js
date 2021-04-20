@@ -27,12 +27,13 @@ const PasswordRecovery = (props) => {
   const disableSubmitButton = () => {
     if(!(values.password && values.confirmPassword && values.password === values.confirmPassword) || status.open){
       return true;
-    } 
-    return false;
+    } else {
+      return false;
+    }
   };
 
   const launchError = () => {
-    if(values.password.length){
+    if (values.password.length) {
       //This Console.log is necessary, if not the function doesn't work properly
       console.log('regex:', !regex.test(values.password) )
       return !regex.test(values.password);
@@ -40,10 +41,12 @@ const PasswordRecovery = (props) => {
     return false;
   };
 
-  const handleChange = valueName => event => {
-    if(!event || !event.target) return;
+  const handleChange = (valueName) => (event) => {
+    if (!event || !event.target) {
+      return;
+    }
     const value = event.target.value;
-    setValues(prev => ({
+    setValues((prev) => ({
       ...prev,
       [valueName]: value
     }));

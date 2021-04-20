@@ -48,7 +48,7 @@ class ForgotPassword extends Component {
                 return errors;
               }}
               onSubmit={(values, { setStatus, setSubmitting }) => {
-                setStatus(undefined)
+                setStatus(undefined);
                 getDBComplex({
                   collection: 'user',
                   queryLike: [{key: 'email', value: values.email}],
@@ -57,7 +57,7 @@ class ForgotPassword extends Component {
                 .then(response => response.json())
                 .then(data => {
                   const valid = data.response;
-                  if(!valid.length){
+                  if (!valid.length) {
                     setSubmitting(false);
                       setStatus(  
                         intl.formatMessage(
@@ -65,8 +65,7 @@ class ForgotPassword extends Component {
                           { name: values.email }
                         )
                       );
-                  }
-                  else if (valid.length) {
+                  } else if (valid.length) {
                     setSubmitting(true);
                     setStatus(
                       intl.formatMessage(
