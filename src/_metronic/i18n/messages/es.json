@@ -27,7 +27,7 @@
   "AUTH.LOGIN.BUTTON": "Registrarse",
   "AUTH.FORGOT.TITLE": "Contraseña olvidada?",
   "AUTH.FORGOT.DESC": "Ingrese su correo electrónico para restablecer su contraseña",
-  "AUTH.FORGOT.SUCCESS": "Your account has been successfully reset.",
+  "AUTH.FORGOT.SUCCESS": "Se ha enviado un correo con las instrucciones para restablecer la contraseña",
   "AUTH.REGISTER.TITLE": "Sign Up",
   "AUTH.REGISTER.DESC": "Enter your details to create your account",
   "AUTH.REGISTER.SUCCESS": "Your account has been successfuly registered.",

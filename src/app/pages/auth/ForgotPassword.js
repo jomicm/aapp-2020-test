@@ -5,7 +5,7 @@ import { TextField } from "@material-ui/core";
 import { Link, Redirect } from "react-router-dom";
 import { FormattedMessage, injectIntl } from "react-intl";
 import * as auth from "../../store/ducks/auth.duck";
-import { requestPassword } from "../../crud/auth.crud";
+import { getDBComplex } from '../../crud/api';
 
 class ForgotPassword extends Component {
   state = { isRequested: false };
@@ -48,19 +48,33 @@ class ForgotPassword extends Component {
                 return errors;
               }}
               onSubmit={(values, { setStatus, setSubmitting }) => {
-                requestPassword(values.email)
-                  .then(() => {
-                    this.setState({ isRequested: true });
-                  })
-                  .catch(() => {
+                setStatus(undefined);
+                getDBComplex({
+                  collection: 'user',
+                  queryLike: [{key: 'email', value: values.email}],
+                  limit: 1
+                })
+                .then(response => response.json())
+                .then(data => {
+                  const valid = data.response;
+                  if (!valid.length) {
                     setSubmitting(false);
+                      setStatus(  
+                        intl.formatMessage(
+                          { id: "AUTH.VALIDATION.NOT_FOUND" },
+                          { name: values.email }
+                        )
+                      );
+                  } else if (valid.length) {
+                    setSubmitting(true);
                     setStatus(
                       intl.formatMessage(
-                        { id: "AUTH.VALIDATION.NOT_FOUND" },
-                        { name: values.email }
+                        { id: "AUTH.FORGOT.SUCCESS" }
                       )
                     );
-                  });
+                  }
+                })
+                .catch(error => console.log('error>', error));
               }}
             >
               {({
@@ -75,7 +89,7 @@ class ForgotPassword extends Component {
               }) => (
                 <form onSubmit={handleSubmit} className="kt-form">
                   {status && (
-                    <div role="alert" className="alert alert-danger">
+                    <div role="alert" className={`alert alert-${isSubmitting ? 'success' : 'danger'}`}>
                       <div className="alert-text">{status}</div>
                     </div>
                   )}
@@ -101,7 +115,7 @@ class ForgotPassword extends Component {
                         type="button"
                         className="btn btn-secondary btn-elevate kt-login__btn-secondary"
                       >
-                        Back
+                        Login
                       </button>
                     </Link>
 
