@@ -3,32 +3,8 @@ import ReactDOM from 'react-dom';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import styled from "@emotion/styled";
 //Custom Fields Preview
-import {
-  SingleLine,
-  MultiLine,
-  Date,
-  DateTime,
-  DropDown,
-  RadioButtons,
-  Checkboxes,
-  FileUpload
-} from './CustomFieldsPreview';
+import { CustomFieldsPreview } from '../../constants';
 import './DragDropArea.scss';
-
-const CustomFieldsPreview = (props) => {
-  const customFieldsPreviewObj = {
-    singleLine: <SingleLine onDelete={props.onDelete} onSelect={props.onSelect} id={props.id} values={props.values}/>,
-    // singleLine: <SingleLineIntegrated preview={true} onDelete={props.onDelete} onSelect={props.onSelect}/>,
-    multiLine: <MultiLine onDelete={props.onDelete} onSelect={props.onSelect} id={props.id} values={props.values}/>,
-    date: <Date onDelete={props.onDelete} onSelect={props.onSelect} id={props.id} values={props.values}/>,
-    dateTime: <DateTime onDelete={props.onDelete} onSelect={props.onSelect} id={props.id} values={props.values}/>,
-    dropDown: <DropDown onDelete={props.onDelete} onSelect={props.onSelect} id={props.id} values={props.values}/>,
-    radioButtons: <RadioButtons onDelete={props.onDelete} onSelect={props.onSelect} id={props.id} values={props.values}/>,
-    checkboxes: <Checkboxes onDelete={props.onDelete} onSelect={props.onSelect} id={props.id} values={props.values}/>,
-    fileUpload: <FileUpload onDelete={props.onDelete} onSelect={props.onSelect} id={props.id} values={props.values}/>
-  };
-  return customFieldsPreviewObj[props.type];
-};
 
 const reorder = (list, startIndex, endIndex) => {
   const result = [...list];
@@ -94,6 +70,7 @@ const PortalAwareItem = (props) => {
         columnIndex={props.columnIndex}
         customFieldIndex={props.customFieldIndex}
         onClick={() => alert(quote.content)}
+        data={props.data.array}
       />
     </SingleCustomField>
   );
@@ -247,6 +224,7 @@ const DragDropArea = (props) => {
                         onSelect={props.setCustomFieldSettings}
                         columnIndex={ix}
                         customFieldIndex={index}
+                        data={dropabble}
                       />
                     )}
                   </Draggable>
