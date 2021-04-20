@@ -323,26 +323,20 @@ function CustomFields(props) {
           </ExpansionPanelSummary>
           <ExpansionPanelDetails>
             <div className='custom-controls-wrapper'>
-              {
-                customControls.map((column, ix) => {
-                  return(
-                    <div className='custom-controls-column'>
-                      {column.map((customField, ix) => {
-                        return (
-                          <center>
-                            <div key={`custom-control-${ix}`} className='custom-controls-wrapper__element' onClick={() => handleAddCustomFieldToTab(customField.id)}>
-                              <div className='custom-controls-icon'>
-                                {customField.icon || null }
-                              </div>
-                              <span>{customField.name}</span>
-                            </div>
-                          </center>
-                        )
-                      })}
-                    </div>
-                  );
-                })
-              }
+              {customControls.map((column) => (
+                  <div className='custom-controls-column'>
+                    {column.map((customField, ix) => (
+                      <center>
+                        <div key={`custom-control-${ix}`} className='custom-controls-wrapper__element' onClick={() => handleAddCustomFieldToTab(customField.id)}>
+                          <div className='custom-controls-icon'>
+                            {customField.icon || null }
+                          </div>
+                          <span>{customField.name}</span>
+                        </div>
+                      </center>
+                    ))}
+                  </div>              
+              ))}
             </div>
           </ExpansionPanelDetails>
         </ExpansionPanel>
