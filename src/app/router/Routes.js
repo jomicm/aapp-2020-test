@@ -14,6 +14,7 @@ import ErrorsPage from "../pages/errors/ErrorsPage";
 import LogoutPage from "../pages/auth/Logout";
 import { LayoutContextProvider } from "../../_metronic";
 import Layout from "../../_metronic/layout/Layout";
+import PasswordRecovery from "../pages/auth/PasswordRecovery";
 import * as routerHelpers from "../router/RouterHelpers";
 import AuthPage from "../pages/auth/AuthPage";
 import CustomizedAlert from '../pages/home/Components/CustomizedAlert';
@@ -37,14 +38,16 @@ export const Routes = withRouter(({ history }) => {
       <CustomizedAlert>
         <LayoutContextProvider history={history} menuConfig={menuConfig}>
           <Switch>
+            
             {!isAuthorized ? (
               /* Render auth page when user at `/auth` and not authorized. */
               <AuthPage />
             ) : (
               /* Otherwise redirect to root page (`/`) */
-              <Redirect from="/auth" to={userLastLocation} />
+              <Redirect from="/auth" to={"/dashboard"} />
             )}
 
+            <Route path="/passwordRecovery" component={PasswordRecovery} />
             <Route path="/error" component={ErrorsPage} />
             <Route path="/logout" component={LogoutPage} />
 

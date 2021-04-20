@@ -37,16 +37,6 @@ import ModalYesNo from '../../../Components/ModalYesNo';
 import Permission from '../../components/Permission';
 import { getFileExtension, saveImage, getImageURL } from '../../../utils';
 
-import {
-  SingleLine,
-  MultiLine,
-  Date,
-  DateTime,
-  DropDown,
-  RadioButtons,
-  Checkboxes,
-  FileUpload
-} from '../../../Components/CustomFields/CustomFieldsPreview';
 import { Editor } from 'react-draft-wysiwyg';
 import { EditorState, ContentState, convertToRaw, convertFromHTML, Modifier } from 'draft-js';
 import draftToHtml from 'draftjs-to-html';

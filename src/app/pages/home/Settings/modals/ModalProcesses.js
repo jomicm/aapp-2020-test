@@ -55,18 +55,7 @@ import ImageUpload from '../../Components/ImageUpload';
 import { postDBEncryptPassword, getOneDB, updateDB, postDB } from '../../../../crud/api';
 import ModalYesNo from '../../Components/ModalYesNo';
 import Permission from '../components/Permission';
-
-import {
-  SingleLine,
-  MultiLine,
-  Date,
-  DateTime,
-  DropDown,
-  RadioButtons,
-  Checkboxes,
-  FileUpload
-} from '../../Components/CustomFields/CustomFieldsPreview';
-
+import { CustomFieldsPreview } from '../../constants';
 import LocationAssignment from '../components/LocationAssignment';
 
 import styled from "@emotion/styled";
@@ -81,20 +70,6 @@ const messagesHeadRows = [
   { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
   { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
 ];
-
-const CustomFieldsPreview = (props) => {
-  const customFieldsPreviewObj = {
-    singleLine: <SingleLine { ...props } />,
-    multiLine: <MultiLine { ...props } />,
-    date: <Date { ...props } />,
-    dateTime: <DateTime { ...props } />,
-    dropDown: <DropDown { ...props } />,
-    radioButtons: <RadioButtons { ...props } />,
-    checkboxes: <Checkboxes { ...props } />,
-    fileUpload: <FileUpload { ...props } />
-  };
-  return customFieldsPreviewObj[props.type];
-};
 
 // Example 5 - Modal
 const styles5 = theme => ({

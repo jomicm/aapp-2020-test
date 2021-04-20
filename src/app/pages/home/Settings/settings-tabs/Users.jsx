@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useEffect, useState } from 'react';
+import { utcToZonedTime } from 'date-fns-tz';
 import {
   FormControl,
   InputLabel,
@@ -106,14 +107,16 @@ const Users = props => {
         if (collectionName === 'settingsAssetSpecialists') {
           const rows = data.response.map(row => {
             const { _id, categorySelected: { label: category }, userSelected: { label: user }, location: { locationName } } = row;
-            return createAssetSpecialistRow(_id, category, user, locationName, 'Admin', '11/03/2020');
+            const date = utcToZonedTime(row.creationDate).toLocaleString();
+            return createAssetSpecialistRow(_id, category, user, locationName, row.creationUserFullName, date);
           });
           setControl(prev => ({ ...prev, assetSpecialistRows: rows, assetSpecialistRowsSelected: [] }));
         } else if (collectionName === 'settingsWitnesses') {
           const rows = data.response.map(row => {
             const { _id, description, userSelected: { label: user }, location: { locationName } } = row;
+            const date = utcToZonedTime(row.creationDate).toLocaleString();
             // return createWitnessesRow(_id, category, user, locationName, 'Admin', '11/03/2020');
-            return createWitnessesRow(_id, description, user, locationName, 'Admin', '11/03/2020');
+            return createWitnessesRow(_id, description, user, locationName, row.creationUserFullName, date);
           });
           setControl(prev => ({ ...prev, witnessesRows: rows, witnessesRowsSelected: [] }));
         }

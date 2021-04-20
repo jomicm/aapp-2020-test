@@ -9,6 +9,7 @@ import {
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
 
+import { utcToZonedTime } from 'date-fns-tz';
 import LanguageIcon from '@material-ui/icons/Language';
 import CheckIcon from '@material-ui/icons/Check';
 import BuildIcon from '@material-ui/icons/Build';
@@ -28,11 +29,9 @@ import './Assets.scss';
 import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 
-const localStorageActiveTabKey = 'builderActiveTab';
 function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAlert }) {
   const dispatch = useDispatch();
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [tab, setTab] = useState(0);
 
   const createAssetCategoryRow = (id, name, depreciation, creator, creation_date, fileExt) => {
     return { id, name, depreciation, creator, creation_date, fileExt };
@@ -158,19 +157,22 @@ function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAle
         .then(data => {
           if (collectionName === 'assets') {
             const rows = data.response.map(row => {
-              return createAssetListRow(row._id, row.name, row.brand, row.model, row.category, row.serial, row.EPC, 'Admin', '11/03/2020', row.location);
+              const creationDate = utcToZonedTime(row.creationDate).toLocaleString();
+              return createAssetListRow(row._id, row.name, row.brand, row.model, row.category, row.serial, row.EPC, row.creationUserFullName, creationDate, row.location);
             });
             setControl(prev => ({ ...prev, assetRows: rows, assetRowsSelected: [] }));
           }
           if (collectionName === 'references') {
             const rows = data.response.map(row => {
-              return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.category, 'Admin', '11/03/2020', row.price);
+              const creationDate = utcToZonedTime(row.creationDate).toLocaleString();
+              return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.category, row.creationUserFullName, creationDate, row.price);
             });
             setControl(prev => ({ ...prev, referenceRows: rows, referenceRowsSelected: [] }));
           }
           if (collectionName === 'categories') {
             const rows = data.response.map(row => {
-              return createAssetCategoryRow(row._id, row.name, row.depreciation, 'Admin', '11/03/2020', row.fileExt);
+              const creationDate = utcToZonedTime(row.creationDate).toLocaleString();
+              return createAssetCategoryRow(row._id, row.name, row.depreciation, row.creationUserFullName, creationDate, row.fileExt);
             });
             setControl(prev => ({ ...prev, categoryRows: rows, categoryRowsSelected: [] }));
           }
@@ -347,10 +349,7 @@ function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAle
                   component='div'
                   className='builder-tabs'
                   value={tab}
-                  onChange={(_, nextTab) => {
-                    setTab(nextTab);
-                    localStorage.setItem(localStorageActiveTabKey, nextTab);
-                  }}
+                  onChange={(_, nextTab) => setTab(nextTab)}
                 >
                   {TabsTitles('assets')}
                 </Tabs>
@@ -398,6 +397,7 @@ function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAle
                       </div>
                     </span>
                     <ModalAssetList
+                      key={control.idAsset}
                       showModal={control.openAssetsModal}
                       setShowModal={(onOff) => setControl({ ...control, openAssetsModal: onOff })}
                       reloadTable={() => loadAssetsData('assets')}

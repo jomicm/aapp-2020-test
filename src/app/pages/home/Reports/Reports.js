@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { shallowEqual, useSelector } from "react-redux";
+import { utcToZonedTime } from 'date-fns-tz';
 import { Tabs } from "@material-ui/core";
 import {
   Portlet,
@@ -14,10 +15,7 @@ import ModalYesNo from '../Components/ModalYesNo';
 import TabGeneral from './TabGeneral';
 import ModalReportsSaved from './modals/ModalReportsSaved'
 
-const localStorageActiveTabKey = "builderActiveTab";
-
 const Reports = () => {
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [control, setControl] = useState({
     idReports: null,
     openReportsModal: false,
@@ -28,7 +26,7 @@ const Reports = () => {
   const [dataModal, setDataModal] = useState({});
   const [reportToGenerate, setReportToGenerate] = useState([]);
   const [selectReferenceConfirmation, setSelectReferenceConfirmation] = useState(false);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [tab, setTab] = useState(0);
   const { layoutConfig } = useSelector(
     ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
     shallowEqual
@@ -136,10 +134,12 @@ const Reports = () => {
       })
         .then(response => response.json())
         .then(data => {
+          setData(data.response);
           const rows = data.response.map((row) => {
-            const { _id, selectReport, reportName, enabled } = row;
+            const { _id, selectReport, reportName, enabled, creationUserFullName, creationDate } = row;
             const cast = enabled ? 'Yes' : 'No';
-            return createReportSavedRow(_id, reportName, 'Admin', '11/03/2020', cast);
+            const date = utcToZonedTime(creationDate).toLocaleString();
+            return createReportSavedRow(_id, reportName, creationUserFullName, date, cast);
           });
           setControl((prev) => ({ ...prev, reportsRows: rows, reportsRowsSelected: [] }));
         })
@@ -209,10 +209,7 @@ const Reports = () => {
                 <Tabs
                   className="builder-tabs"
                   component="div"
-                  onChange={(_, nextTab) => {
-                    setTab(nextTab);
-                    localStorage.setItem(localStorageActiveTabKey, nextTab);
-                  }}
+                  onChange={(_, nextTab) => setTab(nextTab)}
                   value={tab}
                 >
                   {TabsTitles('reports')}

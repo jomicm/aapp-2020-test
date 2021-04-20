@@ -113,7 +113,7 @@ const Processes = props => {
   return (
     <div>
       <div style={{textAlign: 'end', marginBottom: '15px'}}>
-        <SaveButton handleOnClick={handleSave}/>
+        {props.permissions.includes('edit') && <SaveButton handleOnClick={handleSave}/>}
       </div>
       <div style={{ display: 'flex' }}>
         <div className="profile-tab-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '50%', justifyContent: 'flex-start' }}>

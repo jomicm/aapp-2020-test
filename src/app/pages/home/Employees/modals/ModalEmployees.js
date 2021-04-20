@@ -21,16 +21,7 @@ import { actions } from '../../../../store/ducks/general.duck';
 import { executePolicies } from '../../Components/Policies/utils';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import CustomFields from '../../Components/CustomFields/CustomFields';
-import {
-  Checkboxes,
-  MultiLine,
-  Date as DateField,
-  DateTime,
-  DropDown,
-  RadioButtons,
-  SingleLine,
-  FileUpload
-} from '../../Components/CustomFields/CustomFieldsPreview';
+import { CustomFieldsPreview } from '../../constants';
 import ImageUpload from '../../Components/ImageUpload';
 import Permission from '../components/Permission';
 import { getFileExtension, saveImage, getImageURL, getCurrentDateTime } from '../../utils';
@@ -42,20 +33,6 @@ import {
 } from '../../../../crud/api';
 import AssetTable from '../components/AssetTable';
 import ModalAssignmentReport from './ModalAssignmentReport';
-
-const CustomFieldsPreview = (props) => {
-  const customFieldsPreviewObj = {
-    singleLine: <SingleLine {...props} />,
-    multiLine: <MultiLine {...props} />,
-    date: <DateField {...props} />,
-    dateTime: <DateTime {...props} />,
-    dropDown: <DropDown {...props} />,
-    radioButtons: <RadioButtons {...props} />,
-    checkboxes: <Checkboxes {...props} />,
-    fileUpload: <FileUpload {...props} />
-  };
-  return customFieldsPreviewObj[props.type];
-};
 
 const styles5 = (theme) => ({
   root: {
@@ -148,7 +125,14 @@ const ModalEmployees = ({
 }) => {
   const dispatch = useDispatch();
   const { showCustomAlert, showFillFieldsAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
-  const [assetRows, setAssetRows] = useState([]);
+
+  /* Assets */
+
+  const [assetsBeforeSaving, setAssetsBeforeSaving] = useState([]);
+  const [assetsToDelete, setAssetsToDelete] = useState([]);
+
+  /* General */
+
   const classes = useStyles();
   const classes4 = useStyles4();
   const [showModalReports, setShowModalReports] = useState(false);
@@ -183,7 +167,7 @@ const ModalEmployees = ({
 
   const executePolicies = (catalogueName) => {
     const formatDate = new Date();
-    const {dateFormatted: currentDate, timeFormatted: currentTime} = getCurrentDateTime();
+    const { dateFormatted: currentDate, timeFormatted: currentTime } = getCurrentDateTime();
     const timeStamp = `${currentDate} ${currentTime}`;
     const read = false;
     const status = 'new';
@@ -216,6 +200,7 @@ const ModalEmployees = ({
             })
           ),
           postDB('messages', {
+            formatDate: formatDate,
             from: messageFrom,
             html: layout,
             read: read,
@@ -258,7 +243,20 @@ const ModalEmployees = ({
         )
       }
     })
-  }
+  };
+
+  const handleAssignmentsOnSaving = (id) => {
+    assetsToDelete.map(asset => {
+      updateDB('assets/', { assigned: null }, asset.id)
+        .then((response) => { })
+        .catch(error => dispatch(showErrorAlert()));
+    });
+    assetsBeforeSaving.map(asset => {
+      updateDB('assets/', { assigned: id }, asset.id)
+        .then(response => { })
+        .catch(error => dispatch(showErrorAlert()));
+    });
+  };
 
   const handleChange = (name) => (event) => {
     setValues({ ...values, [name]: event.target.value });
@@ -353,7 +351,8 @@ const ModalEmployees = ({
     setShowModal(false);
     setValue4(0);
     setLayoutSelected(null);
-    setAssetRows([]);
+    setAssetsBeforeSaving([]);
+    setAssetsToDelete([]);
     setFormValidation({
       enabled: false,
       isValidForm: false
@@ -361,23 +360,43 @@ const ModalEmployees = ({
   };
 
   const handleOnAssetFinderSubmit = (filteredRows) => {
-    let validRows = filteredRows.rows.filter((row) => !row.assigned);
-    validRows = validRows
-      .map((rowTR) => {
-        if (!assetRows.find((row) => row.id === rowTR.id)) {
-          return rowTR;
-        }
-      })
-      .filter((row) => row);
-    setAssetRows([...assetRows, ...validRows]);
+    filteredRows.rows.map((rowTR) => {
+      if (!assetsBeforeSaving.find((row) => row.id === rowTR.id)) {
+        getOneDB('assets/', rowTR.id)
+          .then(response => response.json())
+          .then(data => {
+            const res = data.response;
+            if (!data.response.parent) {
+              setAssetsBeforeSaving(prev => [
+                ...prev,
+                {
+                  id: res._id,
+                  name: res.name,
+                  brand: res.brand,
+                  model: res.model,
+                  assigned: false,
+                  EPC: res.EPC,
+                  serial: res.serial,
+                }
+              ]);
+              return;
+            }
+
+            dispatch(showErrorAlert());
+          })
+          .catch(error => { })
+      }
+    });
   };
 
   const handleOnDeleteAssetAssigned = (id) => {
-    const restRows = assetRows.filter((row) => row.id !== id);
-    setAssetRows(restRows);
-    updateDB('assets/', { assigned: null }, id)
-      .then((response) => { })
-      .catch(error => dispatch(showErrorAlert()));
+    const restRows = assetsBeforeSaving.filter(row => {
+      if (row.id !== id) {
+        return row;
+      }
+      setAssetsToDelete(prev => [...prev, row]);
+    });
+    setAssetsBeforeSaving(restRows);
   };
 
   const handleSave = () => {
@@ -395,7 +414,7 @@ const ModalEmployees = ({
       locationsTable,
       layoutSelected,
       fileExt,
-      assetsAssigned: assetRows
+      assetsAssigned: assetsBeforeSaving
     };
 
     if (!id) {
@@ -407,7 +426,7 @@ const ModalEmployees = ({
           const { _id } = response.response[0];
           saveAndReload('employees', _id);
           executePolicies('OnAdd', policies);
-          updateAssignedEmpToAssets(_id);
+          handleAssignmentsOnSaving(_id);
         })
         .catch((error) => dispatch(showErrorAlert()));
     } else {
@@ -415,7 +434,7 @@ const ModalEmployees = ({
         .then((response) => {
           dispatch(showUpdatedAlert());
           saveAndReload('employees', id[0]);
-          updateAssignedEmpToAssets(id[0]);
+          handleAssignmentsOnSaving(id[0]);
           executePolicies('OnEdit', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
@@ -435,20 +454,6 @@ const ModalEmployees = ({
   const saveAndReload = (folderName, id) => {
     saveImage(image, folderName, id);
     reloadTable();
-  };
-
-  const updateAssignedEmpToAssets = (_id) => {
-    assetRows.forEach((asset) => {
-      getOneDB('assets/', asset.id)
-        .then((response) => response.json())
-        .then((data) => {
-          const body = { ...data.response, assigned: _id };
-          updateDB('assets/', { assigned: _id }, asset.id)
-            .then((response) => { })
-            .catch(error => dispatch(showErrorAlert()));
-        })
-        .catch(error => dispatch(showErrorAlert()));
-    });
   };
 
   useEffect(() => {
@@ -516,7 +521,7 @@ const ModalEmployees = ({
           isDisableUserProfile: true,
           imageURL: getImageURL(id, 'employees', fileExt)
         });
-        setAssetRows(assetsAssigned);
+        setAssetsBeforeSaving(assetsAssigned);
         const tabs = Object.keys(customFieldsTab).map((key) => ({
           key,
           info: customFieldsTab[key].info,
@@ -547,7 +552,7 @@ const ModalEmployees = ({
   return (
     <div style={{ width: '1000px' }}>
       <ModalAssignmentReport
-        assetRows={assetRows}
+        assetRows={assetsBeforeSaving}
         htmlPreview={htmlPreview}
         layoutSelected={layoutSelected}
         setShowModal={setShowModalReports}
@@ -615,7 +620,7 @@ const ModalEmployees = ({
                   </div>
                   <div className='profile-tab-wrapper'>
                     <AssetTable
-                      assetRows={assetRows}
+                      assetRows={assetsBeforeSaving}
                       onAssetFinderSubmit={handleOnAssetFinderSubmit}
                       onDeleteAssetAssigned={handleOnDeleteAssetAssigned}
                     />
@@ -646,6 +651,7 @@ const ModalEmployees = ({
                                 tab={tab}
                                 type={customField.content}
                                 values={customField.values}
+                                data={tab.content[colIndex]}
                               />
                             ))}
                           </div>

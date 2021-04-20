@@ -15,6 +15,8 @@ import NotificationsPausedIcon from '@material-ui/icons/NotificationsPaused';
 import ModalUserNotifications from './modalNotification/ModalUserNotifications'
 import HeaderDropdownToggle from '../../content/CustomDropdowns/HeaderDropdownToggle';
 import {
+  updateDB,
+  getDB,
   getCountDB,
   getDBComplex,
 } from '../../../crud/api'
@@ -57,20 +59,48 @@ const UserNotifications = ({
     subject: ''
   })
 
+  /* Functions */
+
+  const loadNotifications = () => {
+    getCountDB({ collection: 'notifications' })
+      .then((response) => response.json())
+      .then(data => {
+        setControl(prev => ({
+          ...prev,
+          total: data.response.count === 0 ? 1 : data.response.count
+        }))
+      });
+      
+    getDB('notifications')
+      .then(response => response.json())
+      .then((data) => updateCount(data.response))
+      .catch((error) => console.log('error>', error));
+
+    getDBComplex({
+      collection: 'notifications',
+      limit: control.rowsPerPage,
+      skip: control.rowsPerPage * control.page,
+    })
+      .then(response => response.json())
+      .then((data) => setData(data.response))
+      .catch((error) => console.log('error>', error));
+  };
+
+  const handleNotificationStatus = (id, read) => {
+    if (!read) {
+      const body = { read: true };
+      updateDB('notifications/', body, id)
+        .then (response => loadNotifications())
+        .catch(error => console.log('Error', error));
+    }
+  }
+
   const backGroundStyle = () => {
     if (!bgImage) {
       return 'none';
     }
     return 'url(' + bgImage + ')';
   };
-
-  const checkStatus = (read, id) => {
-    const notif = data.findIndex(item => item._id === id)
-    const newData = data;
-    newData[notif].read = true
-    setData(newData)
-    updateCount(data);
-  }
 
   const changeModal = (read, _id, subject, message, formatDate, from) => {
     setOpenModal(true)
@@ -80,7 +110,7 @@ const UserNotifications = ({
       formatDate,
       from: from.length ? from[0].email : ''
     })
-    checkStatus(read, _id)
+    handleNotificationStatus(_id, read);
   }
 
   const changeColor = (read) => read ? ('firstColor') : ('secondColor');
@@ -156,28 +186,7 @@ const UserNotifications = ({
   }
 
   useEffect(() => {
-    getCountDB({
-      collection: 'notifications',
-    })
-      .then(response => response.json())
-      .then(data => {
-        setControl(prev => ({
-          ...prev,
-          total: data.response.count === 0 ? 1 : data.response.count
-        }))
-      });
-
-    getDBComplex({
-      collection: 'notifications',
-      limit: control.rowsPerPage,
-      skip: control.rowsPerPage * control.page,
-    })
-      .then(response => response.json())
-      .then((data) => {
-        setData(data.response);
-        updateCount(data.response);
-      })
-      .catch((error) => console.log('error>', error));
+    loadNotifications();
   }, [control.search, control.page]);
 
   return (

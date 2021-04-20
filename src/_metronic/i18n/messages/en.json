@@ -27,7 +27,7 @@
   "AUTH.LOGIN.BUTTON": "Sign In",
   "AUTH.FORGOT.TITLE": "Forgotten Password?",
   "AUTH.FORGOT.DESC": "Enter your email to reset your password",
-  "AUTH.FORGOT.SUCCESS": "Your account has been successfully reset.",
+  "AUTH.FORGOT.SUCCESS": "An email was sent with instructions to recover the password.",
   "AUTH.REGISTER.TITLE": "Sign Up",
   "AUTH.REGISTER.DESC": "Enter your details to create your account",
   "AUTH.REGISTER.SUCCESS": "Your account has been successfuly registered.",

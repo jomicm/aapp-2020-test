@@ -17,8 +17,8 @@ import {
   DialogActions,
   Typography,
   IconButton,
-  Tab, 
-  Tabs, 
+  Tab,
+  Tabs,
   Paper,
   TextField,
   FormControlLabel,
@@ -29,6 +29,20 @@ import {
   Tooltip
 } from "@material-ui/core";
 import AddIcon from '@material-ui/icons/Add';
+import EmailOutlinedIcon from '@material-ui/icons/EmailOutlined';
+import TextFormatIcon from '@material-ui/icons/TextFormat';
+import SubjectIcon from '@material-ui/icons/Subject';
+import TodayIcon from '@material-ui/icons/Today';
+import ScheduleIcon from '@material-ui/icons/Schedule';
+import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
+import RadioButtonCheckedIcon from '@material-ui/icons/RadioButtonChecked';
+import CheckBoxOutlinedIcon from '@material-ui/icons/CheckBoxOutlined';
+import AttachFileOutlinedIcon from '@material-ui/icons/AttachFileOutlined';
+import AttachMoneyOutlinedIcon from '@material-ui/icons/AttachMoneyOutlined';
+import TextFieldsIcon from '@material-ui/icons/TextFields';
+import ImageIcon from '@material-ui/icons/Image';
+import LinkIcon from '@material-ui/icons/Link';
+import EditAttributesIcon from '@material-ui/icons/EditAttributes';
 
 import { actions } from '../../../../store/ducks/general.duck';
 import {
@@ -39,7 +53,17 @@ import {
   DropDownSettings,
   RadioButtonsSettings,
   CheckboxesSettings,
-  FileUploadSettings
+  FileUploadSettings,
+  CurrencySettings,
+  PercentageSettings,
+  EmailSettings,
+  DecimalSettings,
+  URLSettings,
+  ImageSettings, 
+  DecisionBoxSettings,
+  RichTextSettings,
+  FormulaSettings,
+  DateFormulaSettings,
 } from './CustomFieldsPreview';
 import DragDropArea from './DragDropArea';
 import './CustomFields.scss';
@@ -73,16 +97,26 @@ const CustomFieldsSettings = (props) => {
     onUpdate: props.updateCustomFieldProps
   }
   const customFieldsSettingsObj = {
-    singleLine: <SingleLineSettings { ...cfProps } />,
-    multiLine: <MultiLineSettings { ...cfProps } />,
-    date: <DateSettings { ...cfProps } />,
-    dateTime: <DateTimeSettings { ...cfProps } />,
-    dropDown: <DropDownSettings { ...cfProps } />,
-    radioButtons: <RadioButtonsSettings { ...cfProps } />,
-    checkboxes: <CheckboxesSettings { ...cfProps } />,
-    fileUpload: <FileUploadSettings { ...cfProps } />
+    singleLine: <SingleLineSettings {...cfProps} />,
+    multiLine: <MultiLineSettings {...cfProps} />,
+    date: <DateSettings {...cfProps} />,
+    dateTime: <DateTimeSettings {...cfProps} />,
+    dropDown: <DropDownSettings {...cfProps} />,
+    radioButtons: <RadioButtonsSettings {...cfProps} />,
+    checkboxes: <CheckboxesSettings {...cfProps} />,
+    fileUpload: <FileUploadSettings {...cfProps} />,
+    currency: <CurrencySettings {...cfProps} />,
+    percentage: <PercentageSettings {...cfProps} />,
+    email: <EmailSettings {...cfProps} />,
+    decimal: <DecimalSettings {...cfProps} />,
+    url: <URLSettings {...cfProps} />,
+    imageUpload: <ImageSettings {...cfProps} />,
+    decisionBox: <DecisionBoxSettings {...cfProps} />,
+    richText: <RichTextSettings {...cfProps} />,
+    formula: <FormulaSettings {...cfProps} />,
+    dateFormula: <DateFormulaSettings {...cfProps} />,
   };
-  return customFieldsSettingsObj[props.settings.selectedCustomField] || null;
+  return customFieldsSettingsObj[props.settings.selectedCustomField] || 'There are no Custom Fields selected';
 };
 
 
@@ -98,7 +132,7 @@ function CustomFields(props) {
 
   const [tabName, setTabName] = useState('');
 
-  const handleChangeValue = async(fieldName, fieldValue) => {
+  const handleChangeValue = async (fieldName, fieldValue) => {
     await setValues({
       ...values,
       [fieldName]: fieldValue
@@ -112,7 +146,7 @@ function CustomFields(props) {
       setTabs(tabsTmp);
       setCustomFieldsColumns(Array(Number(e.target.value)).fill(1));
     }
-    
+
     setValues({
       ...values,
       [name]: e.target.value
@@ -120,10 +154,10 @@ function CustomFields(props) {
   }
 
   const handleAddNewTab = (add) => {
-    setValues({...values, newTabName: ''});
+    setValues({ ...values, newTabName: '' });
     setShowNewTabModal(false);
     if (!add) return;
-    setTabs([...tabs, {name: values.newTabName, columns: 1}]);
+    setTabs([...tabs, { name: values.newTabName, columns: 1 }]);
   };
 
   const handleChangeCFTab = (event, newValue) => {
@@ -136,16 +170,37 @@ function CustomFields(props) {
   const [tabIndex, setTabIndex] = useState(0);
 
   const customControls = [
-    {id: 'singleLine', name: 'Single Line'}, 
-    {id: 'multiLine', name: 'Multi Line'}, 
-    {id: 'date', name: 'Date'}, 
-    {id: 'dateTime', name: 'Date Time'}, 
-    {id: 'dropDown', name: 'Drop Down'}, 
-    {id: 'radioButtons', name: 'Radio'}, 
-    {id: 'checkboxes', name: 'Check Box'}, 
-    {id: 'fileUpload', name: 'File Upload'}, 
+    [
+      { id: 'singleLine', name: 'Single Line', icon: <TextFormatIcon style={{fill: 'grey'}}/> },
+      { id: 'multiLine', name: 'Multi Line', icon: <SubjectIcon style={{fill: 'grey'}}/> },
+      { id: 'date', name: 'Date', icon: <TodayIcon style={{fill: 'grey'}}/> },
+      { id: 'dateTime', name: 'Date Time', icon: <ScheduleIcon style={{fill: 'grey'}}/> },
+    ],
+    [
+      { id: 'dropDown', name: 'Drop Down', icon: <ArrowDropDownIcon style={{fill: 'grey'}}/> },
+      { id: 'radioButtons', name: 'Radio', icon: <RadioButtonCheckedIcon style={{fill: 'grey'}}/>},
+      { id: 'checkboxes', name: 'Check Box', icon: <CheckBoxOutlinedIcon style={{fill: 'grey'}}/> },
+      { id: 'fileUpload', name: 'File Upload', icon: <AttachFileOutlinedIcon style={{fill: 'grey'}}/> },
+    ],
+    [
+      { id: 'currency', name: 'Currency', icon: <AttachMoneyOutlinedIcon style={{fill: 'grey'}}/>},
+      { id: 'percentage', name: 'Percentage', icon: <Typography style={{color: 'grey', fontSize: 18, fontWeight: 'bolder'}}>%</Typography> },
+      { id: 'email', name: 'Email', icon: <EmailOutlinedIcon style={{fill: 'grey'}}/> },
+      { id: 'decimal', name: 'Decimal', icon: <Typography style={{color: 'grey', fontSize: 12, fontWeight: 'bolder'}}>0.00</Typography> },      
+    ],
+    [
+      { id: 'richText', name: 'HTML', icon: <TextFieldsIcon style={{fill: 'grey'}}/> },
+      { id: 'imageUpload', name: 'Image Upload', icon: <ImageIcon style={{fill: 'grey'}}/> },
+      { id: 'decisionBox', name: 'Decision Box', icon: <EditAttributesIcon style={{fill: 'grey'}}/> },
+      { id: 'url', name: 'URL', icon: <LinkIcon style={{fill: 'grey'}}/> },
+    ],
+    [
+      { id: 'formula', name: 'Num Formula', icon: <Typography style={{color: 'grey', fontSize: 16, fontWeight: 'bolder'}}>f(x)</Typography> },
+      //Date Formula will be implemented in another ticket
+      // { id: 'dateGormula', name: 'Date Formula', icon: <Typography style={{color: 'grey', fontSize: 16, fontWeight: 'bolder'}}>f(t)</Typography> },
+    ],
   ];
-  
+
   const [tabs, setTabs] = useState([]); // useState([{name:'One', columns:1}]);
   const [showNewTabModal, setShowNewTabModal] = useState(false);
   const [customFieldsColumns, setCustomFieldsColumns] = useState([1]);
@@ -184,7 +239,7 @@ function CustomFields(props) {
 
   // Save the custom field props from the settings CF to the preview CF
   const handleSetCustomFieldProps = (idSelectedCustomField, selectedCustomField, values, setValues) => {
-    setSelectedCustomFieldSettings({idSelectedCustomField, selectedCustomField, values, setValues, selfValues: findValuesByCustomFieldId(idSelectedCustomField)});
+    setSelectedCustomFieldSettings({ idSelectedCustomField, selectedCustomField, values, setValues, selfValues: findValuesByCustomFieldId(idSelectedCustomField) });
   };
 
   // Add the custom field props to the main object to be saved in DB
@@ -217,7 +272,7 @@ function CustomFields(props) {
 
   const handleChangeSelectedTabName = (e) => {
     setTabName(e.target.value);
-    const tabsTmp = [ ...tabs ];
+    const tabsTmp = [...tabs];
     tabsTmp[tabIndex].name = e.target.value;
     setTabs(tabsTmp);
     if (!isEmpty(customFieldsTab)) {
@@ -238,7 +293,7 @@ function CustomFields(props) {
 
   const setTabsOnLoad = () => {
     let _tabs = Object.keys(props.customFieldsTab)
-      .map(key => ({ 
+      .map(key => ({
         ...props.customFieldsTab[key].info,
         key,
         columns: props.customFieldsTab[key].right.length === 0 ? 1 : 2
@@ -252,7 +307,7 @@ function CustomFields(props) {
     setCustomFieldsColumns(Array(_tabs[0].columns).fill(1));
     handleChangeValue('tabLayout', String(_tabs[0].columns));
   };
-  
+
   return (
     <div className="custom-fields-wrapper">
       {/* Accordions Area */}
@@ -268,13 +323,20 @@ function CustomFields(props) {
           </ExpansionPanelSummary>
           <ExpansionPanelDetails>
             <div className='custom-controls-wrapper'>
-              {customControls.map((customField, ix) => {
-                return (
-                  <div key={`custom-control-${ix}`} className='custom-controls-wrapper__element' onClick={() => handleAddCustomFieldToTab(customField.id)}>
-                    <span>{customField.name}</span>
-                  </div>
-                )
-              })}
+              {customControls.map((column) => (
+                  <div className='custom-controls-column'>
+                    {column.map((customField, ix) => (
+                      <center>
+                        <div key={`custom-control-${ix}`} className='custom-controls-wrapper__element' onClick={() => handleAddCustomFieldToTab(customField.id)}>
+                          <div className='custom-controls-icon'>
+                            {customField.icon || null }
+                          </div>
+                          <span>{customField.name}</span>
+                        </div>
+                      </center>
+                    ))}
+                  </div>              
+              ))}
             </div>
           </ExpansionPanelDetails>
         </ExpansionPanel>
@@ -289,14 +351,18 @@ function CustomFields(props) {
           </ExpansionPanelSummary>
           <ExpansionPanelDetails>
             <div className="tab-properties-wrapper">
-              <TextField
-                id="standard-name"
-                label="Tab Name"
-                className='tab-properties-wrapper__tab-name'
-                value={tabName}
-                onChange={(e) => handleChangeSelectedTabName(e)}
-                margin="normal"
-              />
+              <div className='tab-properties-wrapper__tab-name'>
+                <TextField
+                  id="standard-name"
+                  label="Tab Name"
+                  value={tabName}
+                  onChange={(e) => tabs.length > 0 ? handleChangeSelectedTabName(e) : null}
+                  margin="normal"
+                />
+                <span field-validator_error style={{ display: 'flex', justifyContent: 'start', width: '90%', color: 'red', fontSize: 10 }}>
+                  {tabs.length > 0 ? null : 'First add a tab'}
+                </span>
+              </div>
               <FormControl
                 component="fieldset"
                 className={classes.formControl}
@@ -337,7 +403,7 @@ function CustomFields(props) {
           </ExpansionPanelSummary>
           <ExpansionPanelDetails>
             <div className="field-properties-wrapper">
-              <CustomFieldsSettings settings={selectedCustomFieldSettings} updateCustomFieldProps={handleUpdateCustomFieldProps}/>
+              <CustomFieldsSettings settings={selectedCustomFieldSettings} updateCustomFieldProps={handleUpdateCustomFieldProps} />
             </div>
           </ExpansionPanelDetails>
         </ExpansionPanel>
@@ -345,7 +411,7 @@ function CustomFields(props) {
       <div className="custom-fields-wrapper__tab-area">
         <div className=''>
           {/* CF Tab Headers */}
-          <Paper style={{display:'flex', flexDirection:"row", justifyContent:"space-between"}}>
+          <Paper style={{ display: 'flex', flexDirection: "row", justifyContent: "space-between" }}>
             <Tabs
               value={tabIndex}
               onChange={handleChangeCFTab}
@@ -355,7 +421,7 @@ function CustomFields(props) {
             >
               {tabs.map((tab, ix) => <Tab key={`CFtab-${ix}`} label={tab.name} onClick={() => handleOnTabClick(ix)} />)}
             </Tabs>
-            <div className="add-tab" style={{alignSelf:'center'}}>
+            <div className="add-tab" style={{ alignSelf: 'center' }}>
               <div>
                 <Tooltip title="Add Tab">
                   <IconButton onClick={() => setShowNewTabModal(true)} aria-label="Add Tab">
@@ -400,7 +466,7 @@ function CustomFields(props) {
             {tabs.map((tab, ix) => (
               <TabContainer key={`tabContainer-${ix}`}>
                 <div className="drag-drop-custom-fields-wrapper">
-                  <DragDropArea 
+                  <DragDropArea
                     tabIndex={tabIndex}
                     customFieldsTab={customFieldsTab}
                     setCustomFieldsTab={setCustomFieldsTab}

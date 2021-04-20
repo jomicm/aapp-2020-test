@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { utcToZonedTime } from 'date-fns-tz';
 import { getDB, postDB, getOneDB, updateDB, deleteDB } from '../../../../crud/api';
 import TableComponent from '../../Components/TableComponent';
 import ModalLists from './modals/ModalLists';
@@ -78,14 +79,16 @@ const Custom = props => {
         .then(data => {
           if (collectionName === 'settingsLists') {
             const rows = data.response.map(row => {
-              const { _id, name, options } = row;
-              return createListRow(_id, name, options.length, 'Admin', '11/03/2020');
+              const { _id, name, options, creationUserFullName, creationDate } = row;
+              const date = utcToZonedTime(creationDate).toLocaleString();
+              return createListRow(_id, name, options.length, creationUserFullName, date);
             });
             setControl(prev => ({ ...prev, listRows: rows, listRowsSelected: [] }));
           } else if (collectionName === 'settingsConstants') {
             const rows = data.response.map(row => {
-              const { _id, name, value } = row;
-              return createConstantRow(_id, name, value, 'Admin', '11/03/2020');
+              const { _id, name, value, creationUserFullName, creationDate } = row;
+              const date = utcToZonedTime(creationDate).toLocaleString();
+              return createConstantRow(_id, name, value, creationUserFullName, date);
             });
             setControl(prev => ({ ...prev, constantRows: rows, constantRowsSelected: [] }));
           }

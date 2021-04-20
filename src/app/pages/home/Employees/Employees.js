@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from "react-redux";
+import { utcToZonedTime } from 'date-fns-tz';
 import { Tabs } from '@material-ui/core';
 import { useDispatch } from 'react-redux';
 import { actions } from '../../../store/ducks/general.duck';
@@ -18,12 +19,9 @@ import Policies from '../Components/Policies/Policies';
 import ModalEmployees from './modals/ModalEmployees';
 import ModalEmployeeProfiles from './modals/ModalEmployeeProfiles';
 
-const localStorageActiveTabKey = 'builderActiveTab';
-
 const Employees = ({ globalSearch, setGeneralSearch }) => {
   const dispatch = useDispatch();
   const { showCustomAlert, showDeletedAlert, showErrorAlert} = actions;
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const [employeeLayoutSelected, setEmployeeLayoutSelected] = useState({});
   const [policies, setPolicies] = useState(['']);
   const [referencesSelectedId, setReferencesSelectedId] = useState(null);
@@ -31,7 +29,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
     selectReferenceConfirmation,
     setSelectReferenceConfirmation
   ] = useState(false);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [tab, setTab] = useState(0);
 
   const createUserProfilesRow = (id, name, creator, creation_date) => {
     return { id, name, creator, creation_date };
@@ -142,11 +140,12 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
           if (collectionName === 'employeeProfiles') {
             const rows = data.response.map((row) => {
               const { _id, name, creationUserFullName, creationDate } = row;
+              const date = utcToZonedTime(creationDate).toLocaleString();
               return createUserProfilesRow(
                 _id,
                 name,
                 creationUserFullName,
-                creationDate
+                date
               );
             });
             setControl(prev => ({ ...prev, employeeProfilesRows: rows, employeeProfilesRowsSelected: [] }));
@@ -154,6 +153,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
           if (collectionName === 'employees') {
             const rows = data.response.map((row) => {
               const { _id, name, lastName, email, designation, manager, creationUserFullName, creationDate } = row;
+              const date = utcToZonedTime(creationDate).toLocaleString();
               return createEmployeeRow(
                 _id,
                 name,
@@ -162,7 +162,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
                 designation,
                 manager,
                 creationUserFullName,
-                creationDate
+                date
               );
             });
             setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));
@@ -294,10 +294,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
                 <Tabs
                   className='builder-tabs'
                   component='div'
-                  onChange={(_, nextTab) => {
-                    setTab(nextTab);
-                    localStorage.setItem(localStorageActiveTabKey, nextTab);
-                  }}
+                  onChange={(_, nextTab) => setTab(nextTab)}
                   value={tab}
                 >
                   {TabsTitles('employees')}

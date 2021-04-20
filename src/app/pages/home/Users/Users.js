@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { utcToZonedTime } from 'date-fns-tz';
 import { connect, useDispatch } from "react-redux";
 import { Tabs } from '@material-ui/core';
 import { actions } from '../../../store/ducks/general.duck';
@@ -21,12 +22,10 @@ import ModalUsers from './modals/ModalUsers';
 import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 
-const localStorageActiveTabKey = 'builderActiveTab';
 function Users({ globalSearch, setGeneralSearch }) {
   const dispatch = useDispatch();
   const { showDeletedAlert, showErrorAlert } = actions;
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [tab, setTab] = useState(0);
 
   const createUserProfilesRow = (id, name, creator, creation_date) => {
     return { id, name, creator, creation_date };
@@ -120,13 +119,15 @@ function Users({ globalSearch, setGeneralSearch }) {
         .then(data => {
           if (collectionName === 'userProfiles') {
             const rows = data.response.map(row => {
-              return createUserProfilesRow(row._id, row.name, 'Admin', '11/03/2020');
+              const date = utcToZonedTime(row.creationDate).toLocaleString();
+              return createUserProfilesRow(row._id, row.name, row.creationUserFullName, date);
             });
             setControl(prev => ({ ...prev, userProfilesRows: rows, userProfilesRowsSelected: [] }));
           }
           if (collectionName === 'user') {
             const rows = data.response.map(row => {
-              return createUserRow(row._id, row.name, row.lastName, row.email, row.designation, row.manager, 'Admin', '11/03/2020');
+              const date = utcToZonedTime(row.creationDate).toLocaleString();
+              return createUserRow(row._id, row.name, row.lastName, row.email, row.designation, row.manager, row.creationUserFullName, date);
             });
             setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));
           }
@@ -238,10 +239,7 @@ function Users({ globalSearch, setGeneralSearch }) {
                   component='div'
                   className='builder-tabs'
                   value={tab}
-                  onChange={(_, nextTab) => {
-                    setTab(nextTab);
-                    localStorage.setItem(localStorageActiveTabKey, nextTab);
-                  }}
+                  onChange={(_, nextTab) => setTab(nextTab)}
                 >
                   {TabsTitles('users')}
                 </Tabs>

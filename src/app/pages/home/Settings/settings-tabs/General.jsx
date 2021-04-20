@@ -86,7 +86,7 @@ const General = (props) => {
   return (
     <div>
       <div style={{ textAlign: 'end', marginBottom: '15px' }}>
-        <SaveButton handleOnClick={handleSave} />
+        {props.permissions.includes('edit') && <SaveButton handleOnClick={handleSave} />}
       </div>
       {fields.map(({ id, name, selected }, ix) => (
         <FormControl key={`base-field-${ix}`} className={classes.textField}>

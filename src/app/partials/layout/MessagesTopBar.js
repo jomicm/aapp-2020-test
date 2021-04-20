@@ -1,23 +1,22 @@
 import React, { useEffect, useState } from 'react';
+import { connect } from 'react-redux';
 import { Nav, Tab, Dropdown } from 'react-bootstrap';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import ReactTimeAgo from 'react-time-ago';
-import clsx from 'clsx';
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
-import { OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { FormattedMessage } from 'react-intl';
-import { Badge, IconButton, Typography } from '@material-ui/core';
+import { Badge, IconButton } from '@material-ui/core';
+
+import PersonIcon from '@material-ui/icons/Person';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
 import { ReactComponent as MessageIcon } from '../../../_metronic/layout/assets/layout-svg-icons/Message.svg';
 import {
-  getCountDB,
-  getDB,
-  getDBComplex,
   updateDB,
+  getDB,
+  getMessages,
+  getTotalMessages,
 } from '../../crud/api';
 import HeaderDropdownToggle from '../content/CustomDropdowns/HeaderDropdownToggle';
-import Messages from '../../pages/home/Messages/Messages';
 
 const perfectScrollbarOptions = {
   wheelSpeed: 2,
@@ -31,7 +30,8 @@ const MessagesTopBar = ({
   pulse,
   skin,
   type,
-  useSVG
+  useSVG,
+  user,
 }) => {
   const [countNotifications, setCountNotifications] = useState(0);
   const [data, setData] = useState([]);
@@ -129,9 +129,10 @@ const MessagesTopBar = ({
     }
   }
 
-  const getMessagesData = () =>{
-    getCountDB({
+  const getMessagesData = () => {
+    getTotalMessages({
       collection: 'messages',
+      userId: user.id,
     })
       .then(response => response.json())
       .then(data => {
@@ -144,20 +145,19 @@ const MessagesTopBar = ({
     getDB('messages')
       .then((response) => response.json())
       .then((data) => {
-        updateCount(data.response);
+        const filteredData = data.response.filter((message) => message.status === "new");
+        updateCount(filteredData);
       })
-      .catch((error) => console.log('error>', error));
+      .catch((error) => console.log('error:', error));
 
-    getDBComplex({
-      collection: 'messages',
+    getMessages({
       limit: control.rowsPerPage,
       skip: control.rowsPerPage * control.page,
-      sort: [{ key: 'creationDate', value: -1 }]
+      sort: [{ key: 'creationDate', value: -1 }],
+      userId: user.id,
     })
       .then((response) => response.json())
-      .then((data) => {
-        setData(data.response.reverse());
-      })
+      .then((data) => setData(data.response.reverse()))
       .catch((error) => console.log('error>', error));
   };
 
@@ -249,21 +249,36 @@ const MessagesTopBar = ({
                         data-height='300'
                         data-mobile-height='200'
                       >
-                        {data.length ? data.map(({ _id, from, html, formatDate, read, subject }) => (
+                        {data.length ? data.map(({ _id, from, formatDate, read, subject }) => (
                           <div style={{ display: 'flex', minHeight: '100px' }}>
                             <div className={changeBarColor(read)} />
                             <Link
-                              to={`/messages?id=${_id}&page=${control.page}`}
+                              to={`/messages?id=${_id}&page=${control.page}&tab=0`}
                               className='kt-header__topbar-item'
                               drop='down'
                               style={{ width: '100%' }}
                             >
                               <div
-                                style={{ padding: '20px' }}
+                                style={{
+                                  padding: '20px',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                }}
                                 className={changeColor(read)}
                                 onClick={() => checkStatus(_id, read)}
                               >
-                                <div style={{ color: 'black', fontSize: '1.3rem' }}>
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    flexDirection: 'row'
+                                  }}
+                                >
+                                  <PersonIcon />
+                                  <div style={{ fontWeight: 'bold', paddingLeft: '5px' }}>
+                                    {from[0].email}
+                                  </div>
+                                </div>
+                                <div style={{ color: 'black' }}>
                                   {subject}
                                 </div>
                                 <div className='kt-notification__item-time'>
@@ -273,7 +288,7 @@ const MessagesTopBar = ({
                                       locale='en-EN'
                                       timeStyle='round'
                                     />
-                                  ) : ''
+                                  ) : 'Unreadable date'
                                   }
                                 </div>
                               </div>
@@ -292,4 +307,9 @@ const MessagesTopBar = ({
     </Dropdown >
   );
 }
-export default MessagesTopBar;
+
+const mapStateToProps = ({ auth: { user } }) => ({
+  user
+});
+
+export default connect(mapStateToProps)(MessagesTopBar);

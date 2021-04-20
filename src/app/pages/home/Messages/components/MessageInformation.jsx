@@ -1,6 +1,8 @@
 import React from 'react';
-import { makeStyles } from '@material-ui/core/styles';
+import PropTypes from 'prop-types';
+
 import {
+  makeStyles,
   Avatar,
   Card,
   CardContent,
@@ -8,71 +10,68 @@ import {
   Divider,
   Typography
 } from '@material-ui/core';
-import Preview from './Preview';
-import './MessageInformation.scss';
 
-const useStyles = makeStyles(theme => ({
-  card: {
-    width: '100%',
-    height: '100%'
+import Preview from './Preview';
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    flex: 1,
+    height: '100%',
+    [theme.breakpoints.up('md')]: {
+      marginLeft: '20px',
+      marginBottom: '40px',
+    },
+    border: '1px solid lightGrey',
   },
-  media: {
-    height: 0,
-    paddingTop: '56.25%'
-  },
-  avatar: {
-    height: 60,
-    width: 60
-  },
-  subject: {
-    fontSize: 30
-  },
-  dateTime: {
-    fontSize: 15
-  },
-  preview: {
-    fontSize: 20
-  }
 }));
 
-const MessageInformation = ({ dateTime, img, preview, senderName, subject, to }) => {
+const MessageInformation = ({ headerInfo, preview }) => {
   const classes = useStyles();
-
+  const {
+    timeStamp,
+    img,
+    senderName,
+    subject,
+    to,
+  } = headerInfo;
   return (
-    <Card className={classes.card}>
+    <Card className={classes.root} elevation={0}>
       <CardHeader
-        avatar={<Avatar alt='Remy Sharp' src={img} />}
+        avatar={<Avatar alt="user image" src={img} />}
         title={
-          <Typography
-            className={classes.subject}
-            color='textSecondary'
-            component='h2'
-            variant='body2'
-          >
+          <Typography variant="h5">
             {subject}
           </Typography>
         }
         subheader={
-          <Typography
-            className={classes.dateTime}
-            color='textSecondary'
-            component='div'
-            variant='body2'
-          >
-            {dateTime}
+          <Typography>
+            {timeStamp}
           </Typography>
         }
       />
       <Divider />
       <CardContent>
-        <Typography className={classes.preview} variant='body2' color='p'>
-          <div className='container-messages-preview'>
-            <Preview preview={preview} />
-          </div>
+        <Typography
+          color="primary"
+          style={{ fontSize: '20px' }}
+          variant="body2"
+        >
+          <Preview preview={preview} />
         </Typography>
       </CardContent>
     </Card>
   );
+}
+
+MessageInformation.propTypes = {
+  headerInfo: PropTypes.shape({
+    img: PropTypes.string,
+    senderName: PropTypes.string,
+    subject: PropTypes.string,
+    timeStamp: PropTypes.string,
+    to: PropTypes.string,
+  }).isRequired,
+  preview: PropTypes.string.isRequired,
 };
 
 export default MessageInformation;

@@ -8,7 +8,7 @@ import { protectedRoutes } from '../../router/protectedRoutes';
 import { nonProtectedRoutes } from '../../router/nonProtectedRoutes';
 
 function HomePage({ user }) {
-  const userRoutes = Object.keys(filterObject(user?.profilePermissions, (element) => element.length > 1));
+  const userRoutes = Object.keys(filterObject(user?.profilePermissions, (element) => element.length >= 1));
   return (
     <Suspense fallback={<LayoutSplashScreen />}>
       <Switch>
@@ -26,7 +26,7 @@ function HomePage({ user }) {
             <Route path={path} component={component} />
           ))
         }
-        {/* <Redirect to='/error/error-v1' /> */}
+        <Redirect to='/error/error-v1' />
         <Redirect to='/logout' />
       </Switch>
     </Suspense>

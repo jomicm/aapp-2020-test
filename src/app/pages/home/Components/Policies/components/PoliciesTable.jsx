@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { utcToZonedTime } from 'date-fns-tz';
 import {
   PortletBody,
 } from '../../../../../partials/content/Portlet';
@@ -98,7 +99,7 @@ const PoliciesTable = ({ module }) => {
 
   const [tableControl, setTableControl] = useState({
     policies: {
-      collection: 'policies',
+      collection: 'employees',
       total: 0,
       page: 0,
       rowsPerPage: 5,
@@ -168,8 +169,11 @@ const PoliciesTable = ({ module }) => {
                 notificationDisabled,
                 policyName,
                 selectedAction,
-                selectedCatalogue
+                selectedCatalogue,
+                creationUserFullName,
+                creationDate,
               } = row;
+              const date = utcToZonedTime(creationDate).toLocaleString();
               const typeString = getTypeString(
                 messageDisabled,
                 notificationDisabled,
@@ -181,8 +185,8 @@ const PoliciesTable = ({ module }) => {
                 selectedCatalogue,
                 selectedAction,
                 typeString,
-                'Admin',
-                '12/2/2020'
+                creationUserFullName,
+                date
               );
             });
             setControl((prev) => ({

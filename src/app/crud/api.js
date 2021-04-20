@@ -168,11 +168,88 @@ const getCountDB = ({
   return fetch(reqURL, { method: 'GET', headers: getHeaders() });
 };
 
+const getMessages = ({
+  queryLike,
+  sort,
+  limit,
+  skip,
+  fields,
+  trash,
+  userId
+}) => {
+  let collection = 'messages';
+  let count = 0;
+  let additionalParams = '';
+  if (queryLike) {
+    const qLike = queryLike.map(({ key, value }) => {
+      const res = {};
+      const isValueBool = typeof value === 'boolean';
+      res[key] = isValueBool ? value : { "$regex": `(?i).*${value}.*` };
+      return res;
+    });
+    const queryString = JSON.stringify({ "$and" : [{"$or": qLike }, {"to": {"$elemMatch": {"_id": userId }}}, {"status" : trash ? "trash" : "new"}]});
+    additionalParams += `query=${queryString}`;
+    count++;
+  } else {
+    const queryString = JSON.stringify({ "$and" : [{"to": {"$elemMatch": {"_id": userId }}}, {"status" : trash ? "trash" : "new"}]});
+    additionalParams += `query=${queryString}`;
+    count++;
+  }
+  if (typeof skip === 'number') {
+    additionalParams += `${count? '&' : '' }skip=${skip}`;
+    count++;
+  };
+  if (typeof limit === 'number') {
+    additionalParams += `${count? '&' : '' }limit=${limit}`;
+    count++;
+  };
+  if (Array.isArray(fields)) {
+    const res = fields.map(({key, value}) => `"${key}":${value}`).join(',');
+    additionalParams += `${count? '&' : '' }fields={${res}}`;
+    count++;
+  };
+  if (Array.isArray(sort)) {
+    const res = sort.map(({key, value}) => `"${key}":${value}`).join(',');
+    additionalParams += `${count? '&' : '' }sort={${res}}`;
+    count++;
+  }
+
+  additionalParams = additionalParams ? `?${additionalParams}` : '';
+  const reqURL = `${getAPIPath(collection)}${additionalParams}`;
+  return fetch(reqURL, { method: 'GET', headers: getHeaders() });
+};
+
+const getTotalMessages = ({
+  queryLike,
+  trash,
+  userId
+}) => {
+  let collection = 'messages';
+  let additionalParams = '';
+  if (queryLike) {
+    const qLike = queryLike.map(({ key, value }) => {
+      const res = {};
+      res[key] = { "$regex": `(?i).*${value}.*` };
+      return res;
+    });
+    const queryString = JSON.stringify({ "$and" : [{"$or": qLike }, {"to": {"$elemMatch": {"_id": userId }}}, {"status" : trash ? "trash" : "new"}]});
+    additionalParams += `query=${queryString}`;
+  } else {
+    const queryString = JSON.stringify({ "$and" : [{"to": {"$elemMatch": {"_id": userId }}}, {"status" : trash ? "trash" : "new"}]});
+    additionalParams += `query=${queryString}`;
+  }
+  additionalParams = additionalParams ? `?${additionalParams}` : '';
+  const reqURL = `${getAPIPath(collection, '', false, false, count)}${additionalParams}`;
+  return fetch(reqURL, { method: 'GET', headers: getHeaders() });
+};
+
 module.exports = {
   deleteDB,
   getDB,
+  getMessages,
   getPublicDB,
   getOneDB,
+  getTotalMessages,
   postDB,
   postDBEncryptPassword,
   postFILE,

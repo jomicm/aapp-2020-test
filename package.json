@@ -51,6 +51,7 @@
     "cp-cli": "^2.0.0",
     "css-mediaquery": "^0.1.2",
     "date-fns": "^2.8.1",
+    "date-fns-tz": "^1.1.4",
     "dentist": "^1.0.3",
     "dotenv": "^8.2.0",
     "downshift": "^3.4.2",
