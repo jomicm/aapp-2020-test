@@ -117,14 +117,15 @@ const MyTickets = () => {
         .then((data) => {
           if (collectionName === "tickets") {
             const rows = data.response.map((row) => {
-              const { _id, message, peaceOfMind, selectedType, subject } = row;
+              const { _id, message, peaceOfMind, selectedType, subject, creationUserFullName, creationDate } = row;
+              const date = new Date(creationDate).toString();
               return createTicketsRow(
                 _id,
                 subject,
                 selectedType,
                 peaceOfMind,
-                "Admin",
-                "11/03/2020"
+                creationUserFullName,
+                date
               );
             });
             setControl((prev) => ({

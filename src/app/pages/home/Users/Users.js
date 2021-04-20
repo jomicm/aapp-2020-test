@@ -118,13 +118,15 @@ function Users({ globalSearch, setGeneralSearch }) {
         .then(data => {
           if (collectionName === 'userProfiles') {
             const rows = data.response.map(row => {
-              return createUserProfilesRow(row._id, row.name, 'Admin', '11/03/2020');
+              const date = new Date(row.creationDate).toLocaleString();
+              return createUserProfilesRow(row._id, row.name, row.creationUserFullName, date);
             });
             setControl(prev => ({ ...prev, userProfilesRows: rows, userProfilesRowsSelected: [] }));
           }
           if (collectionName === 'user') {
             const rows = data.response.map(row => {
-              return createUserRow(row._id, row.name, row.lastName, row.email, row.designation, row.manager, 'Admin', '11/03/2020');
+              const date = new Date(row.creationDate).toLocaleString();
+              return createUserRow(row._id, row.name, row.lastName, row.email, row.designation, row.manager, row.creationUserFullName, date);
             });
             setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));
           }

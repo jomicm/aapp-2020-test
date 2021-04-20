@@ -134,9 +134,10 @@ const Reports = () => {
         .then(response => response.json())
         .then(data => {
           const rows = data.response.map((row) => {
-            const { _id, selectReport, reportName, enabled } = row;
+            const { _id, selectReport, reportName, enabled, creationUserFullName, creationDate } = row;
             const cast = enabled ? 'Yes' : 'No';
-            return createReportSavedRow(_id, reportName, 'Admin', '11/03/2020', cast);
+            const date = new Date(creationDate).toString();
+            return createReportSavedRow(_id, reportName, creationUserFullName, date, cast);
           });
           setControl((prev) => ({ ...prev, reportsRows: rows, reportsRowsSelected: [] }));
         })

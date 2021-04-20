@@ -78,14 +78,16 @@ const Custom = props => {
         .then(data => {
           if (collectionName === 'settingsLists') {
             const rows = data.response.map(row => {
-              const { _id, name, options } = row;
-              return createListRow(_id, name, options.length, 'Admin', '11/03/2020');
+              const { _id, name, options, creationUserFullName, creationDate } = row;
+              const date = new Date(creationDate).toString();
+              return createListRow(_id, name, options.length, creationUserFullName, date);
             });
             setControl(prev => ({ ...prev, listRows: rows, listRowsSelected: [] }));
           } else if (collectionName === 'settingsConstants') {
             const rows = data.response.map(row => {
-              const { _id, name, value } = row;
-              return createConstantRow(_id, name, value, 'Admin', '11/03/2020');
+              const { _id, name, value, creationUserFullName, creationDate } = row;
+              const date = new Date(creationDate).toString();
+              return createConstantRow(_id, name, value, creationUserFullName, date);
             });
             setControl(prev => ({ ...prev, constantRows: rows, constantRowsSelected: [] }));
           }

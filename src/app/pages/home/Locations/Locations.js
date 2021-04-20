@@ -420,8 +420,9 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
         .then(data => {
           if (collectionName === 'locations') {
             const profileRows = data.response.map((row) => {
-              const { _id, level, name } = row;
-              return createLocationProfileRow(_id, level, name, 'Admin', '11/03/2020');
+              const { _id, level, name, creationUserFullName, creationDate } = row;
+              const date = new Date(creationDate).toString();
+              return createLocationProfileRow(_id, level, name, creationUserFullName, date);
             });
             setLocationProfileRows(profileRows);
             setSelectedLocationProfileRows([]);

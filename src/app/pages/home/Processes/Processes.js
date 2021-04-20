@@ -130,15 +130,17 @@ export default function Processes() {
         .then(data => {
           if (collectionName === 'processStages') {
             const rows = data.response.map(row => {
-              const { functions, selectedFunction, types, selectedType, customFieldTabs } = row;
+              const { functions, selectedFunction, types, selectedType, customFieldTabs, creationUserFullName, creationDate } = row;
               const isCustom = String(!isEmpty(customFieldTabs)).toUpperCase();
-              return createProcessStageRow(row._id, row.name, functions[selectedFunction], types[selectedType], isCustom, 'FALSE', 'Admin', '11/03/2020');
+              const date = new Date(creationDate).toString();
+              return createProcessStageRow(row._id, row.name, functions[selectedFunction], types[selectedType], isCustom, 'FALSE', creationUserFullName, date);
             });
             setControl(prev => ({ ...prev, processStagesRows: rows, processStagesRowsSelected: [] }));
           }
           if (collectionName === 'processes') {
             const rows = data.response.map(row => {
-              return createProcessRow(row._id, row.name, row.processStages.length || 'N/A', 'Admin', '11/03/2020');
+              const date = new Date(row.creationDate).toString();
+              return createProcessRow(row._id, row.name, row.processStages.length || 'N/A', row.creationUserFullName, date);
             });
             setControl(prev => ({ ...prev, processRows: rows, processRowsSelected: [] }));
           }

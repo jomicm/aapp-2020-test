@@ -168,8 +168,11 @@ const PoliciesTable = ({ module }) => {
                 notificationDisabled,
                 policyName,
                 selectedAction,
-                selectedCatalogue
+                selectedCatalogue,
+                creationUserFullName,
+                creationDate,
               } = row;
+              const date = new Date(creationDate).toString();
               const typeString = getTypeString(
                 messageDisabled,
                 notificationDisabled,
@@ -181,8 +184,8 @@ const PoliciesTable = ({ module }) => {
                 selectedCatalogue,
                 selectedAction,
                 typeString,
-                'Admin',
-                '12/2/2020'
+                creationUserFullName,
+                date
               );
             });
             setControl((prev) => ({

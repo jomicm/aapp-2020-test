@@ -117,10 +117,9 @@ const LiveProcesses = (props) => {
       .then(response => response.json())
       .then(data => {
         const rows = data.response.map(row => {
-          const { _id: id, processData: { name, processStages } } = row;
-          return createLiveProcessesHeadRows(id, id.slice(-6), name, 'Type', '12/12/12', 'Approvals', processStages.length, 'Admin', '11/03/2020');
-          // return { id, folio, name, type, date, approvals, status, creator, creation_date };
-          // return createLayoutsEmployeeRow(row._id, row.name, 99, 'Admin', '11/03/2020');
+          const { _id: id, processData: { name, processStages }, creationUserFullName, creationDate } = row;
+          const date = new Date(creationDate).toString();
+          return createLiveProcessesHeadRows(id, id.slice(-6), name, 'Type', '12/12/12', 'Approvals', processStages.length, creationUserFullName, date);
         });
         setControl(prev => ({ ...prev, processLiveRows: rows, ProcessLiveRowsSelected: [] }));
       })

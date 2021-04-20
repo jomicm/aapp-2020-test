@@ -94,13 +94,15 @@ const LayoutsPresets = props => {
       .then(data => {
         if (collectionName === 'settingsLayoutsEmployees') {
           const rows = data.response.map(row => {
-            return createLayoutsEmployeeRow(row._id, row.name, 99, 'Admin', '11/03/2020');
+            const date = new Date(row.creationDate).toString();
+            return createLayoutsEmployeeRow(row._id, row.name, 99, row.creationUserFullName, date);
           });
           setControl(prev => ({ ...prev, layoutEmployeesRows: rows, layoutEmployeesRowsSelected: [] }));
         }
         if (collectionName === 'settingsLayoutsStages') {
           const rows = data.response.map(row => {
-            return createLayoutsStageRow(row._id, row.name, row.stageName, 99, 'Admin', '11/03/2020');
+            const date = new Date(row.creationDate).toString();
+            return createLayoutsStageRow(row._id, row.name, row.stageName, 99, row.creationUserFullName, date);
           });
           setControl(prev => ({ ...prev, layoutStagesRows: rows, layoutStagesRowsSelected: [] }));
         }
