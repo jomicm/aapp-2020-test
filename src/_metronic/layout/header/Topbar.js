@@ -23,22 +23,22 @@ export default class Topbar extends React.Component {
           useSVG="true"
           dot="false"
         />
-         
-          <MessagesTopBar
-            bgImage={toAbsoluteUrl("/media/misc/bg-1.jpg")}
-            skin="dark"
-            iconType=''
-            useSVG='true'
-            type="success"
-          />
 
-          <Help
-            iconType=''
-            useSVG='true'
-          />
-          
-          <LanguageSelector iconType="" />
-          
+        <MessagesTopBar
+          bgImage={toAbsoluteUrl("/media/misc/bg-1.jpg")}
+          skin="dark"
+          iconType=''
+          useSVG='true'
+          type="success"
+        />
+
+        <Help
+          iconType=''
+          useSVG='true'
+        />
+
+        <LanguageSelector iconType="" />
+
         <UserProfile showAvatar={true} showHi={true} showBadge={false} />
       </div>
     );
