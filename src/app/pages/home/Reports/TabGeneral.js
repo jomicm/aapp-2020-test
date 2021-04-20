@@ -19,7 +19,7 @@ import {
   convertRowsToDataTableObjects,
   extractCustomField,
   formatData,
-  normalizeRows,
+  normalizeRows
 } from './reportsHelpers';
 import ChangeReportName from './modals/ChangeReportName';
 
@@ -454,8 +454,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         </FormControl>
       </div>
       
-      {
-        Object.keys(specificFilters).includes(values.selectedReport) && (
+      { Object.keys(specificFilters).includes(values.selectedReport) && (
           <>
             <div
               name="SpecificFilter"
@@ -464,31 +463,26 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
               <Divider style={{width: '100%', margintop: '10px'}} />
               <Typography className={classes.filterTitles}> {`${modules.map(({ id, name }) => id === values.selectedReport ? name : null).join('')} Specific Filter`} </Typography>
               <div style={{marginTop: '10px', display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', width: '100%'}}>
-                {
-                  specificFilters[values.selectedReport].map((e) =>
-                    (
-                      <Autocomplete
-                        className={classes.filters}
-                        defaultValue={filtersSelected[values.selectedReport][e.id]}
-                        getOptionLabel={(option) => option.label}
-                        multiple
-                        onChange={changeFiltersSelected( values.selectedReport, e.id)}
-                        options={specificFiltersOptions[values.selectedReport][e.id]}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label={e.label}
-                            variant='standard'
-                            style={{ width: '200px', marginTop:'10px'}}
-                          />
-                        )}
-                        value={filtersSelected[values.selectedReport][e.id]}
-                      />
-                    )
-                  )
-                }
-                {
-                  values.selectedReport === 'processes' && (
+                { specificFilters[values.selectedReport].map((e) => (
+                    <Autocomplete
+                      className={classes.filters}
+                      defaultValue={filtersSelected[values.selectedReport][e.id]}
+                      getOptionLabel={(option) => option.label}
+                      multiple
+                      onChange={changeFiltersSelected( values.selectedReport, e.id)}
+                      options={specificFiltersOptions[values.selectedReport][e.id]}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label={e.label}
+                          variant='standard'
+                          style={{ width: '200px', marginTop:'10px'}}
+                        />
+                      )}
+                      value={filtersSelected[values.selectedReport][e.id]}
+                    />
+                ))}
+                { values.selectedReport === 'processes' && (
                     <div style={{display:'flex', alignItems:'center', marginTop: '20px'}}>
                       <Typography style={{color:'black'}}> {'Delayed >='} </Typography>
                       <TextField
@@ -514,21 +508,18 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
                       />
                       <Typography style={{color:'black'}}> Days </Typography>
                     </div>
-                  )
-                }
+                )}
               </div>
             </div>
           </>
-        )
-      }
-      {
-        (filtersSelected.customFields.all.length > 0 || filtersSelected.customFields.selected.length > 0) && (
+      )}
+      {(filtersSelected.customFields.all.length > 0 || filtersSelected.customFields.selected.length > 0) && (
           <div
             name="SpecificFilter"
             style={{ marginTop: '30px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap'}}
           >
             <Divider style={{width: '100%', margintop: '10px'}} />
-            <Typography className={classes.filterTitles}> {`Custom Fields Specific Filter`} </Typography>
+            <Typography className={classes.filterTitles}> Custom Fields Specific Filter</Typography>
             <div style={{marginTop: '10px', display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', width: '100%'}}>
               <Autocomplete
                 className={classes.filters}
@@ -550,14 +541,13 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
               />
             </div>
           </div>
-        )
-      }
+      )}
       <div>
         <h3 style={{ marginTop: '40px' }}>Table</h3>
         <TableReportsGeneral
           controlValues={tableControl}
           disableLoading={!!collectionName}
-          headRows={filtersSelected.customFields.selected.length ? filtersSelected.customFields.base.concat(filtersSelected.customFields.selected) : dataTable.headerObject }
+          headRows={filtersSelected.customFields.selected.length ? filtersSelected.customFields.base.concat(filtersSelected.customFields.selected) : dataTable.headerObject}
           onDelete={() => { }}
           onEdit={() => { }}
           onView={() => { }}

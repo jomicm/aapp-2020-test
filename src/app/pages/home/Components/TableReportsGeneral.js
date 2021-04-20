@@ -304,7 +304,7 @@ const TableReportsGeneral = props => {
       if (numSelected > 0) {
         return (
           <div style={{ display: 'flex' }}>
-            {numSelected === 1 && !noEdit && typeof onView === 'function' && !disableActions &&
+            { numSelected === 1 && !noEdit && typeof onView === 'function' && !disableActions &&
               <Tooltip title='View'>
                 <IconButton aria-label='View' onClick={() => onView(selectedId)}>
                   <RemoveRedEye />
@@ -318,8 +318,7 @@ const TableReportsGeneral = props => {
                 </IconButton>
               </Tooltip>
             }
-            {
-              !disableActions &&
+            { !disableActions &&
               <Tooltip title='Delete'>
                 <IconButton aria-label='Delete' onClick={onDelete}>
                   <DeleteIcon />
@@ -465,8 +464,7 @@ const TableReportsGeneral = props => {
     return (
       <TableHead>
         <TableRow>
-          {
-            rows.length > 0 && (
+          { rows.length > 0 && (
               <TableCell padding='checkbox'>
                 <Checkbox
                   checked={numSelected === rowCount}
@@ -475,9 +473,8 @@ const TableReportsGeneral = props => {
                   onChange={onSelectAllClick}
                 />
               </TableCell>
-            )
-          }
-          {columnPicker.filter((column) => column.visible).map(row => (
+          )}
+          { columnPicker.filter((column) => column.visible).map(row => (
             <TableCell
               align={'left'}
               key={row.id}
@@ -628,8 +625,7 @@ const TableReportsGeneral = props => {
             {
               (viewControl.table || viewControl.tree) && (
                 <>
-                  {
-                    loading ? (
+                  { loading ? (
                       <div style={{
                         width: '100%',
                         height: 49 * (rowsPerPage + 1),
@@ -651,8 +647,7 @@ const TableReportsGeneral = props => {
                           rowCount={rows.length}
                         />
                         <TableBody>
-                          {
-                            rows.length <= 0 && (
+                          { rows.length <= 0 && (
                               <TableRow
                                 hover
                                 key={`No info`}
@@ -674,8 +669,7 @@ const TableReportsGeneral = props => {
                               </TableRow>
                             )
                           }
-                          {
-                            rows.map((row, index) => {
+                          { rows.map((row, index) => {
                               const isItemSelected = isSelected(row._id);
                               const labelId = `enhanced-table-checkbox-\${index}`;
                               return (
