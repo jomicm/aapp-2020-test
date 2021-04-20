@@ -98,7 +98,7 @@ const PoliciesTable = ({ module }) => {
 
   const [tableControl, setTableControl] = useState({
     policies: {
-      collection: 'policies',
+      collection: 'employees',
       total: 0,
       page: 0,
       rowsPerPage: 5,

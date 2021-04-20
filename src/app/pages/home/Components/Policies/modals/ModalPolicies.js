@@ -353,8 +353,6 @@ const ModalPolicies = ({
     setCursorPosition([selectionStart, selectionEnd]);
   };
 
-  console.log('Users: ', users)
-
   useEffect(() => {
     getDB('user')
       .then((response) => response.json())
