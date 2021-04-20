@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import Paper from '@material-ui/core/Paper';
-import InputBase from '@material-ui/core/InputBase';
-import IconButton from '@material-ui/core/IconButton';
+import {
+  Paper,
+  InputBase,
+  IconButton,
+  makeStyles
+} from '@material-ui/core';
 import SearchIcon from '@material-ui/icons/Search';
 import { getDBComplex } from '../../../../crud/api';
 import Table from '../../Components/AssetFinder/Table';

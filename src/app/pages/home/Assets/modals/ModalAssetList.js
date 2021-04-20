@@ -148,10 +148,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   function handleChange4(event, newValue) {
     setValue4(newValue);
   }
-  function handleChangeIndex4(index) {
-    console.log(index);
-    setValue4(index);
-  }
+  const handleChangeIndex4 = (index) => setValue4(index);
   // Example 5 - Tabs
   const classes5 = useStyles5();
   const [value5, setValue5] = useState(0);
@@ -210,7 +207,6 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
           .catch(error => { })
       }
     });
-    debugger
     setTimeout(() => {
       if (errors.length) {
         const assetsWithError = errors.map((asset) => Object.values(pick(asset, ['name', 'brand', 'model', 'serial', 'EPC'])).join(', '));
@@ -513,7 +509,6 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   };
 
   const handleCloseModal = () => {
-    console.log('HANDLE CLOSE MODAL!')
     setCustomFieldsTab({});
     setValues({
       name: '',

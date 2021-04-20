@@ -28,7 +28,7 @@ export default function OtherModalMapTab({ mapInfo, mapMarker, setMapMarker }) {
 
   const classes = useStyles();
   const [marker, setMarker] = useState(mapMarker ? [mapMarker] : []);
-  const [zoom, setZoom] = useState(mapInfo ? zoom : 6);
+  const [zoom, setZoom] = useState(mapInfo ? mapInfo.zoom : 6);
 
   /* Component Mounts */
 

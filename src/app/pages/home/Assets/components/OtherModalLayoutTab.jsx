@@ -57,13 +57,10 @@ export default function OtherModalLayoutTab({ layoutMarker, setLayoutMarker, rea
     setMarkers(prev => [...prev, marker]);
   };
 
-  useEffect(() => { }, [markers]);
-
   return (
     <Grid className={classes.root} container>
       {
-        realImageURL
-          ? (
+        realImageURL ? (
             <Grid style={{ flex: 1 }} container item direction="column">
               <OtherPinContent title="Location Layout Pin">
                 <ImageMarker
@@ -80,8 +77,7 @@ export default function OtherModalLayoutTab({ layoutMarker, setLayoutMarker, rea
                 />
               </OtherPinContent>
             </Grid>
-          )
-          : (
+          ) : (
             <Grid style={{ flex: 1 }} container item direction="column" alignItems="center" justify="center">
               <h6 style={{ alignSelf: 'center' }}>
                 No Layout Information Found
