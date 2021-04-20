@@ -38,33 +38,10 @@ import { postDB, getDB, getOneDB, updateDB } from '../../../../crud/api';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import ImageUpload from '../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
-import {
-  SingleLine,
-  MultiLine,
-  Date,
-  DateTime,
-  DropDown,
-  RadioButtons,
-  Checkboxes,
-  FileUpload
-} from '../../Components/CustomFields/CustomFieldsPreview';
+import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetList.scss';
 import OtherModalTabs from '../components/OtherModalTabs';
 import { pick } from 'lodash';
-
-const CustomFieldsPreview = (props) => {
-  const customFieldsPreviewObj = {
-    singleLine: <SingleLine {...props} />,
-    multiLine: <MultiLine {...props} />,
-    date: <Date {...props} />,
-    dateTime: <DateTime {...props} />,
-    dropDown: <DropDown {...props} />,
-    radioButtons: <RadioButtons {...props} />,
-    checkboxes: <Checkboxes {...props} />,
-    fileUpload: <FileUpload {...props} />
-  };
-  return customFieldsPreviewObj[props.type];
-};
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -863,6 +840,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                               onUpdateCustomField={handleUpdateCustomFields}
                               // customFieldIndex={props.customFieldIndex}
                               onClick={() => alert(customField.content)}
+                              data={tab.content[colIndex]}
                             />
                           ))}
                         </div>

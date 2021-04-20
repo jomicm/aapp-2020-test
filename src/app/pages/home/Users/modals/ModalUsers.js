@@ -28,35 +28,12 @@ import { postDBEncryptPassword, getOneDB, getDB, updateDB } from '../../../../cr
 import ImageUpload from '../../Components/ImageUpload';
 import { hosts, getFileExtension, saveImage, getImageURL } from '../../utils';
 import { modules } from '../../constants';
-import {
-  SingleLine,
-  MultiLine,
-  Date,
-  DateTime,
-  DropDown,
-  RadioButtons,
-  Checkboxes,
-  FileUpload
-} from '../../Components/CustomFields/CustomFieldsPreview';
+import { CustomFieldsPreview } from '../../constants';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import LocationAssignment from '../components/LocationAssignment';
 import Permission from '../components/Permission';
 
 const { apiHost, localHost } = hosts;
-
-const CustomFieldsPreview = (props) => {
-  const customFieldsPreviewObj = {
-    singleLine: <SingleLine {...props} />,
-    multiLine: <MultiLine {...props} />,
-    date: <Date {...props} />,
-    dateTime: <DateTime {...props} />,
-    dropDown: <DropDown {...props} />,
-    radioButtons: <RadioButtons {...props} />,
-    checkboxes: <Checkboxes {...props} />,
-    fileUpload: <FileUpload {...props} />
-  };
-  return customFieldsPreviewObj[props.type];
-};
 
 const styles5 = theme => ({
   root: {
@@ -343,6 +320,10 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     isValidForm: {}
   });
 
+  useEffect(() => {
+    console.log('debug2', profileSelected)
+  }, [profileSelected])
+
   const baseFieldsLocalProps = {
     userProfile: {
       ownValidFn: () => !!idUserProfile,
@@ -480,6 +461,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
                               tab={tab}
                               onUpdateCustomField={handleUpdateCustomFields}
                               onClick={() => alert(customField.content)}
+                              data={tab.content[colIndex]}
                             />
                           ))}
                         </div>

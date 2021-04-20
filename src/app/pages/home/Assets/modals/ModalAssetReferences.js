@@ -27,34 +27,10 @@ import './ModalAssetCategories.scss';
 import ImageUpload from '../../Components/ImageUpload';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetReferences.scss';
 
-import {
-  SingleLine,
-  MultiLine,
-  Date,
-  DateTime,
-  DropDown,
-  RadioButtons,
-  Checkboxes,
-  FileUpload
-} from '../../Components/CustomFields/CustomFieldsPreview';
-
 import BaseFields from '../../Components/BaseFields/BaseFields';
-
-const CustomFieldsPreview = (props) => {
-  const customFieldsPreviewObj = {
-    singleLine: <SingleLine {...props} />,
-    multiLine: <MultiLine {...props} />,
-    date: <Date {...props} />,
-    dateTime: <DateTime {...props} />,
-    dropDown: <DropDown {...props} />,
-    radioButtons: <RadioButtons {...props} />,
-    checkboxes: <Checkboxes {...props} />,
-    fileUpload: <FileUpload {...props} />
-  };
-  return customFieldsPreviewObj[props.type];
-};
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -151,11 +127,11 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
   const [tabs, setTabs] = useState([]);
 
   const handleChange = name => event => {
-    const value = name === 'selectedProfile' ? event.value : event.target.value;
+    const value = name === 'selectedProfile' ? event : event.target.value;
     setValues(prev => ({ ...prev, [name]: value }));
     // Load Custom Fields based on Select Control [Category Selected]
     if (name === 'selectedProfile') {
-      handleLoadCustomFields(values.profiles[value]);
+      handleLoadCustomFields(value.value);
       if (!value) {
         setValues(prev => ({ ...prev, depreciation: 0 }));
         setCustomFieldsTab({});
@@ -164,9 +140,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
   };
 
   const handleLoadCustomFields = (profile) => {
-    if (!profile || !profile.id) return;
-    console.log('id:', id)
-    getOneDB('categories/', profile.id)
+    getOneDB('categories/', profile)
       .then(response => response.json())
       .then(data => {
         console.log(data.response);
@@ -219,7 +193,6 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
     saveImage(image, folderName, id);
     reloadTable();
   };
-
 
   const baseFieldsLocalProps = {
     category: {
@@ -300,7 +273,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
       .then(response => response.json())
       .then(data => {
         console.log(data.response);
-        const { name, brand, model, price, depreciation, customFieldsTab, fileExt } = data.response;
+        const { name, brand, model, price, depreciation, customFieldsTab, fileExt, selectedProfile } = data.response;
         setValues({
           ...values,
           name,
@@ -308,7 +281,8 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
           model,
           price,
           depreciation,
-          imageURL: getImageURL(id, 'references', fileExt)
+          imageURL: getImageURL(id, 'references', fileExt),
+          selectedProfile
         });
         const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
         tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
@@ -399,6 +373,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
                               onUpdateCustomField={handleUpdateCustomFields}
                               // customFieldIndex={props.customFieldIndex}
                               onClick={() => alert(customField.content)}
+                              data={tab.content[colIndex]}
                             />
                           ))}
                         </div>

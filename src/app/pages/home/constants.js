@@ -1,4 +1,25 @@
+import React from 'react';
 import { toAbsoluteUrl } from "../../../_metronic";
+import {
+  SingleLine,
+  MultiLine,
+  Date,
+  DateTime,
+  DropDown,
+  RadioButtons,
+  Checkboxes,
+  FileUpload,
+  Currency,
+  Percentage,
+  Email,
+  Decimal,
+  URL,
+  Image,
+  DecisionBox,
+  RichText,
+  Formula,
+  DateFormula
+} from './Components/CustomFields/CustomFieldsPreview';
 
 export const modules = [
   { key: 'dashboard', name: 'Dashboard' },
@@ -40,6 +61,10 @@ export const collections = {
     module: 'employees',
     name: 'employeeProfiles'
   },
+  policies: {
+    module: 'employees',
+    name: 'employeeProfiles'
+  },
   processes: {
     module: 'processes',
     name: 'processes'
@@ -56,6 +81,30 @@ export const collections = {
     module: 'reports',
     name: 'reports'
   }
+};
+
+export const CustomFieldsPreview = (props) => {
+  const customFieldsPreviewObj = {
+    singleLine: <SingleLine {...props} />,
+    multiLine: <MultiLine {...props} />,
+    date: <Date {...props} />,
+    dateTime: <DateTime {...props} />,
+    dropDown: <DropDown {...props} />,
+    radioButtons: <RadioButtons {...props} />,
+    checkboxes: <Checkboxes {...props} />,
+    fileUpload: <FileUpload {...props} />,
+    currency: <Currency {...props} />,
+    percentage: <Percentage {...props} />,
+    email: <Email{...props} />,
+    decimal: <Decimal {...props} />,
+    url: <URL {...props} />,
+    imageUpload: <Image {...props} />,
+    decisionBox: <DecisionBox {...props} />,
+    richText:  <RichText {...props} />,
+    formula:  <Formula {...props} />,
+    dateFormula:  <DateFormula {...props} />,
+  };
+  return customFieldsPreviewObj[props.type];
 };
 
 export const allBaseFields = {

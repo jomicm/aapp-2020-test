@@ -21,16 +21,7 @@ import { actions } from '../../../../store/ducks/general.duck';
 import { executePolicies } from '../../Components/Policies/utils';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import CustomFields from '../../Components/CustomFields/CustomFields';
-import {
-  Checkboxes,
-  MultiLine,
-  Date as DateField,
-  DateTime,
-  DropDown,
-  RadioButtons,
-  SingleLine,
-  FileUpload
-} from '../../Components/CustomFields/CustomFieldsPreview';
+import { CustomFieldsPreview } from '../../constants';
 import ImageUpload from '../../Components/ImageUpload';
 import Permission from '../components/Permission';
 import { getFileExtension, saveImage, getImageURL, getCurrentDateTime } from '../../utils';
@@ -42,20 +33,6 @@ import {
 } from '../../../../crud/api';
 import AssetTable from '../components/AssetTable';
 import ModalAssignmentReport from './ModalAssignmentReport';
-
-const CustomFieldsPreview = (props) => {
-  const customFieldsPreviewObj = {
-    singleLine: <SingleLine {...props} />,
-    multiLine: <MultiLine {...props} />,
-    date: <DateField {...props} />,
-    dateTime: <DateTime {...props} />,
-    dropDown: <DropDown {...props} />,
-    radioButtons: <RadioButtons {...props} />,
-    checkboxes: <Checkboxes {...props} />,
-    fileUpload: <FileUpload {...props} />
-  };
-  return customFieldsPreviewObj[props.type];
-};
 
 const styles5 = (theme) => ({
   root: {
@@ -674,6 +651,7 @@ const ModalEmployees = ({
                                 tab={tab}
                                 type={customField.content}
                                 values={customField.values}
+                                data={tab.content[colIndex]}
                               />
                             ))}
                           </div>
