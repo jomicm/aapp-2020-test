@@ -38,15 +38,16 @@ export const Routes = withRouter(({ history }) => {
       <CustomizedAlert>
         <LayoutContextProvider history={history} menuConfig={menuConfig}>
           <Switch>
-            <Route path="/passwordRecovery" component={PasswordRecovery} />
+            
             {!isAuthorized ? (
               /* Render auth page when user at `/auth` and not authorized. */
               <AuthPage />
             ) : (
               /* Otherwise redirect to root page (`/`) */
-              <Redirect from="/auth" to={userLastLocation} />
+              <Redirect from="/auth" to={"/dashboard"} />
             )}
-            
+
+            <Route path="/passwordRecovery" component={PasswordRecovery} />
             <Route path="/error" component={ErrorsPage} />
             <Route path="/logout" component={LogoutPage} />
 
