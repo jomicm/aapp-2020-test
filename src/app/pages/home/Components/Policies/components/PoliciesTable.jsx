@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { utcToZonedTime } from 'date-fns-tz';
 import {
   PortletBody,
 } from '../../../../../partials/content/Portlet';
@@ -172,7 +173,7 @@ const PoliciesTable = ({ module }) => {
                 creationUserFullName,
                 creationDate,
               } = row;
-              const date = new Date(creationDate).toString();
+              const date = utcToZonedTime(creationDate).toLocaleString();
               const typeString = getTypeString(
                 messageDisabled,
                 notificationDisabled,

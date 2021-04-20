@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { shallowEqual, useSelector } from "react-redux";
+import { utcToZonedTime } from 'date-fns-tz';
 import { Tabs } from "@material-ui/core";
 import {
   Portlet,
@@ -136,7 +137,7 @@ const Reports = () => {
           const rows = data.response.map((row) => {
             const { _id, selectReport, reportName, enabled, creationUserFullName, creationDate } = row;
             const cast = enabled ? 'Yes' : 'No';
-            const date = new Date(creationDate).toString();
+            const date = utcToZonedTime(creationDate).toLocaleString();
             return createReportSavedRow(_id, reportName, creationUserFullName, date, cast);
           });
           setControl((prev) => ({ ...prev, reportsRows: rows, reportsRowsSelected: [] }));

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { utcToZonedTime } from 'date-fns-tz';
 import {
   Portlet,
   PortletBody,
@@ -118,7 +119,7 @@ const MyTickets = () => {
           if (collectionName === "tickets") {
             const rows = data.response.map((row) => {
               const { _id, message, peaceOfMind, selectedType, subject, creationUserFullName, creationDate } = row;
-              const date = new Date(creationDate).toString();
+              const date = utcToZonedTime(creationDate).toLocaleString();
               return createTicketsRow(
                 _id,
                 subject,

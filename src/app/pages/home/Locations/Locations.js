@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import ImageMarker from 'react-image-marker';
 import SwipeableViews from 'react-swipeable-views';
+import { utcToZonedTime } from 'date-fns-tz';
 import { merge } from 'lodash';
 import { Formik } from 'formik';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
@@ -421,7 +422,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
           if (collectionName === 'locations') {
             const profileRows = data.response.map((row) => {
               const { _id, level, name, creationUserFullName, creationDate } = row;
-              const date = new Date(creationDate).toString();
+              const date = utcToZonedTime(creationDate).toLocaleString();
               return createLocationProfileRow(_id, level, name, creationUserFullName, date);
             });
             setLocationProfileRows(profileRows);

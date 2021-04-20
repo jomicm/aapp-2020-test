@@ -1,6 +1,7 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
+import { utcToZonedTime } from 'date-fns-tz';
 import { isEmpty } from 'lodash';
 import { Tabs } from '@material-ui/core';
 import { actions } from '../../../store/ducks/general.duck';
@@ -132,14 +133,14 @@ export default function Processes() {
             const rows = data.response.map(row => {
               const { functions, selectedFunction, types, selectedType, customFieldTabs, creationUserFullName, creationDate } = row;
               const isCustom = String(!isEmpty(customFieldTabs)).toUpperCase();
-              const date = new Date(creationDate).toString();
+              const date = utcToZonedTime(creationDate).toLocaleString();
               return createProcessStageRow(row._id, row.name, functions[selectedFunction], types[selectedType], isCustom, 'FALSE', creationUserFullName, date);
             });
             setControl(prev => ({ ...prev, processStagesRows: rows, processStagesRowsSelected: [] }));
           }
           if (collectionName === 'processes') {
             const rows = data.response.map(row => {
-              const date = new Date(row.creationDate).toString();
+              const date = utcToZonedTime(row.creationDate).toLocaleString();
               return createProcessRow(row._id, row.name, row.processStages.length || 'N/A', row.creationUserFullName, date);
             });
             setControl(prev => ({ ...prev, processRows: rows, processRowsSelected: [] }));

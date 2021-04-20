@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { utcToZonedTime } from 'date-fns-tz';
 import { connect, useDispatch } from "react-redux";
 import { Tabs } from '@material-ui/core';
 import { actions } from '../../../store/ducks/general.duck';
@@ -118,14 +119,14 @@ function Users({ globalSearch, setGeneralSearch }) {
         .then(data => {
           if (collectionName === 'userProfiles') {
             const rows = data.response.map(row => {
-              const date = new Date(row.creationDate).toLocaleString();
+              const date = utcToZonedTime(row.creationDate).toLocaleString();
               return createUserProfilesRow(row._id, row.name, row.creationUserFullName, date);
             });
             setControl(prev => ({ ...prev, userProfilesRows: rows, userProfilesRowsSelected: [] }));
           }
           if (collectionName === 'user') {
             const rows = data.response.map(row => {
-              const date = new Date(row.creationDate).toLocaleString();
+              const date = utcToZonedTime(row.creationDate).toLocaleString();
               return createUserRow(row._id, row.name, row.lastName, row.email, row.designation, row.manager, row.creationUserFullName, date);
             });
             setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));
