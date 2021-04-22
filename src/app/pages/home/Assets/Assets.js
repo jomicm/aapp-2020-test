@@ -26,12 +26,14 @@ import ModalAssetList from './modals/ModalAssetList';
 import './Assets.scss';
 
 //DB API methods
-import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB, getDB, getOneDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 
-function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAlert }) {
+function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showErrorAlert }) {
   const dispatch = useDispatch();
   const [tab, setTab] = useState(0);
+  const [userLocations, setUserLocations] = useState([]);
+  const [userAssets, setUserAssets] = useState([]);
 
   const createAssetCategoryRow = (id, name, depreciation, creator, creation_date, fileExt) => {
     return { id, name, depreciation, creator, creation_date, fileExt };
@@ -99,6 +101,53 @@ function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAle
       color: '#ad2222'
     }
   })
+
+  const locationsRecursive = (data, currentLocation, res) => {
+    const children = data.response.filter((e) => e.parent === currentLocation._id);
+
+    if (!children.length) {
+      return;
+    }
+
+    children.forEach((e) => res.push(e._id));
+    children.forEach((e) => locationsRecursive(data, e, res));
+  };
+
+  const loadUserLocations = () => {
+    getOneDB('user/', user.id)
+      .then((response) => response.json())
+      .then((data) => {
+        const locationsTable = data.response.locationsTable;
+        locationsTable.forEach((location) => {
+          getDB('locationsReal')
+            .then((response) => response.json())
+            .then((data) => {
+              let res = [];
+              const children = data.response.filter((e) => e.parent === location.parent);
+              children.forEach((e) => res.push(e._id));
+              children.forEach((e) => locationsRecursive(data, e, res));
+              setUserLocations(prev => prev.concat(res));
+            })
+            .catch((error) => dispatch(showErrorAlert()));
+        });
+      })
+      .catch((error) => dispatch(showErrorAlert()));
+  };
+
+  const loadUserAssets = () => {
+    getDB('assets')
+      .then((response) => response.json())
+      .then((data) => {
+        let assets = [];
+        data.response.forEach((asset) => {
+          if (asset.location.length && userLocations.includes(asset.location)) {
+            console.log(asset.name);
+            assets.push(asset);
+          }
+        });
+        setUserAssets(assets);
+      })
+  };
 
   const loadAssetsData = (collectionNames = ['assets', 'categories', 'references']) => {
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
@@ -289,6 +338,10 @@ function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAle
     }
   };
 
+  useEffect(() => loadUserLocations(), []);
+
+  useEffect(() => loadUserAssets(), [userLocations]);
+
   useEffect(() => {
     loadAssetsData('assets');
   }, [tableControl.assets.page, tableControl.assets.rowsPerPage, tableControl.assets.order, tableControl.assets.orderBy, tableControl.assets.search, tableControl.assets.locationsFilter]);
@@ -413,6 +466,7 @@ function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAle
                         controlValues={tableControl.assets}
                         headRows={assetListHeadRows}
                         locationControl={(locations) => {
+                          console.log(`Locations: ${locations}`);
                           setTableControl(prev => ({
                             ...prev,
                             assets: {
@@ -615,7 +669,8 @@ function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAle
     </>
   );
 }
-const mapStateToProps = ({ general: { globalSearch } }) => ({
-  globalSearch
+const mapStateToProps = ({ general: { globalSearch }, auth: { user } }) => ({
+  globalSearch,
+  user
 });
 export default connect(mapStateToProps, general.actions)(Assets);
