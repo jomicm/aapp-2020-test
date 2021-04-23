@@ -49,7 +49,7 @@ const getAPIFilePath = (foldername) => `${host}${version}upload/${foldername}`;
 const getHeaders = (isFile = false) => {
   const state = store.default.getState();
   const token = state?.auth?.user?.accessToken || REACT_APP_TOKEN;
-  
+
   const headers = new Headers();
   headers.set('Authorization', `Bearer ${token}`);
   if (!isFile) {
@@ -96,11 +96,12 @@ const getDBComplex = ({
   sort,
   limit,
   skip,
-  fields
+  fields,
+  condition
 }) => {
   let count = 0;
   let additionalParams = '';
-  if (queryLike) {
+  if (queryLike && !condition) {
     const qLike = queryLike.map(({ key, value }) => {
       const res = {};
       const isValueBool = typeof value === 'boolean';
@@ -110,23 +111,37 @@ const getDBComplex = ({
     const queryString = JSON.stringify({ "$or": qLike });
     additionalParams += `query=${queryString}`;
     count++;
+  } else if (queryLike && condition) {
+    const qLike = queryLike.map(({ key, value }) => {
+      const res = {};
+      const isValueBool = typeof value === 'boolean';
+      res[key] = isValueBool ? value : { "$regex": `(?i).*${value}.*` };
+      return res;
+    });
+    const queryString = JSON.stringify({ "$and": [{ "$or": qLike }, condition] });
+    additionalParams += `query=${queryString}`;
+    count++;
+  } else if (!queryLike && condition) {
+    const queryString = JSON.stringify({ "$and": [condition] });
+    additionalParams += `query=${queryString}`;
+    count++;
   }
   if (typeof skip === 'number') {
-    additionalParams += `${count? '&' : '' }skip=${skip}`;
+    additionalParams += `${count ? '&' : ''}skip=${skip}`;
     count++;
   };
   if (typeof limit === 'number') {
-    additionalParams += `${count? '&' : '' }limit=${limit}`;
+    additionalParams += `${count ? '&' : ''}limit=${limit}`;
     count++;
   };
   if (Array.isArray(fields)) {
-    const res = fields.map(({key, value}) => `"${key}":${value}`).join(',');
-    additionalParams += `${count? '&' : '' }fields={${res}}`;
+    const res = fields.map(({ key, value }) => `"${key}":${value}`).join(',');
+    additionalParams += `${count ? '&' : ''}fields={${res}}`;
     count++;
   };
   if (Array.isArray(sort)) {
-    const res = sort.map(({key, value}) => `"${key}":${value}`).join(',');
-    additionalParams += `${count? '&' : '' }sort={${res}}`;
+    const res = sort.map(({ key, value }) => `"${key}":${value}`).join(',');
+    additionalParams += `${count ? '&' : ''}sort={${res}}`;
     count++;
   }
 
@@ -138,15 +153,28 @@ const getDBComplex = ({
 const getCountDB = ({
   collection,
   queryLike,
+  condition
 }) => {
   let additionalParams = '';
-  if (queryLike) {
+  if (queryLike && !condition) {
     const qLike = queryLike.map(({ key, value }) => {
       const res = {};
       res[key] = { "$regex": `(?i).*${value}.*` };
       return res;
     });
     const queryString = JSON.stringify({ "$or": qLike });
+    additionalParams += `query=${queryString}`;
+  } else if (queryLike && condition) {
+    const qLike = queryLike.map(({ key, value }) => {
+      const res = {};
+      const isValueBool = typeof value === 'boolean';
+      res[key] = isValueBool ? value : { "$regex": `(?i).*${value}.*` };
+      return res;
+    });
+    const queryString = JSON.stringify({ "$and": [{ "$or": qLike }, condition] });
+    additionalParams += `query=${queryString}`;
+  } else if (!queryLike && condition) {
+    const queryString = JSON.stringify({ "$and": [condition] });
     additionalParams += `query=${queryString}`;
   }
   additionalParams = additionalParams ? `?${additionalParams}` : '';
@@ -173,30 +201,30 @@ const getMessages = ({
       res[key] = isValueBool ? value : { "$regex": `(?i).*${value}.*` };
       return res;
     });
-    const queryString = JSON.stringify({ "$and" : [{"$or": qLike }, {"to": {"$elemMatch": {"_id": userId }}}, {"status" : trash ? "trash" : "new"}]});
+    const queryString = JSON.stringify({ "$and": [{ "$or": qLike }, { "to": { "$elemMatch": { "_id": userId } } }, { "status": trash ? "trash" : "new" }] });
     additionalParams += `query=${queryString}`;
     count++;
   } else {
-    const queryString = JSON.stringify({ "$and" : [{"to": {"$elemMatch": {"_id": userId }}}, {"status" : trash ? "trash" : "new"}]});
+    const queryString = JSON.stringify({ "$and": [{ "to": { "$elemMatch": { "_id": userId } } }, { "status": trash ? "trash" : "new" }] });
     additionalParams += `query=${queryString}`;
     count++;
   }
   if (typeof skip === 'number') {
-    additionalParams += `${count? '&' : '' }skip=${skip}`;
+    additionalParams += `${count ? '&' : ''}skip=${skip}`;
     count++;
   };
   if (typeof limit === 'number') {
-    additionalParams += `${count? '&' : '' }limit=${limit}`;
+    additionalParams += `${count ? '&' : ''}limit=${limit}`;
     count++;
   };
   if (Array.isArray(fields)) {
-    const res = fields.map(({key, value}) => `"${key}":${value}`).join(',');
-    additionalParams += `${count? '&' : '' }fields={${res}}`;
+    const res = fields.map(({ key, value }) => `"${key}":${value}`).join(',');
+    additionalParams += `${count ? '&' : ''}fields={${res}}`;
     count++;
   };
   if (Array.isArray(sort)) {
-    const res = sort.map(({key, value}) => `"${key}":${value}`).join(',');
-    additionalParams += `${count? '&' : '' }sort={${res}}`;
+    const res = sort.map(({ key, value }) => `"${key}":${value}`).join(',');
+    additionalParams += `${count ? '&' : ''}sort={${res}}`;
     count++;
   }
 
@@ -218,10 +246,10 @@ const getTotalMessages = ({
       res[key] = { "$regex": `(?i).*${value}.*` };
       return res;
     });
-    const queryString = JSON.stringify({ "$and" : [{"$or": qLike }, {"to": {"$elemMatch": {"_id": userId }}}, {"status" : trash ? "trash" : "new"}]});
+    const queryString = JSON.stringify({ "$and": [{ "$or": qLike }, { "to": { "$elemMatch": { "_id": userId } } }, { "status": trash ? "trash" : "new" }] });
     additionalParams += `query=${queryString}`;
   } else {
-    const queryString = JSON.stringify({ "$and" : [{"to": {"$elemMatch": {"_id": userId }}}, {"status" : trash ? "trash" : "new"}]});
+    const queryString = JSON.stringify({ "$and": [{ "to": { "$elemMatch": { "_id": userId } } }, { "status": trash ? "trash" : "new" }] });
     additionalParams += `query=${queryString}`;
   }
   additionalParams = additionalParams ? `?${additionalParams}` : '';

@@ -33,7 +33,6 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
   const dispatch = useDispatch();
   const [tab, setTab] = useState(0);
   const [userLocations, setUserLocations] = useState([]);
-  const [userAssets, setUserAssets] = useState([]);
 
   const createAssetCategoryRow = (id, name, depreciation, creator, creation_date, fileExt) => {
     return { id, name, depreciation, creator, creation_date, fileExt };
@@ -109,7 +108,11 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
       return;
     }
 
-    children.forEach((e) => res.push(e._id));
+    children.forEach((e) => {
+      if (!res.includes(e._id)) {
+        res.push(e._id);
+      }
+    });
     children.forEach((e) => locationsRecursive(data, e, res));
   };
 
@@ -118,38 +121,47 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
       .then((response) => response.json())
       .then((data) => {
         const locationsTable = data.response.locationsTable;
-        locationsTable.forEach((location) => {
-          getDB('locationsReal')
-            .then((response) => response.json())
-            .then((data) => {
+        getDB('locationsReal')
+          .then((response) => response.json())
+          .then((data) => {
+            locationsTable.forEach((location) => {
               let res = [];
-              const children = data.response.filter((e) => e.parent === location.parent);
-              children.forEach((e) => res.push(e._id));
-              children.forEach((e) => locationsRecursive(data, e, res));
-              setUserLocations(prev => prev.concat(res));
-            })
-            .catch((error) => dispatch(showErrorAlert()));
-        });
+              const currentLoc = data.response.find((e) => e._id === location.parent);
+              
+              if (!userLocations.includes(currentLoc._id)) {
+                res.push(currentLoc._id);
+              }
+
+              const children = data.response.filter((e) => e.parent === currentLoc._id);
+              
+              if (children.length) {
+                children.forEach((e) => res.push(e._id));
+                children.forEach((e) => locationsRecursive(data, e, res));
+              }
+              setUserLocations(prev => {
+                let index = 0;
+                const found = prev.some(e => {
+                  index = res.indexOf(e)
+                  if (index >= 0) {
+                    return true;
+                  }
+                });
+                
+                if (found) {
+                  res.splice(index, 1);
+                }
+
+                return prev.concat(res);
+              });
+            });
+          })
+          .catch((error) => dispatch(showErrorAlert()));
       })
       .catch((error) => dispatch(showErrorAlert()));
   };
 
-  const loadUserAssets = () => {
-    getDB('assets')
-      .then((response) => response.json())
-      .then((data) => {
-        let assets = [];
-        data.response.forEach((asset) => {
-          if (asset.location.length && userLocations.includes(asset.location)) {
-            console.log(asset.name);
-            assets.push(asset);
-          }
-        });
-        setUserAssets(assets);
-      })
-  };
-
   const loadAssetsData = (collectionNames = ['assets', 'categories', 'references']) => {
+    console.log(userLocations);
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
       let queryLike = '';
@@ -182,7 +194,8 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
 
       getCountDB({
         collection: collectionName,
-        queryLike: tableControl[collectionName].search || tableControl['assets'].locationsFilter.length ? queryLike : null
+        queryLike: tableControl[collectionName].search || tableControl['assets'].locationsFilter.length ? queryLike : null,
+        condition: collectionName === 'assets' ? { "location": { "$in": userLocations } } : null
       })
         .then(response => response.json())
         .then(data => {
@@ -200,7 +213,8 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
         limit: tableControl[collectionName].rowsPerPage,
         skip: tableControl[collectionName].rowsPerPage * tableControl[collectionName].page,
         sort: [{ key: tableControl[collectionName].orderBy, value: tableControl[collectionName].order }],
-        queryLike: tableControl[collectionName].search || tableControl['assets'].locationsFilter.length ? queryLike : null
+        queryLike: tableControl[collectionName].search || tableControl['assets'].locationsFilter.length ? queryLike : null,
+        condition: collectionName === 'assets' ? { "location": { "$in": userLocations } } : null
       })
         .then(response => response.json())
         .then(data => {
@@ -226,7 +240,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
             setControl(prev => ({ ...prev, categoryRows: rows, categoryRowsSelected: [] }));
           }
         })
-        .catch(error => console.log('error>', error));
+        .catch(error => dispatch(showErrorAlert()));
     });
   };
 
@@ -309,7 +323,6 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
     const collection = collections[collectionName];
     return {
       onAdd() {
-        console.log('MAIN ON ADD>> ', referencesSelectedId);
         if (!referencesSelectedId && collectionName === 'assets') {
           setSelectReferenceConfirmation(true);
           return;
@@ -340,19 +353,9 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
 
   useEffect(() => loadUserLocations(), []);
 
-  useEffect(() => loadUserAssets(), [userLocations]);
-
   useEffect(() => {
     loadAssetsData('assets');
-  }, [tableControl.assets.page, tableControl.assets.rowsPerPage, tableControl.assets.order, tableControl.assets.orderBy, tableControl.assets.search, tableControl.assets.locationsFilter]);
-
-  useEffect(() => {
-    loadAssetsData('references');
-  }, [tableControl.references.page, tableControl.references.rowsPerPage, tableControl.references.order, tableControl.references.orderBy, tableControl.references.search]);
-
-  useEffect(() => {
-    loadAssetsData('categories');
-  }, [tableControl.categories.page, tableControl.categories.rowsPerPage, tableControl.categories.order, tableControl.categories.orderBy, tableControl.categories.search]);
+  }, [userLocations]);
 
   useEffect(() => {
     getCountDB({ collection: 'assets' })
@@ -367,6 +370,18 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
         }));
       });
   }, []);
+
+  useEffect(() => {
+    loadAssetsData('assets');
+  }, [tableControl.assets.page, tableControl.assets.rowsPerPage, tableControl.assets.order, tableControl.assets.orderBy, tableControl.assets.search, tableControl.assets.locationsFilter]);
+
+  useEffect(() => {
+    loadAssetsData('references');
+  }, [tableControl.references.page, tableControl.references.rowsPerPage, tableControl.references.order, tableControl.references.orderBy, tableControl.references.search]);
+
+  useEffect(() => {
+    loadAssetsData('categories');
+  }, [tableControl.categories.page, tableControl.categories.rowsPerPage, tableControl.categories.order, tableControl.categories.orderBy, tableControl.categories.search]);
 
   const tabIntToText = ['assets', 'references', 'categories'];
 
@@ -466,7 +481,6 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                         controlValues={tableControl.assets}
                         headRows={assetListHeadRows}
                         locationControl={(locations) => {
-                          console.log(`Locations: ${locations}`);
                           setTableControl(prev => ({
                             ...prev,
                             assets: {

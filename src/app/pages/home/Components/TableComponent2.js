@@ -343,6 +343,7 @@ const TableComponentTile = props => {
               onChange={event => handleInputChange(event, null)}
               placeholder='Search...'
               value={controlValues.searchBy ? null : controlValues.search}
+              onSubmit={event => handleInputChange(event, null)}
             />
             {
               (controlValues.search.length > 0 && !controlValues.searchBy) && (
@@ -646,7 +647,7 @@ const TableComponentTile = props => {
           <Grid container>
             {
               viewControl.tree && (
-                <Grid item sm={12} md={2} lg={2}>
+                <Grid style={{ paddingLeft: '16px' }} item sm={12} md={2} lg={2}>
                   <TreeView data={locationsTree} onClick={selectLocation} />
                 </Grid>
               )
