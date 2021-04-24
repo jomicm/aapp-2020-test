@@ -239,7 +239,9 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
     .then(data => {
       // const users = data.response.map(({ _id, email }) => ({ _id, email }));
       const users = data.response.map((user) => pick(user, ['_id', 'email', 'name', 'lastName']));
-      setUsers(users);
+      const bossUser = { _id: 'boss', email: 'auto', name: 'Direct', lastName: 'Boss' };
+      const locationUser = { _id: 'locationManager', email: 'auto', name: 'Location', lastName: 'Manager' };
+      setUsers([bossUser, locationUser, ...users]);
     })
     .catch(error => console.log(error));
 
@@ -317,7 +319,7 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
                         onChange={handleChange("name")}
                         margin="normal"
                       />
-                      <FormControl className={classes.textField} style={{ marginTop: '10px' }}>
+                      {/* <FormControl className={classes.textField} style={{ marginTop: '10px' }}>
                         <InputLabel htmlFor="age-simple">Function</InputLabel>
                         <Select
                           value={values.selectedFunction}
@@ -338,7 +340,7 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
                             <MenuItem key={`opt-${ix}`} value={ix}>{opt}</MenuItem>
                           ))}
                         </Select>
-                      </FormControl>
+                      </FormControl> */}
                       <Autocomplete
                         style={{ marginTop: '15px' }}
                         className={classes.textField}

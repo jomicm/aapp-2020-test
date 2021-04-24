@@ -253,6 +253,33 @@ const Processes = (props) => {
                 <div className='kt-section__body'>
                   <div className='kt-section'>
                     <span className='kt-section__sub'>
+                      This section will integrate <code>Live Processes</code>
+                    </span>
+                    <div className='kt-separator kt-separator--dashed' />
+                    <div className='kt-section__content'>
+                      <LiveProcesses />
+                      {/* <TableComponent
+                                title={'Live Processes'}
+                                headRows={liveProcessesHeadRows}
+                                rows={control.employeeProfilesRows}
+                                onAdd={tableActions('employeeProfiles').onAdd}
+                                onDelete={tableActions('employeeProfiles').onDelete}
+                                onEdit={tableActions('employeeProfiles').onEdit}
+                                onSelect={tableActions('employeeProfiles').onSelect}
+                              /> */}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </PortletBody>
+          )}
+
+          {tab === 1 && (
+            <PortletBody>
+              <div className='kt-section kt-margin-t-0'>
+                <div className='kt-section__body'>
+                  <div className='kt-section'>
+                    <span className='kt-section__sub'>
                       This section will integrate <code>Processes List</code>
                     </span>
                     <ModalProcesses
@@ -311,7 +338,7 @@ const Processes = (props) => {
             </PortletBody>
           )}
 
-          {tab === 1 && (
+          {tab === 2 && (
             <PortletBody>
               <div className='kt-section kt-margin-t-0'>
                 <div className='kt-section__body'>
@@ -376,32 +403,6 @@ const Processes = (props) => {
             </PortletBody>
           )}
 
-          {tab === 2 && (
-            <PortletBody>
-              <div className='kt-section kt-margin-t-0'>
-                <div className='kt-section__body'>
-                  <div className='kt-section'>
-                    <span className='kt-section__sub'>
-                      This section will integrate <code>Live Processes</code>
-                    </span>
-                    <div className='kt-separator kt-separator--dashed' />
-                    <div className='kt-section__content'>
-                      <LiveProcesses />
-                      {/* <TableComponent
-                                title={'Live Processes'}
-                                headRows={liveProcessesHeadRows}
-                                rows={control.employeeProfilesRows}
-                                onAdd={tableActions('employeeProfiles').onAdd}
-                                onDelete={tableActions('employeeProfiles').onDelete}
-                                onEdit={tableActions('employeeProfiles').onEdit}
-                                onSelect={tableActions('employeeProfiles').onSelect}
-                              /> */}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </PortletBody>
-          )}
         </Portlet>
       </div>
     </>

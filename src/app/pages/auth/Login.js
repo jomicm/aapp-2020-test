@@ -82,16 +82,24 @@ function Login(props) {
                   .then(response => response.json())
                   // .then(({response: { accessToken }}) => {
                   .then(({ response }) => {
-                    // console.log('data:', data)
-                    console.log('accessToken:', response)
                     disableLoading();
-                    const { email, accessToken, id, fileExt, profilePermissions } = response;
+                    const { accessToken, email, fileExt, id, profilePermissions, selectedBoss: boss } = response;
                     // global.token = accessToken;
                     const pic = fileExt ?
                       `${apiHost}/uploads/user/${id}.${fileExt}` :
                       `${localHost}/media/misc/placeholder-image.jpg`;
                     // const pic = 'https://i2.wp.com/float8ion.com/wp-content/uploads/2015/12/random-user-31.jpg';
-                    const user = { id, name: response.name, lastName: response.lastName, fullname: `${response.name} ${response.lastName}`, email, accessToken, pic, profilePermissions };
+                    const user = {
+                      accessToken,
+                      boss,
+                      email,
+                      fullname: `${response.name} ${response.lastName}`,
+                      id,
+                      lastName: response.lastName,
+                      name: response.name,
+                      pic,
+                      profilePermissions
+                    };
                     props.fulfillUser(user);
                   })
                   .catch((err) => {

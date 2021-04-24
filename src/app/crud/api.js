@@ -152,6 +152,7 @@ const getDBComplex = ({
 const getCountDB = ({
   collection,
   queryLike,
+  queryExact
 }) => {
   let additionalParams = '';
   if (queryLike) {
@@ -161,6 +162,15 @@ const getCountDB = ({
       return res;
     });
     const queryString = JSON.stringify({ "$or": qLike });
+    additionalParams += `query=${queryString}`;
+  }
+  if (queryExact) {
+    const qExact = queryExact.map(({ key, value }) => {
+      const res = {};
+      res[key] = value;
+      return res;
+    });
+    const queryString = JSON.stringify({ "$or": qExact });
     additionalParams += `query=${queryString}`;
   }
   additionalParams = additionalParams ? `?${additionalParams}` : '';

@@ -42,6 +42,7 @@ const AssetFinder = ({
 
   const handleOnSearchClick = () => {
     const queryLike = ['name', 'brand', 'model'].map(key => ({ key, value: searchText }));
+    // queryLike.push({ key: 'status', value: 'active' });
 
     getDBComplex({ collection, queryLike })
       .then(response => response.json())

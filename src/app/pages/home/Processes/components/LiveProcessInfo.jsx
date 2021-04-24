@@ -84,7 +84,7 @@ const getRandomId = () => Math.random().toString(36).replace(/[^a-z]+/g, '').sub
 const LiveProcessInfo = ({ processInfo }) => {
   const { processData = {}, requestUser } = processInfo;
   const { email: userEmail, name: userName, lastName: userLastName } = requestUser || {};
-  const { name, currentStage, totalStages } = processData;
+  const { name, currentStage, totalStages, selectedProcessType } = processData;
   const processInfoTexts = [
     { label: 'Process Name:', value: name },
     { label: 'Process Creator:', value: `${userName} ${userLastName} (${userEmail})` },
@@ -92,6 +92,9 @@ const LiveProcessInfo = ({ processInfo }) => {
     { label: 'Total Stages:', value: totalStages },
   ];
   const stageFulfilled = Object.values(processData.stages || []).map(({ stageFulfilled }) => ({ stageFulfilled }));
+  if (selectedProcessType === 'short') { // If process is 'short' then simulate a single stage fulfilled so the Process shows as completed
+    stageFulfilled.push({ stageFulfilled: true });
+  }
   const isProcessComplete = stageFulfilled.every(({ stageFulfilled }) => stageFulfilled === true);
 
   const getApprovedRejectedAssets = (cartRows) => {
@@ -180,10 +183,10 @@ const LiveProcessInfo = ({ processInfo }) => {
                 labelIcon={CheckBoxIcon}
                 labelInfo={`(${val.approvals.length || 0})`}
               >
-                {(val.approvals || []).map(({ cartRows, email, fulfilled, fulfillDate, name, lastName }) => (
+                {(val.approvals || []).map(({ cartRows, email, fulfilled, fulfillDate, name, lastName, virtualUser }) => (
                   <StyledTreeItem
                     nodeId={getRandomId()}
-                    labelText={`${name} ${lastName} (${email})`}
+                    labelText={`${virtualUser ? (virtualUser === 'boss' ? '[DB] ' : virtualUser === 'locationManager' ? '[LM] ' : '') : ''}${name} ${lastName} (${email})`}
                     labelIcon={!fulfillDate ? HourglassEmptyIcon : AccountCircleIcon}
                     labelInfo={!fulfillDate ? 'Pending' : 'Fulfilled'}
                   >
@@ -206,10 +209,10 @@ const LiveProcessInfo = ({ processInfo }) => {
                 labelIcon={NotificationsIcon}
                 labelInfo={`(${val.notifications.length || 0})`}
               >
-                {(val.notifications || []).map(({ email, sent, sentDate, name, lastName }) => (
+                {(val.notifications || []).map(({ email, sent, sentDate, name, lastName, virtualUser }) => (
                   <StyledTreeItem
                     nodeId={getRandomId()}
-                    labelText={`${name} ${lastName} (${email})`}
+                    labelText={`${virtualUser ? (virtualUser === 'boss' ? '[DB] ' : virtualUser === 'locationManager' ? '[LM] ' : '') : ''}${name} ${lastName} (${email})`}
                     labelIcon={!sentDate ? HourglassEmptyIcon : sent ? SendIcon : ThumbDownIcon}
                     labelInfo={!sentDate ? 'Pending' : sent ? 'Sent' : 'Not Sent'}
                   >

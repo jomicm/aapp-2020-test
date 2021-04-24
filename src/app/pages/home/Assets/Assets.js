@@ -301,18 +301,27 @@ function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAle
     loadAssetsData('categories');
   }, [tableControl.categories.page, tableControl.categories.rowsPerPage, tableControl.categories.order, tableControl.categories.orderBy, tableControl.categories.search]);
 
+  const kpis = [
+    { kpi: 'total', queryExact: null },
+    { kpi: 'available', queryExact: [{ key: 'status', value: 'active' }] },
+    { kpi: 'onProcess', queryExact: [{ key: 'status', value: 'inProcess' }] },
+    { kpi: 'decommissioned', queryExact: [{ key: 'status', value: 'decommissioned' }] }
+  ];
+
   useEffect(() => {
-    getCountDB({ collection: 'assets' })
-      .then(response => response.json())
-      .then(data => {
-        setAssetsKPI(prev => ({
-          ...prev,
-          total: {
-            ...prev.total,
-            number: data.response.count
-          }
-        }));
-      });
+    kpis.forEach(({ kpi, queryExact }) => {
+      getCountDB({ collection: 'assets', queryExact })
+        .then(response => response.json())
+        .then(data => {
+          setAssetsKPI(prev => ({
+            ...prev,
+            [kpi]: {
+              ...prev[kpi],
+              number: data.response.count
+            }
+          }));
+        });
+    });
   }, []);
 
   const tabIntToText = ['assets', 'references', 'categories'];

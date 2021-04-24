@@ -72,7 +72,7 @@ export const tabsConfig = {
     },
     {
       name: 'processes',
-      titles: ['List','Stages','Live']
+      titles: ['Live','List','Stages']
     },
     {
       name: 'users',

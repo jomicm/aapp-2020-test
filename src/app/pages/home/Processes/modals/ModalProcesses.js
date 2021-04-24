@@ -279,7 +279,7 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
 
   const handleSave = () => {
     const body = { ...values, processStages, usersProcess, validMessages };
-    const r = JSON.stringify(body);
+
     if (!id) {
       body.idUserProfile = idUserProfile;
       postDB('processes', body)

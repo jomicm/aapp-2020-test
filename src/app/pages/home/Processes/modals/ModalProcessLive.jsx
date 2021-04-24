@@ -22,7 +22,7 @@ import {
   useTheme,
   makeStyles
 } from "@material-ui/core/styles";
-import { omit, pick } from "lodash";
+import { forEach, omit, pick } from "lodash";
 import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
 import { postDB, getDB, getOneDB, updateDB, postFILE, getDBComplex } from '../../../../crud/api';
@@ -149,6 +149,35 @@ const ModalProcessLive = (props) => {
     setValues({ ...values, [name]: event.target.checked });
   };
 
+  const checkValidLocations = (processType) => {
+    if (['creation', 'movement'].includes(processType)) {
+      if (!cartRows.length) {
+        alert('First, please add assets');
+        return false;
+      }
+
+      const locationsSet = cartRows.every((row) => row.locationId);
+      if (!locationsSet) {
+        alert('In Creation and Movement processes, all assets should have a location selected');
+        return false;
+      }
+
+      if (processType === 'movement') {
+        const firstLocationId = cartRows[0].locationId;
+        const sameLocation = cartRows.every((row) => row.locationId === firstLocationId);
+
+        if (!sameLocation) {
+          alert('In movement process all locations should be the same');
+          return false;
+        }
+      }
+
+      return true;
+    } else {
+      return true;
+    }
+  };
+
   const handleSave = () => {
     const body = {
       ...values,
@@ -157,19 +186,27 @@ const ModalProcessLive = (props) => {
     };
     if (!id) {
       body.processData = transformProcess(processes, values.selectedProcess);
+      if (!checkValidLocations(body.processData.selectedProcessType)) {
+        return;
+      }
       postDB('processLive', body)
         .then(data => data.json())
-        .then(response => {
+        .then(async response => {
           const processLiveResponse = response.response[0];
           const { _id } = processLiveResponse;
           groomProcess(processLiveResponse);
-          updateDB('processLive/', omit(processLiveResponse, '_id'), _id)
-            .then(() => saveAndReload('processLive', processLiveResponse._id))
-            .catch(error => console.log(error));
+          const { processData: { selectedProcessType } } = processLiveResponse;
+          if (selectedProcessType !== 'short') {
+            setTimeout(() => {
+              updateDB('processLive/', omit(processLiveResponse, '_id'), _id)
+                .then(() => saveAndReload('processLive', processLiveResponse._id))
+                .catch(error => console.log(error));
+              setAssetsStatus(processLiveResponse, selectedProcessType);
+            }, 1000);
+          }
         })
         .catch(error => console.log(error));
     } else {
-      // body.cartRows = cartRows;
       const isApprovalComplete = checkApprovalComplete();
       if (!isApprovalComplete) {
         alert('You have to validate all assets');
@@ -178,27 +215,37 @@ const ModalProcessLive = (props) => {
       const processData = applyApproval();
       processInfo.processData =  processData;
       groomProcess(processInfo);
-      updateDB('processLive/', { processData: processInfo.processData }, id[0])
-        .then(data => data.json())
-        .then(response => {
-          const queryExact = [{ key: 'userId', value: user.id }, { key: 'processId', value: id[0] }];
-          getDBComplex({ collection: 'processApprovals', queryExact, operator: '$and' })
-            .then(response => response.json())
-            .then(data => {
-              const { _id } = data.response[0];
-              const { dateFormatted, timeFormatted } = getCurrentDateTime();
-              updateDB('processApprovals/', { fulfilled: true, fulfillDate: `${dateFormatted} ${timeFormatted}` }, _id)
-                .then(data => data.json())
-                .then(response => {
-                })
-                .catch(error => console.log(error));
-            })
-            .catch(error => console.log('error>', error));
-        })
-        .catch(error => console.log(error));
+      setTimeout(() => {
+        updateDB('processLive/', { processData: processInfo.processData }, id[0])
+          .then(data => data.json())
+          .then(response => {
+            const queryExact = [{ key: 'userId', value: user.id }, { key: 'processId', value: id[0] }];
+            getDBComplex({ collection: 'processApprovals', queryExact, operator: '$and' })
+              .then(response => response.json())
+              .then(data => {
+                const { _id } = data.response[0];
+                const { dateFormatted, timeFormatted } = getCurrentDateTime();
+                updateDB('processApprovals/', { fulfilled: true, fulfillDate: `${dateFormatted} ${timeFormatted}` }, _id)
+                  .then(data => data.json())
+                  .then(response => {
+                  })
+                  .catch(error => console.log(error));
+              })
+              .catch(error => console.log('error>', error));
+          })
+          .catch(error => console.log(error));
+      }, 1000);
     }
 
     handleCloseModal();
+  };
+
+  const setAssetsStatus = ({ cartRows = [] }, selectedProcessType) => {
+    const status = selectedProcessType === 'maintenance' ? 'maintenance' : 'inProcess';
+    cartRows.forEach(({ id }) => {
+      updateDB('assets/', { status }, id)
+        .catch(error => console.log(error));
+    });
   };
 
   const checkApprovalComplete = () => {
@@ -229,7 +276,8 @@ const ModalProcessLive = (props) => {
     const { processData } = process;
     const { currentStage, totalStages } = processData;
     if (currentStage === 0) {
-      return initializeStage(process);
+      const { selectedProcessType } = processData;
+      return selectedProcessType === 'short' ? finishProcess(process) : initializeStage(process);
     }
     const currentStageData = getCurrentStageData(currentStage, processData);
     const isStageFulfilled = getIsStageFulfilled(currentStageData);
@@ -250,8 +298,8 @@ const ModalProcessLive = (props) => {
     const { dateFormatted, rawDate: formatDate, timeFormatted } = getCurrentDateTime();
     const { stageId, stageName, notifications: stageNotifications, approvals: stageApprovals } = stageData;
     const { validMessages: { notifications, approvals } } = processes[0];
-    const processNotifications = notifications[stageId];
-    const processApprovals = approvals[stageId];
+    const processNotifications = notifications[stageId] || [];
+    const processApprovals = approvals[stageId] || [];
 
     const filteredProcessMessages = (message) => Object.entries(message).map(([userId, val]) => {
       const transformedMessages = val.reduce((acu, cur) => {
@@ -268,44 +316,85 @@ const ModalProcessLive = (props) => {
       const isNotification = type === 'notification';
       const messagesType = isNotification ? stageNotifications : stageApprovals;
 
-      messagesType.forEach((message) => {        
-        const { layoutId } = messages.find(({ userId }) => userId === message._id);
+      messagesType.forEach(async(message) => {        
+        const foundMessage = messages.find(({ userId }) => userId === message._id);
+        const layoutId = foundMessage ? foundMessage.layoutId : null;
         const fromObj = pick(requestUser, ['email', 'name', 'lastName']);
         const from = [{ _id: requestUser.id, ...fromObj }];
-        const html = processLayouts.find(({ id }) => id === layoutId).layout || '';
+        const html = layoutId ? processLayouts.find(({ id }) => id === layoutId).layout || '' : null;
         const timeStamp = `${dateFormatted} ${timeFormatted}`;
         const subject = isNotification ?
           `New notification from Stage: ${stageName}` :
           `New approval request from Stage: ${stageName}`;
+        
+        const getBossInfo = () => ({
+          email: user?.boss?.label,
+          id: user?.boss?.value,
+          lastName: user?.boss?.lastName,
+          name: user?.boss?.name
+        });
+        const getLocationManagerInfo = (locationId) => {
+          return getOneDB('locationsReal/', locationId)
+            .then(response => response.json())
+            .then(data => {
+              const { assignedTo = {} } = data.response;
+              const { userId: id, email, name, lastName } = assignedTo;
+
+              return { id, email, name, lastName };
+            })
+            .catch(error => console.log(error));
+        };
+        let targetUserInfo = {
+          email: message.email,
+          id: message._id,
+          lastName: message.lastName,
+          name: message.name
+        };
+        if (['boss', 'locationManager'].includes(message._id)) {
+          let autoUserInfo;
+          if (message._id === 'boss') {
+            autoUserInfo = getBossInfo();
+            message.virtualUser = 'boss';
+          } else {
+            autoUserInfo = await getLocationManagerInfo(cartRows[0].locationId);
+            message.virtualUser = 'locationManager';
+          }
+          targetUserInfo = autoUserInfo;
+          message._id = autoUserInfo.id;
+          message.email = autoUserInfo.email;
+          message.name = autoUserInfo.name;
+          message.lastName = autoUserInfo.lastName;
+        }
   
         const messageObj = {
           html,
           formatDate,
           from,
-          // icon,
           read: false,
           status: `new`,
           subject,
           timeStamp,
           to: [{
-            _id: message._id,
-            email: message.email,
+            _id: targetUserInfo.id,
+            email: targetUserInfo.email,
             lastName: 'Target LastName TBD',
             name: 'Target Name TBD'
           }]
         };
-        simplePost(collections.messages, messageObj);
+        if (html) {
+          simplePost(collections.messages, messageObj);
+        }
 
         if (isNotification) {
           message.sent = true;
           message.sentDate = timeStamp;
         } else {
           const approvalObj = {
-            email: message.email,
+            email: targetUserInfo.email,
             fulfilled: false,
             fulfilledData: '',
             processId,
-            userId: message._id
+            userId: targetUserInfo.id
           };
           simplePost(collections.processApprovals, approvalObj);
         }
@@ -355,11 +444,27 @@ const ModalProcessLive = (props) => {
       },
       movement: () => {
         validAssets.forEach(({ id, locationId: location }) => {
-          updateDB('assets/', { location } , id)
+          updateDB('assets/', { location, status: 'active' } , id)
             .then(() => {})
             .catch(error => console.log(error));
         });
         alert(`${validAssets.length} Assets Transferred!`)
+      },
+      short: () => {
+        validAssets.forEach(({ id, locationId: location }) => {
+          updateDB('assets/', { location, status: 'active' } , id)
+            .then(() => {})
+            .catch(error => console.log(error));
+        });
+        alert(`${validAssets.length} Assets Short Transferred!`)
+      },
+      maintenance: () => {
+        validAssets.forEach(({ id }) => {
+          updateDB('assets/', { status: 'active' } , id)
+            .then(() => {})
+            .catch(error => console.log(error));
+        });
+        alert(`${validAssets.length} Assets Finished Maintenance!`)
       },
       default: () => {}
     };
