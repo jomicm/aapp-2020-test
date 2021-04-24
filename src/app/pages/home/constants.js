@@ -33,6 +33,9 @@ export const modules = [
 ];
 
 export const collections = {
+  messages: 'messages',
+  notifications: 'notifications',
+  processApprovals: 'processApprovals',
   assets:{
     module: 'assets',
     name: 'assets'
@@ -152,7 +155,7 @@ export const allBaseFields = {
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     lastName: { validationId: 'lastName', component: 'textField', compLabel: 'Last Name' },
     email: { validationId: 'email', component: 'textField', compLabel: 'Email' },
-    responsibilityLayout: { validationId: 'responsibilityLayout', component: 'dropSelect', compLabel: 'Responsability Layout' },
+    responsibilityLayout: { validationId: 'responsibilityLayout', component: 'dropSelect', compLabel: 'Responsibility Layout' },
   },
   employeeReferences: {
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },

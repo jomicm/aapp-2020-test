@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import SwipeableViews from 'react-swipeable-views';
-import { isEmpty } from 'lodash';
+import { forEach, isEmpty } from 'lodash';
 import {
   Button,
   Dialog,
@@ -151,14 +151,20 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
 
     const fileExt = getFileExtension(image);
     const body = { ...values, customFieldsTab, profilePermissions, locationsTable, fileExt };
+    if (!isEmpty(values.selectedBoss)) {
+      const { name, lastName } = allUsers.find(({ value }) => value === values.selectedBoss.value);
+      values.selectedBoss = { ...values.selectedBoss, name, lastName };
+    }
+
     if (!id) {
       body.idUserProfile = idUserProfile;
       postDBEncryptPassword('user', body)
         .then(data => data.json())
         .then(response => {
           dispatch(showSavedAlert());
-          const { _id } = response.response[0];
+          const { _id, email, name, lastName } = response.response[0];
           saveAndReload('user', _id);
+          updateLocationsAssignments(locationsTable, { userId: _id, email, name, lastName });
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -167,6 +173,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
           dispatch(showUpdatedAlert());
           saveAndReload('user', id[0]);
           updateCurrentUserPic(id[0], fileExt);
+          updateLocationsAssignments(locationsTable, { userId: id[0], name: body.name, email: body.email, lastName: body.lastName });
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -177,6 +184,13 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   const saveAndReload = (folderName, id) => {
     saveImage(image, folderName, id);
     reloadTable();
+  };
+  const updateLocationsAssignments = (locationsTable = [], assignedTo) => {
+    (locationsTable).forEach(({ parent: locationId }) => {
+      // const assignedTo = { userId: _id, email, name, lastName };
+      updateDB('locationsReal/', { assignedTo }, locationId)
+        .catch(error => dispatch(showErrorAlert()));
+    });
   };
   const updateCurrentUserPic = (editId, fileExt) => {
     if (user.id === editId) {
@@ -259,7 +273,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     getDB('user')
       .then(response => response.json())
       .then(data => {
-        const users = data.response.map(({ _id: value, email: label }) => ({ value, label }));
+        const users = data.response.map(({ _id: value, email: label, name, lastName }) => ({ value, label, name, lastName }));
         setAllUsers(users);
       })
       .catch(error => dispatch(showErrorAlert()));

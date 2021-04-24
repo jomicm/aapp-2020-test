@@ -1,8 +1,9 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { connect } from 'react-redux';
 import { utcToZonedTime } from 'date-fns-tz';
 import { Tab, Tabs } from "@material-ui/core";
-import { getDB, postDB, getOneDB, updateDB, deleteDB } from '../../../../crud/api';
+import { getDB, getDBComplex, postDB, getOneDB, updateDB, deleteDB } from '../../../../crud/api';
 import {
   Portlet,
   PortletBody,
@@ -12,7 +13,7 @@ import {
 
 // App Components
 import TableComponent from '../../Components/TableComponent';
-import ModalProcessesLive from '../modals/ModalProcessLive.js';
+import ModalProcessesLive from '../modals/ModalProcessLive';
 // import ModalLayoutEmployees from './modals/ModalLayoutEmployees';
 // import ModalLayoutStages from './modals/ModalLayoutStages';
 
@@ -67,7 +68,8 @@ const collections = {
   }
 };
 
-const LiveProcesses = (props) => {
+const LiveProcesses = ({ user }) => {
+  const loggedUserId = user.id;
   const [control, setControl] = useState({
     idLayoutEmployee: null,
     openLayoutEmployeesModal: false,
@@ -83,17 +85,23 @@ const LiveProcesses = (props) => {
     openProcessLiveModal: false,
     processLiveRows: [],
     ProcessLiveRowsSelected: [],
+    //
+    // idProcessApprovalsLive: null,
+    // openProcessLiveModal: false,
+    processLiveApprovalsFulfilledRows: [],
+    ProcessLiveApprovalsFulfilledRowsSelected: [],
+    //
+    processLiveApprovalsNotFulfilledRows: [],
+    ProcessLiveApprovalsNotFulfilledRowsSelected: [],
   });
   const [tab, setTab] = useState(0);
   const tableActions = (collectionName) => {
     const collection = collections[collectionName];
     return {
       onAdd() {
-        // console.log('MAIN ON ADD>> ', referencesSelectedId);
         setControl({ ...control, [collection.id]: null, [collection.modal]: true })
       },
       onEdit(id) {
-        // console.log('onEdit:', id, collection, collection.id)
         setControl({ ...control, [collection.id]: id, [collection.modal]: true })
       },
       onDelete(id) {
@@ -111,20 +119,51 @@ const LiveProcesses = (props) => {
       }
     }
   };
-  const loadLayoutsData = (collectionNames = ['processLive']) => {
+  const loadLayoutsData = (collectionNames = ['processLive', 'processApprovals']) => {
     collectionNames =  !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
-      getDB(collectionName)
-      .then(response => response.json())
-      .then(data => {
-        const rows = data.response.map(row => {
-          const { _id: id, processData: { name, processStages }, creationUserFullName, creationDate } = row;
-          const date = utcToZonedTime(creationDate).toLocaleString();
-          return createLiveProcessesHeadRows(id, id.slice(-6), name, 'Type', '12/12/12', 'Approvals', processStages.length, creationUserFullName, date);
+      if (collectionName === 'processLive') {
+        const queryExact = [{ key: 'requestUser.id', value: loggedUserId }];
+        getDBComplex({ collection: collectionName, queryExact })
+          .then(response => response.json())
+          .then(data => {
+            const rows = data.response.map(row => {
+              const { _id: id, processData: { name, stages }, creationUserFullName, creationDate } = row;
+              const localDate = String(new Date(creationDate)).split('GMT')[0];
+
+              return createLiveProcessesHeadRows(id, id.slice(-6), name, 'Type', '12/12/12', 'Approvals', stages.totalStages, creationUserFullName, localDate);
+            });
+            setControl(prev => ({ ...prev, processLiveRows: rows, ProcessLiveRowsSelected: [] }));
+          })
+          .catch(error => console.log('error>', error));
+      }
+      if (collectionName === 'processApprovals') {
+        const approvals = [
+          { fulfilled: true, controlArray: 'processLiveApprovalsFulfilledRows' },
+          { fulfilled: false, controlArray: 'processLiveApprovalsNotFulfilledRows' }
+        ];
+        approvals.forEach(({ fulfilled, controlArray }) => {
+          const queryNotFulfilled = [{ key: 'userId', value: loggedUserId }, { key: 'fulfilled', value: fulfilled }];
+          getDBComplex({ collection: collectionName, queryExact: queryNotFulfilled, operator: '$and' })
+            .then(response => response.json())
+            .then(data => {
+              const processLive = data.response.map(({ processId }) => getOneDB('processLive/', processId));
+              Promise.all(processLive)
+                .then(responses => Promise.all(responses.map(response => response.json())))
+                .then(data => {
+                  const rows = data.map(({ response: row }) => {
+                    const { _id: id, processData: { name, stages }, creationUserFullName, creationDate } = row;
+                    const localDate = String(new Date(creationDate)).split('GMT')[0];
+      
+                    return createLiveProcessesHeadRows(id, id.slice(-6), name, 'Type', '12/12/12', 'Approvals', stages.totalStages, creationUserFullName, localDate);
+                  });
+                  setControl(prev => ({ ...prev, [controlArray]: rows, ProcessLiveApprovalsRowsSelected: [] }));
+                })
+                .catch(error => console.log('error>', error));
+            })
+            .catch(error => console.log('error>', error));
         });
-        setControl(prev => ({ ...prev, processLiveRows: rows, ProcessLiveRowsSelected: [] }));
-      })
-      .catch(error => console.log('error>', error));
+      }
     });
   };
 
@@ -147,25 +186,26 @@ const LiveProcesses = (props) => {
                 }}
               >
                 <Tab label="My Requests" />
-                <Tab label="Notifications" />
-                <Tab label="Approvals" />
+                <Tab label="Pending Approvals" />
+                <Tab label="Fulfilled Approvals" />
               </Tabs>
             </PortletHeaderToolbar>
           }
         />
         {/* Employees Layout */}
+        <ModalProcessesLive
+          showModal={control.openProcessLiveModal}
+          setShowModal={(onOff) => setControl({ ...control, openProcessLiveModal: onOff })}
+          reloadTable={() => loadLayoutsData('processLive')}
+          // reloadTable={() => loadLayoutsData()}
+          id={control.idProcessLive}
+          // employeeProfileRows={[]}
+        />
         {tab === 0 && (
           <PortletBody>
             <div className="kt-section kt-margin-t-0">
               <div className="kt-section__body">
                 <div className="kt-section">
-                  <ModalProcessesLive
-                    showModal={control.openProcessLiveModal}
-                    setShowModal={(onOff) => setControl({ ...control, openProcessLiveModal: onOff })}
-                    reloadTable={() => loadLayoutsData('processLive')}
-                    id={control.idProcessLive}
-                    // employeeProfileRows={[]}
-                  />
                   <div className="kt-section__content">
                     <TableComponent
                       title={'My Processes Requests'}
@@ -189,25 +229,16 @@ const LiveProcesses = (props) => {
             <div className="kt-section kt-margin-t-0">
               <div className="kt-section__body">
                 <div className="kt-section">
-                  <div className="kt-section">
-                    {/* <ModalLayoutStages
-                      showModal={control.openLayoutStagesModal}
-                      setShowModal={(onOff) => setControl({ ...control, openLayoutStagesModal: onOff })}
-                      reloadTable={() => loadLayoutsData('settingsLayoutsStages')}
-                      id={control.idLayoutStage}
-                      // employeeProfileRows={[]}
-                    /> */}
-                    <div className="kt-section__content">
-                      <TableComponent
-                        title={'Process Notifications'}
-                        headRows={stagesLayoutsHeadRows}
-                        rows={control.layoutStagesRows}
-                        onEdit={tableActions('layoutsStages').onEdit}
-                        onAdd={tableActions('layoutsStages').onAdd}
-                        onDelete={tableActions('layoutsStages').onDelete}
-                        onSelect={tableActions('layoutsStages').onSelect}
-                      />
-                    </div>
+                  <div className="kt-section__content">
+                    <TableComponent
+                      title={'Process Pending Approvals'}
+                      headRows={liveProcessesHeadRows}
+                      rows={control.processLiveApprovalsNotFulfilledRows}
+                      onEdit={tableActions('processLive').onEdit}
+                      // onAdd={tableActions('processLive').onAdd}
+                      // onDelete={tableActions('processLive').onDelete}
+                      onSelect={tableActions('processLive').onSelect}
+                    />
                   </div>
                 </div>
               </div>
@@ -220,22 +251,15 @@ const LiveProcesses = (props) => {
             <div className="kt-section kt-margin-t-0">
               <div className="kt-section__body">
                 <div className="kt-section">
-                  {/* <ModalLayoutStages
-                    showModal={control.openLayoutStagesModal}
-                    setShowModal={(onOff) => setControl({ ...control, openLayoutStagesModal: onOff })}
-                    reloadTable={() => loadLayoutsData('settingsLayoutsStages')}
-                    id={control.idLayoutStage}
-                    // employeeProfileRows={[]}
-                  /> */}
                   <div className="kt-section__content">
                     <TableComponent
-                      title={'Process Approvals'}
-                      headRows={stagesLayoutsHeadRows}
-                      rows={control.layoutStagesRows}
-                      onEdit={tableActions('layoutsStages').onEdit}
-                      onAdd={tableActions('layoutsStages').onAdd}
-                      onDelete={tableActions('layoutsStages').onDelete}
-                      onSelect={tableActions('layoutsStages').onSelect}
+                      title={'Process Fulfilled Approvals'}
+                      headRows={liveProcessesHeadRows}
+                      rows={control.processLiveApprovalsFulfilledRows}
+                      onEdit={tableActions('processLive').onEdit}
+                      // onAdd={tableActions('processLive').onAdd}
+                      // onDelete={tableActions('processLive').onDelete}
+                      onSelect={tableActions('processLive').onSelect}
                     />
                   </div>
                 </div>
@@ -248,4 +272,6 @@ const LiveProcesses = (props) => {
   );
 }
 
-export default LiveProcesses;
+const mapStateToProps = ({ auth: { user } }) => ({ user });
+
+export default connect(mapStateToProps)(LiveProcesses);
