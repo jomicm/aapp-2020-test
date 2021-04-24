@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, Tabs, Typography } from '@material-ui/core';
+import { Grid, Card, CardContent, Tabs, Typography, makeStyles } from '@material-ui/core';
 import { connect, useDispatch } from "react-redux";
 import {
   Portlet,
@@ -14,6 +14,7 @@ import LanguageIcon from '@material-ui/icons/Language';
 import CheckIcon from '@material-ui/icons/Check';
 import BuildIcon from '@material-ui/icons/Build';
 import NotInterestedIcon from '@material-ui/icons/NotInterested';
+import TimelineRoundedIcon from '@material-ui/icons/TimelineRounded';
 
 import * as general from "../../../store/ducks/general.duck";
 // AApp Components
@@ -29,7 +30,38 @@ import './Assets.scss';
 import { deleteDB, getDBComplex, getCountDB, getDB, getOneDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 
+const useStyles = makeStyles((theme) => ({
+  assetsInfoContainer: {
+    flex: 1,
+    justifyContent: 'space-evenly',
+  },
+  assetsInfoCard: {
+    display: 'flex',
+    margin: '10px',
+    [theme.breakpoints.down('xs')]: {
+      width: '100%'
+    },
+  },
+  cardTextContainer: {
+    width: '135px',
+    [theme.breakpoints.down('xs')]: {
+      width: '100%'
+    },
+  },
+  cardSnapshot: {
+    width: '80px',
+    height: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    [theme.breakpoints.down('xs')]: {
+      width: '30%'
+    },
+  },
+}));
+
 function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showErrorAlert }) {
+  const classes = useStyles();
   const dispatch = useDispatch();
   const [tab, setTab] = useState(0);
   const [userLocations, setUserLocations] = useState([]);
@@ -78,28 +110,34 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
     total: {
       number: 0,
       text: 'Total',
-      icon: <LanguageIcon style={{ fill: 'white', fontSize: 40 }} />,
+      icon: <LanguageIcon style={{ fill: 'white', fontSize: 35 }} />,
       color: '#1E1E2D'
     },
     available: {
       number: 0,
       text: 'Available',
-      icon: <CheckIcon style={{ fill: 'white', fontSize: 40 }} />,
+      icon: <CheckIcon style={{ fill: 'white', fontSize: 35 }} />,
       color: '#427241'
     },
     onProcess: {
       number: 0,
       text: 'On Process',
-      icon: <BuildIcon style={{ fill: 'white', fontSize: 40 }} />,
+      icon: <TimelineRoundedIcon style={{ fill: 'white', fontSize: 35 }} />,
       color: '#3e4fa8'
+    },
+    maintenance: {
+      number: 0,
+      text: 'Maintenance',
+      icon: <BuildIcon style={{ fill: 'white', fontSize: 35 }} />,
+      color: '#f2b200'
     },
     decommissioned: {
       number: 0,
       text: 'Decommissioned',
-      icon: <NotInterestedIcon style={{ fill: 'white', fontSize: 40 }} />,
+      icon: <NotInterestedIcon style={{ fill: 'white', fontSize: 35 }} />,
       color: '#ad2222'
     }
-  })
+  });
 
   const locationsRecursive = (data, currentLocation, res) => {
     const children = data.response.filter((e) => e.parent === currentLocation._id);
@@ -127,13 +165,13 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
             locationsTable.forEach((location) => {
               let res = [];
               const currentLoc = data.response.find((e) => e._id === location.parent);
-              
+
               if (!userLocations.includes(currentLoc._id)) {
                 res.push(currentLoc._id);
               }
 
               const children = data.response.filter((e) => e.parent === currentLoc._id);
-              
+
               if (children.length) {
                 children.forEach((e) => res.push(e._id));
                 children.forEach((e) => locationsRecursive(data, e, res));
@@ -146,7 +184,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                     return true;
                   }
                 });
-                
+
                 if (found) {
                   res.splice(index, 1);
                 }
@@ -161,7 +199,6 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
   };
 
   const loadAssetsData = (collectionNames = ['assets', 'categories', 'references']) => {
-    console.log(userLocations);
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
       let queryLike = '';
@@ -205,7 +242,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
               ...prev[collectionName],
               total: data.response.count
             }
-          }))
+          }));
         });
 
       getDBComplex({
@@ -355,21 +392,19 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
 
   useEffect(() => {
     loadAssetsData('assets');
-  }, [userLocations]);
-
-  useEffect(() => {
-    getCountDB({ collection: 'assets' })
+    getDB('assets')
       .then(response => response.json())
       .then(data => {
+        const userAssets = data.response.filter((asset) => userLocations.includes(asset.location));
         setAssetsKPI(prev => ({
           ...prev,
           total: {
             ...prev.total,
-            number: data.response.count
+            number: userAssets.length
           }
         }));
       });
-  }, []);
+  }, [userLocations]);
 
   useEffect(() => {
     loadAssetsData('assets');
@@ -431,26 +466,21 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                 <div className='kt-section__body'>
                   <div className='kt-section'>
                     <span className='kt-section__sub'>
-                      <div style={{ display: 'flex', justifyContent: 'space-evenly' }}>
+                      <Grid className={classes.assetsInfoContainer} container direction="row">
                         {
                           Object.entries(assetsKPI).map(([key, val]) => (
-                            <Card elevation={2} style={{ display: 'flex' }}>
+                            <Card
+                              elevation={2}
+                              className={classes.assetsInfoCard}
+                            >
                               <div
-                                style={{
-                                  width: '80px',
-                                  height: '100%',
-                                  backgroundColor: val.color,
-                                  display: 'flex',
-                                  justifyContent: 'center',
-                                  alignItems: 'center'
-                                }}
+                                className={classes.cardSnapshot}
+                                style={{ backgroundColor: val.color }}
                               >
                                 {val.icon}
                               </div>
-                              <div
-                                style={{ width: '135px' }}
-                              >
-                                <CardContent style={{ padding: '12px' }}>
+                              <div className={classes.cardTextContainer}>
+                                <CardContent style={{ padding: '12px' }} >
                                   <center>
                                     <Typography variant='subtitle'>
                                       {val.text}
@@ -464,7 +494,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                             </Card>
                           ))
                         }
-                      </div>
+                      </Grid>
                     </span>
                     <ModalAssetList
                       key={control.idAsset}
@@ -479,6 +509,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                     <div className='kt-section__content'>
                       <TableComponent2
                         controlValues={tableControl.assets}
+                        userLocations={userLocations}
                         headRows={assetListHeadRows}
                         locationControl={(locations) => {
                           setTableControl(prev => ({

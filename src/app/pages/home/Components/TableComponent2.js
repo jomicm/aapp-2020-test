@@ -166,7 +166,8 @@ const TableComponentTile = props => {
     tileView = false,
     onView,
     disableSearchBy = false,
-    user
+    user,
+    userLocations = [],
   } = props;
   const classes = useStyles();
 
@@ -235,21 +236,41 @@ const TableComponentTile = props => {
     getDB('locationsReal')
       .then(response => response.json())
       .then(data => {
+        let userHomeLocations = [];
+        let validChildren = [];
         locations = data.response.map(res => ({ ...res, id: res._id }));
-        const homeLocations = data.response.filter(loc => loc.profileLevel === 0);
-        const children = constructLocationTreeRecursive(homeLocations);
+        userLocations.forEach((e) => getUserHomeLocations(data.response, e, userHomeLocations, validChildren));
+        const children = constructLocationTreeRecursive(userHomeLocations, validChildren);
         locationsTreeData.children = children;
         setLocationsTree(locationsTreeData);
       });
   };
 
-  const constructLocationTreeRecursive = (locs) => {
+  const getUserHomeLocations = (data, currentLocation, res, validChildren) => {
+    if (!validChildren.includes(currentLocation)) {
+      validChildren.push(currentLocation);
+    }
+
+    const location = data.find((e) => e._id === currentLocation)
+
+    if (res.includes(location)) {
+      return;
+    }
+
+    if (location.parent === 'root') {
+      res.push(location);
+      return;
+    }
+    getUserHomeLocations(data, location.parent, res, validChildren, );
+  };
+
+  const constructLocationTreeRecursive = (locs, validChildren) => {
     if (!locs || !Array.isArray(locs) || !locs.length) return [];
     let res = [];
     locs.forEach((location) => {
       const locObj = (({ _id: id, name, profileLevel, parent }) => ({ id, name, profileLevel, parent }))(location);
-      const children = locations.filter(loc => loc.parent === locObj.id);
-      locObj.children = constructLocationTreeRecursive(children);
+      const children = locations.filter(loc => loc.parent === locObj.id && validChildren.includes(loc._id));
+      locObj.children = constructLocationTreeRecursive(children, validChildren);
       res.push(locObj);
     });
     return res;
