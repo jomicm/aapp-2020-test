@@ -179,14 +179,6 @@ const getCountDB = ({
     });
     const queryString = JSON.stringify({ "$or": qLike });
     additionalParams += `query=${queryString}`;
-  }
-  if (queryExact) {
-    const qExact = queryExact.map(({ key, value }) => {
-      const res = {};
-      res[key] = value;
-      return res;
-    });
-    const queryString = JSON.stringify({ "$or": qExact });
   } else if (queryLike && condition) {
     const qLike = queryLike.map(({ key, value }) => {
       const res = {};
@@ -199,6 +191,14 @@ const getCountDB = ({
   } else if (!queryLike && condition) {
     const queryString = JSON.stringify({ "$and": [condition] });
     additionalParams += `query=${queryString}`;
+  }
+  if (queryExact) {
+    const qExact = queryExact.map(({ key, value }) => {
+      const res = {};
+      res[key] = value;
+      return res;
+    });
+    const queryString = JSON.stringify({ "$or": qExact });
     additionalParams += `query=${queryString}`;
   }
   additionalParams = additionalParams ? `?${additionalParams}` : '';

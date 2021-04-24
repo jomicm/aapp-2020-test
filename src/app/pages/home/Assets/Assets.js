@@ -236,6 +236,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
       })
         .then(response => response.json())
         .then(data => {
+          console.log(data.response.count);
           setTableControl(prev => ({
             ...prev,
             [collectionName]: {
