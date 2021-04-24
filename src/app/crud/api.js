@@ -97,7 +97,7 @@ const getDBComplex = ({
   limit,
   skip,
   fields,
-  condition
+  condition,
   operator = '$or'
 }) => {
   let count = 0;
@@ -167,7 +167,7 @@ const getDBComplex = ({
 const getCountDB = ({
   collection,
   queryLike,
-  condition
+  condition,
   queryExact
 }) => {
   let additionalParams = '';

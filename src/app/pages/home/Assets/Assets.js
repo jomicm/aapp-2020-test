@@ -392,18 +392,6 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
 
   useEffect(() => {
     loadAssetsData('assets');
-    getDB('assets')
-      .then(response => response.json())
-      .then(data => {
-        const userAssets = data.response.filter((asset) => userLocations.includes(asset.location));
-        setAssetsKPI(prev => ({
-          ...prev,
-          total: {
-            ...prev.total,
-            number: userAssets.length
-          }
-        }));
-      });
   }, [userLocations]);
 
   useEffect(() => {
