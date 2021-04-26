@@ -15,10 +15,13 @@ import { connect, useDispatch } from 'react-redux';
 import { actions } from '../../../store/ducks/general.duck';
 import { postDB, getCountDB, getDBComplex } from '../../../crud/api';
 import TableReportsGeneral from '../Components/TableReportsGeneral';
+import CircularProgressCustom from '../Components/CircularProgressCustom';
 import {
   convertRowsToDataTableObjects,
   extractCustomField,
+  extractGeneralField,
   formatData,
+  getGeneralFieldsHeaders,
   normalizeRows
 } from './reportsHelpers';
 import ChangeReportName from './modals/ChangeReportName';
@@ -26,15 +29,15 @@ import ChangeReportName from './modals/ChangeReportName';
 const dataTableDefault = { header: [], tableRows: [], title: '', headerObject: [] };
 
 const modules = [
-  { index: 0, id: 'user', name: 'Users' },
-  { index: 1, id: 'employees', name: 'Employees' },
-  { index: 2, id: 'locations', name: 'Locations' },
-  { index: 3, id: 'categories', name: 'Categories' },
-  { index: 4, id: 'references', name: 'References' },
-  { index: 5, id: 'assets', name: 'Assets' },
-  { index: 6, id: 'depreciation', name: 'Depreciation' },
-  { index: 7, id: 'processes', name: 'Processes' },
-  { index: 8, id: 'inventories', name: 'Inventories' }
+  { index: 0, id: 'user', name: 'Users', custom: 'userProfiles' },
+  { index: 1, id: 'employees', name: 'Employees', custom: 'employeeProfiles' },
+  { index: 2, id: 'locations', name: 'Locations', custom: 'locations' },
+  { index: 3, id: 'categories', name: 'Categories', custom: 'categories' },
+  { index: 4, id: 'references', name: 'References', custom: 'categories' },
+  { index: 5, id: 'assets', name: 'Assets', custom: 'categories' },
+  { index: 6, id: 'depreciation', name: 'Depreciation', custom: '' },
+  { index: 7, id: 'processes', name: 'Processes', custom: '' },
+  { index: 8, id: 'inventories', name: 'Inventories', custom: '' }
 ];
 
 const specificFilters = {
@@ -87,26 +90,13 @@ const specificFiltersOptions = {
   }
 }
 
-const options = {
-  draggableColumns: {
-    enabled: true
-  },
-  filter: true,
-  filterType: 'multiselect',
-  fixedHeader: true,
-  fixedSelectColumn: true,
-  responsive: 'standard',
-  selectableRows: 'single',
-  selectableRowsHideCheckboxes: true,
-  tableBodyHeight: '400px'
-};
 
 const useStyles = makeStyles(theme => ({
   button: {
     margin: theme.spacing(1)
   },
   filterTitles: {
-    margin: 10,
+    marginBottom: '0px',
     fontSize: 16
   }
 }));
@@ -116,6 +106,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
   const { showErrorAlert, showSavedAlert, showSelectValuesAlert } = actions;
   const classes = useStyles();
   const [control, setControl] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [collectionName, setCollectionName] = useState(null);
   const [dataTable, setDataTable] = useState(dataTableDefault);
   const [values, setValues] = useState({
@@ -148,12 +139,69 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
   
   const permissions = user.profilePermissions.reports || [];
 
+  const loadCustomFields = (selectedReport, customSelected) => {
+    if(!customSelected){
+      setFiltersSelected(prev => ({ 
+        ...prev, 
+        customFields: {
+          base:[],
+          category: [],
+          all: [],
+          selected: [],
+        },
+      }));
+    }
+    const collection = modules.filter((e) => e.id === selectedReport)[0];
+    if(collection && collection.custom.length){
+      setLoading(true);
+      getDBComplex({
+        collection: collection?.custom,
+        personalizedQuery: JSON.stringify({"customFieldsTab":{"$ne":{}}})
+      })
+        .then(response => response.json())
+        .then(data => {
+          const { response } = data;
+          //Get just the CustomFields
+          let customFieldNames = {};
+          const rowToObjectsCustom = response.map(row => {
+            let filteredCustomFields = {};
+            const { customFieldsTab } = row;
+            Object.values(customFieldsTab || {}).forEach(tab => {
+              const allCustomFields = [...tab.left, ...tab.right];
+              allCustomFields.map(field => {
+                filteredCustomFields = { ...filteredCustomFields, ...extractCustomField(field) };
+              });
+            });
+            customFieldNames = { ...customFieldNames, ...filteredCustomFields };
+            return filteredCustomFields;
+          })
+          const customFieldsSimplified = convertRowsToDataTableObjects(normalizeRows(rowToObjectsCustom, customFieldNames));
+          setFiltersSelected(prev => ({ 
+            ...prev, 
+            customFields: {
+              ...prev.customFields,
+              all: customFieldsSimplified.headerObject || ["There are no Custom Fields yet"],
+              selected: customSelected || [],
+            }
+          }));
+          setLoading(false);
+        })
+        .catch(error => {
+          console.log('error>', error);
+          setLoading(false);
+        });
+    }};
+
   const handleChange = (name) => (event) => {
     const { value } = event.target;
     if (value) {
       setValues({ ...values, [name]: value });
     } else {
       setValues({ ...values, selectedReport: '', startDate: '', endDate: '' });
+    }
+    if(name === 'selectedReport'){
+      loadCustomFields(value);
+      setDataTable(dataTableDefault);
     }
   };
 
@@ -166,7 +214,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       handleGenerateReport(id);
     }
   }, [id])
-
+  
   const handleClickGenerateReport = (e) => {
     const { value } = e.target;
     handleGenerateReport(value);
@@ -174,40 +222,22 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
   }
 
   const handleGenerateReport = (id) => {
-    savedReports.map(({ _id, endDate, selectedReport, startDate }) => {
+    savedReports.map(({ _id, endDate, selectedReport, startDate, customFields }) => {
       if (_id === id) {
         setValues({
           ...values,
           selectedReport,
           startDate,
           endDate
-        })
+        });
+        loadCustomFields(selectedReport, customFields)
         setCollectionName(selectedReport);
+        loadReportsData(selectedReport);
       }
     })
   }
 
   const handleClickCollectionName = () => {
-    setFiltersSelected({
-        customFields: {
-          base:[],
-          category: [],
-          all: [],
-          selected: [],
-        },
-        processes: {
-          folios: [],
-          processes:[],
-          stage: [],
-          creationUser: [],
-          approvalUser: [],
-          daysDelayed: 0,
-        },
-        inventories:{
-          inventoryUser: [],
-          idSession : [],
-        }
-      });
     setTableControl({
       collection: '',
       total: 0,
@@ -219,6 +249,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       searchBy: '',
     })
     setCollectionName(values.selectedReport);
+    loadReportsData(values.selectedReport);
     setId(null);
   }
 
@@ -228,7 +259,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       dispatch(showSelectValuesAlert());
       return;
     }
-    const body = { ...values, reportName }
+    const body = { ...values, reportName, customFields: filtersSelected.customFields.selected }
     postDB('reports', body)
       .then((response) => response.json())
       .then(() => {
@@ -290,33 +321,19 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         .then(response => response.json())
         .then(data => {
           const { response } = data;
+          const baseHeaders = getGeneralFieldsHeaders(collection.id);
           const dataTable = formatData(collection.id, response);
           //Get just the CustomFields
-          let customFieldNames = {};
-          const rowToObjectsCustom = response.map(row => {
-            let filteredCustomFields = {};
-            const { customFieldsTab } = row;
-            Object.values(customFieldsTab || {}).forEach(tab => {
-              const allCustomFields = [...tab.left, ...tab.right];
-              allCustomFields.map(field => {
-                filteredCustomFields = { ...filteredCustomFields, ...extractCustomField(field) };
-              });
-            });
-            customFieldNames = { ...customFieldNames, ...filteredCustomFields };
-            return filteredCustomFields;
-          })
-          const customFieldsSimplified = convertRowsToDataTableObjects(normalizeRows(rowToObjectsCustom, customFieldNames));
-          const baseFieldsHeaders = dataTable.headerObject.filter(e => !customFieldsSimplified.headerObject.some(custom => custom.id === e.id));
+          const baseFieldsHeaders = dataTable.headerObject.filter(e => !filtersSelected.customFields.all.some(custom => custom.id === e.id));
           setFiltersSelected(prev => ({ 
             ...prev, 
             customFields: {
               ...prev.customFields,
-              all: customFieldsSimplified.headerObject || [],
               base: baseFieldsHeaders
             }
           }));
 
-          setDataTable({ ...dataTable, title: collection.name });
+          setDataTable({ ...dataTable, headerObject: baseHeaders.concat(filtersSelected.customFields.selected), title: collection.name });
         })
         .catch(error => console.log('error>', error));
     });
@@ -351,7 +368,6 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       setDataTable(dataTableDefault);
       return;
     }
-    loadReportsData(collectionName)
   }, [collectionName]);
 
   useEffect(() => {
@@ -364,12 +380,21 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         reset={reset}
         saveData={handleSave}
         setShowModal={setControl}
-        setReportNameInValues={(reportName) => setValues({ ...values, reportName })}
+        setReportNameInValues={(reportName) => {
+          setValues({ ...values, reportName })
+        }}
         showModal={control}
       />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>Generate Reports</h2>
-        <div>
+        <div style={{display:'flex', flexDirection: 'row'}}>
+          {
+            loading && (
+              <div style={{width: '30px', display:'flex', justifyContent: 'center', alignContent: 'center', margin: '10px'}}>
+                <CircularProgressCustom size={25} />
+              </div>
+            )
+          }
           <Button
             className={classes.button}
             color="primary"
@@ -394,7 +419,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       </div>
       <div
         name="Head Part"
-        style={{ marginTop: '30px', display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap' }}
+        style={{ margin: '30px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}
       >
         <FormControl style={{ width: '200px' }}>
           <InputLabel htmlFor="age-simple">Select Report</InputLabel>
@@ -453,16 +478,40 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
           </Select>
         </FormControl>
       </div>
-      
+      {(filtersSelected.customFields.all.length > 0 || filtersSelected.customFields.selected.length > 0) && (
+          <div
+            name="SpecificFilter"
+            style={{ margin: '30px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap'}}
+          >
+            <div style={{ display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap', width: '100%'}}>
+              <Autocomplete
+                defaultValue={filtersSelected.customFields.selected}
+                id='CustomFields'
+                getOptionLabel={(option) => option.label}
+                multiple
+                onChange={changeCustomFieldsSelected}
+                options={filtersSelected.customFields.all}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Custom Fields'
+                    variant='standard'
+                    style={{ width: '400px'}}
+                  />
+                )}
+                value={filtersSelected.customFields.selected}
+              />
+            </div>
+          </div>
+      )}
       { Object.keys(specificFilters).includes(values.selectedReport) && (
           <>
             <div
               name="SpecificFilter"
-              style={{ marginTop: '30px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap'}}
+              style={{ margin: '30px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap'}}
             >
-              <Divider style={{width: '100%', margintop: '10px'}} />
-              <Typography className={classes.filterTitles}> {`${modules.map(({ id, name }) => id === values.selectedReport ? name : null).join('')} Specific Filter`} </Typography>
-              <div style={{marginTop: '10px', display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', width: '100%'}}>
+              <Typography className={classes.filterTitles} style={{marginTop:'0px'}}> {`${modules.map(({ id, name }) => id === values.selectedReport ? name : null).join('')} Specific Filters`} </Typography>
+              <div style={{marginTop: '10px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap', width: '100%'}}>
                 { specificFilters[values.selectedReport].map((e) => (
                     <Autocomplete
                       className={classes.filters}
@@ -476,7 +525,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
                           {...params}
                           label={e.label}
                           variant='standard'
-                          style={{ width: '200px', marginTop:'10px'}}
+                          style={{ width: '200px', margin:'10px 40px 10px 0px'}}
                         />
                       )}
                       value={filtersSelected[values.selectedReport][e.id]}
@@ -513,41 +562,13 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
             </div>
           </>
       )}
-      {(filtersSelected.customFields.all.length > 0 || filtersSelected.customFields.selected.length > 0) && (
-          <div
-            name="SpecificFilter"
-            style={{ marginTop: '30px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap'}}
-          >
-            <Divider style={{width: '100%', margintop: '10px'}} />
-            <Typography className={classes.filterTitles}> Custom Fields Specific Filter</Typography>
-            <div style={{marginTop: '10px', display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', width: '100%'}}>
-              <Autocomplete
-                className={classes.filters}
-                defaultValue={filtersSelected.customFields.selected}
-                id='CustomFields'
-                getOptionLabel={(option) => option.label}
-                multiple
-                onChange={changeCustomFieldsSelected}
-                options={filtersSelected.customFields.all}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label='Custom Fields'
-                    variant='standard'
-                    style={{ width: '200px', marginTop:'10px'}}
-                  />
-                )}
-                value={filtersSelected.customFields.selected}
-              />
-            </div>
-          </div>
-      )}
       <div>
-        <h3 style={{ marginTop: '40px' }}>Table</h3>
+        <Divider style={{width: '100%', marginTop: '30px'}} />
+        <h3 style={{ marginTop: '20px' }}>Table</h3>
         <TableReportsGeneral
           controlValues={tableControl}
           disableLoading={!!collectionName}
-          headRows={filtersSelected.customFields.selected.length ? filtersSelected.customFields.base.concat(filtersSelected.customFields.selected) : dataTable.headerObject}
+          headRows={dataTable.headerObject}
           onDelete={() => { }}
           onEdit={() => { }}
           onView={() => { }}

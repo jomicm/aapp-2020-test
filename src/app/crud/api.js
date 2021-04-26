@@ -96,7 +96,8 @@ const getDBComplex = ({
   sort,
   limit,
   skip,
-  fields
+  fields,
+  personalizedQuery,
 }) => {
   let count = 0;
   let additionalParams = '';
@@ -109,6 +110,10 @@ const getDBComplex = ({
     });
     const queryString = JSON.stringify({ "$or": qLike });
     additionalParams += `query=${queryString}`;
+    count++;
+  }
+  if (personalizedQuery){
+    additionalParams += `query=${queryExact}`;
     count++;
   }
   if (typeof skip === 'number') {

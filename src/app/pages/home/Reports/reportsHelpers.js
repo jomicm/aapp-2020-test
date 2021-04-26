@@ -1,11 +1,12 @@
 import { isEmpty, difference } from 'lodash';
 
 const _types = {
-  simpleType: ['singleLine', 'multiLine', 'date', 'dateTime'],
+  simpleType: ['singleLine', 'multiLine', 'date', 'dateTime', 'currency', 'percentage', 'email', 'decimal', 'url', 'formula'],
   dropType: ['dropDown'],
   radioType: ['radioButtons'],
   checkType: ['checkboxes'],
-  fileType: ['fileUpload']
+  fileType: ['fileUpload'],
+  imageType: ['imageUpload']
 };
 
 const _generalFields = {
@@ -77,7 +78,7 @@ export const extractCustomField = field => {
   if (isEmpty(values)) {
     return { [content]: '' };
   }
-  const { fieldName, initialValue, options, selectedItem } = values;
+  const { fieldName, initialValue, options, selectedItem, fileName } = values;
   if (_types['simpleType'].includes(content)) {
     return { [fieldName]: initialValue || '' };
   } else if (_types['dropType'].includes(content)) {
@@ -90,7 +91,9 @@ export const extractCustomField = field => {
     const res = options.reduce((acu, cur, ix) => values[`check${ix}`] ? acu += `${cur}|` : acu, '');
     return { [fieldName]: res.length ? res.slice(0, -1) : '' };
   } else if (_types['fileType'].includes(content)) {
-    return { [fieldName]: initialValue ? `path>${initialValue}` : '' };
+    return { [fieldName]: fileName ? `${fileName}` : '' };
+  } else if (_types['imageType'].includes(content)) {
+    return { [fieldName]: fileName ? `${fileName}.${initialValue}` : '' };
   }
 };
 
@@ -118,3 +121,9 @@ export const convertRowsToDataTableObjects = rows => {
   const tableRows = rows.map(row => header.map(head => row[head]));
   return { header, tableRows, headerObject, rows }
 };
+
+export const getGeneralFieldsHeaders = collection => {
+  if(!collection) return [];
+  const headerObject = _generalFields[collection].map((e) => ({id: e, label: e}))
+  return headerObject;
+}

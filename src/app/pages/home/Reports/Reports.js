@@ -8,7 +8,7 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from "../../../partials/content/Portlet";
-import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB, getDB } from '../../../crud/api';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import TableComponent2 from '../Components/TableComponent2';
 import ModalYesNo from '../Components/ModalYesNo';
@@ -124,6 +124,13 @@ const Reports = () => {
           orderByFiltered = orderByFiltered
           break;
       }
+            
+      getDB('reports')
+      .then(response => response.json())
+      .then(data => {
+          setData(data.response);
+      })
+      .catch(error => console.log('error>', error));
 
       getDBComplex({
         collection: collectionName,
@@ -134,7 +141,6 @@ const Reports = () => {
       })
         .then(response => response.json())
         .then(data => {
-          setData(data.response);
           const rows = data.response.map((row) => {
             const { _id, selectReport, reportName, enabled, creationUserFullName, creationDate } = row;
             const cast = enabled ? 'Yes' : 'No';
