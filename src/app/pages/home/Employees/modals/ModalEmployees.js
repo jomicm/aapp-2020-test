@@ -165,85 +165,85 @@ const ModalEmployees = ({
     isValidForm: {}
   });
 
-  const executePolicies = (catalogueName) => {
-    const formatDate = new Date();
-    const { dateFormatted: currentDate, timeFormatted: currentTime } = getCurrentDateTime();
-    const timeStamp = `${currentDate} ${currentTime}`;
-    const read = false;
-    const status = 'new';
-    const filteredPolicies = policies.filter(
-      (policy) => policy.selectedAction === catalogueName);
-    filteredPolicies.forEach(({
-      apiDisabled,
-      selectedIcon,
-      layout,
-      messageDisabled,
-      messageFrom,
-      messageNotification,
-      messageTo,
-      notificationDisabled,
-      notificationFrom,
-      notificationTo,
-      policyName,
-      selectedAction,
-      selectedCatalogue,
-      subjectMessage,
-      subjectNotification
-    }) => {
-      if (!messageDisabled) {
-        return (
-          dispatch(
-            showCustomAlert({
-              open: true,
-              message: `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`,
-              type: 'info'
-            })
-          ),
-          postDB('messages', {
-            formatDate: formatDate,
-            from: messageFrom,
-            html: layout,
-            read: read,
-            status: status,
-            subject: subjectMessage,
-            timeStamp: timeStamp,
-            to: messageTo
-          })
-            .then(data => data.json())
-            .then((response) => {
-              const { } = response.response[0];
-            })
-            .catch((error) => console.log('ERROR', error))
-        )
-      } else if (!notificationDisabled) {
-        return (
-          dispatch(
-            showCustomAlert({
-              open: true,
-              message: `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`,
-              type: 'info'
-            })
-          ),
-          postDB('notifications', {
-            formatDate: formatDate,
-            from: notificationFrom,
-            icon: selectedIcon,
-            message: messageNotification,
-            read: read,
-            status: status,
-            subject: subjectNotification,
-            timeStamp: timeStamp,
-            to: notificationTo
-          })
-            .then(data => data.json())
-            .then((response) => {
-              const { } = response.response[0];
-            })
-            .catch((error) => console.log('ERROR', error))
-        )
-      }
-    })
-  };
+  // const executePolicies = (catalogueName) => {
+  //   const formatDate = new Date();
+  //   const { dateFormatted: currentDate, timeFormatted: currentTime } = getCurrentDateTime();
+  //   const timeStamp = `${currentDate} ${currentTime}`;
+  //   const read = false;
+  //   const status = 'new';
+  //   const filteredPolicies = policies.filter(
+  //     (policy) => policy.selectedAction === catalogueName);
+  //   filteredPolicies.forEach(({
+  //     apiDisabled,
+  //     selectedIcon,
+  //     layout,
+  //     messageDisabled,
+  //     messageFrom,
+  //     messageNotification,
+  //     messageTo,
+  //     notificationDisabled,
+  //     notificationFrom,
+  //     notificationTo,
+  //     policyName,
+  //     selectedAction,
+  //     selectedCatalogue,
+  //     subjectMessage,
+  //     subjectNotification
+  //   }) => {
+  //     if (!messageDisabled) {
+  //       return (
+  //         dispatch(
+  //           showCustomAlert({
+  //             open: true,
+  //             message: `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`,
+  //             type: 'info'
+  //           })
+  //         ),
+  //         postDB('messages', {
+  //           formatDate: formatDate,
+  //           from: messageFrom,
+  //           html: layout,
+  //           read: read,
+  //           status: status,
+  //           subject: subjectMessage,
+  //           timeStamp: timeStamp,
+  //           to: messageTo
+  //         })
+  //           .then(data => data.json())
+  //           .then((response) => {
+  //             const { } = response.response[0];
+  //           })
+  //           .catch((error) => console.log('ERROR', error))
+  //       )
+  //     } else if (!notificationDisabled) {
+  //       return (
+  //         dispatch(
+  //           showCustomAlert({
+  //             open: true,
+  //             message: `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`,
+  //             type: 'info'
+  //           })
+  //         ),
+  //         postDB('notifications', {
+  //           formatDate: formatDate,
+  //           from: notificationFrom,
+  //           icon: selectedIcon,
+  //           message: messageNotification,
+  //           read: read,
+  //           status: status,
+  //           subject: subjectNotification,
+  //           timeStamp: timeStamp,
+  //           to: notificationTo
+  //         })
+  //           .then(data => data.json())
+  //           .then((response) => {
+  //             const { } = response.response[0];
+  //           })
+  //           .catch((error) => console.log('ERROR', error))
+  //       )
+  //     }
+  //   })
+  // };
 
   const handleAssignmentsOnSaving = (id) => {
     assetsToDelete.map(asset => {

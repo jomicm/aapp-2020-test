@@ -23,8 +23,8 @@ import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 import LiveProcesses from './components/LiveProcesses';
 
-export default function Processes() {
-
+const localStorageActiveTabKey = 'builderActiveTab';
+const Processes = (props) => {
   const dispatch = useDispatch();
   const { showDeletedAlert, showErrorAlert  } = actions;
   const [tab, setTab] = useState(0);
@@ -253,6 +253,33 @@ export default function Processes() {
                 <div className='kt-section__body'>
                   <div className='kt-section'>
                     <span className='kt-section__sub'>
+                      This section will integrate <code>Live Processes</code>
+                    </span>
+                    <div className='kt-separator kt-separator--dashed' />
+                    <div className='kt-section__content'>
+                      <LiveProcesses />
+                      {/* <TableComponent
+                                title={'Live Processes'}
+                                headRows={liveProcessesHeadRows}
+                                rows={control.employeeProfilesRows}
+                                onAdd={tableActions('employeeProfiles').onAdd}
+                                onDelete={tableActions('employeeProfiles').onDelete}
+                                onEdit={tableActions('employeeProfiles').onEdit}
+                                onSelect={tableActions('employeeProfiles').onSelect}
+                              /> */}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </PortletBody>
+          )}
+
+          {tab === 1 && (
+            <PortletBody>
+              <div className='kt-section kt-margin-t-0'>
+                <div className='kt-section__body'>
+                  <div className='kt-section'>
+                    <span className='kt-section__sub'>
                       This section will integrate <code>Processes List</code>
                     </span>
                     <ModalProcesses
@@ -311,7 +338,7 @@ export default function Processes() {
             </PortletBody>
           )}
 
-          {tab === 1 && (
+          {tab === 2 && (
             <PortletBody>
               <div className='kt-section kt-margin-t-0'>
                 <div className='kt-section__body'>
@@ -376,34 +403,10 @@ export default function Processes() {
             </PortletBody>
           )}
 
-          {tab === 2 && (
-            <PortletBody>
-              <div className='kt-section kt-margin-t-0'>
-                <div className='kt-section__body'>
-                  <div className='kt-section'>
-                    <span className='kt-section__sub'>
-                      This section will integrate <code>Live Processes</code>
-                    </span>
-                    <div className='kt-separator kt-separator--dashed' />
-                    <div className='kt-section__content'>
-                      <LiveProcesses />
-                      {/* <TableComponent
-                                title={'Live Processes'}
-                                headRows={liveProcessesHeadRows}
-                                rows={control.employeeProfilesRows}
-                                onAdd={tableActions('employeeProfiles').onAdd}
-                                onDelete={tableActions('employeeProfiles').onDelete}
-                                onEdit={tableActions('employeeProfiles').onEdit}
-                                onSelect={tableActions('employeeProfiles').onSelect}
-                              /> */}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </PortletBody>
-          )}
         </Portlet>
       </div>
     </>
   );
-}
+};
+
+export default Processes;

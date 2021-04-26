@@ -12,6 +12,7 @@ import {
 } from '../../../partials/content/Portlet';
 import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import * as general from "../../../store/ducks/general.duck";
+import { executePolicies } from '../Components/Policies/utils';
 import TableComponent2 from '../Components/TableComponent2';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import ModalYesNo from '../Components/ModalYesNo';
@@ -245,7 +246,8 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
           deleteDB(`${collection.name}/`, _id)
             .then((response) => {
               dispatch(showDeletedAlert());
-              executePolicies('OnDelete');
+              // executePolicies('OnDelete');
+              executePolicies('OnDelete', policies);
               loadEmployeesData(collection.name);
             })
             .catch((error) => dispatch(showErrorAlert()));
@@ -260,22 +262,22 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
     };
   };
 
-  const executePolicies = (catalogueName) => {
-    const filteredPolicies = policies.filter(
-      ({ selectedAction }) => selectedAction === catalogueName
-    );
-    filteredPolicies.forEach(
-      ({ policyName, selectedAction, selectedCatalogue }) =>{
-        dispatch(
-          showCustomAlert({
-            open: true,
-            message: `Policy <${policyName}> with action <${selectedAction}> of type <${selectedCatalogue}> will be executed`,
-            type: 'info'
-          })
-        );
-      }
-    );
-  };
+  // const executePolicies = (catalogueName) => {
+  //   const filteredPolicies = policies.filter(
+  //     ({ selectedAction }) => selectedAction === catalogueName
+  //   );
+  //   filteredPolicies.forEach(
+  //     ({ policyName, selectedAction, selectedCatalogue }) =>{
+  //       dispatch(
+  //         showCustomAlert({
+  //           open: true,
+  //           message: `Policy <${policyName}> with action <${selectedAction}> of type <${selectedCatalogue}> will be executed`,
+  //           type: 'info'
+  //         })
+  //       );
+  //     }
+  //   );
+  // };
 
   return (
     <>

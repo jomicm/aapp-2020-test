@@ -98,6 +98,7 @@ const getDBComplex = ({
   skip,
   fields,
   personalizedQuery,
+  operator = '$or'
 }) => {
   let count = 0;
   let additionalParams = '';
@@ -108,7 +109,20 @@ const getDBComplex = ({
       res[key] = isValueBool ? value : { "$regex": `(?i).*${value}.*` };
       return res;
     });
-    const queryString = JSON.stringify({ "$or": qLike });
+    const str = {};
+    str[operator] = qLike;
+    const queryString = JSON.stringify(str);
+    additionalParams += `query=${queryString}`;
+    count++;
+  } else if (queryExact) {
+    const qExact = queryExact.map(({ key, value }) => {
+      const res = {};
+      res[key] = value;
+      return res;
+    });
+    const str = {};
+    str[operator] = qExact;
+    const queryString = JSON.stringify(str);
     additionalParams += `query=${queryString}`;
     count++;
   }
@@ -143,6 +157,7 @@ const getDBComplex = ({
 const getCountDB = ({
   collection,
   queryLike,
+  queryExact
 }) => {
   let additionalParams = '';
   if (queryLike) {
@@ -152,6 +167,15 @@ const getCountDB = ({
       return res;
     });
     const queryString = JSON.stringify({ "$or": qLike });
+    additionalParams += `query=${queryString}`;
+  }
+  if (queryExact) {
+    const qExact = queryExact.map(({ key, value }) => {
+      const res = {};
+      res[key] = value;
+      return res;
+    });
+    const queryString = JSON.stringify({ "$or": qExact });
     additionalParams += `query=${queryString}`;
   }
   additionalParams = additionalParams ? `?${additionalParams}` : '';

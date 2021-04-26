@@ -1,12 +1,13 @@
 import { getCurrentDateTime, simplePost } from '../../utils';
-const { dateFormatted, rawDate, timeFormatted } = getCurrentDateTime();
-const collections = { messages: 'messages', notifications: 'notifications' };
+import { collections } from '../../constants';
 
 export const executePolicies = (actionName, policies) => {
-  const timeStamp = `${dateFormatted} ${timeFormatted}`
+  const { dateFormatted, rawDate, timeFormatted } = getCurrentDateTime();
+  const timeStamp = `${dateFormatted} ${timeFormatted}`;
   const filteredPolicies = policies.filter(
     (policy) => policy.selectedAction === actionName
   );
+
   filteredPolicies.forEach(({
     layout: html,
     messageDisabled,
