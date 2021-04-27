@@ -1,20 +1,7 @@
 import React, { useState } from "react";
-import ExpandLess from "@material-ui/icons/ExpandLess";
-import ExpandMore from "@material-ui/icons/ExpandMore";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
-import {
-  Collapse,
-  Divider,
-  ExpansionPanel,
-  ExpansionPanelSummary,
-  ExpansionPanelDetails,
-  List,
-  ListItem,
-  ListItemText,
-  StarBorder,
-  Typography
-} from "@material-ui/core";
+import { List } from "@material-ui/core";
 import { TreeItem, TreeView } from "@material-ui/lab";
 
 const CustomFieldsAccordion = ({ data, onElementClick, customFieldKey }) => {

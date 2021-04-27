@@ -19,6 +19,7 @@ import ModalYesNo from '../Components/ModalYesNo';
 import Policies from '../Components/Policies/Policies';
 import ModalEmployees from './modals/ModalEmployees';
 import ModalEmployeeProfiles from './modals/ModalEmployeeProfiles';
+import { allBaseFields } from '../constants';
 
 const Employees = ({ globalSearch, setGeneralSearch }) => {
   const dispatch = useDispatch();
@@ -31,6 +32,11 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
     setSelectReferenceConfirmation
   ] = useState(false);
   const [tab, setTab] = useState(0);
+
+  const policiesBaseFields = {
+    list: allBaseFields.employees,
+    references: allBaseFields.employeeReferences
+  };
 
   const createUserProfilesRow = (id, name, creator, creation_date) => {
     return { id, name, creator, creation_date };
@@ -447,7 +453,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
             </PortletBody>
           )}
 
-          {tab === 2 && <Policies module='employees' />}
+          {tab === 2 && <Policies module='employees' baseFields={policiesBaseFields} />}
         </Portlet>
       </div>
     </>

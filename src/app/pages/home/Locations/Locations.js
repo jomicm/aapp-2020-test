@@ -69,7 +69,9 @@ import {
   SingleLineSettings
 } from '../Components/CustomFields/CustomFieldsPreview';
 import ModalYesNo from '../Components/ModalYesNo';
+import Policies from '../Components/Policies/Policies';
 import { hosts, getImageURL } from '../utils';
+import { allBaseFields } from '../constants';
 
 const { apiHost, localHost } = hosts;
 
@@ -123,6 +125,10 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
     ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
     shallowEqual
   );
+
+  const policiesBaseFields = {
+    list: allBaseFields.locations
+  };
 
   const dispatch = useDispatch();
   const initialValues = useMemo(
@@ -710,20 +716,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
                   </div>
                 </PortletBody>
               )}
-              {tab === 2 && (
-                <PortletBody>
-                  <div className='kt-section kt-margin-t-0'>
-                    <div className='kt-section__body'>
-                      <div className='kt-section'>
-                        <span className='kt-section__sub'>
-                          This section will integrate <code>Locations Policies</code>
-                        </span>
-                        <div className='kt-separator kt-separator--dashed' />
-                      </div>
-                    </div>
-                  </div>
-                </PortletBody>
-              )}
+              {tab === 2 && <Policies module="locations" baseFields={policiesBaseFields} />}
               {tab === 3 && (
                 <PortletBody>
                   <div className='kt-section kt-margin-t-0'>

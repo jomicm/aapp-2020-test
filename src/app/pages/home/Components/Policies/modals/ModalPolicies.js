@@ -141,10 +141,11 @@ const ModalPolicies = ({
   module,
   reloadTable,
   setShowModal,
-  showModal
+  showModal,
+  baseFields
 }) => {
   const dispatch = useDispatch();
-  const { showErrorAlert, showSavedAlert,  showSelectValuesAlert, showUpdatedAlert } = actions;
+  const { showErrorAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
   const [alignment, setAlignment] = useState('');
   const actionsReader = [
     { value: 'OnAdd', label: 'On Add' },
@@ -153,10 +154,6 @@ const ModalPolicies = ({
     { value: 'OnLoad', label: 'On Load' }
   ];
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
-  const catalogues = [
-    { value: 'list', label: 'List' },
-    { value: 'references', label: 'References' }
-  ];
   const classes = useStyles();
   const classes4 = useStyles4();
   const [cursorPosition, setCursorPosition] = useState([0, 0]);
@@ -457,11 +454,18 @@ const ModalPolicies = ({
                             onChange={handleOnChangeValue('selectedCatalogue')}
                             value={values.selectedCatalogue}
                           >
-                            {catalogues.map(({ value, label }) => (
+                            {
+                              Object.keys(baseFields).map((keyName) => (
+                                <MenuItem key={keyName} value={keyName}>
+                                  {keyName.replace(/\w\S*/g, (w) => (w.replace(/^\w/, (c) => c.toUpperCase())))}
+                                </MenuItem>
+                              ))
+                            }
+                            {/* {catalogues.map(({ value, label }) => (
                               <MenuItem key={value} value={value}>
                                 {label}
                               </MenuItem>
-                            ))}
+                            ))} */}
                           </Select>
                         </FormControl>
                       </div>
@@ -470,7 +474,7 @@ const ModalPolicies = ({
                           <div className='__container-basefield'>
                             <h4>Base Fields</h4>
                             <BaseFieldAccordion
-                              data={employeesFields}
+                              data={baseFields}
                               onElementClick={insertVariable}
                             />
                           </div>

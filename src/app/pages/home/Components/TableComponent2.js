@@ -215,7 +215,7 @@ const TableComponentTile = props => {
 
   useEffect(() => {
     loadLocationsData();
-    if (rows.length > 0 || controlValues.search.length) {
+    if (rows.length >= 0 || controlValues.search.length) {
       setLoading(false);
     };
     if (!rows.length && page > 0) {

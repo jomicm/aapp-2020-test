@@ -21,11 +21,18 @@ import ModalUsers from './modals/ModalUsers';
 //DB API methods
 import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
+import Policies from '../Components/Policies/Policies';
+import { allBaseFields } from '../constants';
 
 function Users({ globalSearch, setGeneralSearch }) {
   const dispatch = useDispatch();
   const { showDeletedAlert, showErrorAlert } = actions;
   const [tab, setTab] = useState(0);
+
+  const policiesBaseFields = {
+    list: allBaseFields.userList,
+    references: allBaseFields.userReferences
+  };
 
   const createUserProfilesRow = (id, name, creator, creation_date) => {
     return { id, name, creator, creation_date };
@@ -385,21 +392,7 @@ function Users({ globalSearch, setGeneralSearch }) {
             </PortletBody>
           )}
 
-          {tab === 2 && (
-            <PortletBody>
-              <div className='kt-section kt-margin-t-0'>
-                <div className='kt-section__body'>
-                  <div className='kt-section'>
-                    <span className='kt-section__sub'>
-                      This section will integrate <code>User Policies</code>
-                    </span>
-                    <div className='kt-separator kt-separator--dashed' />
-                    <Autocomplete />
-                  </div>
-                </div>
-              </div>
-            </PortletBody>
-          )}
+          {tab === 2 && <Policies module="user" baseFields={policiesBaseFields} />}
         </Portlet>
       </div>
     </>

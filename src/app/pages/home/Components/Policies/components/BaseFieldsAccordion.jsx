@@ -1,24 +1,11 @@
-import React from "react";
-import ExpandLess from "@material-ui/icons/ExpandLess";
-import ExpandMore from "@material-ui/icons/ExpandMore";
+import React, { useState } from "react";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
-import {
-  Collapse,
-  Divider,
-  ExpansionPanel,
-  ExpansionPanelSummary,
-  ExpansionPanelDetails,
-  List,
-  ListItem,
-  ListItemText,
-  StarBorder,
-  Typography
-} from "@material-ui/core";
+import { List } from "@material-ui/core";
 import { TreeItem, TreeView } from "@material-ui/lab";
 
 const BaseFieldsAccordion = ({ data, onElementClick }) => {
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = useState(true);
 
   const handleClick = () => {
     setOpen(!open);
@@ -36,18 +23,18 @@ const BaseFieldsAccordion = ({ data, onElementClick }) => {
               <TreeItem
                 className="baseform-tree-item"
                 key={`tree-item-catalogue-${ix}`}
-                label={keyName}
+                label={keyName.replace(/\w\S*/g, (w) => (w.replace(/^\w/, (c) => c.toUpperCase())))}
                 nodeId={`tree-item-catalogue-${ix}`}
                 style={{ margin: "0 0 20px 5px" }}
               >
-                {Object.values(data[keyName].baseFields).map(
-                  ({ id, label }, f_ix) => {
+                {Object.values(data[keyName]).map(
+                  ({ validationId, compLabel }, f_ix) => {
                     return (
                       <TreeItem
-                      key={f_ix}
-                      label={label}
-                      nodeId={`${id}-${f_ix}`}
-                      onClick={() => onElementClick(id)}
+                        key={f_ix}
+                        label={compLabel}
+                        nodeId={`${validationId}-${f_ix}`}
+                        onClick={() => onElementClick(validationId)}
                       />
                     );
                   }
