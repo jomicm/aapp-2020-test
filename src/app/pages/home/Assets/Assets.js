@@ -24,16 +24,18 @@ import ModalAssetReferences from './modals/ModalAssetReferences';
 import ModalAssetList from './modals/ModalAssetList';
 import Policies from '../Components/Policies/Policies';
 import { allBaseFields } from '../constants';
+import { executePolicies } from '../Components/Policies/utils';
 
 import './Assets.scss';
 
 //DB API methods
-import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
+import { deleteDB, getDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 
 function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAlert }) {
   const dispatch = useDispatch();
   const [tab, setTab] = useState(0);
+  const [policies, setPolicies] = useState([]);
 
   const policiesBaseFields = {
     list: { ...allBaseFields.assets1, ...allBaseFields.assets2 },
@@ -284,6 +286,8 @@ function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAle
           deleteDB(`${collection.name}/`, _id)
             .then(response => {
               dispatch(showDeletedAlert());
+              const currentCollection = collection.name === 'assets' ? 'list' : collection.name;
+              executePolicies('OnDelete', 'assets', currentCollection, policies);
               loadAssetsData(collection.name);
             })
             .catch(error => showErrorAlert());
@@ -317,6 +321,12 @@ function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAle
   ];
 
   useEffect(() => {
+    getDB('policies')
+      .then((response) => response.json())
+      .then((data) => {
+        setPolicies(data.response);
+      })
+      .catch((error) => console.log('error>', error));
     kpis.forEach(({ kpi, queryExact }) => {
       getCountDB({ collection: 'assets', queryExact })
         .then(response => response.json())
@@ -330,6 +340,7 @@ function Assets({ globalSearch, setGeneralSearch, showDeletedAlert, showErrorAle
           }));
         });
     });
+    
   }, []);
 
   const tabIntToText = ['assets', 'references', 'categories'];

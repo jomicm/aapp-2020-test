@@ -10,7 +10,7 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
-import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
+import { deleteDB, getDB, getDBComplex, getCountDB } from '../../../crud/api';
 import * as general from "../../../store/ducks/general.duck";
 import { executePolicies } from '../Components/Policies/utils';
 import TableComponent2 from '../Components/TableComponent2';
@@ -23,7 +23,7 @@ import { allBaseFields } from '../constants';
 
 const Employees = ({ globalSearch, setGeneralSearch }) => {
   const dispatch = useDispatch();
-  const { showCustomAlert, showDeletedAlert, showErrorAlert} = actions;
+  const { showCustomAlert, showDeletedAlert, showErrorAlert } = actions;
   const [employeeLayoutSelected, setEmployeeLayoutSelected] = useState({});
   const [policies, setPolicies] = useState(['']);
   const [referencesSelectedId, setReferencesSelectedId] = useState(null);
@@ -180,6 +180,15 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
   };
 
   useEffect(() => {
+    getDB('policies')
+      .then((response) => response.json())
+      .then((data) => {
+        setPolicies(data.response);
+      })
+      .catch((error) => console.log('error>', error));
+  }, []);
+
+  useEffect(() => {
     loadEmployeesData('employees');
   }, [tableControl.employees.page, tableControl.employees.rowsPerPage, tableControl.employees.order, tableControl.employees.orderBy, tableControl.employees.search, tableControl.employees.locationsFilter]);
 
@@ -252,8 +261,8 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
           deleteDB(`${collection.name}/`, _id)
             .then((response) => {
               dispatch(showDeletedAlert());
-              // executePolicies('OnDelete');
-              executePolicies('OnDelete', policies);
+              const currentCollection = collection.name === 'employees' ? 'list' : 'references';
+              executePolicies('OnDelete', 'employees', currentCollection, policies);
               loadEmployeesData(collection.name);
             })
             .catch((error) => dispatch(showErrorAlert()));

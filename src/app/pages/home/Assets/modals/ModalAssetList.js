@@ -42,6 +42,7 @@ import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetList.scss';
 import OtherModalTabs from '../components/OtherModalTabs';
 import { pick } from 'lodash';
+import { executePolicies } from '../../Components/Policies/utils';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -140,6 +141,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   const [mapMarker, setMapMarker] = useState();
   const [assetsBeforeSaving, setAssetsBeforeSaving] = useState([]);
   const [assetsToDelete, setAssetsToDelete] = useState([]);
+  const [policies, setPolicies] = useState([]);
 
   // Example 4 - Tabs
   const classes4 = useStyles4();
@@ -489,6 +491,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('assets', _id);
+          executePolicies('OnAdd', 'assets', 'list', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -496,6 +499,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
         .then(response => {
           dispatch(showUpdatedAlert());
           saveAndReload('assets', id[0]);
+          executePolicies('OnEdit', 'assets', 'list', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -548,6 +552,15 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   };
 
   useEffect(() => {
+    getDB('policies')
+      .then((response) => response.json())
+      .then((data) => {
+        setPolicies(data.response);
+      })
+      .catch((error) => console.log('error>', error));
+  }, []);
+
+  useEffect(() => {
     if (assetLocation.length) {
       getOneDB('locationsReal/', assetLocation)
         .then(response => response.json())
@@ -588,6 +601,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       .then(response => response.json())
       .then(data => {
         const { name, brand, model, category, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt, assigned, layoutCoords, mapCoords, children } = data.response;
+        executePolicies('OnLoad', 'assets', 'list', policies);
         setAssetLocation(location);
         setLayoutMarker(layoutCoords) //* null if not specified
         setMapMarker(mapCoords) //* null if not specified

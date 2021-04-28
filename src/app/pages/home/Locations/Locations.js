@@ -127,7 +127,8 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   );
 
   const policiesBaseFields = {
-    list: allBaseFields.locations
+    list: allBaseFields.locationsList,
+    profiles: allBaseFields.locations
   };
 
   const dispatch = useDispatch();

@@ -14,12 +14,13 @@ import * as general from "../../../store/ducks/general.duck";
 // AApp Components
 import TableComponent2 from '../Components/TableComponent2';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
+import { executePolicies } from '../Components/Policies/utils';
 import Autocomplete from '../Components/Inputs/Autocomplete';
 import ModalUserProfiles from './modals/ModalUserProfiles';
 import ModalUsers from './modals/ModalUsers';
 
 //DB API methods
-import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
+import { getDB, deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 import Policies from '../Components/Policies/Policies';
 import { allBaseFields } from '../constants';
@@ -28,6 +29,7 @@ function Users({ globalSearch, setGeneralSearch }) {
   const dispatch = useDispatch();
   const { showDeletedAlert, showErrorAlert } = actions;
   const [tab, setTab] = useState(0);
+  const [policies, setPolicies] = useState([]);
 
   const policiesBaseFields = {
     list: allBaseFields.userList,
@@ -143,6 +145,15 @@ function Users({ globalSearch, setGeneralSearch }) {
     });
   };
 
+  useEffect(() => {
+    getDB('policies')
+      .then((response) => response.json())
+      .then((data) => {
+        setPolicies(data.response);
+      })
+      .catch((error) => console.log('error>', error));
+  }, []);
+
   
   useEffect(() => {
     loadUsersData('user');
@@ -215,6 +226,8 @@ function Users({ globalSearch, setGeneralSearch }) {
           deleteDB(`${collection.name}/`, _id)
             .then(response => {
               dispatch(showDeletedAlert());
+              const currentCollection = collection.name === 'user' ? 'list' : 'references';
+              executePolicies('OnDelete', 'user', currentCollection, policies);
               loadUsersData(collection.name)
             })
             .catch(error => dispatch(showErrorAlert()));

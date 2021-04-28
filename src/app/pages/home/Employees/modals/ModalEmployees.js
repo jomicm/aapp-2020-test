@@ -425,7 +425,7 @@ const ModalEmployees = ({
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('employees', _id);
-          executePolicies('OnAdd', policies);
+          executePolicies('OnAdd', 'employees', 'list', policies);
           handleAssignmentsOnSaving(_id);
         })
         .catch((error) => dispatch(showErrorAlert()));
@@ -435,7 +435,7 @@ const ModalEmployees = ({
           dispatch(showUpdatedAlert());
           saveAndReload('employees', id[0]);
           handleAssignmentsOnSaving(id[0]);
-          executePolicies('OnEdit', policies);
+          executePolicies('OnEdit', 'employees', 'list', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -503,7 +503,7 @@ const ModalEmployees = ({
           fileExt,
           assetsAssigned = []
         } = data.response;
-        executePolicies('OnLoad', policies);
+        executePolicies('OnLoad', 'employees', 'list', policies);
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
         setLayoutSelected(layoutSelected);

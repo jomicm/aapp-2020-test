@@ -145,7 +145,7 @@ const ModalPolicies = ({
   baseFields
 }) => {
   const dispatch = useDispatch();
-  const { showErrorAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
+  const { showErrorAlert, showCustomAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
   const [alignment, setAlignment] = useState('');
   const actionsReader = [
     { value: 'OnAdd', label: 'On Add' },
@@ -295,6 +295,17 @@ const ModalPolicies = ({
       setEditor(EditorState.push(editor, contentState, 'insert-characters'));
     } else {
       const text = values[selectedControl];
+
+      if (!text) {
+        dispatch(showCustomAlert({
+          type: 'warning',
+          message: 'Please focus the message body to insert a field',
+          open: true
+        }));
+
+        return;
+      }
+
       const left = text.substr(0, cursorPosition[0]);
       const right = text.substr(cursorPosition[1], text.length);
       const final = `${left}%{${varId}}${right}`;
@@ -461,11 +472,6 @@ const ModalPolicies = ({
                                 </MenuItem>
                               ))
                             }
-                            {/* {catalogues.map(({ value, label }) => (
-                              <MenuItem key={value} value={value}>
-                                {label}
-                              </MenuItem>
-                            ))} */}
                           </Select>
                         </FormControl>
                       </div>

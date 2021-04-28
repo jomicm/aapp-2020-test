@@ -25,10 +25,11 @@ import { useDispatch } from 'react-redux';
 import { actions } from '../../../../store/ducks/general.duck';
 import './ModalAssetCategories.scss';
 import ImageUpload from '../../Components/ImageUpload';
-import { postDB, getOneDB, updateDB } from '../../../../crud/api';
+import { postDB, getDB, getOneDB, updateDB } from '../../../../crud/api';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetReferences.scss';
+import { executePolicies } from '../../Components/Policies/utils';
 
 import BaseFields from '../../Components/BaseFields/BaseFields';
 
@@ -99,6 +100,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
+  const [policies, setPolicies] = useState([]);
   function handleChange4(event, newValue) {
     setValue4(newValue);
   }
@@ -175,6 +177,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('references', _id);
+          executePolicies('OnAdd', 'assets', 'references', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -182,6 +185,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
         .then(response => {
           dispatch(showUpdatedAlert());
           saveAndReload('references', id[0]);
+          executePolicies('OnEdit', 'assets', 'references', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -262,6 +266,15 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
   };
 
   useEffect(() => {
+    getDB('policies')
+      .then((response) => response.json())
+      .then((data) => {
+        setPolicies(data.response);
+      })
+      .catch((error) => console.log('error>', error));
+  }, []);
+
+  useEffect(() => {
     if (!showModal) return;
     console.log('Use Eff Ref>', id)
 
@@ -274,6 +287,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
       .then(data => {
         console.log(data.response);
         const { name, brand, model, price, depreciation, customFieldsTab, fileExt, selectedProfile } = data.response;
+        executePolicies('OnLoad', 'assets', 'references', policies);
         setValues({
           ...values,
           name,
