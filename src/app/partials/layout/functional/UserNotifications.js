@@ -274,7 +274,7 @@ const UserNotifications = ({
                           </IconButton>
                         </div>
                         {
-                          data?.length > 0 ? (
+                          data?.length ? (
                             data.map(({ formatDate, icon, _id, message, subject, read, status, from }) => {
                               return (
                                 <div style={{ display: 'flex' }}>

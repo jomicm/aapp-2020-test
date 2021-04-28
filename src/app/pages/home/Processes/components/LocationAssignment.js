@@ -78,7 +78,7 @@ const LocationAssignment = ({ locationsTable, setLocationsTable }) => {
 
   return (
     <div>
-       <h2 className="title">Assign Location</h2>
+      <h2 className="title">Assign Location</h2>
       <div className="location-assignment">
         <div className="location-assignment__tree-section">
           <Fab

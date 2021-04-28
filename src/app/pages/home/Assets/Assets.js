@@ -1,6 +1,13 @@
 /* eslint-disable no-restricted-imports */
 import React, { useEffect, useState } from 'react';
-import { Grid, Card, CardContent, Tabs, Typography, makeStyles } from '@material-ui/core';
+import {
+  Card,
+  CardContent,
+  Grid,
+  makeStyles,
+  Tabs,
+  Typography
+} from '@material-ui/core';
 import { connect, useDispatch } from "react-redux";
 import {
   Portlet,
@@ -236,7 +243,6 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
       })
         .then(response => response.json())
         .then(data => {
-          console.log(data.response.count);
           setTableControl(prev => ({
             ...prev,
             [collectionName]: {
