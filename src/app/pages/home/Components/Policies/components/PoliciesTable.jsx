@@ -138,7 +138,8 @@ const PoliciesTable = ({ module, baseFields }) => {
       }
       getCountDB({
         collection: collectionName,
-        queryLike: tableControl[collectionName].search ? queryLike : null
+        queryLike: tableControl[collectionName].search ? queryLike : null,
+        condition: { "module": { "$eq": module } }
       })
         .then(response => response.json())
         .then(data => {
