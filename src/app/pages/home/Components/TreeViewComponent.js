@@ -9,7 +9,7 @@ import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 
 const useStyles = makeStyles({
   root: {
-    height: 110,
+    height: 'auto',
     flexGrow: 1,
     maxWidth: 400,
   },
