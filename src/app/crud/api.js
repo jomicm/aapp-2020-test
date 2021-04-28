@@ -166,6 +166,7 @@ const getDBComplex = ({
 
 const getCountDB = ({
   collection,
+  condition,
   queryLike,
   condition,
   queryExact
