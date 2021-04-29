@@ -4,7 +4,7 @@ import { Button } from "@material-ui/core";
 import DeleteIcon from '@material-ui/icons/Delete';
 import './ImageUpload.scss';
 
-const ImageUpload = ({ children, setImage = () => {}, image = null }) => {
+const ImageUpload = ({ children, setImage = () => {}, image = null, disabled = false }) => {
   const [values, setValues] = useState({
     categoryPic: '/media/misc/placeholder-image.jpg',
     categoryPicDefault: '/media/misc/placeholder-image.jpg'
@@ -49,7 +49,7 @@ const ImageUpload = ({ children, setImage = () => {}, image = null }) => {
           src={values.categoryPic}
         />
       </div>
-      <input type="file" onChange={updateValues} />
+      <input type="file" onChange={updateValues} disabled={disabled} />
     </div>
   );
 }

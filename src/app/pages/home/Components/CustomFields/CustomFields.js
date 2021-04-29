@@ -206,7 +206,7 @@ function CustomFields(props) {
   const [customFieldsColumns, setCustomFieldsColumns] = useState([1]);
 
   // Custom Control Click
-  const handleAddCustomFieldToTab = customFieldName => {
+  const handleAddCustomFieldToTab = (customFieldName, fieldName) => {
     if (!tabs.length) {
       dispatch(
         showCustomAlert({
@@ -221,7 +221,7 @@ function CustomFields(props) {
     if (!customFieldsTabTmp[`tab-${tabIndex}`]) {
       customFieldsTabTmp[`tab-${tabIndex}`] = { left: [], right: [], info: tabs[tabIndex] };
     }
-    customFieldsTabTmp[`tab-${tabIndex}`].left.push({ id: uuidv4().split('-').pop(), content: customFieldName, values: {} });
+    customFieldsTabTmp[`tab-${tabIndex}`].left.push({ id: uuidv4().split('-').pop(), content: customFieldName, values: {fieldName} });
     setCustomFieldsTab(customFieldsTabTmp);
   };
 
@@ -327,7 +327,7 @@ function CustomFields(props) {
                   <div className='custom-controls-column'>
                     {column.map((customField, ix) => (
                       <center>
-                        <div key={`custom-control-${ix}`} className='custom-controls-wrapper__element' onClick={() => handleAddCustomFieldToTab(customField.id)}>
+                        <div key={`custom-control-${ix}`} className='custom-controls-wrapper__element' onClick={() => handleAddCustomFieldToTab(customField.id, customField.name)}>
                           <div className='custom-controls-icon'>
                             {customField.icon || null }
                           </div>
