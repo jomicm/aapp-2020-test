@@ -97,6 +97,7 @@ const getDBComplex = ({
   limit,
   skip,
   fields,
+  customQuery,
   condition,
   operator = '$or'
 }) => {
@@ -138,6 +139,10 @@ const getDBComplex = ({
   } else if (!queryLike && condition) {
     const queryString = JSON.stringify({ "$and": [condition] });
     additionalParams += `query=${queryString}`;
+    count++;
+  }
+  if (customQuery){
+    additionalParams += `query=${queryExact}`;
     count++;
   }
   if (typeof skip === 'number') {

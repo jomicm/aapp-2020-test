@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  Button,
   Checkbox,
   Fab,
   FormControl,
@@ -37,6 +38,7 @@ import EmailOutlinedIcon from '@material-ui/icons/EmailOutlined';
 import LinkIcon from '@material-ui/icons/Link';
 import HelpIcon from '@material-ui/icons/Help';
 
+import { postFILE } from '../../../../../crud/api';
 import ImageUpload from '../../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../../utils';
 import './index.scss';
@@ -375,36 +377,61 @@ const Checkboxes = (props) => {
 const FileUpload = (props) => {
   const defaultValues = {
     fieldName: 'File Upload',
-    fileName: ''
+    fileName: '', 
+    fileId: uuidv4().split('-').pop(),
+    fileExt: ''
   };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
     props.onSelect(props.id, 'fileUpload', values, setValues);
   };
   useEffect(() => {
-    if (!isEmpty(props.values)) {
-      setValues(props.values);
+    if (!isEmpty(props.values)) {      
+      if(!props.values.fileName){
+        const newValues = {...props.values, fileId: uuidv4().split('-').pop()};
+        setValues(newValues);
+      } else {
+        setValues(props.values);
+      }
     } else {
       setValues(defaultValues);
     }
   }, [props.values]);
+
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
     if (isPreview)  return;
-    setValues({ ...values, fileName: e.target.value });
-    //props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, fileName: e.target.value });
+    const fileExt = e.target.files[0].type.split('/')[1];
+    setValues({ ...values, fileName: e.target.files[0].name, fileExt });
+    postFILE('customFields', values.fileId, e.target.files[0]);
+    props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, fileName: e.target.files[0].name, fileExt});
   };
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
-      <FormControl component="fieldset">
-        <FormLabel component="legend">{values.fieldName}</FormLabel>
-        <FormGroup>
-          <input type="file" name="myImage" value={values.fileName} onChange={handleOnChange}/>
-          {/* <a onClick={() => setValues({ ...values, fileName: '' })}>Clear</a> */}
-          <a onClick={handleOnChange}>Clear</a>
-        </FormGroup>
-      </FormControl>
+      <div style={{ display:'flex', flexDirection: 'column'}}>
+        <h4 className="image-upload-wrapper__picture-title" style={{marginBottom: '10px'}}>{values.fieldName}</h4>
+        <div style={{ display:'flex', alignItems:'center'}}>
+          <Button
+            variant="contained"
+            color="secondary"
+            style={{width: '10px'}}
+            onClick={() => setValues({...values, fileName: '', file: '', })}
+          >
+            <DeleteIcon />
+          </Button>
+          <input type="file" name="myImage" title="" style={{marginLeft: '10px',color:'transparent', width:'90px'}} onChange={handleOnChange}/>
+        </div>
+          <Button
+            variant="contained"
+            style={{marginTop: '10px'}}
+            disableElevation
+            disabled={!values.fileName}
+            href={values.fileId && values.fileExt ? getImageURL(values.fileId, 'customFields', values.fileExt) : null}
+          >
+            {values.fileName || 'First choose a File '}
+          </Button>  
+      </div>
       { isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
@@ -699,14 +726,21 @@ const Image = (props) => {
 
   useEffect(() => {
     if (!isEmpty(props.values)) {      
-      setValues(props.values);
+      if(!props.values.fileName){
+        const newValues = {...props.values, fileName: uuidv4().split('-').pop()};
+        setValues(newValues);
+      } else {
+        setValues(props.values);
+      }
     } else {
       setValues(defaultValues);
     }
   }, [props.values]);
 
   useEffect(() => {
-    setImageURL(getImageURL(values.fileName, 'customFields', values.initialValue));
+    setTimeout(() => {
+      setImageURL(getImageURL(values.fileName, 'customFields', values.initialValue));
+    }, 1000);
   }, [values]);
 
   const isFirstRun = useRef(true);
@@ -727,7 +761,7 @@ const Image = (props) => {
 
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
-        <ImageUpload setImage={setImage} image={imageURL}>
+        <ImageUpload setImage={setImage} image={imageURL} disabled={isPreview}>
           {values.fieldName}
         </ImageUpload>
       { isPreview &&
@@ -881,8 +915,7 @@ const Formula = (props) => {
       var element = props.data.find((pos) => pos.id === e);
       if(element){
         element.values.fieldName ? readable.push(element.values.fieldName) : readable.push(element.content)
-      }
-      else {
+      } else {
         readable.push(e);
       }
       return element ? element.values.initialValue || 0 : e;
@@ -974,8 +1007,7 @@ const DateFormula = (props) => {
       var element = props.data.find((pos) => pos.id === e);
       if(element){
         element.values.fieldName ? readable.push(element.values.fieldName) : readable.push(element.content)
-      }
-      else {
+      } else {
         readable.push(e);
       }
       return element ? element.values.initialValue || 0 : e;
