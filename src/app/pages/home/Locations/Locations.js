@@ -8,27 +8,16 @@ import { Formik } from 'formik';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { Tab, Tabs } from '@material-ui/core';
 import {
-  Checkbox,
-  FormControl,
-  FormControlLabel,
-  FormGroup,
-  FormLabel,
   IconButton,
-  InputLabel,
   makeStyles,
   Menu,
   MenuItem,
   Paper,
-  Radio,
-  RadioGroup,
-  Select,
-  TextField,
   Tooltip,
   Typography,
   useTheme,
 } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
-import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
 import RemoveIcon from '@material-ui/icons/Remove';
 import RoomIcon from '@material-ui/icons/Room';
@@ -50,32 +39,13 @@ import TreeView from '../Components/TreeViewComponent';
 import ModalLocationList from './modals/ModalLocationList';
 import ModalLocationProfiles from './modals/ModalLocationProfiles';
 import './Locations.scss';
-import {
-  Checkboxes,
-  CheckboxesSettings,
-  Date,
-  DateSettings,
-  DateTime,
-  DateTimeSettings,
-  DropDown,
-  DropDownSettings,
-  FileUpload,
-  FileUploadSettings,
-  MultiLine,
-  MultiLineSettings,
-  RadioButtons,
-  RadioButtonsSettings,
-  SingleLine,
-  SingleLineSettings
-} from '../Components/CustomFields/CustomFieldsPreview';
 import ModalYesNo from '../Components/ModalYesNo';
 import Policies from '../Components/Policies/Policies';
+import { executePolicies } from '../Components/Policies/utils';
 import { hosts, getImageURL } from '../utils';
 import { allBaseFields } from '../constants';
 
-const { apiHost, localHost } = hosts;
-
-const Divider = () => <div style={{ width: '100%', height: '3px', backgroundColor: 'black' }}></div>;
+const { localHost } = hosts;
 
 let locations;
 
@@ -89,6 +59,7 @@ const locationsTreeData = {
 const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   const { showCustomAlert, showDeletedAlert, showErrorAlert } = actions;
   const theme4 = useTheme();
+  const [policies, setPolicies] = useState([]);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [coordinates, setCoordinates] = useState([]);
   const [modalData, setModalData] = useState([])
@@ -152,6 +123,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
       deleteDB('locationsReal/', parentSelected)
         .then((response) => {
           dispatch(showDeletedAlert());
+          executePolicies('OnDelete', 'locations', 'list', policies);
           handleLoadLocations();
         })
         .catch((error) => dispatch(showErrorAlert()));
@@ -269,6 +241,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
       deleteDB('locations/', _id)
         .then((response) => {
           dispatch(showDeletedAlert());
+          executePolicies('OnDelete', 'locations', 'profiles', policies);
           loadLocationsProfilesData();
         })
         .catch((error) => dispatch(showErrorAlert()));
@@ -454,6 +427,12 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   };
 
   useEffect(() => {
+    getDB('policies')
+      .then((response) => response.json())
+      .then((data) => {
+        setPolicies(data.response);
+      })
+      .catch((error) => console.log('error>', error));
     handleLoadLocations();
   }, []);
 
@@ -577,7 +556,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
                                     <IconButton aria-label='Filter list' onClick={locationActions.openProfilesListBox}>
                                       <AddIcon />
                                     </IconButton>
-                                  </Tooltip>                                
+                                  </Tooltip>
                                 )}
                                 {user.profilePermissions.locations.includes('edit') && (
                                   <Tooltip placement='top' title='Edit Location'>

@@ -168,7 +168,6 @@ const getCountDB = ({
   collection,
   condition,
   queryLike,
-  condition,
   queryExact
 }) => {
   let additionalParams = '';

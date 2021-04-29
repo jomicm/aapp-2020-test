@@ -25,7 +25,8 @@ import CloseIcon from "@material-ui/icons/Close";
 import { isEmpty } from 'lodash';
 import { useDispatch } from 'react-redux';
 import { actions } from '../../../../store/ducks/general.duck';
-import { postDB, getOneDB, updateDB } from '../../../../crud/api';
+import { getDB, getOneDB, postDB, updateDB } from '../../../../crud/api';
+import { executePolicies } from '../../Components/Policies/utils';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import CustomFields from '../../Components/CustomFields/CustomFields'
 import ImageUpload from '../../Components/ImageUpload';
@@ -122,6 +123,7 @@ const useStyles = makeStyles(theme => ({
 const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
   const dispatch = useDispatch();
   const { showFillFieldsAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
+  const [policies, setPolicies] = useState([]);
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -195,6 +197,7 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('locations', _id);
+          executePolicies('OnAdd', 'locations', 'profiles', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -202,6 +205,7 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
         .then(response => {
           dispatch(showUpdatedAlert());
           saveAndReload('locations', id[0]);
+          executePolicies('OnEdit', 'locations', 'profiles', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -228,6 +232,15 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
 
   useEffect(() => {
+    getDB('policies')
+      .then((response) => response.json())
+      .then((data) => {
+        setPolicies(data.response);
+      })
+      .catch((error) => console.log('error>', error));
+  }, []);
+
+  useEffect(() => {
     if (!id || !Array.isArray(id)) {
       setIsNew(true);
       return;
@@ -236,7 +249,6 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
     getOneDB('locations/', id[0])
       .then(response => response.json())
       .then(data => {
-        console.log(data.response);
         const { name, level, isAssetRepository, isLocationControl, customFieldsTab, fileExt } = data.response;
         const obj = {
           name,
@@ -245,7 +257,7 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
           isLocationControl: isLocationControl || false,
           imageURL: getImageURL(id, 'locations', fileExt)
         };
-        console.log('obj:', obj)
+        executePolicies('OnLoad', 'locations', 'profiles', policies);
         setValues(obj);
         setCustomFieldsTab(customFieldsTab);
         setIsNew(false);
