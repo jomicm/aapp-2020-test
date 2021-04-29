@@ -97,7 +97,7 @@ const getDBComplex = ({
   limit,
   skip,
   fields,
-  personalizedQuery,
+  customQuery,
   operator = '$or'
 }) => {
   let count = 0;
@@ -126,7 +126,7 @@ const getDBComplex = ({
     additionalParams += `query=${queryString}`;
     count++;
   }
-  if (personalizedQuery){
+  if (customQuery){
     additionalParams += `query=${queryExact}`;
     count++;
   }

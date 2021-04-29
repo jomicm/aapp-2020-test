@@ -390,8 +390,7 @@ const FileUpload = (props) => {
       if(!props.values.fileName){
         const newValues = {...props.values, fileId: uuidv4().split('-').pop()};
         setValues(newValues);
-      }
-      else {
+      } else {
         setValues(props.values);
       }
     } else {
@@ -403,7 +402,7 @@ const FileUpload = (props) => {
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
     if (isPreview)  return;
-    const fileExt =  e.target.files[0].type.split('/')[1];
+    const fileExt = e.target.files[0].type.split('/')[1];
     setValues({ ...values, fileName: e.target.files[0].name, fileExt });
     postFILE('customFields', values.fileId, e.target.files[0]);
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, fileName: e.target.files[0].name, fileExt});
@@ -730,8 +729,7 @@ const Image = (props) => {
       if(!props.values.fileName){
         const newValues = {...props.values, fileName: uuidv4().split('-').pop()};
         setValues(newValues);
-      }
-      else {
+      } else {
         setValues(props.values);
       }
     } else {
@@ -917,8 +915,7 @@ const Formula = (props) => {
       var element = props.data.find((pos) => pos.id === e);
       if(element){
         element.values.fieldName ? readable.push(element.values.fieldName) : readable.push(element.content)
-      }
-      else {
+      } else {
         readable.push(e);
       }
       return element ? element.values.initialValue || 0 : e;
@@ -1010,8 +1007,7 @@ const DateFormula = (props) => {
       var element = props.data.find((pos) => pos.id === e);
       if(element){
         element.values.fieldName ? readable.push(element.values.fieldName) : readable.push(element.content)
-      }
-      else {
+      } else {
         readable.push(e);
       }
       return element ? element.values.initialValue || 0 : e;

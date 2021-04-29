@@ -126,11 +126,11 @@ const Reports = () => {
       }
             
       getDB('reports')
-      .then(response => response.json())
-      .then(data => {
+        .then(response => response.json())
+        .then(data => {
           setData(data.response);
-      })
-      .catch(error => console.log('error>', error));
+        })
+        .catch(error => console.log('error>', error));
 
       getDBComplex({
         collection: collectionName,

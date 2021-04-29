@@ -140,7 +140,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
   const permissions = user.profilePermissions.reports || [];
 
   const loadCustomFields = (selectedReport, customSelected) => {
-    if(!customSelected){
+    if (!customSelected) {
       setFiltersSelected(prev => ({ 
         ...prev, 
         customFields: {
@@ -151,8 +151,8 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         },
       }));
     }
-    const collection = modules.filter((e) => e.id === selectedReport)[0];
-    if(collection && collection.custom.length){
+    const collection = modules.filter(({ id }) => id === selectedReport)[0];
+    if (collection && collection.custom.length) {
       setLoading(true);
       getDBComplex({
         collection: collection?.custom,
@@ -199,7 +199,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
     } else {
       setValues({ ...values, selectedReport: '', startDate: '', endDate: '' });
     }
-    if(name === 'selectedReport'){
+    if (name === 'selectedReport') {
       loadCustomFields(value);
       setDataTable(dataTableDefault);
     }
@@ -388,13 +388,11 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>Generate Reports</h2>
         <div style={{display:'flex', flexDirection: 'row'}}>
-          {
-            loading && (
+          {loading && (
               <div style={{width: '30px', display:'flex', justifyContent: 'center', alignContent: 'center', margin: '10px'}}>
                 <CircularProgressCustom size={25} />
               </div>
-            )
-          }
+          )}
           <Button
             className={classes.button}
             color="primary"
@@ -525,7 +523,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
                           {...params}
                           label={e.label}
                           variant='standard'
-                          style={{ width: '200px', margin:'10px 40px 10px 0px'}}
+                          style={{ width: '200px', margin:'10px 40px 10px 0px' }}
                         />
                       )}
                       value={filtersSelected[values.selectedReport][e.id]}
@@ -563,7 +561,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
           </>
       )}
       <div>
-        <Divider style={{width: '100%', marginTop: '30px'}} />
+        <Divider style={{ width: '100%', marginTop: '30px' }} />
         <h3 style={{ marginTop: '20px' }}>Table</h3>
         <TableReportsGeneral
           controlValues={tableControl}
