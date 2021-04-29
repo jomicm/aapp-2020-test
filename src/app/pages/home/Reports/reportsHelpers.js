@@ -97,6 +97,21 @@ export const extractCustomField = field => {
   }
 };
 
+export const extractCustomFieldId = field => {
+  const { content, values, id } = field;
+  const { fieldName } = values;
+  const types = Object.keys(_types);
+  debugger
+  let res;
+  types.map((type) => {
+    if (_types[type].includes(content)) {
+      res = { [id]: fieldName || content };
+    }
+  });
+
+  return res;
+};
+
 export const normalizeRows = (rows, allCustomFields) => {
   return rows.map(row => {
     const missingCustomFields = difference(Object.keys(allCustomFields), Object.keys(row))

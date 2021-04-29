@@ -49,12 +49,14 @@ import {
 import { actions } from '../../../../../store/ducks/general.duck';
 import {
   getDB,
+  getDBComplex,
   getOneDB,
   updateDB,
   postDB
 } from '../../../../../crud/api';
 import BaseFieldAccordion from '../components/BaseFieldsAccordion';
 import CustomFieldAccordion from '../components/CustomFieldsAccordion';
+import { extractCustomFieldId } from '../../../Reports/reportsHelpers';
 import './ModalPolicies.scss';
 
 const localStorageActiveTabKey = 'builderActiveTab';
@@ -147,11 +149,23 @@ const ModalPolicies = ({
   const dispatch = useDispatch();
   const { showErrorAlert, showCustomAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
   const [alignment, setAlignment] = useState('');
+  const [customFields, setCustomFields] = useState([]);
   const actionsReader = [
     { value: 'OnAdd', label: 'On Add' },
     { value: 'OnEdit', label: 'On Edit' },
     { value: 'OnDelete', label: 'On Delete' },
     { value: 'OnLoad', label: 'On Load' }
+  ];
+  const modules = [
+    { id: 'user', name: 'Users', custom: 'userProfiles' },
+    { id: 'employees', name: 'Employees', custom: 'employeeProfiles' },
+    { id: 'locations', name: 'Locations', custom: 'locations' },
+    { id: 'categories', name: 'Categories', custom: 'categories' },
+    { id: 'references', name: 'References', custom: 'categories' },
+    { id: 'assets', name: 'Assets', custom: 'categories' },
+    { id: 'depreciation', name: 'Depreciation', custom: '' },
+    { id: 'processes', name: 'Processes', custom: '' },
+    { id: 'inventories', name: 'Inventories', custom: '' }
   ];
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const classes = useStyles();
@@ -413,6 +427,37 @@ const ModalPolicies = ({
       .catch(error => dispatch(showErrorAlert()));
   }, [id, employeeProfileRows]);
 
+  useEffect(() => {
+    const collection = modules.filter(({ id }) => id === module)[0];
+    getDBComplex({
+      collection: collection?.custom,
+      customQuery: JSON.stringify({"customFieldsTab":{"$ne":{}}})
+    })
+      .then(response => response.json())
+      .then(data => {
+        const { response } = data;
+        //Get just the CustomFields
+        let customFieldNames = {};
+        const rowToObjectsCustom = response.map(row => {
+          let filteredCustomFields = {};
+          const { customFieldsTab } = row;
+          Object.values(customFieldsTab || {}).forEach(tab => {
+            const allCustomFields = [...tab.left, ...tab.right];
+            allCustomFields.map(field => {
+              filteredCustomFields = { ...filteredCustomFields, ...extractCustomFieldId(field) };
+            });
+          });
+          console.log("Filtered: ", filteredCustomFields);
+          const filtered = { [row.name]: filteredCustomFields };
+          customFieldNames = { ...customFieldNames, filtered };
+          return { name: row.name, customFields: filteredCustomFields };
+        })
+        setCustomFields(rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
+        console.log(customFieldNames, rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
+      })
+      .catch(error => console.log('error>', error));
+  }, [module]);
+
   return (
     <div style={{ width: '1000px' }}>
       <Dialog
@@ -488,7 +533,7 @@ const ModalPolicies = ({
                             <h4>Custom Fields</h4>
                             <CustomFieldAccordion
                               customFieldKey={['references']}
-                              data={employeesFields}
+                              data={customFields}
                               onElementClick={insertVariable}
                             />
                           </div>

@@ -18,7 +18,25 @@ const CustomFieldsAccordion = ({ data, onElementClick, customFieldKey }) => {
         defaultExpandIcon={<ChevronRightIcon />}
       >
         <List style={{ fontSize: "3rem" }}>
-          {Object.keys(data[customFieldKey].customFields).map((keyName, ix) => {
+          {data.map(({ name }, index) => (
+            <TreeItem
+              className="baseform-tree-item"
+              key={`tree-item-catalogue-${index}`}
+              label={name}
+              nodeId={`tree-item-catalogue-${index}`}
+              style={{ margin: "0 0 20px 5px" }}
+            >
+              {Object.keys(data[index].customFields).map((id, customFieldIndex) => (
+                <TreeItem
+                  key={customFieldIndex}
+                  label={data[index].customFields[id].replace(/\w\S*/g, (w) => (w.replace(/^\w/, (c) => c.toUpperCase())))}
+                  nodeId={`${id}-${customFieldIndex}`}
+                  onClick={() => onElementClick(id)}
+                />
+              ))}
+            </TreeItem>
+          ))}
+          {/* {Object.keys(data[customFieldKey].customFields).map((keyName, ix) => {
             return (
               <TreeItem
                 className="baseform-tree-item"
@@ -39,7 +57,7 @@ const CustomFieldsAccordion = ({ data, onElementClick, customFieldKey }) => {
                   })}
               </TreeItem>
             );
-          })}
+          })} */}
         </List>
       </TreeView>
     </div>
