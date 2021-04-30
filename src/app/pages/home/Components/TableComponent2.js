@@ -216,13 +216,19 @@ const TableComponentTile = props => {
 
   useEffect(() => {
     loadLocationsData();
-    if (rows.length >= 0 || controlValues.search.length) {
+    if (rows.length > 0 || controlValues.search.length) {
       setLoading(false);
     };
     if (!rows.length && page > 0) {
       setPage(page - 1);
     }
   }, [rows]);
+
+  useEffect(() => {
+    if (loading) {
+      setTimeout(() => setLoading(false), 5000);
+    }
+  }, [loading]);
 
   const locationsTreeData = {
     id: 'root',
@@ -261,7 +267,7 @@ const TableComponentTile = props => {
       res.push(location);
       return;
     }
-    getUserHomeLocations(data, location.parent, res, validChildren, );
+    getUserHomeLocations(data, location.parent, res, validChildren,);
   };
 
   const constructLocationTreeRecursive = (locs, validChildren) => {
