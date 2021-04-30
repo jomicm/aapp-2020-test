@@ -34,7 +34,7 @@ import TimelineIcon from '@material-ui/icons/Timeline';
 import CloseIcon from "@material-ui/icons/Close";
 
 import { actions } from '../../../../store/ducks/general.duck';
-import { postDB, getDB, getOneDB, updateDB } from '../../../../crud/api';
+import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import ImageUpload from '../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
@@ -43,6 +43,7 @@ import './ModalAssetList.scss';
 import OtherModalTabs from '../components/OtherModalTabs';
 import { pick } from 'lodash';
 import { executePolicies } from '../../Components/Policies/utils';
+import { usePolicies } from '../../Components/Policies/hooks';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -141,7 +142,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   const [mapMarker, setMapMarker] = useState();
   const [assetsBeforeSaving, setAssetsBeforeSaving] = useState([]);
   const [assetsToDelete, setAssetsToDelete] = useState([]);
-  const [policies, setPolicies] = useState([]);
+  const policies = usePolicies();
 
   // Example 4 - Tabs
   const classes4 = useStyles4();
@@ -550,15 +551,6 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     setAssetsBeforeSaving([]);
     setAssetsToDelete([]);
   };
-
-  useEffect(() => {
-    getDB('policies')
-      .then((response) => response.json())
-      .then((data) => {
-        setPolicies(data.response);
-      })
-      .catch((error) => console.log('error>', error));
-  }, []);
 
   useEffect(() => {
     if (assetLocation.length) {

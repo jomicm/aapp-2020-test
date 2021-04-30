@@ -11,7 +11,6 @@ import {
   Tab,
   Tabs,
   Paper,
-  TextField,
   FormControlLabel,
   Switch
 } from "@material-ui/core";
@@ -25,8 +24,9 @@ import CloseIcon from "@material-ui/icons/Close";
 import { isEmpty } from 'lodash';
 import { useDispatch } from 'react-redux';
 import { actions } from '../../../../store/ducks/general.duck';
-import { getDB, getOneDB, postDB, updateDB } from '../../../../crud/api';
+import { getOneDB, postDB, updateDB } from '../../../../crud/api';
 import { executePolicies } from '../../Components/Policies/utils';
+import { usePolicies } from '../../Components/Policies/hooks';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import CustomFields from '../../Components/CustomFields/CustomFields'
 import ImageUpload from '../../Components/ImageUpload';
@@ -123,7 +123,7 @@ const useStyles = makeStyles(theme => ({
 const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
   const dispatch = useDispatch();
   const { showFillFieldsAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
-  const [policies, setPolicies] = useState([]);
+  const policies = usePolicies();
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -230,15 +230,6 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   };
 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
-
-  useEffect(() => {
-    getDB('policies')
-      .then((response) => response.json())
-      .then((data) => {
-        setPolicies(data.response);
-      })
-      .catch((error) => console.log('error>', error));
-  }, []);
 
   useEffect(() => {
     if (!id || !Array.isArray(id)) {

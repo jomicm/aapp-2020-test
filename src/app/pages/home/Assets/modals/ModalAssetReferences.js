@@ -25,11 +25,12 @@ import { useDispatch } from 'react-redux';
 import { actions } from '../../../../store/ducks/general.duck';
 import './ModalAssetCategories.scss';
 import ImageUpload from '../../Components/ImageUpload';
-import { postDB, getDB, getOneDB, updateDB } from '../../../../crud/api';
+import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetReferences.scss';
 import { executePolicies } from '../../Components/Policies/utils';
+import { usePolicies } from '../../Components/Policies/hooks';
 
 import BaseFields from '../../Components/BaseFields/BaseFields';
 
@@ -100,7 +101,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
-  const [policies, setPolicies] = useState([]);
+  const policies = usePolicies();
   function handleChange4(event, newValue) {
     setValue4(newValue);
   }
@@ -264,15 +265,6 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
       isValidForm: false
     });
   };
-
-  useEffect(() => {
-    getDB('policies')
-      .then((response) => response.json())
-      .then((data) => {
-        setPolicies(data.response);
-      })
-      .catch((error) => console.log('error>', error));
-  }, []);
 
   useEffect(() => {
     if (!showModal) return;

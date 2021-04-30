@@ -33,6 +33,7 @@ import ModalAssetList from './modals/ModalAssetList';
 import Policies from '../Components/Policies/Policies';
 import { allBaseFields } from '../constants';
 import { executePolicies } from '../Components/Policies/utils';
+import { usePolicies } from '../Components/Policies/hooks';
 
 import './Assets.scss';
 
@@ -75,7 +76,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
   const dispatch = useDispatch();
   const [tab, setTab] = useState(0);
   const [userLocations, setUserLocations] = useState([]);
-  const [policies, setPolicies] = useState([]);
+  const policies = usePolicies();
 
   const policiesBaseFields = {
     list: { ...allBaseFields.assets1, ...allBaseFields.assets2 },
@@ -432,29 +433,6 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
     { kpi: 'maintenance', queryExact: [{ key: 'status', value: 'maintenance' }] },
     { kpi: 'decommissioned', queryExact: [{ key: 'status', value: 'decommissioned' }] }
   ];
-
-  useEffect(() => {
-    getDB('policies')
-      .then((response) => response.json())
-      .then((data) => {
-        setPolicies(data.response);
-      })
-      .catch((error) => console.log('error>', error));
-    kpis.forEach(({ kpi, queryExact }) => {
-      getCountDB({ collection: 'assets', queryExact })
-        .then(response => response.json())
-        .then(data => {
-          setAssetsKPI(prev => ({
-            ...prev,
-            [kpi]: {
-              ...prev[kpi],
-              number: data.response.count
-            }
-          }));
-        });
-    });
-    
-  }, []);
 
   const tabIntToText = ['assets', 'references', 'categories'];
 

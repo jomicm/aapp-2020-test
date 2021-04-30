@@ -30,6 +30,7 @@ import CustomFields from '../../Components/CustomFields/CustomFields';
 import ImageUpload from '../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import { executePolicies } from '../../Components/Policies/utils';
+import { usePolicies } from '../../Components/Policies/hooks';
 
 const styles5 = theme => ({
   root: {
@@ -112,7 +113,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
-  const [policies, setPolicies] = useState(['']);
+  const policies = usePolicies();
 
   function handleChange4(event, newValue) {
     setValue4(newValue);
@@ -202,16 +203,6 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
       isValidForm: false
     });
   };
-
-  useEffect(() => {
-    getDB('policies')
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data.response);
-        setPolicies(data.response);
-      })
-      .catch((error) => console.log('error>', error));
-  }, []);
 
   useEffect(() => {
     if (!id || !Array.isArray(id)) {

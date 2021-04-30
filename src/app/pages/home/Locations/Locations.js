@@ -30,8 +30,7 @@ import {
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
 import * as general from '../../../store/ducks/general.duck';
-import { getDB } from '../../../crud/api';
-import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
+import { deleteDB, getCountDB, getDB, getDBComplex } from '../../../crud/api';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import GoogleMaps from '../Components/GoogleMaps';
 import TableComponent2 from '../Components/TableComponent2';
@@ -42,6 +41,7 @@ import './Locations.scss';
 import ModalYesNo from '../Components/ModalYesNo';
 import Policies from '../Components/Policies/Policies';
 import { executePolicies } from '../Components/Policies/utils';
+import { usePolicies } from '../Components/Policies/hooks';
 import { hosts, getImageURL } from '../utils';
 import { allBaseFields } from '../constants';
 
@@ -59,7 +59,7 @@ const locationsTreeData = {
 const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   const { showCustomAlert, showDeletedAlert, showErrorAlert } = actions;
   const theme4 = useTheme();
-  const [policies, setPolicies] = useState([]);
+  const policies = usePolicies();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [coordinates, setCoordinates] = useState([]);
   const [modalData, setModalData] = useState([])
@@ -427,12 +427,6 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   };
 
   useEffect(() => {
-    getDB('policies')
-      .then((response) => response.json())
-      .then((data) => {
-        setPolicies(data.response);
-      })
-      .catch((error) => console.log('error>', error));
     handleLoadLocations();
   }, []);
 

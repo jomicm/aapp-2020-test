@@ -22,14 +22,14 @@ import {
 } from "@material-ui/core/styles";
 import CloseIcon from "@material-ui/icons/Close";
 import { actions } from '../../../../store/ducks/general.duck';
-import { postDB, getDB, getOneDB, updateDB } from '../../../../crud/api';
+import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import CustomFields from '../../Components/CustomFields/CustomFields';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import ImageUpload from '../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import './ModalAssetCategories.scss';
 import { executePolicies } from '../../Components/Policies/utils';
-
+import { usePolicies } from '../../Components/Policies/hooks';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -98,7 +98,7 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
-  const [policies, setPolicies] = useState([]);
+  const policies = usePolicies();
   function handleChange4(event, newValue) {
     setValue4(newValue);
   }
@@ -193,15 +193,6 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
       isValidForm: false
     });
   };
-
-  useEffect(() => {
-    getDB('policies')
-      .then((response) => response.json())
-      .then((data) => {
-        setPolicies(data.response);
-      })
-      .catch((error) => console.log('error>', error));
-  }, []);
 
   useEffect(() => {
     if (!id || !Array.isArray(id)) {

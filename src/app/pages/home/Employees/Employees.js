@@ -10,9 +10,10 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
-import { deleteDB, getDB, getDBComplex, getCountDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import * as general from "../../../store/ducks/general.duck";
 import { executePolicies } from '../Components/Policies/utils';
+import { usePolicies } from '../Components/Policies/hooks';
 import TableComponent2 from '../Components/TableComponent2';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import ModalYesNo from '../Components/ModalYesNo';
@@ -25,7 +26,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
   const dispatch = useDispatch();
   const { showCustomAlert, showDeletedAlert, showErrorAlert } = actions;
   const [employeeLayoutSelected, setEmployeeLayoutSelected] = useState({});
-  const [policies, setPolicies] = useState(['']);
+  const policies = usePolicies();
   const [referencesSelectedId, setReferencesSelectedId] = useState(null);
   const [
     selectReferenceConfirmation,
@@ -178,15 +179,6 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
         .catch(error => console.log('error>', error));
     });
   };
-
-  useEffect(() => {
-    getDB('policies')
-      .then((response) => response.json())
-      .then((data) => {
-        setPolicies(data.response);
-      })
-      .catch((error) => console.log('error>', error));
-  }, []);
 
   useEffect(() => {
     loadEmployeesData('employees');

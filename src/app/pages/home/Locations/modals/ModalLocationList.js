@@ -28,10 +28,11 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../../partials/content/Portlet';
-import { getDB, getOneDB, postDB, updateDB } from '../../../../crud/api';
+import { getOneDB, postDB, updateDB } from '../../../../crud/api';
 import { CustomFieldsPreview } from '../../constants';
 import { getFileExtension, getImageURL, saveImage } from '../../utils';
 import { executePolicies } from '../../Components/Policies/utils';
+import { usePolicies } from '../../Components/Policies/hooks';
 import GoogleMaps from '../../Components/GoogleMaps';
 import ImageUpload from '../../Components/ImageUpload';
 import './ModalLocationList.scss';
@@ -156,7 +157,7 @@ const ModalLocationList = ({
   const [profileLabel, setProfileLabel] = useState('');
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const [tabs, setTabs] = useState([]);
-  const [policies, setPolicies] = useState([]);
+  const policies = usePolicies();
   const theme4 = useTheme();
   const { showCustomAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const [value4, setValue4] = useState(0);
@@ -273,15 +274,6 @@ const ModalLocationList = ({
     saveImage(image, folderName, id);
     reload();
   };
-
-  useEffect(() => {
-    getDB('policies')
-      .then((response) => response.json())
-      .then((data) => {
-        setPolicies(data.response);
-      })
-      .catch((error) => console.log('error>', error));
-  }, []);
 
   useEffect(() => {
     if (!profile || !profile.id || editOrNew === 'edit' || !showModal || parent === 'root') {

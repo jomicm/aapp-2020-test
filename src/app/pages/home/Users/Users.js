@@ -15,12 +15,12 @@ import * as general from "../../../store/ducks/general.duck";
 import TableComponent2 from '../Components/TableComponent2';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import { executePolicies } from '../Components/Policies/utils';
-import Autocomplete from '../Components/Inputs/Autocomplete';
+import { usePolicies } from '../Components/Policies/hooks';
 import ModalUserProfiles from './modals/ModalUserProfiles';
 import ModalUsers from './modals/ModalUsers';
 
 //DB API methods
-import { getDB, deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 import Policies from '../Components/Policies/Policies';
 import { allBaseFields } from '../constants';
@@ -29,7 +29,7 @@ function Users({ globalSearch, setGeneralSearch }) {
   const dispatch = useDispatch();
   const { showDeletedAlert, showErrorAlert } = actions;
   const [tab, setTab] = useState(0);
-  const [policies, setPolicies] = useState([]);
+  const policies = usePolicies();
 
   const policiesBaseFields = {
     list: allBaseFields.userList,
@@ -144,15 +144,6 @@ function Users({ globalSearch, setGeneralSearch }) {
         .catch(error => console.log('error>', error));
     });
   };
-
-  useEffect(() => {
-    getDB('policies')
-      .then((response) => response.json())
-      .then((data) => {
-        setPolicies(data.response);
-      })
-      .catch((error) => console.log('error>', error));
-  }, []);
 
   
   useEffect(() => {

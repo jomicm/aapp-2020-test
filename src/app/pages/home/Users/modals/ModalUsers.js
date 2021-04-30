@@ -33,6 +33,7 @@ import BaseFields from '../../Components/BaseFields/BaseFields';
 import LocationAssignment from '../components/LocationAssignment';
 import Permission from '../components/Permission';
 import { executePolicies } from '../../Components/Policies/utils';
+import { usePolicies } from '../../Components/Policies/hooks';
 
 const { apiHost, localHost } = hosts;
 
@@ -113,7 +114,7 @@ const useStyles = makeStyles(theme => ({
 
 const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows, user, updateUserPic }) => {
   const dispatch = useDispatch();
-  const [policies, setPolicies] = useState([]);
+  const policies = usePolicies();
   const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -240,13 +241,6 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   const [allUsers, setAllUsers] = useState([]);
 
   useEffect(() => {
-    getDB('policies')
-      .then((response) => response.json())
-      .then((data) => {
-        setPolicies(data.response);
-      })
-      .catch((error) => console.log('error>', error));
-
     if (!id || !Array.isArray(id)) {
       return;
     }
