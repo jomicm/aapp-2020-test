@@ -67,7 +67,7 @@ export const formatData = (collectionName, completeFields) => {
 
 export const extractGeneralField = (collectionName, row) => {
   let filteredGeneralFields = {};
-  _generalFields[collectionName].map(field => {
+  _generalFields[collectionName].map((field) => {
     filteredGeneralFields = { ...filteredGeneralFields, [field]: row[field] || '' }
   });
   return filteredGeneralFields;
@@ -97,16 +97,14 @@ export const extractCustomField = field => {
   }
 };
 
-export const extractCustomFieldId = field => {
+export const extractCustomFieldId = (field) => {
   const { content, values, id } = field;
   const { fieldName } = values;
-  const types = Object.keys(_types);
-  debugger
   let res;
-  types.map((type) => {
-    if (_types[type].includes(content)) {
-      res = { [id]: fieldName || content };
-    }
+  Object.entries(_types).forEach(([key, value]) => {
+      if (value.includes(content)) {
+        res = { [id]: fieldName || content };
+      }
   });
 
   return res;

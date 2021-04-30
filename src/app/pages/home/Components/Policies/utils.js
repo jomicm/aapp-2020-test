@@ -4,7 +4,6 @@ import { collections } from '../../constants';
 export const executePolicies = (actionName, module, selectedCatalogue, policies) => {
   const { dateFormatted, rawDate, timeFormatted } = getCurrentDateTime();
   const timeStamp = `${dateFormatted} ${timeFormatted}`;
-  debugger
   const filteredPolicies = policies.filter(
     (policy) => policy.selectedAction === actionName && policy.selectedCatalogue === selectedCatalogue && policy.module === module
   );
