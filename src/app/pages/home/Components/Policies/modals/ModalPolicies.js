@@ -49,12 +49,14 @@ import {
 import { actions } from '../../../../../store/ducks/general.duck';
 import {
   getDB,
+  getDBComplex,
   getOneDB,
   updateDB,
   postDB
 } from '../../../../../crud/api';
 import BaseFieldAccordion from '../components/BaseFieldsAccordion';
 import CustomFieldAccordion from '../components/CustomFieldsAccordion';
+import { extractCustomFieldId } from '../../../Reports/reportsHelpers';
 import './ModalPolicies.scss';
 
 const localStorageActiveTabKey = 'builderActiveTab';
@@ -141,22 +143,31 @@ const ModalPolicies = ({
   module,
   reloadTable,
   setShowModal,
-  showModal
+  showModal,
+  baseFields
 }) => {
   const dispatch = useDispatch();
-  const { showErrorAlert, showSavedAlert,  showSelectValuesAlert, showUpdatedAlert } = actions;
+  const { showErrorAlert, showCustomAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
   const [alignment, setAlignment] = useState('');
+  const [customFields, setCustomFields] = useState([]);
   const actionsReader = [
     { value: 'OnAdd', label: 'On Add' },
     { value: 'OnEdit', label: 'On Edit' },
     { value: 'OnDelete', label: 'On Delete' },
     { value: 'OnLoad', label: 'On Load' }
   ];
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
-  const catalogues = [
-    { value: 'list', label: 'List' },
-    { value: 'references', label: 'References' }
+  const modules = [
+    { id: 'user', name: 'Users', custom: 'userProfiles' },
+    { id: 'employees', name: 'Employees', custom: 'employeeProfiles' },
+    { id: 'locations', name: 'Locations', custom: 'locations' },
+    { id: 'categories', name: 'Categories', custom: 'categories' },
+    { id: 'references', name: 'References', custom: 'categories' },
+    { id: 'assets', name: 'Assets', custom: 'categories' },
+    { id: 'depreciation', name: 'Depreciation', custom: '' },
+    { id: 'processes', name: 'Processes', custom: '' },
+    { id: 'inventories', name: 'Inventories', custom: '' }
   ];
+  const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const classes = useStyles();
   const classes4 = useStyles4();
   const [cursorPosition, setCursorPosition] = useState([0, 0]);
@@ -298,6 +309,17 @@ const ModalPolicies = ({
       setEditor(EditorState.push(editor, contentState, 'insert-characters'));
     } else {
       const text = values[selectedControl];
+
+      if (!text) {
+        dispatch(showCustomAlert({
+          type: 'warning',
+          message: 'Please focus the message body to insert a field',
+          open: true
+        }));
+
+        return;
+      }
+
       const left = text.substr(0, cursorPosition[0]);
       const right = text.substr(cursorPosition[1], text.length);
       const final = `${left}%{${varId}}${right}`;
@@ -405,6 +427,37 @@ const ModalPolicies = ({
       .catch(error => dispatch(showErrorAlert()));
   }, [id, employeeProfileRows]);
 
+  useEffect(() => {
+    const collection = modules.filter(({ id }) => id === module)[0];
+    getDBComplex({
+      collection: collection?.custom,
+      customQuery: JSON.stringify({"customFieldsTab":{"$ne":{}}})
+    })
+      .then(response => response.json())
+      .then(data => {
+        const { response } = data;
+        //Get just the CustomFields
+        let customFieldNames = {};
+        const rowToObjectsCustom = response.map(row => {
+          let filteredCustomFields = {};
+          const { customFieldsTab } = row;
+          Object.values(customFieldsTab || {}).forEach(tab => {
+            const allCustomFields = [...tab.left, ...tab.right];
+            allCustomFields.map(field => {
+              filteredCustomFields = { ...filteredCustomFields, ...extractCustomFieldId(field) };
+            });
+          });
+          console.log("Filtered: ", filteredCustomFields);
+          const filtered = { [row.name]: filteredCustomFields };
+          customFieldNames = { ...customFieldNames, filtered };
+          return { name: row.name, customFields: filteredCustomFields };
+        })
+        setCustomFields(rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
+        console.log(customFieldNames, rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
+      })
+      .catch(error => console.log('error>', error));
+  }, [module]);
+
   return (
     <div style={{ width: '1000px' }}>
       <Dialog
@@ -457,11 +510,13 @@ const ModalPolicies = ({
                             onChange={handleOnChangeValue('selectedCatalogue')}
                             value={values.selectedCatalogue}
                           >
-                            {catalogues.map(({ value, label }) => (
-                              <MenuItem key={value} value={value}>
-                                {label}
-                              </MenuItem>
-                            ))}
+                            {
+                              Object.keys(baseFields).map((keyName) => (
+                                <MenuItem key={keyName} value={keyName}>
+                                  {keyName.replace(/\w\S*/g, (w) => (w.replace(/^\w/, (c) => c.toUpperCase())))}
+                                </MenuItem>
+                              ))
+                            }
                           </Select>
                         </FormControl>
                       </div>
@@ -470,7 +525,7 @@ const ModalPolicies = ({
                           <div className='__container-basefield'>
                             <h4>Base Fields</h4>
                             <BaseFieldAccordion
-                              data={employeesFields}
+                              data={baseFields}
                               onElementClick={insertVariable}
                             />
                           </div>
@@ -478,7 +533,7 @@ const ModalPolicies = ({
                             <h4>Custom Fields</h4>
                             <CustomFieldAccordion
                               customFieldKey={['references']}
-                              data={employeesFields}
+                              data={customFields}
                               onElementClick={insertVariable}
                             />
                           </div>

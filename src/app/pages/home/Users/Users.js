@@ -14,18 +14,27 @@ import * as general from "../../../store/ducks/general.duck";
 // AApp Components
 import TableComponent2 from '../Components/TableComponent2';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
-import Autocomplete from '../Components/Inputs/Autocomplete';
+import { executePolicies } from '../Components/Policies/utils';
+import { usePolicies } from '../Components/Policies/hooks';
 import ModalUserProfiles from './modals/ModalUserProfiles';
 import ModalUsers from './modals/ModalUsers';
 
 //DB API methods
 import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
+import Policies from '../Components/Policies/Policies';
+import { allBaseFields } from '../constants';
 
 function Users({ globalSearch, setGeneralSearch }) {
   const dispatch = useDispatch();
   const { showDeletedAlert, showErrorAlert } = actions;
   const [tab, setTab] = useState(0);
+  const policies = usePolicies();
+
+  const policiesBaseFields = {
+    list: allBaseFields.userList,
+    references: allBaseFields.userReferences
+  };
 
   const createUserProfilesRow = (id, name, creator, creation_date) => {
     return { id, name, creator, creation_date };
@@ -208,6 +217,8 @@ function Users({ globalSearch, setGeneralSearch }) {
           deleteDB(`${collection.name}/`, _id)
             .then(response => {
               dispatch(showDeletedAlert());
+              const currentCollection = collection.name === 'user' ? 'list' : 'references';
+              executePolicies('OnDelete', 'user', currentCollection, policies);
               loadUsersData(collection.name)
             })
             .catch(error => dispatch(showErrorAlert()));
@@ -385,21 +396,7 @@ function Users({ globalSearch, setGeneralSearch }) {
             </PortletBody>
           )}
 
-          {tab === 2 && (
-            <PortletBody>
-              <div className='kt-section kt-margin-t-0'>
-                <div className='kt-section__body'>
-                  <div className='kt-section'>
-                    <span className='kt-section__sub'>
-                      This section will integrate <code>User Policies</code>
-                    </span>
-                    <div className='kt-separator kt-separator--dashed' />
-                    <Autocomplete />
-                  </div>
-                </div>
-              </div>
-            </PortletBody>
-          )}
+          {tab === 2 && <Policies module="user" baseFields={policiesBaseFields} />}
         </Portlet>
       </div>
     </>

@@ -30,6 +30,10 @@ import TableComponent2 from '../Components/TableComponent2';
 import ModalAssetCategories from './modals/ModalAssetCategories';
 import ModalAssetReferences from './modals/ModalAssetReferences';
 import ModalAssetList from './modals/ModalAssetList';
+import Policies from '../Components/Policies/Policies';
+import { allBaseFields } from '../constants';
+import { executePolicies } from '../Components/Policies/utils';
+import { usePolicies } from '../Components/Policies/hooks';
 
 import './Assets.scss';
 
@@ -72,6 +76,13 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
   const dispatch = useDispatch();
   const [tab, setTab] = useState(0);
   const [userLocations, setUserLocations] = useState([]);
+  const policies = usePolicies();
+
+  const policiesBaseFields = {
+    list: { ...allBaseFields.assets1, ...allBaseFields.assets2 },
+    references: allBaseFields.references,
+    categories: allBaseFields.categories
+  };
 
   const createAssetCategoryRow = (id, name, depreciation, creator, creation_date, fileExt) => {
     return { id, name, depreciation, creator, creation_date, fileExt };
@@ -382,6 +393,8 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
           deleteDB(`${collection.name}/`, _id)
             .then(response => {
               dispatch(showDeletedAlert());
+              const currentCollection = collection.name === 'assets' ? 'list' : collection.name;
+              executePolicies('OnDelete', 'assets', currentCollection, policies);
               loadAssetsData(collection.name);
             })
             .catch(error => showErrorAlert());
@@ -420,22 +433,6 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
     { kpi: 'maintenance', queryExact: [{ key: 'status', value: 'maintenance' }] },
     { kpi: 'decommissioned', queryExact: [{ key: 'status', value: 'decommissioned' }] }
   ];
-
-  useEffect(() => {
-    kpis.forEach(({ kpi, queryExact }) => {
-      getCountDB({ collection: 'assets', queryExact })
-        .then(response => response.json())
-        .then(data => {
-          setAssetsKPI(prev => ({
-            ...prev,
-            [kpi]: {
-              ...prev[kpi],
-              number: data.response.count
-            }
-          }));
-        });
-    });
-  }, []);
 
   const tabIntToText = ['assets', 'references', 'categories'];
 
@@ -714,20 +711,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
             </PortletBody>
           )}
 
-          {tab === 3 && (
-            <PortletBody>
-              <div className='kt-section kt-margin-t-0'>
-                <div className='kt-section__body'>
-                  <div className='kt-section'>
-                    <span className='kt-section__sub'>
-                      This section will integrate <code>Asset Policies</code>
-                    </span>
-                    <div className='kt-separator kt-separator--dashed' />
-                  </div>
-                </div>
-              </div>
-            </PortletBody>
-          )}
+          {tab === 3 && <Policies module="assets" baseFields={policiesBaseFields} />}
         </Portlet>
       </div>
     </>

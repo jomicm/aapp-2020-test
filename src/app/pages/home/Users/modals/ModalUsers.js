@@ -32,6 +32,8 @@ import { CustomFieldsPreview } from '../../constants';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import LocationAssignment from '../components/LocationAssignment';
 import Permission from '../components/Permission';
+import { executePolicies } from '../../Components/Policies/utils';
+import { usePolicies } from '../../Components/Policies/hooks';
 
 const { apiHost, localHost } = hosts;
 
@@ -112,6 +114,7 @@ const useStyles = makeStyles(theme => ({
 
 const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows, user, updateUserPic }) => {
   const dispatch = useDispatch();
+  const policies = usePolicies();
   const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -165,6 +168,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
           const { _id, email, name, lastName } = response.response[0];
           saveAndReload('user', _id);
           updateLocationsAssignments(locationsTable, { userId: _id, email, name, lastName });
+          executePolicies('OnAdd', 'user', 'list', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -174,6 +178,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
           saveAndReload('user', id[0]);
           updateCurrentUserPic(id[0], fileExt);
           updateLocationsAssignments(locationsTable, { userId: id[0], name: body.name, email: body.email, lastName: body.lastName });
+          executePolicies('OnEdit', 'user', 'list', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -236,6 +241,12 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   const [allUsers, setAllUsers] = useState([]);
 
   useEffect(() => {
+    if (!id || !Array.isArray(id)) {
+      return;
+    }
+  }, []);
+
+  useEffect(() => {
     const userProfiles = userProfileRows.map((profile, ix) => ({ value: profile.id, label: profile.name }));
     setUserProfilesFiltered(userProfiles);
     loadInit();
@@ -247,6 +258,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       .then(response => response.json())
       .then(data => {
         const { name, lastName, email, customFieldsTab, profilePermissions, idUserProfile, locationsTable, fileExt, selectedBoss } = data.response;
+        executePolicies('OnLoad', 'user', 'list', policies);
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
         setProfileSelected(userProfilesFiltered.filter(profile => profile.value === idUserProfile));

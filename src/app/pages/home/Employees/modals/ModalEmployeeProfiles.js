@@ -24,11 +24,13 @@ import {
 import CloseIcon from '@material-ui/icons/Close';
 import { useDispatch } from 'react-redux';
 import { actions } from '../../../../store/ducks/general.duck';
-import { postDB, getOneDB, updateDB } from '../../../../crud/api';
+import { getDB, postDB, getOneDB, updateDB } from '../../../../crud/api';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import CustomFields from '../../Components/CustomFields/CustomFields';
 import ImageUpload from '../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import { executePolicies } from '../../Components/Policies/utils';
+import { usePolicies } from '../../Components/Policies/hooks';
 
 const styles5 = theme => ({
   root: {
@@ -111,6 +113,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
+  const policies = usePolicies();
 
   function handleChange4(event, newValue) {
     setValue4(newValue);
@@ -160,6 +163,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('employeeProfiles', _id);
+          executePolicies('OnAdd', 'employees', 'references', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -167,6 +171,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
         .then(data => data.json())
         .then(response => {
           dispatch(showUpdatedAlert());
+          executePolicies('OnEdit', 'employees', 'references', policies);
           saveAndReload('employeeProfiles', id[0]);
         })
         .catch(error => dispatch(showErrorAlert()));
@@ -211,6 +216,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id }) => 
         const imageURL = getImageURL(id, 'employeeProfiles', fileExt);
         const obj = { name, depreciation, imageURL };
         setValues(obj);
+        executePolicies('OnLoad', 'employees', 'references', policies);
         setCustomFieldsTab(customFieldsTab);
         setIsAssetRepository(isAssetRepository);
         setProfilePermissions(profilePermissions);

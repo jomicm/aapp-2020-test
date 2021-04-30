@@ -31,6 +31,8 @@ import {
 import { getOneDB, postDB, updateDB } from '../../../../crud/api';
 import { CustomFieldsPreview } from '../../constants';
 import { getFileExtension, getImageURL, saveImage } from '../../utils';
+import { executePolicies } from '../../Components/Policies/utils';
+import { usePolicies } from '../../Components/Policies/hooks';
 import GoogleMaps from '../../Components/GoogleMaps';
 import ImageUpload from '../../Components/ImageUpload';
 import './ModalLocationList.scss';
@@ -155,6 +157,7 @@ const ModalLocationList = ({
   const [profileLabel, setProfileLabel] = useState('');
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const [tabs, setTabs] = useState([]);
+  const policies = usePolicies();
   const theme4 = useTheme();
   const { showCustomAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const [value4, setValue4] = useState(0);
@@ -236,6 +239,7 @@ const ModalLocationList = ({
           dispatch(showSavedAlert());
           const { _id } = data.response[0];
           saveAndReload('locationsReal', _id);
+          executePolicies('OnAdd', 'locations', 'list', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -244,6 +248,7 @@ const ModalLocationList = ({
         .then((response) => {
           dispatch(showUpdatedAlert());
           saveAndReload('locationsReal', parent);
+          executePolicies('OnEdit', 'locations', 'list', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -283,6 +288,7 @@ const ModalLocationList = ({
           level: profileLevel,
           customFieldsTab
         } = data.response;
+        executePolicies('OnLoad', 'locations', 'list', policies);
         setValues((prev) => ({ ...prev, name: '', profileName, profileId, profileLevel, customFieldsTab }));
         setProfileLabel(profile.name);
         const tabs = Object.keys(customFieldsTab).map((key) => ({

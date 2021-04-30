@@ -67,7 +67,7 @@ export const formatData = (collectionName, completeFields) => {
 
 export const extractGeneralField = (collectionName, row) => {
   let filteredGeneralFields = {};
-  _generalFields[collectionName].map(field => {
+  _generalFields[collectionName].map((field) => {
     filteredGeneralFields = { ...filteredGeneralFields, [field]: row[field] || '' }
   });
   return filteredGeneralFields;
@@ -95,6 +95,19 @@ export const extractCustomField = field => {
   } else if (_types['imageType'].includes(content)) {
     return { [fieldName]: fileName ? `${fileName}.${initialValue}` : '' };
   }
+};
+
+export const extractCustomFieldId = (field) => {
+  const { content, values, id } = field;
+  const { fieldName } = values;
+  let res;
+  Object.entries(_types).forEach(([key, value]) => {
+      if (value.includes(content)) {
+        res = { [id]: fieldName || content };
+      }
+  });
+
+  return res;
 };
 
 export const normalizeRows = (rows, allCustomFields) => {

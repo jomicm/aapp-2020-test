@@ -8,27 +8,16 @@ import { Formik } from 'formik';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import { Tab, Tabs } from '@material-ui/core';
 import {
-  Checkbox,
-  FormControl,
-  FormControlLabel,
-  FormGroup,
-  FormLabel,
   IconButton,
-  InputLabel,
   makeStyles,
   Menu,
   MenuItem,
   Paper,
-  Radio,
-  RadioGroup,
-  Select,
-  TextField,
   Tooltip,
   Typography,
   useTheme,
 } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
-import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
 import RemoveIcon from '@material-ui/icons/Remove';
 import RoomIcon from '@material-ui/icons/Room';
@@ -41,8 +30,7 @@ import {
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
 import * as general from '../../../store/ducks/general.duck';
-import { getDB } from '../../../crud/api';
-import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
+import { deleteDB, getCountDB, getDB, getDBComplex } from '../../../crud/api';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import GoogleMaps from '../Components/GoogleMaps';
 import TableComponent2 from '../Components/TableComponent2';
@@ -50,30 +38,14 @@ import TreeView from '../Components/TreeViewComponent';
 import ModalLocationList from './modals/ModalLocationList';
 import ModalLocationProfiles from './modals/ModalLocationProfiles';
 import './Locations.scss';
-import {
-  Checkboxes,
-  CheckboxesSettings,
-  Date,
-  DateSettings,
-  DateTime,
-  DateTimeSettings,
-  DropDown,
-  DropDownSettings,
-  FileUpload,
-  FileUploadSettings,
-  MultiLine,
-  MultiLineSettings,
-  RadioButtons,
-  RadioButtonsSettings,
-  SingleLine,
-  SingleLineSettings
-} from '../Components/CustomFields/CustomFieldsPreview';
 import ModalYesNo from '../Components/ModalYesNo';
+import Policies from '../Components/Policies/Policies';
+import { executePolicies } from '../Components/Policies/utils';
+import { usePolicies } from '../Components/Policies/hooks';
 import { hosts, getImageURL } from '../utils';
+import { allBaseFields } from '../constants';
 
-const { apiHost, localHost } = hosts;
-
-const Divider = () => <div style={{ width: '100%', height: '3px', backgroundColor: 'black' }}></div>;
+const { localHost } = hosts;
 
 let locations;
 
@@ -87,6 +59,7 @@ const locationsTreeData = {
 const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   const { showCustomAlert, showDeletedAlert, showErrorAlert } = actions;
   const theme4 = useTheme();
+  const policies = usePolicies();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [coordinates, setCoordinates] = useState([]);
   const [modalData, setModalData] = useState([])
@@ -124,6 +97,11 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
     shallowEqual
   );
 
+  const policiesBaseFields = {
+    list: allBaseFields.locationsList,
+    profiles: allBaseFields.locations
+  };
+
   const dispatch = useDispatch();
   const initialValues = useMemo(
     () =>
@@ -145,6 +123,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
       deleteDB('locationsReal/', parentSelected)
         .then((response) => {
           dispatch(showDeletedAlert());
+          executePolicies('OnDelete', 'locations', 'list', policies);
           handleLoadLocations();
         })
         .catch((error) => dispatch(showErrorAlert()));
@@ -262,6 +241,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
       deleteDB('locations/', _id)
         .then((response) => {
           dispatch(showDeletedAlert());
+          executePolicies('OnDelete', 'locations', 'profiles', policies);
           loadLocationsProfilesData();
         })
         .catch((error) => dispatch(showErrorAlert()));
@@ -570,7 +550,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
                                     <IconButton aria-label='Filter list' onClick={locationActions.openProfilesListBox}>
                                       <AddIcon />
                                     </IconButton>
-                                  </Tooltip>                                
+                                  </Tooltip>
                                 )}
                                 {user.profilePermissions.locations.includes('edit') && (
                                   <Tooltip placement='top' title='Edit Location'>
@@ -710,20 +690,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
                   </div>
                 </PortletBody>
               )}
-              {tab === 2 && (
-                <PortletBody>
-                  <div className='kt-section kt-margin-t-0'>
-                    <div className='kt-section__body'>
-                      <div className='kt-section'>
-                        <span className='kt-section__sub'>
-                          This section will integrate <code>Locations Policies</code>
-                        </span>
-                        <div className='kt-separator kt-separator--dashed' />
-                      </div>
-                    </div>
-                  </div>
-                </PortletBody>
-              )}
+              {tab === 2 && <Policies module="locations" baseFields={policiesBaseFields} />}
               {tab === 3 && (
                 <PortletBody>
                   <div className='kt-section kt-margin-t-0'>

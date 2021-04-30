@@ -28,7 +28,8 @@ import BaseFields from '../../Components/BaseFields/BaseFields';
 import ImageUpload from '../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import './ModalAssetCategories.scss';
-
+import { executePolicies } from '../../Components/Policies/utils';
+import { usePolicies } from '../../Components/Policies/hooks';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -97,6 +98,7 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
+  const policies = usePolicies();
   function handleChange4(event, newValue) {
     setValue4(newValue);
   }
@@ -154,6 +156,7 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('categories', _id);
+          executePolicies('OnAdd', 'assets', 'categories', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -161,6 +164,7 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
         .then(response => {
           dispatch(showUpdatedAlert());
           saveAndReload('categories', id[0]);
+          executePolicies('OnEdit', 'assets', 'categories', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -201,6 +205,7 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
       .then(data => {
         console.log(data.response);
         const { name, depreciation, customFieldsTab, fileExt } = data.response;
+        executePolicies('OnLoad', 'assets', 'categories', policies);
         const imageURL = getImageURL(id, 'categories', fileExt);
         const obj = { name, depreciation, imageURL };
         console.log('obj:', obj)

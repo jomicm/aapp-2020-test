@@ -28,6 +28,8 @@ import ImageUpload from '../../Components/ImageUpload';
 import { modules } from '../../constants';
 import Permission from '../components/Permission';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import { executePolicies } from '../../Components/Policies/utils';
+import { usePolicies } from '../../Components/Policies/hooks';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -95,6 +97,7 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
+  const policies = usePolicies();
   function handleChange4(event, newValue) {
     setValue4(newValue);
   }
@@ -129,6 +132,7 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('userProfiles', _id);
+          executePolicies('OnAdd', 'user', 'references', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -136,6 +140,7 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
         .then(response => {
           dispatch(showUpdatedAlert());
           saveAndReload('userProfiles', id[0]);
+          executePolicies('OnEdit', 'user', 'references', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -176,11 +181,18 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
     if (!id || !Array.isArray(id)) {
       return;
     }
+  }, []);
+
+  useEffect(() => {
+    if (!id || !Array.isArray(id)) {
+      return;
+    }
 
     getOneDB('userProfiles/', id[0])
       .then(response => response.json())
       .then(data => {
         const { name, depreciation, customFieldsTab, profilePermissions, fileExt } = data.response;
+        executePolicies('OnLoad', 'user', 'references', policies);
         const obj = {
           name,
           depreciation,

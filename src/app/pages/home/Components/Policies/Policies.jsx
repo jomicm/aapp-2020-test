@@ -1,11 +1,11 @@
 import React from "react";
 import PoliciesTable from "./components/PoliciesTable";
 
-const Policies = ({ module }) => {
+const Policies = ({ module, baseFields = {} }) => {
 
   return (
     <div className="__container-policies">
-        <PoliciesTable module={module} />
+        <PoliciesTable module={module} baseFields={baseFields} />
     </div>
   );
 };

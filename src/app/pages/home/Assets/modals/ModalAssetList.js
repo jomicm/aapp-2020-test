@@ -34,7 +34,7 @@ import TimelineIcon from '@material-ui/icons/Timeline';
 import CloseIcon from "@material-ui/icons/Close";
 
 import { actions } from '../../../../store/ducks/general.duck';
-import { postDB, getDB, getOneDB, updateDB } from '../../../../crud/api';
+import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import ImageUpload from '../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
@@ -42,6 +42,8 @@ import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetList.scss';
 import OtherModalTabs from '../components/OtherModalTabs';
 import { pick } from 'lodash';
+import { executePolicies } from '../../Components/Policies/utils';
+import { usePolicies } from '../../Components/Policies/hooks';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -140,6 +142,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   const [mapMarker, setMapMarker] = useState();
   const [assetsBeforeSaving, setAssetsBeforeSaving] = useState([]);
   const [assetsToDelete, setAssetsToDelete] = useState([]);
+  const policies = usePolicies();
 
   // Example 4 - Tabs
   const classes4 = useStyles4();
@@ -489,6 +492,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('assets', _id);
+          executePolicies('OnAdd', 'assets', 'list', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -496,6 +500,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
         .then(response => {
           dispatch(showUpdatedAlert());
           saveAndReload('assets', id[0]);
+          executePolicies('OnEdit', 'assets', 'list', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -588,6 +593,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       .then(response => response.json())
       .then(data => {
         const { name, brand, model, category, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt, assigned, layoutCoords, mapCoords, children } = data.response;
+        executePolicies('OnLoad', 'assets', 'list', policies);
         setAssetLocation(location);
         setLayoutMarker(layoutCoords) //* null if not specified
         setMapMarker(mapCoords) //* null if not specified

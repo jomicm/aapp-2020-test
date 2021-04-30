@@ -224,6 +224,12 @@ const TableComponentTile = props => {
     }
   }, [rows]);
 
+  useEffect(() => {
+    if (loading) {
+      setTimeout(() => setLoading(false), 5000);
+    }
+  }, [loading]);
+
   const locationsTreeData = {
     id: 'root',
     name: 'Locations',
@@ -261,7 +267,7 @@ const TableComponentTile = props => {
       res.push(location);
       return;
     }
-    getUserHomeLocations(data, location.parent, res, validChildren, );
+    getUserHomeLocations(data, location.parent, res, validChildren,);
   };
 
   const constructLocationTreeRecursive = (locs, validChildren) => {

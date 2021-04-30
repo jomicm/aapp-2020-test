@@ -13,24 +13,31 @@ import {
 import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import * as general from "../../../store/ducks/general.duck";
 import { executePolicies } from '../Components/Policies/utils';
+import { usePolicies } from '../Components/Policies/hooks';
 import TableComponent2 from '../Components/TableComponent2';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import ModalYesNo from '../Components/ModalYesNo';
 import Policies from '../Components/Policies/Policies';
 import ModalEmployees from './modals/ModalEmployees';
 import ModalEmployeeProfiles from './modals/ModalEmployeeProfiles';
+import { allBaseFields } from '../constants';
 
 const Employees = ({ globalSearch, setGeneralSearch }) => {
   const dispatch = useDispatch();
-  const { showCustomAlert, showDeletedAlert, showErrorAlert} = actions;
+  const { showCustomAlert, showDeletedAlert, showErrorAlert } = actions;
   const [employeeLayoutSelected, setEmployeeLayoutSelected] = useState({});
-  const [policies, setPolicies] = useState(['']);
+  const policies = usePolicies();
   const [referencesSelectedId, setReferencesSelectedId] = useState(null);
   const [
     selectReferenceConfirmation,
     setSelectReferenceConfirmation
   ] = useState(false);
   const [tab, setTab] = useState(0);
+
+  const policiesBaseFields = {
+    list: allBaseFields.employees,
+    references: allBaseFields.employeeReferences
+  };
 
   const createUserProfilesRow = (id, name, creator, creation_date) => {
     return { id, name, creator, creation_date };
@@ -246,8 +253,8 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
           deleteDB(`${collection.name}/`, _id)
             .then((response) => {
               dispatch(showDeletedAlert());
-              // executePolicies('OnDelete');
-              executePolicies('OnDelete', policies);
+              const currentCollection = collection.name === 'employees' ? 'list' : 'references';
+              executePolicies('OnDelete', 'employees', currentCollection, policies);
               loadEmployeesData(collection.name);
             })
             .catch((error) => dispatch(showErrorAlert()));
@@ -447,7 +454,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
             </PortletBody>
           )}
 
-          {tab === 2 && <Policies module='employees' />}
+          {tab === 2 && <Policies module='employees' baseFields={policiesBaseFields} />}
         </Portlet>
       </div>
     </>

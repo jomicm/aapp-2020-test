@@ -29,6 +29,8 @@ import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetReferences.scss';
+import { executePolicies } from '../../Components/Policies/utils';
+import { usePolicies } from '../../Components/Policies/hooks';
 
 import BaseFields from '../../Components/BaseFields/BaseFields';
 
@@ -99,6 +101,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
+  const policies = usePolicies();
   function handleChange4(event, newValue) {
     setValue4(newValue);
   }
@@ -175,6 +178,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('references', _id);
+          executePolicies('OnAdd', 'assets', 'references', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -182,6 +186,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
         .then(response => {
           dispatch(showUpdatedAlert());
           saveAndReload('references', id[0]);
+          executePolicies('OnEdit', 'assets', 'references', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -274,6 +279,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
       .then(data => {
         console.log(data.response);
         const { name, brand, model, price, depreciation, customFieldsTab, fileExt, selectedProfile } = data.response;
+        executePolicies('OnLoad', 'assets', 'references', policies);
         setValues({
           ...values,
           name,

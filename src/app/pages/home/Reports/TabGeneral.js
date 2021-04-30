@@ -156,7 +156,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       setLoading(true);
       getDBComplex({
         collection: collection?.custom,
-        personalizedQuery: JSON.stringify({"customFieldsTab":{"$ne":{}}})
+        customQuery: JSON.stringify({"customFieldsTab":{"$ne":{}}})
       })
         .then(response => response.json())
         .then(data => {

@@ -164,6 +164,12 @@ export const allBaseFields = {
     selectedLevel: { validationId: 'selectedLevel', component: 'textField', compLabel: 'Level' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
   },
+  locationsList: {
+    name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
+    fileExt: { validationId: 'fileExt', compLabel: 'Layout' },
+    imageInfo: { validationId: 'imageInfo', compLabel: 'Pin Layout' },
+    mapInfo: { validationId: 'mapInfo', compLabel: 'Pin Map' },
+  },
   assets1: {
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     brand: { validationId: 'brand', component: 'textField', compLabel: 'Brand' },

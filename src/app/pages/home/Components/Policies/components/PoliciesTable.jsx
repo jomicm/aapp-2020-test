@@ -44,7 +44,7 @@ const createPoliciesRow = (
   };
 };
 
-const PoliciesTable = ({ module }) => {
+const PoliciesTable = ({ module, baseFields }) => {
   const [control, setControl] = useState({
     idPolicies: null,
     openPoliciesModal: false,
@@ -138,7 +138,8 @@ const PoliciesTable = ({ module }) => {
       }
       getCountDB({
         collection: collectionName,
-        queryLike: tableControl[collectionName].search ? queryLike : null
+        queryLike: tableControl[collectionName].search ? queryLike : null,
+        condition: { "module": { "$eq": module } }
       })
         .then(response => response.json())
         .then(data => {
@@ -156,7 +157,8 @@ const PoliciesTable = ({ module }) => {
         limit: tableControl[collectionName].rowsPerPage,
         skip: tableControl[collectionName].rowsPerPage * tableControl[collectionName].page,
         sort: [{ key: tableControl[collectionName].orderBy, value: tableControl[collectionName].order }],
-        queryLike: tableControl[collectionName].search ? queryLike : null
+        queryLike: tableControl[collectionName].search ? queryLike : null,
+        condition: { "module": { "$eq": module } }
       })
         .then(response => response.json())
         .then(data => {
@@ -220,6 +222,7 @@ const PoliciesTable = ({ module }) => {
               id={control.idPolicies}
               employeeProfileRows={[]}
               module={module}
+              baseFields={baseFields}
               reloadTable={() => loadPoliciesData('policies')}
               setShowModal={(onOff) =>
                 setControl({ ...control, openPoliciesModal: onOff })

@@ -15,6 +15,7 @@ import {
   getDB,
   getMessages,
   getTotalMessages,
+  getDBComplex,
 } from '../../crud/api';
 import HeaderDropdownToggle from '../content/CustomDropdowns/HeaderDropdownToggle';
 
@@ -142,13 +143,16 @@ const MessagesTopBar = ({
         }))
       });
 
-    getDB('messages')
-      .then((response) => response.json())
-      .then((data) => {
-        const filteredData = data.response.filter((message) => message.status === "new");
-        updateCount(filteredData);
+    getDBComplex({
+      collection: 'messages',
+      condition: { "to": { "$elemMatch": { "_id": user.id } } }
+    })
+      .then(response => response.json())
+      .then(data => {
+        const userMessages = data.response.filter((message) => message.status === "new");
+        updateCount(userMessages);
       })
-      .catch((error) => console.log('error:', error));
+      .catch((error) => console.log(error));
 
     getMessages({
       limit: control.rowsPerPage,
