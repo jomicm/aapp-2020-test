@@ -127,11 +127,17 @@
 .__container-url {
     align-items: center;
     display: flex;
-    width: 71%;
+    width: 100%;
     padding: 0 20px;
 }
 
 .__container-disabled {
     padding: 50px 0 0 0.4rem;
     width: 25%;
+}
+
+.token_textField {
+	display: flex;
+	flex-direction: row;
+	align-items: baseline;
 }

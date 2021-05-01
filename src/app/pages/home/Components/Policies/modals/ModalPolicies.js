@@ -262,6 +262,25 @@ const ModalPolicies = ({
     setValues({ ...values, [name]: value });
   };
 
+  const handleBodyAPI = () => {
+    let jsonBodyAPI = '';
+
+    if (!values.apiDisabled) {
+      try {
+        jsonBodyAPI = JSON.parse(values.bodyAPI);
+
+        if (typeof jsonBodyAPI !== 'object') {
+          jsonBodyAPI = JSON.parse('{}');
+        }
+
+      } catch (error) {
+        jsonBodyAPI = JSON.parse('{}');
+      }
+    }
+
+    return jsonBodyAPI
+  }
+
   const handleSave = () => {
     const { selectedAction, selectedCatalogue } = values;
     if (!selectedAction || !selectedCatalogue) {
@@ -269,8 +288,11 @@ const ModalPolicies = ({
       return;
     }
     const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
+    const jsonBodyAPI = handleBodyAPI();
+
     const body = {
       ...values,
+      bodyAPI: JSON.stringify(jsonBodyAPI, null, 2),
       messageFrom,
       messageTo,
       layout,
@@ -411,7 +433,8 @@ const ModalPolicies = ({
           'subjectMessage',
           'subjectNotification',
           'selectedIcon',
-          'urlAPI'
+          'urlAPI',
+          'bodyAPI'
         ]);
         const contentBlock = htmlToDraft(layout);
         const contentState = ContentState.createFromBlockArray(
@@ -431,7 +454,7 @@ const ModalPolicies = ({
     const collection = modules.filter(({ id }) => id === module)[0];
     getDBComplex({
       collection: collection?.custom,
-      customQuery: JSON.stringify({"customFieldsTab":{"$ne":{}}})
+      customQuery: JSON.stringify({ "customFieldsTab": { "$ne": {} } })
     })
       .then(response => response.json())
       .then(data => {
@@ -804,28 +827,48 @@ const ModalPolicies = ({
                       {tab === 2 && (
                         <PortletBody>
                           <div className='__container-send-api'>
-                            <div className='__container-url-disabled'>
-                              <div className='__container-url'>
+                            <div className='__container-post'>
+                              <div className='token_textField'>
                                 <TextField
                                   className={classes.textField}
                                   id='standard-url'
                                   label='URL'
                                   margin='normal'
                                   onChange={handleChangeName('urlAPI')}
-                                  style={{ width: '600px' }}
+                                  style={{ width: '90%' }}
                                   value={values.urlAPI}
                                 />
-                              </div>
-                              <div className='__container-disabled'>
                                 <FormControlLabel
                                   value='start'
                                   control={
                                     <Switch
                                       checked={values.apiDisabled}
                                       color='primary'
-                                      onChange={handleChangeCheck(
-                                        'apiDisabled'
-                                      )}
+                                      onChange={handleChangeCheck('apiDisabled')}
+                                    />
+                                  }
+                                  label='Disabled'
+                                  labelPlacement='start'
+                                />
+                              </div>
+                            </div>
+                            <div className='__container-post'>
+                              <div className='token_textField'>
+                                <TextField
+                                  className={classes.textField}
+                                  id="Token-TextField"
+                                  label="Web Token"
+                                  margin="normal"
+                                  onChange={(e) => { }}
+                                  style={{ width: '90%' }}
+                                />
+                                <FormControlLabel
+                                  value='start'
+                                  control={
+                                    <Switch
+                                      checked={false}
+                                      color="primary"
+                                      onChange={(e) => { }}
                                     />
                                   }
                                   label='Disabled'
@@ -842,7 +885,7 @@ const ModalPolicies = ({
                                 multiline
                                 onChange={handleChangeName('bodyAPI')}
                                 rows='4'
-                                style={{ width: '100%' }}
+                                style={{ width: '90%' }}
                                 value={values.bodyAPI}
                               />
                             </div>
