@@ -230,6 +230,8 @@ const ModalPolicies = ({
     selectedIcon: '',
     subjectMessage: '',
     subjectNotification: '',
+    token: '',
+    tokenDisabled: true,
     urlAPI: ''
   });
 
@@ -420,8 +422,9 @@ const ModalPolicies = ({
           notificationFrom,
           notificationTo
         } = data.response;
-        const obj = pick(data.response, [
+        let obj = pick(data.response, [
           'apiDisabled',
+          'bodyAPI',
           'messageDisabled',
           'messageInternal',
           'messageMail',
@@ -434,8 +437,12 @@ const ModalPolicies = ({
           'subjectNotification',
           'selectedIcon',
           'urlAPI',
-          'bodyAPI'
+          'token',
+          'tokenDisabled'
         ]);
+        
+        obj = !obj.token && obj.tokenDisabled === undefined ? { ...obj, token: '', tokenDisabled: true } : obj;
+
         const contentBlock = htmlToDraft(layout);
         const contentState = ContentState.createFromBlockArray(
           contentBlock.contentBlocks
@@ -470,13 +477,11 @@ const ModalPolicies = ({
               filteredCustomFields = { ...filteredCustomFields, ...extractCustomFieldId(field) };
             });
           });
-          console.log("Filtered: ", filteredCustomFields);
           const filtered = { [row.name]: filteredCustomFields };
           customFieldNames = { ...customFieldNames, filtered };
           return { name: row.name, customFields: filteredCustomFields };
         })
         setCustomFields(rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
-        console.log(customFieldNames, rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
       })
       .catch(error => console.log('error>', error));
   }, [module]);
@@ -859,16 +864,17 @@ const ModalPolicies = ({
                                   id="Token-TextField"
                                   label="Web Token"
                                   margin="normal"
-                                  onChange={(e) => { }}
+                                  onChange={handleChangeName('token')}
                                   style={{ width: '90%' }}
+                                  value={values.token}
                                 />
                                 <FormControlLabel
                                   value='start'
                                   control={
                                     <Switch
-                                      checked={false}
+                                      checked={values.tokenDisabled}
                                       color="primary"
-                                      onChange={(e) => { }}
+                                      onChange={handleChangeCheck('tokenDisabled')}
                                     />
                                   }
                                   label='Disabled'

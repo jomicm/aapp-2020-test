@@ -10,6 +10,8 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
   );
 
   filteredPolicies.forEach(async ({
+    apiDisabled,
+    bodyAPI,
     layout: html,
     messageDisabled,
     messageFrom,
@@ -21,9 +23,9 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
     selectedIcon: icon,
     subjectMessage,
     subjectNotification,
-    apiDisabled,
     urlAPI,
-    bodyAPI
+    token,
+    tokenDisabled
   }) => {
     if (!messageDisabled) {
       const messageObj = {
@@ -52,10 +54,19 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
       simplePost(collections.notifications, notificationObj);
     }
     if (!apiDisabled) {
+
       try {
-        debugger
-        const data = await axios.post(urlAPI, bodyAPI);
-        console.log(data);
+        const validBody = JSON.parse(bodyAPI);
+        
+        if (!tokenDisabled) {
+          debugger
+          const data = await axios.post(urlAPI, validBody, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          console.log(data);
+        }
       } catch (error) {
         console.log(error);
       }
