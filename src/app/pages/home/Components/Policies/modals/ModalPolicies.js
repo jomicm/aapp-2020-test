@@ -267,17 +267,15 @@ const ModalPolicies = ({
   const handleBodyAPI = () => {
     let jsonBodyAPI = '';
 
-    if (!values.apiDisabled) {
-      try {
-        jsonBodyAPI = JSON.parse(values.bodyAPI);
+    try {
+      jsonBodyAPI = JSON.parse(values.bodyAPI);
 
-        if (typeof jsonBodyAPI !== 'object') {
-          jsonBodyAPI = JSON.parse('{}');
-        }
-
-      } catch (error) {
+      if (typeof jsonBodyAPI !== 'object') {
         jsonBodyAPI = JSON.parse('{}');
       }
+
+    } catch (error) {
+      jsonBodyAPI = JSON.parse('{}');
     }
 
     return jsonBodyAPI
@@ -302,6 +300,9 @@ const ModalPolicies = ({
       notificationTo,
       module
     };
+
+    console.log(body);
+
     if (!id) {
       postDB('policies', body)
         .then((data) => data.json())
@@ -440,6 +441,8 @@ const ModalPolicies = ({
           'token',
           'tokenDisabled'
         ]);
+
+        console.log(obj);
         
         obj = !obj.token && obj.tokenDisabled === undefined ? { ...obj, token: '', tokenDisabled: true } : obj;
 

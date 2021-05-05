@@ -41,7 +41,6 @@ import './Locations.scss';
 import ModalYesNo from '../Components/ModalYesNo';
 import Policies from '../Components/Policies/Policies';
 import { executePolicies } from '../Components/Policies/utils';
-import { usePolicies } from '../Components/Policies/hooks';
 import { hosts, getImageURL } from '../utils';
 import { allBaseFields } from '../constants';
 
@@ -59,7 +58,6 @@ const locationsTreeData = {
 const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   const { showCustomAlert, showDeletedAlert, showErrorAlert } = actions;
   const theme4 = useTheme();
-  const policies = usePolicies();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [coordinates, setCoordinates] = useState([]);
   const [modalData, setModalData] = useState([])
@@ -120,13 +118,18 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
       setOpenYesNoModal(false);
     },
     removeLocation() {
-      deleteDB('locationsReal/', parentSelected)
-        .then((response) => {
-          dispatch(showDeletedAlert());
-          executePolicies('OnDelete', 'locations', 'list', policies);
-          handleLoadLocations();
+      getDB('policies')
+        .then((response) => response.json())
+        .then((data) => {
+          deleteDB('locationsReal/', parentSelected)
+            .then((_) => {
+              dispatch(showDeletedAlert());
+              executePolicies('OnDelete', 'locations', 'list', data.response);
+              handleLoadLocations();
+            })
+            .catch((_) => dispatch(showErrorAlert()));
         })
-        .catch((error) => dispatch(showErrorAlert()));
+        .catch((_) => dispatch(showErrorAlert()));
       setOpenYesNoModal(false);
     },
     openProfilesListBox(e) {
@@ -237,15 +240,20 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
 
   const onDeleteProfileLocation = (id) => {
     if (!id || !Array.isArray(id)) return;
-    id.forEach(_id => {
-      deleteDB('locations/', _id)
-        .then((response) => {
-          dispatch(showDeletedAlert());
-          executePolicies('OnDelete', 'locations', 'profiles', policies);
-          loadLocationsProfilesData();
-        })
-        .catch((error) => dispatch(showErrorAlert()));
-    });
+    getDB('policies')
+      .then((response) => response.json())
+      .then((data => {
+        id.forEach(_id => {
+          deleteDB('locations/', _id)
+            .then((_) => {
+              dispatch(showDeletedAlert());
+              executePolicies('OnDelete', 'locations', 'profiles', data.response);
+              loadLocationsProfilesData();
+            })
+            .catch((_) => dispatch(showErrorAlert()));
+        });
+      })
+        .catch((_) => dispatch(showErrorAlert())));
   };
 
   const onEditProfileLocation = (_id) => {
