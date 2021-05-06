@@ -72,6 +72,14 @@
     width: 100%;
 }
 
+.__container-on-load {
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
+    width: 100%;
+    padding: 10px 15px;
+}
+
 .__container-form-checkbox {
     display: flex;
     justify-content: space-around;
@@ -116,7 +124,6 @@
 .notification-icons {
     margin: 10px;
 }
-
 
 .__container-url-disabled {
     display: flex;

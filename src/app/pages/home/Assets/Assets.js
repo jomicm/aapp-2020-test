@@ -450,6 +450,22 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
     }
   }, [globalSearch.tabIndex, globalSearch.searchValue]);
 
+  useEffect(() => {
+    kpis.forEach(({ kpi, queryExact }) => {
+      getCountDB({ collection: 'assets', queryExact })
+        .then(response => response.json())
+        .then(data => {
+          setAssetsKPI(prev => ({
+            ...prev,
+            [kpi]: {
+              ...prev[kpi],
+              number: data.response.count
+            }
+          }));
+        });
+    });
+  }, []);
+
   return (
     <>
       <ModalYesNo

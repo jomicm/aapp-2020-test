@@ -59,8 +59,6 @@ import CustomFieldAccordion from '../components/CustomFieldsAccordion';
 import { extractCustomFieldId } from '../../../Reports/reportsHelpers';
 import './ModalPolicies.scss';
 
-const localStorageActiveTabKey = 'builderActiveTab';
-
 const styles5 = (theme) => ({
   root: {
     margin: 0,
@@ -167,40 +165,10 @@ const ModalPolicies = ({
     { id: 'processes', name: 'Processes', custom: '' },
     { id: 'inventories', name: 'Inventories', custom: '' }
   ];
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const classes = useStyles();
   const classes4 = useStyles4();
   const [cursorPosition, setCursorPosition] = useState([0, 0]);
   const [editor, setEditor] = useState(EditorState.createEmpty());
-  const employeesFields = {
-    references: {
-      baseFields: {
-        name: { id: 'nameReferences', label: 'name' },
-        ssn: { id: 'ssn', label: 'Social Service Number' }
-      },
-      customFields: {
-        recepcionist: {
-          ootoDay: { id: 'ootoDay', label: 'Ooto Day' },
-          favoriteOffice: { id: 'favoriteOffice', label: 'Favorite Office' }
-        },
-        emp02: {
-          birthday: { id: 'birthday', label: 'Birthday' }
-        },
-        emp03: {
-          age: { id: 'age', label: 'Age' }
-        }
-      },
-      name: 'BF - References'
-    },
-    list: {
-      baseFields: {
-        name: { id: 'nameList', label: 'name' },
-        lastName: { id: 'lastName', label: 'Laste Name' },
-        email: { id: 'email', label: 'Email' }
-      },
-      name: 'BF - List'
-    }
-  };
   const iconsList = {
     notificationImportantIcon: <NotificationImportantIcon />,
     notificationsIcon: <NotificationsIcon />,
@@ -214,7 +182,8 @@ const ModalPolicies = ({
   const [notificationFrom, setNotificationFrom] = useState([]);
   const [notificationTo, setNotificationTo] = useState([]);
   const [selectedControl, setSelectedControl] = useState(null);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [tab, setTab] = useState(0);
+  const [onLoadTab, setOnLoadTab] = useState(0);
   const [users, setUsers] = useState([]);
   const [values, setValues] = useState({
     apiDisabled: false,
@@ -228,9 +197,11 @@ const ModalPolicies = ({
     selectedAction: '',
     selectedCatalogue: '',
     selectedIcon: '',
+    selectedOnLoadCategory: {},
     subjectMessage: '',
     subjectNotification: '',
-    urlAPI: ''
+    urlAPI: '',
+    urlOnLoad: ''
   });
 
   const handleAlignment = (event, newAlignment) => {
@@ -259,7 +230,12 @@ const ModalPolicies = ({
 
   const handleOnChangeValue = (name) => (event) => {
     const { target: { value } } = event;
+
+    if (name === 'selectedAction' && value !== 'OnLoad') setTab(0);
+
     setValues({ ...values, [name]: value });
+
+    if (value === 'OnLoad') setTab(3);
   };
 
   const handleSave = () => {
@@ -352,15 +328,19 @@ const ModalPolicies = ({
       selectedAction: '',
       selectedCatalogue: '',
       selectedIcon: '',
+      selectedOnLoadCategory: {},
       subjectMessage: '',
       subjectNotification: '',
-      urlAPI: ''
+      urlAPI: '',
+      urlOnLoad: ''
     });
     setMessageFrom([]);
     setMessageTo([]);
     setNotificationFrom([]);
     setNotificationTo([]);
     setEditor(EditorState.createEmpty());
+    setTab(0);
+    setOnLoadTab(0);
   };
 
   const saveAndReload = (folderName, id) => {
@@ -398,7 +378,7 @@ const ModalPolicies = ({
           notificationFrom,
           notificationTo
         } = data.response;
-        const obj = pick(data.response, [
+        let obj = pick(data.response, [
           'apiDisabled',
           'messageDisabled',
           'messageInternal',
@@ -408,11 +388,18 @@ const ModalPolicies = ({
           'policyName',
           'selectedAction',
           'selectedCatalogue',
+          'selectedOnLoadCategory',
           'subjectMessage',
           'subjectNotification',
           'selectedIcon',
-          'urlAPI'
+          'urlAPI',
+          'urlOnLoad'
         ]);
+
+        obj = !obj.urlOnLoad ? { ...obj, urlOnLoad: '' } : obj;
+
+        obj = !obj.selectedOnLoadCategory ? { ...obj, selectedOnLoadCategory: {} } : obj;
+
         const contentBlock = htmlToDraft(layout);
         const contentState = ContentState.createFromBlockArray(
           contentBlock.contentBlocks
@@ -431,7 +418,7 @@ const ModalPolicies = ({
     const collection = modules.filter(({ id }) => id === module)[0];
     getDBComplex({
       collection: collection?.custom,
-      customQuery: JSON.stringify({"customFieldsTab":{"$ne":{}}})
+      customQuery: JSON.stringify({ "customFieldsTab": { "$ne": {} } })
     })
       .then(response => response.json())
       .then(data => {
@@ -447,13 +434,12 @@ const ModalPolicies = ({
               filteredCustomFields = { ...filteredCustomFields, ...extractCustomFieldId(field) };
             });
           });
-          console.log("Filtered: ", filteredCustomFields);
           const filtered = { [row.name]: filteredCustomFields };
           customFieldNames = { ...customFieldNames, filtered };
           return { name: row.name, customFields: filteredCustomFields };
         })
         setCustomFields(rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
-        console.log(customFieldNames, rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
+        console.log(rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
       })
       .catch(error => console.log('error>', error));
   }, [module]);
@@ -549,18 +535,27 @@ const ModalPolicies = ({
                               <Tabs
                                 className='builder-tabs'
                                 component='div'
-                                onChange={(_, nextTab) => {
-                                  setTab(nextTab);
-                                  localStorage.setItem(
-                                    localStorageActiveTabKey,
-                                    nextTab
-                                  );
-                                }}
+                                onChange={(_, nextTab) => setTab(nextTab)}
                                 value={tab}
                               >
-                                <Tab label='Send Message' />
-                                <Tab label='Send Notification' />
-                                <Tab label='Send API' />
+                                <Tab
+                                  label='Send Message'
+                                  style={{ display: values.selectedAction === 'OnLoad' ? 'none' : null }}
+                                />
+                                <Tab
+                                  label='Send Notification'
+                                  style={{ display: values.selectedAction === 'OnLoad' ? 'none' : null }}
+                                />
+                                <Tab
+                                  label='Send API'
+                                  style={{ display: values.selectedAction === 'OnLoad' ? 'none' : null }}
+                                />
+                                {values.selectedAction === 'OnLoad' && (
+                                  <Tab
+                                    label="On Load"
+                                    style={{ display: values.selectedAction === 'OnLoad' ? null : 'none' }}
+                                  />
+                                )}
                               </Tabs>
                             </PortletHeaderToolbar>
                           }
@@ -846,6 +841,50 @@ const ModalPolicies = ({
                                 value={values.bodyAPI}
                               />
                             </div>
+                          </div>
+                        </PortletBody>
+                      )}
+                      {/* OnLoad Action */}
+                      {tab === 3 && values.selectedAction === 'OnLoad' && (
+                        <PortletBody>
+                          <div className="__container-on-load">
+                            <TextField
+                              className={classes.textField}
+                              id='onLoad-URL'
+                              label='URL'
+                              margin='normal'
+                              onChange={handleChangeName('urlOnLoad')}
+                              style={{ width: '70%', marginBottom: '20px' }}
+                              value={values.urlOnLoad}
+                            />
+                            <FormControl style={{ marginBottom: '20px' }} className={classes.textField}>
+                              <InputLabel htmlFor='age-simple'>
+                                {module === 'assets' ? 'Category' : 'References'}
+                              </InputLabel>
+                              <Select
+                                onChange={handleOnChangeValue('selectedOnLoadCategory')}
+                                value={values.selectedOnLoadCategory}
+                              >
+                                {customFields.map((customField, index) => (
+                                  <MenuItem key={`${customField.name}-${index}`} value={customField}>
+                                    {customField.name.replace(/\w\S*/g, (w) => (w.replace(/^\w/, (c) => c.toUpperCase())))}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                            {Object.entries(values.selectedOnLoadCategory).length && (
+                              <Tabs
+                                style={{ marginLeft: '10px' }}
+                                className='builder-tabs'
+                                component='div'
+                                onChange={(_, nextTab) => setOnLoadTab(nextTab)}
+                                value={onLoadTab}
+                              >
+                                {Object.values(values.selectedOnLoadCategory.customFields).map((customField, index) => (
+                                  <Tab key={`${customField}-${index}`} label={customField} />
+                                ))}
+                              </Tabs>
+                            )}
                           </div>
                         </PortletBody>
                       )}
