@@ -142,3 +142,10 @@
     padding: 50px 0 0 0.4rem;
     width: 25%;
 }
+
+.__token-on-load-container {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 25px;
+    align-items: baseline;
+}

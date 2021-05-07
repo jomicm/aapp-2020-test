@@ -26,6 +26,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Grid,
   IconButton,
   FormControl,
   FormControlLabel,
@@ -40,6 +41,7 @@ import {
   Typography,
   withStyles,
 } from '@material-ui/core';
+import { TabPanel } from '@material-ui/lab';
 import CloseIcon from '@material-ui/icons/Close';
 import {
   PortletBody,
@@ -114,6 +116,25 @@ const useStyles = makeStyles((theme) => ({
     display: 'flex',
     flexWrap: 'wrap'
   },
+  customField: {
+    width: '40%',
+    marginLeft: '15px',
+    [theme.breakpoints.down('sm')]: {
+      width: '100%',
+      marginLeft: '0px',
+      marginTop: '0px'
+    }
+  },
+  customFieldTitle: {
+    display: 'flex',
+    width: '80px',
+    flexWrap: 'wrap',
+    textAlign: 'justify',
+    [theme.breakpoints.down('sm')]: {
+      width: 'auto',
+      marginTop: '20px',
+    }
+  },
   textField: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
@@ -148,6 +169,7 @@ const ModalPolicies = ({
   const { showErrorAlert, showCustomAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
   const [alignment, setAlignment] = useState('');
   const [customFields, setCustomFields] = useState([]);
+  const [selectedCustomFieldTab, setSelectedCustomFieldTab] = useState();
   const actionsReader = [
     { value: 'OnAdd', label: 'On Add' },
     { value: 'OnEdit', label: 'On Edit' },
@@ -200,6 +222,8 @@ const ModalPolicies = ({
     selectedOnLoadCategory: {},
     subjectMessage: '',
     subjectNotification: '',
+    tokenOnLoad: '',
+    tokenOnLoadDisabled: true,
     urlAPI: '',
     urlOnLoad: ''
   });
@@ -231,7 +255,15 @@ const ModalPolicies = ({
   const handleOnChangeValue = (name) => (event) => {
     const { target: { value } } = event;
 
+    if (name === 'selectedOnLoadCategory') {
+      setOnLoadTab(0);
+      const { left, right } = value.rawCF[`tab-0`];
+      const res = [...left, ...right];
+      setSelectedCustomFieldTab(res);
+    }
+
     if (name === 'selectedAction' && value !== 'OnLoad') setTab(0);
+
 
     setValues({ ...values, [name]: value });
 
@@ -331,6 +363,8 @@ const ModalPolicies = ({
       selectedOnLoadCategory: {},
       subjectMessage: '',
       subjectNotification: '',
+      tokenOnLoad: '',
+      tokenOnLoadDisabled: true,
       urlAPI: '',
       urlOnLoad: ''
     });
@@ -392,6 +426,8 @@ const ModalPolicies = ({
           'subjectMessage',
           'subjectNotification',
           'selectedIcon',
+          'tokenOnLoad',
+          'tokenOnLoadDisabled',
           'urlAPI',
           'urlOnLoad'
         ]);
@@ -399,6 +435,10 @@ const ModalPolicies = ({
         obj = !obj.urlOnLoad ? { ...obj, urlOnLoad: '' } : obj;
 
         obj = !obj.selectedOnLoadCategory ? { ...obj, selectedOnLoadCategory: {} } : obj;
+
+        obj = !obj.tokenOnLoad ? { ...obj, tokenOnLoad: '' } : obj;
+
+        obj = !obj.tokenOnLoadDisabled ? { ...obj, tokenOnLoadDisabled: true } : obj;
 
         const contentBlock = htmlToDraft(layout);
         const contentState = ContentState.createFromBlockArray(
@@ -436,12 +476,17 @@ const ModalPolicies = ({
           });
           const filtered = { [row.name]: filteredCustomFields };
           customFieldNames = { ...customFieldNames, filtered };
-          return { name: row.name, customFields: filteredCustomFields };
+          console.log({ name: row.name, customFields: filteredCustomFields, rawCF: row.customFieldsTab, id: row._id });
+          return { name: row.name, customFields: filteredCustomFields, rawCF: row.customFieldsTab, id: row._id };
         })
         setCustomFields(rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
-        console.log(rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
       })
       .catch(error => console.log('error>', error));
+
+    // getDBComplex({
+    //   collection: collection?.custom,
+
+    // });
   }, [module]);
 
   return (
@@ -854,9 +899,32 @@ const ModalPolicies = ({
                               label='URL'
                               margin='normal'
                               onChange={handleChangeName('urlOnLoad')}
-                              style={{ width: '70%', marginBottom: '20px' }}
+                              style={{ width: '80%', marginBottom: '20px' }}
                               value={values.urlOnLoad}
                             />
+                            <div className="__token-on-load-container">
+                              <TextField
+                                className={classes.textField}
+                                id='onLoad-tokenURL'
+                                label='Web Token'
+                                margin='normal'
+                                onChange={handleChangeName('tokenOnLoad')}
+                                style={{ width: '80%' }}
+                                value={values.tokenOnLoad}
+                              />
+                              <FormControlLabel
+                                value='start'
+                                control={
+                                  <Switch
+                                    checked={values.tokenOnLoadDisabled}
+                                    color='primary'
+                                    onChange={handleChangeCheck('tokenOnLoadDisabled')}
+                                  />
+                                }
+                                label='Disabled'
+                                labelPlacement='start'
+                              />
+                            </div>
                             <FormControl style={{ marginBottom: '20px' }} className={classes.textField}>
                               <InputLabel htmlFor='age-simple'>
                                 {module === 'assets' ? 'Category' : 'References'}
@@ -872,19 +940,58 @@ const ModalPolicies = ({
                                 ))}
                               </Select>
                             </FormControl>
-                            {Object.entries(values.selectedOnLoadCategory).length && (
-                              <Tabs
-                                style={{ marginLeft: '10px' }}
-                                className='builder-tabs'
-                                component='div'
-                                onChange={(_, nextTab) => setOnLoadTab(nextTab)}
-                                value={onLoadTab}
-                              >
-                                {Object.values(values.selectedOnLoadCategory.customFields).map((customField, index) => (
-                                  <Tab key={`${customField}-${index}`} label={customField} />
-                                ))}
-                              </Tabs>
-                            )}
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              {Object.entries(values.selectedOnLoadCategory).length && (
+                                <Tabs
+                                  style={{ marginLeft: '10px' }}
+                                  className='builder-tabs'
+                                  component='div'
+                                  onChange={(_, nextTab) => {
+                                    setOnLoadTab(nextTab);
+                                    const { left, right } = values.selectedOnLoadCategory.rawCF[`tab-${nextTab}`];
+                                    const res = [...left, ...right];
+                                    console.log(res);
+                                    setSelectedCustomFieldTab(res);
+                                  }}
+                                  value={onLoadTab}
+                                >
+                                  {Object.values(values.selectedOnLoadCategory.rawCF || {}).map((tab, index) => (
+                                    <Tab key={`Tab-${index}`} label={tab.info.name} />
+                                  ))}
+                                </Tabs>
+                              )}
+                              {selectedCustomFieldTab && (
+                                <Grid
+                                  container
+                                  direction="column"
+                                  style={{ paddingLeft: '10px', paddingRight: '10px' }}
+                                >
+                                  {selectedCustomFieldTab.length ? (selectedCustomFieldTab.map((customField) => (
+                                    <Grid
+                                      alignItems="baseline"
+                                      container
+                                      direction="row"
+                                      item
+                                      justify="flex-start"
+                                      key={customField.id}
+                                    >
+                                      <h6 className={classes.customFieldTitle}>
+                                        {customField.values?.fieldName || customField.content}
+                                      </h6>
+                                      <TextField
+                                        className={classes.customField}
+                                        id={`TextField-${customField.id}`}
+                                        label='Value'
+                                        margin='normal'
+                                        onChange={(val) => { }}
+                                        value={customField.initialValue}
+                                      />
+                                    </Grid>
+                                  )))
+                                    : <h6 style={{ marginTop: '15px' }}> No Custom Fields Found In This Tab </h6>}
+                                </Grid>
+                              )}
+                            </div>
                           </div>
                         </PortletBody>
                       )}
