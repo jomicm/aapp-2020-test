@@ -4,7 +4,7 @@ import { pick } from 'lodash';
 import {
   ContentState,
   convertToRaw,
-  EditorState,
+  EditorState, 
   Modifier
 } from 'draft-js';
 import { Editor } from 'react-draft-wysiwyg';
@@ -941,7 +941,7 @@ const ModalPolicies = ({
                               </Select>
                             </FormControl>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                              {Object.entries(values.selectedOnLoadCategory).length && (
+                              {Object.entries(values.selectedOnLoadCategory).length > 0 && (
                                 <Tabs
                                   style={{ marginLeft: '10px' }}
                                   className='builder-tabs'
