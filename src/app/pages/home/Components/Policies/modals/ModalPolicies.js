@@ -112,28 +112,50 @@ const useStyles4 = makeStyles((theme) => ({
 }));
 
 const useStyles = makeStyles((theme) => ({
+  button: {
+    display: 'block',
+    marginTop: theme.spacing(2)
+  },
   container: {
     display: 'flex',
     flexWrap: 'wrap'
+  },
+  customField: {
+    width: '40%',
+    marginLeft: '15px',
+    [theme.breakpoints.down('sm')]: {
+      width: '100%',
+      marginLeft: '0px',
+      marginTop: '0px'
+    }
+  },
+  customFieldTitle: {
+    display: 'flex',
+    width: '80px',
+    flexWrap: 'wrap',
+    textAlign: 'justify',
+    [theme.breakpoints.down('sm')]: {
+      width: 'auto',
+      marginTop: '20px',
+    }
+  },
+  dense: {
+    marginTop: 19
+  },
+  formControl: {
+    margin: theme.spacing(1),
+    minWidth: 120
+  },
+  formControlLabel: {
+    marginLeft: '10px'
+  },
+  menu: {
+    width: 200
   },
   textField: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
     width: 200
-  },
-  dense: {
-    marginTop: 19
-  },
-  menu: {
-    width: 200
-  },
-  button: {
-    display: 'block',
-    marginTop: theme.spacing(2)
-  },
-  formControl: {
-    margin: theme.spacing(1),
-    minWidth: 120
   }
 }));
 
@@ -443,7 +465,7 @@ const ModalPolicies = ({
         ]);
 
         console.log(obj);
-        
+
         obj = !obj.token && obj.tokenDisabled === undefined ? { ...obj, token: '', tokenDisabled: true } : obj;
 
         const contentBlock = htmlToDraft(layout);
@@ -862,17 +884,11 @@ const ModalPolicies = ({
                             </div>
                             <div className='__container-post'>
                               <div className='token_textField'>
-                                <TextField
-                                  className={classes.textField}
-                                  id="Token-TextField"
-                                  label="Web Token"
-                                  margin="normal"
-                                  onChange={handleChangeName('token')}
-                                  style={{ width: '90%' }}
-                                  value={values.token}
-                                />
                                 <FormControlLabel
                                   value='start'
+                                  classes={{
+                                    labelPlacementStart: classes.formControlLabel
+                                  }}
                                   control={
                                     <Switch
                                       checked={values.tokenDisabled}
@@ -880,8 +896,17 @@ const ModalPolicies = ({
                                       onChange={handleChangeCheck('tokenDisabled')}
                                     />
                                   }
-                                  label='Disabled'
+                                  label='Web Token'
                                   labelPlacement='start'
+                                />
+                                <TextField
+                                  className={classes.textField}
+                                  id="Token-TextField"
+                                  label="Web Token"
+                                  margin="normal"
+                                  onChange={handleChangeName('token')}
+                                  style={{ width: '90%', marginLeft: '20px' }}
+                                  value={values.token}
                                 />
                               </div>
                             </div>
