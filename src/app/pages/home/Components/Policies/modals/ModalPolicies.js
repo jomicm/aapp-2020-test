@@ -4,7 +4,7 @@ import { pick } from 'lodash';
 import {
   ContentState,
   convertToRaw,
-  EditorState, 
+  EditorState,
   Modifier
 } from 'draft-js';
 import { Editor } from 'react-draft-wysiwyg';
@@ -112,6 +112,10 @@ const useStyles4 = makeStyles((theme) => ({
 }));
 
 const useStyles = makeStyles((theme) => ({
+  button: {
+    display: 'block',
+    marginTop: theme.spacing(2)
+  },
   container: {
     display: 'flex',
     flexWrap: 'wrap'
@@ -135,24 +139,23 @@ const useStyles = makeStyles((theme) => ({
       marginTop: '20px',
     }
   },
-  textField: {
-    marginLeft: theme.spacing(1),
-    marginRight: theme.spacing(1),
-    width: 200
-  },
   dense: {
     marginTop: 19
-  },
-  menu: {
-    width: 200
-  },
-  button: {
-    display: 'block',
-    marginTop: theme.spacing(2)
   },
   formControl: {
     margin: theme.spacing(1),
     minWidth: 120
+  },
+  formControlLabel: {
+    marginLeft: '10px'
+  },
+  menu: {
+    width: 200
+  },
+  textField: {
+    marginLeft: theme.spacing(1),
+    marginRight: theme.spacing(1),
+    width: 200
   }
 }));
 
@@ -170,6 +173,7 @@ const ModalPolicies = ({
   const [alignment, setAlignment] = useState('');
   const [customFields, setCustomFields] = useState([]);
   const [selectedCustomFieldTab, setSelectedCustomFieldTab] = useState();
+  const [customFieldsInputs, setCustomFieldsInputs] = useState({});
   const actionsReader = [
     { value: 'OnAdd', label: 'On Add' },
     { value: 'OnEdit', label: 'On Edit' },
@@ -215,6 +219,7 @@ const ModalPolicies = ({
     messageMail: false,
     messageNotification: '',
     notificationDisabled: false,
+    onLoadDisabled: true,
     policyName: '',
     selectedAction: '',
     selectedCatalogue: '',
@@ -223,13 +228,33 @@ const ModalPolicies = ({
     subjectMessage: '',
     subjectNotification: '',
     tokenOnLoad: '',
-    tokenOnLoadDisabled: true,
+    tokenOnLoadEnabled: false,
     urlAPI: '',
     urlOnLoad: ''
   });
 
+  const handleCustomFieldInputs = (onlyTextCustomFields, clear = false) => {
+    setCustomFieldsInputs(prev => {
+      let inputs = clear ? {} : prev;
+      onlyTextCustomFields.forEach((customField) => {
+        if (inputs[customField.id] === null || inputs[customField.id] === undefined) {
+          inputs = { ...inputs, [customField.id]: '' };
+        }
+      });
+      return inputs
+    });
+  };
+
   const handleAlignment = (event, newAlignment) => {
     setAlignment(newAlignment);
+  };
+
+  const handleCustomFieldInputChange = (customField) => (event) => {
+    const text = event.target.value;
+    setCustomFieldsInputs(prev => ({
+      ...prev,
+      [customField.id]: text
+    }));
   };
 
   const handleChangeCheck = (name) => (event) => {
@@ -257,9 +282,11 @@ const ModalPolicies = ({
 
     if (name === 'selectedOnLoadCategory') {
       setOnLoadTab(0);
-      const { left, right } = value.rawCF[`tab-0`];
+      const { left, right } = value.rawCF['tab-0'];
       const res = [...left, ...right];
-      setSelectedCustomFieldTab(res);
+      const onlyTextCustomFields = res.filter((e) => ['singleLine', 'multiLine'].includes(e.content));
+      handleCustomFieldInputs(onlyTextCustomFields, true);
+      setSelectedCustomFieldTab(onlyTextCustomFields);
     }
 
     if (name === 'selectedAction' && value !== 'OnLoad') setTab(0);
@@ -277,14 +304,23 @@ const ModalPolicies = ({
       return;
     }
     const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
-    const body = {
+
+    const validValues = values.selectedAction === 'OnLoad' ? {
       ...values,
+      apiDisabled: true,
+      messageDisabled: true,
+      notificationDisabled: true
+    } : values;
+
+    const body = {
+      ...validValues,
       messageFrom,
       messageTo,
       layout,
       notificationFrom,
       notificationTo,
-      module
+      module,
+      onLoadFields: customFieldsInputs
     };
     if (!id) {
       postDB('policies', body)
@@ -356,6 +392,7 @@ const ModalPolicies = ({
       messageMail: false,
       messageNotification: '',
       notificationDisabled: false,
+      onLoadDisabled: true,
       policyName: '',
       selectedAction: '',
       selectedCatalogue: '',
@@ -364,7 +401,7 @@ const ModalPolicies = ({
       subjectMessage: '',
       subjectNotification: '',
       tokenOnLoad: '',
-      tokenOnLoadDisabled: true,
+      tokenOnLoadEnabled: false,
       urlAPI: '',
       urlOnLoad: ''
     });
@@ -375,6 +412,8 @@ const ModalPolicies = ({
     setEditor(EditorState.createEmpty());
     setTab(0);
     setOnLoadTab(0);
+    setSelectedCustomFieldTab();
+    setCustomFieldsInputs({});
   };
 
   const saveAndReload = (folderName, id) => {
@@ -419,6 +458,7 @@ const ModalPolicies = ({
           'messageMail',
           'messageNotification',
           'notifiactionDisabled',
+          'onLoadDisabled',
           'policyName',
           'selectedAction',
           'selectedCatalogue',
@@ -427,10 +467,12 @@ const ModalPolicies = ({
           'subjectNotification',
           'selectedIcon',
           'tokenOnLoad',
-          'tokenOnLoadDisabled',
+          'tokenOnLoadEnabled',
           'urlAPI',
           'urlOnLoad'
         ]);
+
+        obj = !obj.onLoadDisabled ? { ...obj, onLoadDisabled: true } : obj;
 
         obj = !obj.urlOnLoad ? { ...obj, urlOnLoad: '' } : obj;
 
@@ -438,7 +480,7 @@ const ModalPolicies = ({
 
         obj = !obj.tokenOnLoad ? { ...obj, tokenOnLoad: '' } : obj;
 
-        obj = !obj.tokenOnLoadDisabled ? { ...obj, tokenOnLoadDisabled: true } : obj;
+        obj = !obj.tokenOnLoadEnabled ? { ...obj, tokenOnLoadEnabled: false } : obj;
 
         const contentBlock = htmlToDraft(layout);
         const contentState = ContentState.createFromBlockArray(
@@ -476,7 +518,6 @@ const ModalPolicies = ({
           });
           const filtered = { [row.name]: filteredCustomFields };
           customFieldNames = { ...customFieldNames, filtered };
-          console.log({ name: row.name, customFields: filteredCustomFields, rawCF: row.customFieldsTab, id: row._id });
           return { name: row.name, customFields: filteredCustomFields, rawCF: row.customFieldsTab, id: row._id };
         })
         setCustomFields(rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
@@ -893,36 +934,53 @@ const ModalPolicies = ({
                       {tab === 3 && values.selectedAction === 'OnLoad' && (
                         <PortletBody>
                           <div className="__container-on-load">
-                            <TextField
-                              className={classes.textField}
-                              id='onLoad-URL'
-                              label='URL'
-                              margin='normal'
-                              onChange={handleChangeName('urlOnLoad')}
-                              style={{ width: '80%', marginBottom: '20px' }}
-                              value={values.urlOnLoad}
-                            />
                             <div className="__token-on-load-container">
+                              <TextField
+                                className={classes.textField}
+                                id='onLoad-URL'
+                                label='URL'
+                                margin='normal'
+                                onChange={handleChangeName('urlOnLoad')}
+                                style={{ width: '90%' }}
+                                value={values.urlOnLoad}
+                              />
+                              <FormControlLabel
+                                value='start'
+                                control={
+                                  <Switch
+                                    checked={values.onLoadDisabled}
+                                    color='primary'
+                                    onChange={handleChangeCheck('onLoadDisabled')}
+                                  />
+                                }
+                                label='Disabled'
+                                labelPlacement='start'
+                              />
+                            </div>
+                            <div className="__token-on-load-container">
+                              <FormControlLabel
+                                value='start'
+                                classes={{
+                                  labelPlacementStart: classes.formControlLabel
+                                }}
+                                control={
+                                  <Switch
+                                    checked={values.tokenOnLoadEnabled}
+                                    color='primary'
+                                    onChange={handleChangeCheck('tokenOnLoadEnabled')}
+                                  />
+                                }
+                                label='Web Token'
+                                labelPlacement='start'
+                              />
                               <TextField
                                 className={classes.textField}
                                 id='onLoad-tokenURL'
                                 label='Web Token'
                                 margin='normal'
                                 onChange={handleChangeName('tokenOnLoad')}
-                                style={{ width: '80%' }}
+                                style={{ width: '80%', marginLeft: '20px' }}
                                 value={values.tokenOnLoad}
-                              />
-                              <FormControlLabel
-                                value='start'
-                                control={
-                                  <Switch
-                                    checked={values.tokenOnLoadDisabled}
-                                    color='primary'
-                                    onChange={handleChangeCheck('tokenOnLoadDisabled')}
-                                  />
-                                }
-                                label='Disabled'
-                                labelPlacement='start'
                               />
                             </div>
                             <FormControl style={{ marginBottom: '20px' }} className={classes.textField}>
@@ -950,8 +1008,9 @@ const ModalPolicies = ({
                                     setOnLoadTab(nextTab);
                                     const { left, right } = values.selectedOnLoadCategory.rawCF[`tab-${nextTab}`];
                                     const res = [...left, ...right];
-                                    console.log(res);
-                                    setSelectedCustomFieldTab(res);
+                                    const onlyTextCustomFields = res.filter((e) => ['singleLine', 'multiLine'].includes(e.content));
+                                    handleCustomFieldInputs(onlyTextCustomFields);
+                                    setSelectedCustomFieldTab(onlyTextCustomFields);
                                   }}
                                   value={onLoadTab}
                                 >
@@ -981,14 +1040,14 @@ const ModalPolicies = ({
                                       <TextField
                                         className={classes.customField}
                                         id={`TextField-${customField.id}`}
-                                        label='Value'
+                                        label='Object Path'
                                         margin='normal'
-                                        onChange={(val) => { }}
-                                        value={customField.initialValue}
+                                        onChange={handleCustomFieldInputChange(customField)}
+                                        value={customFieldsInputs[customField.id]}
                                       />
                                     </Grid>
                                   )))
-                                    : <h6 style={{ marginTop: '15px' }}> No Custom Fields Found In This Tab </h6>}
+                                    : <h6 style={{ marginTop: '15px' }}> No Text Custom Fields Found In This Tab </h6>}
                                 </Grid>
                               )}
                             </div>
