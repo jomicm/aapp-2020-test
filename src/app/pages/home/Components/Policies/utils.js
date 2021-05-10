@@ -27,7 +27,7 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
     subjectNotification,
     urlAPI,
     token,
-    tokenDisabled
+    tokenEnabled
   }) => {
     if (!messageDisabled) {
       const messageObj = {
@@ -59,7 +59,7 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
       try {
         const validBody = JSON.parse(bodyAPI);
         
-        if (!tokenDisabled) {
+        if (tokenEnabled) {
           await axios.post(urlAPI, validBody, {
             headers: {
               Authorization: `Bearer ${token}`

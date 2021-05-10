@@ -253,7 +253,7 @@ const ModalPolicies = ({
     subjectMessage: '',
     subjectNotification: '',
     token: '',
-    tokenDisabled: true,
+    tokenEnabled: false,
     urlAPI: ''
   });
 
@@ -461,12 +461,16 @@ const ModalPolicies = ({
           'selectedIcon',
           'urlAPI',
           'token',
-          'tokenDisabled'
+          'tokenDisabled',
+          'tokenEnabled'
         ]);
 
-        console.log(obj);
+        // obj = !obj.token && obj.tokenDisabled === undefined ? { ...obj, token: '', tokenDisabled: true } : obj;
 
-        obj = !obj.token && obj.tokenDisabled === undefined ? { ...obj, token: '', tokenDisabled: true } : obj;
+        if (!obj.tokenEnabled && typeof obj.tokenEnabled !== 'boolean') {
+          obj.tokenEnabled = false;
+          delete obj.tokenDisabled;
+        }
 
         const contentBlock = htmlToDraft(layout);
         const contentState = ContentState.createFromBlockArray(
@@ -891,9 +895,9 @@ const ModalPolicies = ({
                                   }}
                                   control={
                                     <Switch
-                                      checked={values.tokenDisabled}
+                                      checked={values.tokenEnabled}
                                       color="primary"
-                                      onChange={handleChangeCheck('tokenDisabled')}
+                                      onChange={handleChangeCheck('tokenEnabled')}
                                     />
                                   }
                                   label='Web Token'
