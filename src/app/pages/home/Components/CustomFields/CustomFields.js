@@ -221,7 +221,11 @@ function CustomFields(props) {
     if (!customFieldsTabTmp[`tab-${tabIndex}`]) {
       customFieldsTabTmp[`tab-${tabIndex}`] = { left: [], right: [], info: tabs[tabIndex] };
     }
-    customFieldsTabTmp[`tab-${tabIndex}`].left.push({ id: uuidv4().split('-').pop(), content: customFieldName, values: {fieldName} });
+    if (['Radio', 'Drop Down', 'Check Box', 'Decision Box'].includes(fieldName)){
+      customFieldsTabTmp[`tab-${tabIndex}`].left.push({ id: uuidv4().split('-').pop(), content: customFieldName, values: {fieldName, options: ['option 1', 'option 2', 'option 3']}});
+    } else {
+      customFieldsTabTmp[`tab-${tabIndex}`].left.push({ id: uuidv4().split('-').pop(), content: customFieldName, values: {fieldName, initialValue: ''}});
+    }
     setCustomFieldsTab(customFieldsTabTmp);
   };
 

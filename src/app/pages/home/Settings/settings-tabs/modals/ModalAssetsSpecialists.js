@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { useDispatch } from 'react-redux';
+import { omit } from "lodash";
 import {
   Button,
   Dialog,
@@ -97,7 +98,7 @@ const ModalAssetsSpecialists = ({ showModal, setShowModal, reloadTable, id, empl
     }
     const body = { ...values };
     if (!id) {
-      postDB('settingsAssetSpecialists', body)
+      postDB('settingsAssetSpecialists', omit(body, ['categories', 'user']))
         .then(data => data.json())
         .then(response => {
           dispatch(showSavedAlert());
@@ -106,7 +107,7 @@ const ModalAssetsSpecialists = ({ showModal, setShowModal, reloadTable, id, empl
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
-      updateDB('settingsAssetSpecialists/', body, id[0])
+      updateDB('settingsAssetSpecialists/', omit(body, ['categories', 'user']), id[0])
         .then(response => {
           dispatch(showUpdatedAlert());
           saveAndReload('settingsAssetSpecialists', id[0]);
@@ -130,7 +131,6 @@ const ModalAssetsSpecialists = ({ showModal, setShowModal, reloadTable, id, empl
       user: [],
       categorySelected: 0,
       userSelected: 0,
-      locationSelected: '',
       location: {}
     });
   };
@@ -167,7 +167,7 @@ const ModalAssetsSpecialists = ({ showModal, setShowModal, reloadTable, id, empl
           setLocationsTree(locationsTreeData);
         }
         if (collectionName === 'user') {
-          const user = data.response.map(({ _id: value, email: label }) => ({ value, label }));
+          const user = data.response.map(({ _id: value, email: label, name, lastName }) => ({ value, label, name, lastName }));
           setValues(prev => ({ ...prev, user }));
         }
         if (collectionName === 'categories') {

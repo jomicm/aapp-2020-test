@@ -25,7 +25,7 @@ import { useDispatch } from 'react-redux';
 import { actions } from '../../../../store/ducks/general.duck';
 import './ModalAssetCategories.scss';
 import ImageUpload from '../../Components/ImageUpload';
-import { postDB, getOneDB, updateDB } from '../../../../crud/api';
+import { postDB, getOneDB, updateDB, getDB } from '../../../../crud/api';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetReferences.scss';
@@ -270,8 +270,14 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
     if (!showModal) return;
     console.log('Use Eff Ref>', id)
 
-    const profiles = categoryRows.map(cat => ({ value: cat.id, label: cat.name }));
-    setValues(prev => ({ ...prev, profiles }));
+    getDB('categories/')
+      .then(response => response.json())
+      .then(data => {
+        const profiles = data.response.map(({_id : value, name: label}) => ({ value, label }))
+        setValues(prev => ({ ...prev, profiles }));
+      })
+      .catch(error => console.log(error));
+   
     if (!id || !Array.isArray(id)) return;
 
     getOneDB('references/', id[0])

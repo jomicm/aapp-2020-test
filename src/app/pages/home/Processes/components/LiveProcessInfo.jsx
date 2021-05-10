@@ -186,7 +186,7 @@ const LiveProcessInfo = ({ processInfo }) => {
                 {(val.approvals || []).map(({ cartRows, email, fulfilled, fulfillDate, name, lastName, virtualUser }) => (
                   <StyledTreeItem
                     nodeId={getRandomId()}
-                    labelText={`${virtualUser ? (virtualUser === 'boss' ? '[DB] ' : virtualUser === 'locationManager' ? '[LM] ' : '') : ''}${name} ${lastName} (${email})`}
+                    labelText={`${virtualUser ? (virtualUser === 'boss' ? '[DB] ' : virtualUser === 'locationManager' ? '[LM] ' : virtualUser === 'locationWitness' ? '[LW] ' : virtualUser === 'assetSpecialist' ? '[AS] ' : '') : ''}${name} ${lastName} (${email})`}
                     labelIcon={!fulfillDate ? HourglassEmptyIcon : AccountCircleIcon}
                     labelInfo={!fulfillDate ? 'Pending' : 'Fulfilled'}
                   >
@@ -212,7 +212,7 @@ const LiveProcessInfo = ({ processInfo }) => {
                 {(val.notifications || []).map(({ email, sent, sentDate, name, lastName, virtualUser }) => (
                   <StyledTreeItem
                     nodeId={getRandomId()}
-                    labelText={`${virtualUser ? (virtualUser === 'boss' ? '[DB] ' : virtualUser === 'locationManager' ? '[LM] ' : '') : ''}${name} ${lastName} (${email})`}
+                    labelText={`${virtualUser ? (virtualUser === 'boss' ? '[DB] ' : virtualUser === 'locationManager' ? '[LM] ' : virtualUser === 'locationWitness' ? '[LW] ' : virtualUser === 'assetSpecialist' ? '[AS] ' : '') : ''}${name} ${lastName} (${email})`}
                     labelIcon={!sentDate ? HourglassEmptyIcon : sent ? SendIcon : ThumbDownIcon}
                     labelInfo={!sentDate ? 'Pending' : sent ? 'Sent' : 'Not Sent'}
                   >
