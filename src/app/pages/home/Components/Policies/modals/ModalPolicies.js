@@ -400,6 +400,7 @@ const ModalPolicies = ({
       selectedOnLoadCategory: {},
       subjectMessage: '',
       subjectNotification: '',
+      tokenEnabled: false,
       tokenOnLoad: '',
       tokenOnLoadEnabled: false,
       urlAPI: '',
@@ -469,7 +470,8 @@ const ModalPolicies = ({
           'tokenOnLoad',
           'tokenOnLoadEnabled',
           'urlAPI',
-          'urlOnLoad'
+          'urlOnLoad',
+          'tokenEnabled'
         ]);
 
         obj = !obj.onLoadDisabled ? { ...obj, onLoadDisabled: true } : obj;
@@ -477,6 +479,8 @@ const ModalPolicies = ({
         obj = !obj.urlOnLoad ? { ...obj, urlOnLoad: '' } : obj;
 
         obj = !obj.selectedOnLoadCategory ? { ...obj, selectedOnLoadCategory: {} } : obj;
+
+        obj = !obj.tokenEnabled ? { ...obj, tokenEnabled: false } : obj;
 
         obj = !obj.tokenOnLoad ? { ...obj, tokenOnLoad: '' } : obj;
 
