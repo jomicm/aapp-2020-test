@@ -27,6 +27,7 @@ import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
 import { actions } from '../../../../store/ducks/general.duck';
 import { postDB, getDB, getOneDB, updateDB, postFILE, getDBComplex } from '../../../../crud/api';
+import CircularProgressCustom from '../../Components/CircularProgressCustom';
 import CustomFields from '../../Components/CustomFields/CustomFields';
 import { CustomFieldsPreview } from '../../constants';
 import { getCurrentDateTime, simplePost } from '../../utils';
@@ -126,6 +127,7 @@ const ModalProcessLive = (props) => {
   const dispatch = useDispatch();
   const { showCustomAlert } = actions;
   // Example 4 - Tabs
+  const [loading, setLoading] = useState(false);
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
@@ -190,27 +192,12 @@ const ModalProcessLive = (props) => {
       }
 
       const locationsSet = cartRows.every((row) => row.locationId);
-      if (!locationsSet) {
-        dispatch(showCustomAlert({
-          type: 'warning',
-          open: true,
-          message: 'In Creation and Movement processes, all assets should have a location selected'
-        }));
+      const firstLocationId = cartRows[0].locationId;
+      const sameLocation = cartRows.every((row) => row.locationId === firstLocationId);
+
+      if (!locationsSet || !sameLocation) {
+        alert('In Creation and Movement processes, all assets should have the same location selected');
         return false;
-      }
-
-      if (processType === 'movement') {
-        const firstLocationId = cartRows[0].locationId;
-        const sameLocation = cartRows.every((row) => row.locationId === firstLocationId);
-
-        if (!sameLocation) {
-          dispatch(showCustomAlert({
-            type: 'warning',
-            open: true,
-            message: 'In movement process all locations should be the same'
-          }));
-          return false;
-        }
       }
 
       return true;
@@ -219,7 +206,140 @@ const ModalProcessLive = (props) => {
     }
   };
 
-  const handleSave = () => {
+  const checkValidDirectBoss = async (_processData, _stageKeys) => {
+    const boss = await getBossInfo();
+    if(!boss){
+      dispatch(showCustomAlert({
+        type: 'warning',
+        open: true,
+        message: 'Current user should have a boss assigned in order to create the process'
+      }));
+      return false;
+    }
+    _stageKeys.map(stageKey => {
+      _processData.stages[stageKey].approvals[_processData.stages[stageKey].approvals.findIndex(e => e._id === 'boss')] = {...boss, fulfillDate: '', fulfilled: false, virtualUser: 'boss'};
+      _processData.stages[stageKey].notifications[_processData.stages[stageKey].notifications.findIndex(e => e._id === 'boss')] = {...boss, fulfillDate: '', fulfilled: false, virtualUser: 'boss'};
+    });
+    return true;
+  };
+
+  const checkValidLocationManager = async(_cartRows, _processData, _stageKeys) => {
+    const {locationId, locationName} = _cartRows[0];
+    const manager = await getLocationManagerInfo(locationId);
+    if(!manager){
+      dispatch(showCustomAlert({
+        type: 'warning',
+        open: true,
+        message: `${locationName} doesn't have a Location Manager`
+      }));
+      return false;
+    }
+    _stageKeys.map(stageKey => {
+      _processData.stages[stageKey].approvals[_processData.stages[stageKey].approvals.findIndex(e => e._id === 'locationManager')] = {...manager, fulfillDate: '', fulfilled: false, virtualUser: 'locationManager'};
+      _processData.stages[stageKey].notifications[_processData.stages[stageKey].notifications.findIndex(e => e._id === 'locationManager')] = {...manager, fulfillDate: '', fulfilled: false, virtualUser: 'locationManager'};
+    });
+
+    return true;
+  };
+
+  const recursiveFindWitnessByLocation = (allLocations, allWitnesses, currentLocation) => {
+    const witness = allWitnesses.find(({location}) => location.locationSelected === currentLocation.id);
+    if(witness){
+      const { value: _id, label: email, name, lastName } = witness.userSelected;
+      return { _id, email, name, lastName };
+    }
+    else if(!witness && currentLocation.parent !== 'root'){
+      currentLocation = allLocations.find(({id}) => currentLocation.parent === id);
+      return recursiveFindWitnessByLocation(allLocations, allWitnesses, currentLocation);
+    }
+    return;
+  };
+
+  const recursiveFindSpecialist = (allLocations, allSpecialists, currentLocation, allCategories) => {
+    const specialist = allSpecialists.filter(({location, categorySelected}) => location.locationSelected === currentLocation.id && (allCategories.includes(categorySelected.value)));
+    if(specialist.length){
+      specialist.map(({categorySelected}) => {
+        const deleteIndex = allCategories.findIndex((e) => e === categorySelected.value);
+        if(deleteIndex !== -1){
+          allCategories.splice(deleteIndex, 1);
+        }
+      });
+    }
+    if(allCategories.length <= 0 || currentLocation.parent === 'root'){
+      return specialist;
+    }
+    else if(currentLocation.parent !== 'root' && allCategories.length){
+      currentLocation = allLocations.find(({id}) => currentLocation.parent === id);
+      const otherSpecialists = recursiveFindSpecialist(allLocations, allSpecialists, currentLocation, allCategories);
+      return otherSpecialists ? specialist.concat(otherSpecialists) : specialist; 
+    }
+    return;
+  };
+  
+  const checkValidLocationWitness = async(_cartRows, _processData, _stageKeys) => {
+    const {locationId, locationName} = _cartRows[0];
+    const allLocations = await getLocations();
+    const allWitnesses = await getWitnesses();
+    var currentLocation = allLocations.find(({id}) => locationId === id);
+    var recursiveResult = await recursiveFindWitnessByLocation(allLocations, allWitnesses, currentLocation);
+
+    if(!recursiveResult){
+      dispatch(showCustomAlert({
+        type: 'warning',
+        open: true,
+        message: `Neither "${locationName}" nor any of its parents have a Location Witness`
+      }));
+      return false;
+    }
+    
+    _stageKeys.map(stageKey => {
+      _processData.stages[stageKey].approvals[_processData.stages[stageKey].approvals.findIndex(e => e._id === 'locationWitness')] = {...recursiveResult, fulfillDate: '', fulfilled: false, virtualUser: 'locationWitness'};
+      _processData.stages[stageKey].notifications[_processData.stages[stageKey].notifications.findIndex(e => e._id === 'locationWitness')] = {...recursiveResult, fulfillDate: '', fulfilled: false, virtualUser: 'locationWitness'};
+    });
+    return true;
+  };
+
+  const checkValidAssetSpecialist = async(_cartRows, _processData, _stageKeys) => {
+    const {locationId, locationName} = _cartRows[0];
+    const allLocations = await getLocations();
+    const allSpecialists = await getAssetSpecialists();
+    var allCategories = _cartRows.map(({selectedProfile}) => selectedProfile.value);
+    var currentLocation = allLocations.find(({id}) => locationId === id);
+    
+    const recursiveResult = await recursiveFindSpecialist(allLocations, allSpecialists, currentLocation, allCategories);
+
+    if(allCategories.length){
+      dispatch(showCustomAlert({
+        type: 'warning',
+        open: true,
+        message: `Neither "${locationName}" nor any of its parents have an Asset Specialist for the assets selected`
+      }));
+      return false;
+    }
+
+    _stageKeys.map(stageKey => {
+      const approvalIndex = _processData.stages[stageKey].approvals.findIndex(e => e._id === 'assetSpecialist');
+      const notificationIndex = _processData.stages[stageKey].notifications.findIndex(e => e._id === 'assetSpecialist');
+      if(approvalIndex !== -1){
+        _processData.stages[stageKey].approvals.splice(approvalIndex, 1);
+        recursiveResult.map(({userSelected}) => {
+          const {value:_id, label: email, name, lastName} = userSelected;
+          _processData.stages[stageKey].approvals.push({_id, email, name, lastName, fulfillDate: '', fulfilled: false, virtualUser: 'assetSpecialist'});
+        });
+      }
+      if(notificationIndex !== -1){
+        _processData.stages[stageKey].notifications.splice(notificationIndex, 1);
+        recursiveResult.map(({userSelected}) => {
+          const {value:_id, label: email, name, lastName } = userSelected;
+          _processData.stages[stageKey].notifications.push({_id, email, name, lastName, fulfillDate: '', fulfilled: false, virtualUser: 'assetSpecialist'});
+        });       
+      }     
+    });
+    return true;
+  };
+
+  const handleSave = async () => {
+    setLoading(true);
     const body = {
       ...values,
       cartRows,
@@ -227,9 +347,31 @@ const ModalProcessLive = (props) => {
     };
     if (!id) {
       body.processData = transformProcess(processes, values.selectedProcess);
+      const stageKeys = Object.keys(body.processData.stages);
+      const allApprovals = stageKeys.map(e => (body.processData.stages[e].approvals)).flat().map(f => (f._id));
+      if (allApprovals.includes('boss')) {
+        if(! await checkValidDirectBoss(body.processData, stageKeys)){
+          return;
+        }
+      }
       if (!checkValidLocations(body.processData.selectedProcessType)) {
         return;
       }
+      if (allApprovals.includes('locationManager')) {
+         if(! await checkValidLocationManager(body.cartRows, body.processData, stageKeys)){
+          return;
+        }
+      }
+      if (allApprovals.includes('locationWitness')) {
+        if(! await checkValidLocationWitness(body.cartRows, body.processData, stageKeys)){
+         return;
+       }
+     }
+     if (allApprovals.includes('assetSpecialist')) {
+      if(! await checkValidAssetSpecialist(body.cartRows, body.processData, stageKeys)){
+       return;
+     }
+   }
       postDB('processLive', body)
         .then(data => data.json())
         .then(async response => {
@@ -238,12 +380,10 @@ const ModalProcessLive = (props) => {
           groomProcess(processLiveResponse);
           const { processData: { selectedProcessType } } = processLiveResponse;
           if (selectedProcessType !== 'short') {
-            setTimeout(() => {
-              updateDB('processLive/', omit(processLiveResponse, '_id'), _id)
+            updateDB('processLive/', omit(processLiveResponse, '_id'), _id)
                 .then(() => saveAndReload('processLive', processLiveResponse._id))
                 .catch(error => console.log(error));
               setAssetsStatus(processLiveResponse, selectedProcessType);
-            }, 1000);
           }
         })
         .catch(error => console.log(error));
@@ -337,8 +477,67 @@ const ModalProcessLive = (props) => {
       finishProcess(process);
     }
   };
+  const getLocations = () => {
+    return getDB('locationsReal/')
+      .then(response => response.json())
+      .then(data => {
+        const filtered = data.response.map(({_id : id, name, parent}) => ({ id, name, parent}))
+        return filtered;
+      })
+      .catch(error => console.log(error));
+  };
 
-  const sendMessages = (stageData, requestUser, processId) => {
+  const getWitnesses = () => {
+    return getDB('settingsWitnesses/')
+      .then(response => response.json())
+      .then(data => {
+        const filtered = data.response.map(({_id : id, location, userSelected}) => ({ id, location, userSelected}));
+        return filtered;
+      })
+      .catch(error => console.log(error));
+  };
+
+  const getAssetSpecialists = () => {
+    return getDB('settingsAssetSpecialists/')
+      .then(response => response.json())
+      .then(data => {
+        const filtered = data.response.map(({_id : id, location, userSelected, categorySelected}) => ({ id, location, userSelected, categorySelected}));
+        return filtered;
+      })
+      .catch(error => console.log(error));
+  };
+
+  const getBossInfo = () => {
+    return getOneDB('user/', user?.id)
+      .then(response => response.json())
+      .then(data => {
+        const { selectedBoss = {} } = data.response;
+        if(!selectedBoss || Object.keys(selectedBoss).length <= 0){
+          return undefined;
+        }
+        const { value: _id, label: email, name, lastName } = selectedBoss;
+
+        return { _id, email, name, lastName };
+      })
+      .catch(error => console.log(error));
+  };
+  
+  const getLocationManagerInfo = (locationId) => {
+    return getOneDB('locationsReal/', locationId)
+      .then(response => response.json())
+      .then(data => {
+        const { assignedTo = {} } = data.response;
+        if(!assignedTo || Object.keys(assignedTo).length <= 0){
+          return undefined;
+        }
+        const { userId: id, email, name, lastName } = assignedTo;
+
+        return { id, email, name, lastName };
+      })
+      .catch(error => console.log(error));
+  };
+
+   const sendMessages = (stageData, requestUser, processId) => {
     // Notifications are simple messages, Approvals are simple messages + ProcessApprovals DB posting
     const { dateFormatted, rawDate: formatDate, timeFormatted } = getCurrentDateTime();
     const { stageId, stageName, notifications: stageNotifications, approvals: stageApprovals } = stageData;
@@ -372,44 +571,12 @@ const ModalProcessLive = (props) => {
           `New notification from Stage: ${stageName}` :
           `New approval request from Stage: ${stageName}`;
         
-        const getBossInfo = () => ({
-          email: user?.boss?.label,
-          id: user?.boss?.value,
-          lastName: user?.boss?.lastName,
-          name: user?.boss?.name
-        });
-        const getLocationManagerInfo = (locationId) => {
-          return getOneDB('locationsReal/', locationId)
-            .then(response => response.json())
-            .then(data => {
-              const { assignedTo = {} } = data.response;
-              const { userId: id, email, name, lastName } = assignedTo;
-
-              return { id, email, name, lastName };
-            })
-            .catch(error => console.log(error));
-        };
         let targetUserInfo = {
           email: message.email,
           id: message._id,
           lastName: message.lastName,
           name: message.name
         };
-        if (['boss', 'locationManager'].includes(message._id)) {
-          let autoUserInfo;
-          if (message._id === 'boss') {
-            autoUserInfo = getBossInfo();
-            message.virtualUser = 'boss';
-          } else {
-            autoUserInfo = await getLocationManagerInfo(cartRows[0].locationId);
-            message.virtualUser = 'locationManager';
-          }
-          targetUserInfo = autoUserInfo;
-          message._id = autoUserInfo.id;
-          message.email = autoUserInfo.email;
-          message.name = autoUserInfo.name;
-          message.lastName = autoUserInfo.lastName;
-        }
   
         const messageObj = {
           html,
@@ -590,6 +757,7 @@ const ModalProcessLive = (props) => {
   };
 
   const handleCloseModal = () => {
+    setCartRows([]);
     setCustomFieldsTab({});
     // setProfilePermissions([]);
     setValues({ 
@@ -598,7 +766,6 @@ const ModalProcessLive = (props) => {
     setTypes([]);
     setShowModal(false);
     setValue4(0);
-    setCartRows([]);
     setIsAssetReference(null);
     setCustomTabs([]);
     // setIsAssetRepository(false);
@@ -874,7 +1041,10 @@ const ModalProcessLive = (props) => {
           </div>
         </DialogContent5>
         <DialogActions5>
-          <Button onClick={handleSave} color="primary">
+          { loading && 
+            <CircularProgressCustom size={20} />
+          }
+          <Button onClick={() => handleSave().then(() => setLoading(false))} color="primary">
             Save changes
           </Button>
         </DialogActions5>

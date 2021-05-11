@@ -151,7 +151,8 @@ const LiveProcesses = ({ user }) => {
               Promise.all(processLive)
                 .then(responses => Promise.all(responses.map(response => response.json())))
                 .then(data => {
-                  const rows = data.map(({ response: row }) => {
+                  const filteredData = data.filter(({response}) => response);
+                  const rows = filteredData.map(({ response: row }) => {
                     const { _id: id, processData: { name, stages }, creationUserFullName, creationDate } = row;
                     const localDate = String(new Date(creationDate)).split('GMT')[0];
       
