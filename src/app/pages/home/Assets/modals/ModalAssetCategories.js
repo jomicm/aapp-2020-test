@@ -203,7 +203,6 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id }) => {
     getOneDB('categories/', id[0])
       .then(response => response.json())
       .then(data => {
-        console.log(data.response);
         const { name, depreciation, customFieldsTab, fileExt } = data.response;
         executePolicies('OnLoad', 'assets', 'categories', policies);
         const imageURL = getImageURL(id, 'categories', fileExt);

@@ -1,6 +1,7 @@
 import { getCurrentDateTime, simplePost } from '../../utils';
 import { collections } from '../../constants';
 import axios from 'axios';
+import objectPath from 'object-path';
 
 export const executePolicies = (actionName, module, selectedCatalogue, policies) => {
   const { dateFormatted, rawDate, timeFormatted } = getCurrentDateTime();
@@ -51,26 +52,39 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
   })
 };
 
-export const executeOnLoadPolicy = (id, categoryId, module, selectedCatalogue, policies) => {
-  const filteredPolicies = policies.filter(
-    (policy) => policy.selectedAction === 'OnLoad' && policy.selectedOnLoadCategory?.id === categoryId && policy.selectedCatalogue === selectedCatalogue && policy.module === module
+export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, policies) => {
+  // debugger
+  const filteredPolicies = policies.find(
+    (policy) => policy.selectedAction === 'OnLoad' && policy.selectedOnLoadCategory?.id === itemID && policy.selectedCatalogue === selectedCatalogue && policy.module === module
   );
 
-  filteredPolicies.forEach(({
-    onLoadDisabled,
-    onLoadFields,
-    tokenOnLoad,
-    tokenOnLoadEnabled,
-    urlOnLoad
-  }) => {
-    if (!onLoadDisabled) {
-      if (tokenOnLoadEnabled) {
-        try {
+  if (!filteredPolicies) return;
 
-        } catch (error) {
-          console.log(error);
-        }
+  const { onLoadDisabled, onLoadFields, tokenOnLoad, tokenOnLoadEnabled, urlOnLoad } = filteredPolicies;
+
+  let response;
+
+  if (!onLoadDisabled) {
+    if (tokenOnLoadEnabled) {
+      try {
+        const { data } = await axios.get(urlOnLoad, {
+          headers: {
+            Authorization: `Bearer ${tokenOnLoad}`,
+          }
+        });
+        console.log(data.response);
+      } catch (error) {
+        console.log(error)
+      }
+    } else {
+      try {
+        const { data } = await axios.get(urlOnLoad);
+        console.log(data.response);
+      } catch (error) {
+        console.log(error);
       }
     }
-  });
+  }
+
+  return response;
 };

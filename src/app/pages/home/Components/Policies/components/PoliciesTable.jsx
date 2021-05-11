@@ -220,7 +220,6 @@ const PoliciesTable = ({ module, baseFields }) => {
             </span>
             <ModalPolicies
               id={control.idPolicies}
-              employeeProfileRows={[]}
               module={module}
               baseFields={baseFields}
               reloadTable={() => loadPoliciesData('policies')}

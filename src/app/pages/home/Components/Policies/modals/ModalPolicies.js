@@ -160,7 +160,6 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const ModalPolicies = ({
-  employeeProfileRows,
   id,
   module,
   reloadTable,
@@ -302,16 +301,12 @@ const ModalPolicies = ({
       return;
     }
     const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
+    debugger
 
-    const validValues = values.selectedAction === 'OnLoad' ? {
-      ...values,
-      apiDisabled: true,
-      messageDisabled: true,
-      notificationDisabled: true
-    } : values;
+    console.log(values);
 
     const body = {
-      ...validValues,
+      ...values,
       messageFrom,
       messageTo,
       layout,
@@ -471,7 +466,9 @@ const ModalPolicies = ({
           'tokenEnabled'
         ]);
 
-        obj = !obj.onLoadDisabled ? { ...obj, onLoadDisabled: true } : obj;
+        console.log(obj);
+
+        obj = !obj.onLoadDisabled && typeof obj.onLoadDisabled !== 'boolean' ? { ...obj, onLoadDisabled: true } : obj;
 
         obj = !obj.onLoadFields ? { ...obj, onLoadFields: {} } : obj;
 
@@ -479,11 +476,11 @@ const ModalPolicies = ({
 
         obj = !obj.selectedOnLoadCategory ? { ...obj, selectedOnLoadCategory: {} } : obj;
 
-        obj = !obj.tokenEnabled ? { ...obj, tokenEnabled: false } : obj;
+        obj = !obj.tokenEnabled && typeof obj.tokenEnabled !== 'boolean' ? { ...obj, tokenEnabled: false } : obj;
 
         obj = !obj.tokenOnLoad ? { ...obj, tokenOnLoad: '' } : obj;
 
-        obj = !obj.tokenOnLoadEnabled ? { ...obj, tokenOnLoadEnabled: false } : obj;
+        obj = !obj.tokenOnLoadEnabled && typeof obj.tokenOnLoadEnabled !== 'boolean' ? { ...obj, tokenOnLoadEnabled: false } : obj;
 
         if (Object.entries(obj.selectedOnLoadCategory).length > 0) {
           // update custom fields
@@ -501,7 +498,6 @@ const ModalPolicies = ({
         const contentState = ContentState.createFromBlockArray(
           contentBlock.contentBlocks
         );
-        console.log(obj);
         setValues(obj);
         setMessageFrom(messageFrom);
         setMessageTo(messageTo);
@@ -510,7 +506,7 @@ const ModalPolicies = ({
         setNotificationTo(notificationTo);
       })
       .catch(error => dispatch(showErrorAlert));
-  }, [id, employeeProfileRows]);
+  }, [id]);
 
   useEffect(() => {
     const collection = modules.filter(({ id }) => id === module)[0];

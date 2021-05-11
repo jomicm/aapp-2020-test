@@ -29,7 +29,7 @@ import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetReferences.scss';
-import { executePolicies } from '../../Components/Policies/utils';
+import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
 import { usePolicies } from '../../Components/Policies/hooks';
 
 import BaseFields from '../../Components/BaseFields/BaseFields';
@@ -274,8 +274,11 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
     getOneDB('references/', id[0])
       .then(response => response.json())
       .then(data => {
+        console.log(data.response);
         const { name, brand, model, price, depreciation, customFieldsTab, fileExt, selectedProfile } = data.response;
-        executePolicies('OnLoad', 'assets', 'references', policies);
+        const { value } = selectedProfile;
+        // executePolicies('OnLoad', 'assets', 'references', policies);
+        executeOnLoadPolicy(value, 'assets', 'references', policies);
         setValues({
           ...values,
           name,
