@@ -362,7 +362,7 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     getDB('processStages')
     .then(response => response.json())
     .then(data => {
-      const stages = data.response.map(({ _id, name, notifications, approvals }) => ({ id: _id, name, notifications, approvals })).filter(st => !selectedStages.includes(st.id));
+      const stages = data.response.map(({ _id, name, notifications, approvals, customFieldsTab }) => ({ id: _id, name, notifications, approvals, customFieldsTab })).filter(st => !selectedStages.includes(st.id));
       setStages(stages);
       setOriginalStages(stages);
     })

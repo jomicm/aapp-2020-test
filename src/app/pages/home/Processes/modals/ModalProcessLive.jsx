@@ -29,6 +29,7 @@ import { actions } from '../../../../store/ducks/general.duck';
 import { postDB, getDB, getOneDB, updateDB, postFILE, getDBComplex } from '../../../../crud/api';
 import CircularProgressCustom from '../../Components/CircularProgressCustom';
 import CustomFields from '../../Components/CustomFields/CustomFields';
+import { CustomFieldsPreview } from '../../constants';
 import { getCurrentDateTime, simplePost } from '../../utils';
 import AssetFinderPreview from '../../Components/AssetFinderPreview';
 import TableComponent from '../../Components/TableComponent';
@@ -88,6 +89,13 @@ function TabContainer4({ children, dir }) {
     </Typography>
   );
 }
+const TabContainerCustom = ({ children, dir }) => {
+  return (
+    <Typography component="div" dir={dir} style={{ paddingTop: 8 * 2 }}>
+      {children}
+    </Typography>
+  );
+}
 const useStyles4 = makeStyles(theme => ({
   root: {
     backgroundColor: theme.palette.background.paper,
@@ -123,8 +131,17 @@ const ModalProcessLive = (props) => {
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
+  const [stageTabSelected, setStageTabSelected] = useState(0);
+  const [customTabSelected, setCustomTabSelected] = useState(0);
   function handleChange4(event, newValue) {
     setValue4(newValue);
+  }
+  const handleChangeStageTab = (event, newValue) => {
+    setCustomTabSelected(0);
+    setStageTabSelected(newValue);
+  }
+  const handleChangeCustomFieldTab = (event, newValue) => {
+    setCustomTabSelected(newValue);
   }
   function handleChangeIndex4(index) {
     setValue4(index);
@@ -154,10 +171,23 @@ const ModalProcessLive = (props) => {
     setValues({ ...values, [name]: event.target.checked });
   };
 
+  const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
+    const colValue = ['left', 'right'];
+    const customFieldsTabTmp = { ...customFieldsTab };
+
+    const field = customFieldsTabTmp[stageTabSelected][tab][colValue[colIndex]]
+      .find(cf => cf.id === id);
+    field.values = CFValues;
+  };
+
   const checkValidLocations = (processType) => {
     if (['creation', 'movement'].includes(processType)) {
       if (!cartRows.length) {
-        alert('First, please add assets');
+        dispatch(showCustomAlert({
+          type: 'warning',
+          open: true,
+          message: 'First, please add assets'
+        }));
         return false;
       }
 
@@ -360,7 +390,11 @@ const ModalProcessLive = (props) => {
     } else {
       const isApprovalComplete = checkApprovalComplete();
       if (!isApprovalComplete) {
-        alert('You have to validate all assets');
+        dispatch(showCustomAlert({
+          type: 'warning',
+          open: true,
+          message: 'You have to validate all assets'
+        }));
         return;
       }
       const processData = applyApproval();
@@ -609,7 +643,11 @@ const ModalProcessLive = (props) => {
             status: 'active'
           };
           simplePost('assets', assetObj);
-          alert(`${validAssets.length} Assets Created!`)
+          dispatch(showCustomAlert({
+            type: 'info',
+            open: true,
+            message: `${validAssets.length} Assets Created!`
+          }));
         });
       },
       decommission: () => {
@@ -618,7 +656,11 @@ const ModalProcessLive = (props) => {
             .then(() => {})
             .catch(error => console.log(error));
         });
-        alert(`${validAssets.length} Assets Decommissioned!`)
+        dispatch(showCustomAlert({
+          type: 'info',
+          open: true,
+          message: `${validAssets.length} Assets Decommissioned!`
+        }));
       },
       movement: () => {
         validAssets.forEach(({ id, locationId: location }) => {
@@ -626,7 +668,11 @@ const ModalProcessLive = (props) => {
             .then(() => {})
             .catch(error => console.log(error));
         });
-        alert(`${validAssets.length} Assets Transferred!`)
+        dispatch(showCustomAlert({
+          type: 'info',
+          open: true,
+          message: `${validAssets.length} Assets Transferred!`
+        }));
       },
       short: () => {
         validAssets.forEach(({ id, locationId: location }) => {
@@ -634,7 +680,11 @@ const ModalProcessLive = (props) => {
             .then(() => {})
             .catch(error => console.log(error));
         });
-        alert(`${validAssets.length} Assets Short Transferred!`)
+        dispatch(showCustomAlert({
+          type: 'info',
+          open: true,
+          message: `${validAssets.length} Assets Short Transferred!`
+        }));
       },
       maintenance: () => {
         validAssets.forEach(({ id }) => {
@@ -642,7 +692,11 @@ const ModalProcessLive = (props) => {
             .then(() => {})
             .catch(error => console.log(error));
         });
-        alert(`${validAssets.length} Assets Finished Maintenance!`)
+        dispatch(showCustomAlert({
+          type: 'info',
+          open: true,
+          message: `${validAssets.length} Assets Finished Maintenance!`
+        }));
       },
       default: () => {}
     };
@@ -713,12 +767,15 @@ const ModalProcessLive = (props) => {
     setShowModal(false);
     setValue4(0);
     setIsAssetReference(null);
+    setCustomTabs([]);
     // setIsAssetRepository(false);
   };
 
   const [processes, setProcesses] = useState([]);
   const [processInfo, setProcessInfo] = useState([]);
   const [processLayouts, setProcessLayouts] = useState([]);
+  const [customFieldsTab, setCustomFieldsTab] = useState([]);
+  const [customTabs, setCustomTabs] = useState([]);
 
   useEffect(() => {
     getDB('processes')
@@ -760,11 +817,22 @@ const ModalProcessLive = (props) => {
       .then(response => response.json())
       .then(data => {
         setProcessInfo(data.response);
+        const stagesKeys = Object.keys(data.response.processData.stages).filter(e => Number(e.split('_')[1]) <= data.response.processData.currentStage);
+        var customtabs = [];
+        var allCustomFields = [];
+        stagesKeys.map(e => {
+          const { stageName, customFieldsTab }= data.response.processData.stages[e];
+          const tabs = Object.keys(data.response.processData.stages[e].customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
+          tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
+          
+          allCustomFields.push(customFieldsTab);
+          customtabs.push({stage: stageName, tabs});
+        });
+        setCustomTabs(customtabs);
+        setCustomFieldsTab(allCustomFields);
       })
       .catch(error => console.log(error));
   }, [id]);
-
-  const [customFieldsTab, setCustomFieldsTab] = useState({});
 
   const [image, setImage] = useState(null);
   // const [notifications, setNotifications] = useState([]);
@@ -808,7 +876,7 @@ const ModalProcessLive = (props) => {
     if (!id) {
       return tabs(generateTabs(['General', 'Table']));
     } else {
-      return tabs(generateTabs(['Live Process']));
+      return tabs(generateTabs( customTabs.length > 0 ? ['Live Process', 'Custom Fields'] : ['Live Process']));
     }
   };
 
@@ -877,6 +945,70 @@ const ModalProcessLive = (props) => {
               rows={cartRows}
             />
           </TabContainer4>
+          <TabContainerCustom dir={theme4.direction}>
+            <Paper className={classes4.root}>
+                <Tabs
+                  value={stageTabSelected}
+                  onChange={handleChangeStageTab}
+                  indicatorColor="primary"
+                  textColor="primary"
+                  variant="fullWidth"
+                >
+                  {
+                    customTabs?.map(({stage, tabs}) => <Tab label={stage} />)
+                  }
+                </Tabs>
+              </Paper>
+              <TabContainerCustom dir={theme4.direction}>
+                {customTabs[stageTabSelected]?.tabs.length > 0 && (
+                  <Paper className={classes4.root}>
+                    <Tabs
+                      value={customTabSelected}
+                      onChange={handleChangeCustomFieldTab}
+                      indicatorColor="primary"
+                      textColor="primary"
+                      variant="fullWidth"
+                    >
+                      {customTabs[stageTabSelected]?.tabs.map((tab, index) => (
+                        <Tab key={`tab-reference-${index}`} label={tab.info.name} />
+                      ))}
+                    </Tabs>
+                  </Paper>
+                )}
+                <SwipeableViews
+                  axis={theme4.direction === "rtl" ? "x-reverse" : "x"}
+                  index={customTabSelected}
+                  onChangeIndex={handleChangeCustomFieldTab}
+                >
+                  {customTabs[stageTabSelected]?.tabs.map(tab => (
+                    <TabContainer4 dir={theme4.direction}>
+                      <div className="modal-asset-reference">
+                        {Array(tab.content[1].length === 0 ? 1 : 2).fill(0).map((col, colIndex) => (
+                          <div className="modal-asset-reference__list-field" >
+                            {tab.content[colIndex].map(customField => (
+                              <CustomFieldsPreview
+                                id={customField.id}
+                                type={customField.content}
+                                values={customField.values}
+                                onDelete={() => { }}
+                                onSelect={() => { }}
+                                columnIndex={colIndex}
+                                from="form"
+                                tab={tab}
+                                onUpdateCustomField={handleUpdateCustomFields}
+                                // customFieldIndex={props.customFieldIndex}
+                                onClick={() => alert(customField.content)}
+                                data={tab.content[colIndex]}
+                              />
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    </TabContainer4>
+                  ))}
+                </SwipeableViews>
+              </TabContainerCustom>
+          </TabContainerCustom>
         </SwipeableViews>
       );
     }

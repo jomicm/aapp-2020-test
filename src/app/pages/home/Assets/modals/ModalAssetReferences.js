@@ -146,13 +146,10 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
     getOneDB('categories/', profile)
       .then(response => response.json())
       .then(data => {
-        console.log(data.response);
         const { customFieldsTab, depreciation } = data.response;
-        console.log('customFieldsTab:', customFieldsTab)
         const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
         tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
 
-        console.log('tabs:', tabs)
         setCustomFieldsTab(customFieldsTab);
         setValues(prev => ({ ...prev, depreciation }));
         setTabs(tabs);
@@ -283,7 +280,6 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
     getOneDB('references/', id[0])
       .then(response => response.json())
       .then(data => {
-        console.log(data.response);
         const { name, brand, model, price, depreciation, customFieldsTab, fileExt, selectedProfile } = data.response;
         executePolicies('OnLoad', 'assets', 'references', policies);
         setValues({
@@ -308,7 +304,6 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
   // Function to update customFields
   const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
     const colValue = ['left', 'right'];
-    console.log('Looking for you', tab, id, colIndex, values);
     const customFieldsTabTmp = { ...customFieldsTab };
 
     const field = customFieldsTabTmp[tab][colValue[colIndex]]
