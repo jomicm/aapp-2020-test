@@ -301,10 +301,7 @@ const ModalPolicies = ({
       return;
     }
     const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
-    debugger
-
-    console.log(values);
-
+    
     const body = {
       ...values,
       messageFrom,

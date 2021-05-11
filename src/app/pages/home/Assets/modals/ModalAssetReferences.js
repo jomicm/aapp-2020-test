@@ -128,6 +128,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
   });
   const [customFieldsTab, setCustomFieldsTab] = useState({});
   const [tabs, setTabs] = useState([]);
+  const [customFieldsPathResponse, setCustomFieldsPathResponse] = useState();
 
   const handleChange = name => event => {
     const value = name === 'selectedProfile' ? event : event.target.value;
@@ -241,7 +242,6 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
   };
 
   const handleCloseModal = () => {
-    console.log('HANDLE CLOSE MODAL!')
     setCustomFieldsTab({});
     setValues({
       name: '',
@@ -265,7 +265,6 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
 
   useEffect(() => {
     if (!showModal) return;
-    console.log('Use Eff Ref>', id)
 
     getDB('categories/')
       .then(response => response.json())
@@ -279,12 +278,12 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
 
     getOneDB('references/', id[0])
       .then(response => response.json())
-      .then(data => {
-        console.log(data.response);
+      .then( async (data) => {
         const { name, brand, model, price, depreciation, customFieldsTab, fileExt, selectedProfile } = data.response;
         const { value } = selectedProfile;
         // executePolicies('OnLoad', 'assets', 'references', policies);
-        executeOnLoadPolicy(value, 'assets', 'references', policies);
+        const onLoadResponse = await executeOnLoadPolicy(value, 'assets', 'references', policies);
+        setCustomFieldsPathResponse(onLoadResponse);
         setValues({
           ...values,
           name,
@@ -372,6 +371,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
                         <div className="modal-asset-reference__list-field" >
                           {tab.content[colIndex].map(customField => (
                             <CustomFieldsPreview
+                              customFieldsPathResponse={customFieldsPathResponse}
                               id={customField.id}
                               type={customField.content}
                               values={customField.values}
@@ -381,7 +381,6 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
                               from="form"
                               tab={tab}
                               onUpdateCustomField={handleUpdateCustomFields}
-                              // customFieldIndex={props.customFieldIndex}
                               onClick={() => alert(customField.content)}
                               data={tab.content[colIndex]}
                             />

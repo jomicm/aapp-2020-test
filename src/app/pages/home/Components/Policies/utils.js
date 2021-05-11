@@ -53,7 +53,6 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
 };
 
 export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, policies) => {
-  // debugger
   const filteredPolicies = policies.find(
     (policy) => policy.selectedAction === 'OnLoad' && policy.selectedOnLoadCategory?.id === itemID && policy.selectedCatalogue === selectedCatalogue && policy.module === module
   );
@@ -62,29 +61,38 @@ export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, pol
 
   const { onLoadDisabled, onLoadFields, tokenOnLoad, tokenOnLoadEnabled, urlOnLoad } = filteredPolicies;
 
-  let response;
+  let res;
 
   if (!onLoadDisabled) {
     if (tokenOnLoadEnabled) {
       try {
-        const { data } = await axios.get(urlOnLoad, {
+        const { data: { response } } = await axios.get(urlOnLoad, {
           headers: {
             Authorization: `Bearer ${tokenOnLoad}`,
           }
         });
-        console.log(data.response);
+        res = handlePathResponse(response, onLoadFields);
       } catch (error) {
         console.log(error)
       }
     } else {
       try {
-        const { data } = await axios.get(urlOnLoad);
-        console.log(data.response);
+        const { data: { response } } = await axios.get(urlOnLoad);
+        res = handlePathResponse(response, onLoadFields);
       } catch (error) {
         console.log(error);
       }
     }
   }
 
-  return response;
+  return res;
+};
+
+const handlePathResponse = (response, onLoadFields, res = {}) => {
+  Object.entries(onLoadFields).forEach((customField) => {
+    const pathResponse = objectPath.get(response, customField[1]);
+    res = { ...res, [customField[0]]: pathResponse };
+  });
+
+  return res;
 };

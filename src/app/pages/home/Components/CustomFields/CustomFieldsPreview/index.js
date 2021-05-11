@@ -49,6 +49,13 @@ const SingleLine = (props) => {
     fieldName: 'Single Line',
     initialValue: '',
   };
+  const { customFieldsPathResponse } = props;
+  let onLoadField;
+  Object.entries(customFieldsPathResponse).forEach((field) => {
+    if (field[0] === props.id) {
+      onLoadField = field[1];
+    }
+  })
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
     props.onSelect(props.id, 'singleLine', values, setValues);
@@ -74,9 +81,8 @@ const SingleLine = (props) => {
         label={values.fieldName}
         type="text"
         margin="normal"
-        value={values.initialValue}
+        value={onLoadField || values.initialValue}
         onChange={handleOnChange}
-        //onChange={e => setValues({...values, initialValue: e.target.value})}
       />
       { isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
