@@ -50,6 +50,10 @@ const AssetFinder = ({
         const rows = data.response.map(row => {
           const { name, brand, model, _id: id, sn = 'sn', fileExt } = row;
           const assigned = !!row.assigned;
+          if( isAssetReference ){
+            const {selectedProfile} = row;
+            return { name, brand, model, id, sn, assigned, fileExt, selectedProfile };
+          }
           return { name, brand, model, id, sn, assigned, fileExt };
         });
         setAssetRows(rows);

@@ -241,7 +241,9 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
       const users = data.response.map((user) => pick(user, ['_id', 'email', 'name', 'lastName']));
       const bossUser = { _id: 'boss', email: 'auto', name: 'Direct', lastName: 'Boss' };
       const locationUser = { _id: 'locationManager', email: 'auto', name: 'Location', lastName: 'Manager' };
-      setUsers([bossUser, locationUser, ...users]);
+      const witnessUser = { _id: 'locationWitness', email: 'auto', name: 'Location', lastName: 'Witness' };
+      const asssetSpecialistUser = { _id: 'assetSpecialist', email: 'auto', name: 'Asset', lastName: 'Specialist' };
+      setUsers([bossUser, locationUser, witnessUser, asssetSpecialistUser, ...users]);
     })
     .catch(error => console.log(error));
 

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import Select from 'react-select';
+import { omit } from "lodash";
 import {
   Button,
   Dialog,
@@ -104,7 +105,7 @@ const ModalWitnesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     }
     const body = { ...values };
     if (!id) {
-      postDB('settingsWitnesses', body)
+      postDB('settingsWitnesses', omit(body, ['categories', 'user']))
         .then(data => data.json())
         .then(response => {
           dispatch(showSavedAlert());
@@ -113,7 +114,7 @@ const ModalWitnesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
-      updateDB('settingsWitnesses/', body, id[0])
+      updateDB('settingsWitnesses/', omit(body, ['categories', 'user']), id[0])
         .then(response => {
           dispatch(showUpdatedAlert());
           saveAndReload('settingsWitnesses', id[0]);
@@ -172,7 +173,7 @@ const ModalWitnesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
             setLocationsTree(locationsTreeData);
           }
           if (collectionName === 'user') {
-            const user = data.response.map(({ _id: value, email: label }) => ({ value, label }));
+            const user = data.response.map(({ _id: value, email: label, name, lastName }) => ({ value, label, name, lastName }));
             setValues(prev => ({ ...prev, user }));
           }
           if (collectionName === 'categories') {
