@@ -112,28 +112,50 @@ const useStyles4 = makeStyles((theme) => ({
 }));
 
 const useStyles = makeStyles((theme) => ({
+  button: {
+    display: 'block',
+    marginTop: theme.spacing(2)
+  },
   container: {
     display: 'flex',
     flexWrap: 'wrap'
+  },
+  customField: {
+    marginLeft: '15px',
+    width: '40%',
+    [theme.breakpoints.down('sm')]: {
+      marginLeft: '0px',
+      marginTop: '0px',
+      width: '100%'
+    }
+  },
+  customFieldTitle: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    textAlign: 'justify',
+    width: '80px',
+    [theme.breakpoints.down('sm')]: {
+      marginTop: '20px',
+      width: 'auto'
+    }
+  },
+  dense: {
+    marginTop: 19
+  },
+  formControl: {
+    margin: theme.spacing(1),
+    minWidth: 120
+  },
+  formControlLabel: {
+    marginLeft: '10px'
+  },
+  menu: {
+    width: 200
   },
   textField: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
     width: 200
-  },
-  dense: {
-    marginTop: 19
-  },
-  menu: {
-    width: 200
-  },
-  button: {
-    display: 'block',
-    marginTop: theme.spacing(2)
-  },
-  formControl: {
-    margin: theme.spacing(1),
-    minWidth: 120
   }
 }));
 
@@ -230,6 +252,8 @@ const ModalPolicies = ({
     selectedIcon: '',
     subjectMessage: '',
     subjectNotification: '',
+    token: '',
+    tokenEnabled: false,
     urlAPI: ''
   });
 
@@ -262,6 +286,23 @@ const ModalPolicies = ({
     setValues({ ...values, [name]: value });
   };
 
+  const handleBodyAPI = () => {
+    let jsonBodyAPI = '';
+
+    try {
+      jsonBodyAPI = JSON.parse(values.bodyAPI);
+
+      if (typeof jsonBodyAPI !== 'object') {
+        jsonBodyAPI = JSON.parse('{}');
+      }
+
+    } catch (error) {
+      jsonBodyAPI = JSON.parse('{}');
+    }
+
+    return jsonBodyAPI
+  }
+
   const handleSave = () => {
     const { selectedAction, selectedCatalogue } = values;
     if (!selectedAction || !selectedCatalogue) {
@@ -269,8 +310,11 @@ const ModalPolicies = ({
       return;
     }
     const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
+    const jsonBodyAPI = handleBodyAPI();
+
     const body = {
       ...values,
+      bodyAPI: JSON.stringify(jsonBodyAPI, null, 2),
       messageFrom,
       messageTo,
       layout,
@@ -278,6 +322,9 @@ const ModalPolicies = ({
       notificationTo,
       module
     };
+
+    console.log(body);
+
     if (!id) {
       postDB('policies', body)
         .then((data) => data.json())
@@ -398,8 +445,9 @@ const ModalPolicies = ({
           notificationFrom,
           notificationTo
         } = data.response;
-        const obj = pick(data.response, [
+        let obj = pick(data.response, [
           'apiDisabled',
+          'bodyAPI',
           'messageDisabled',
           'messageInternal',
           'messageMail',
@@ -411,8 +459,25 @@ const ModalPolicies = ({
           'subjectMessage',
           'subjectNotification',
           'selectedIcon',
-          'urlAPI'
+          'urlAPI',
+          'token',
+          'tokenDisabled',
+          'tokenEnabled'
         ]);
+
+        obj = !obj.apiDisabled ? { ...obj, apiDisabled: false } : obj;
+
+        obj = !obj.token ? { ...obj, token: '' } : obj;
+
+        obj = !obj.bodyAPI ? { ...obj, bodyAPI: '' } : obj;
+
+        obj = !obj.urlAPI ? { ...obj, urlAPI: '' } : obj;
+
+        if (!obj.tokenEnabled && typeof obj.tokenEnabled !== 'boolean') {
+          obj.tokenEnabled = false;
+          delete obj.tokenDisabled;
+        }
+
         const contentBlock = htmlToDraft(layout);
         const contentState = ContentState.createFromBlockArray(
           contentBlock.contentBlocks
@@ -431,7 +496,7 @@ const ModalPolicies = ({
     const collection = modules.filter(({ id }) => id === module)[0];
     getDBComplex({
       collection: collection?.custom,
-      customQuery: JSON.stringify({"customFieldsTab":{"$ne":{}}})
+      customQuery: JSON.stringify({ "customFieldsTab": { "$ne": {} } })
     })
       .then(response => response.json())
       .then(data => {
@@ -447,13 +512,11 @@ const ModalPolicies = ({
               filteredCustomFields = { ...filteredCustomFields, ...extractCustomFieldId(field) };
             });
           });
-          console.log("Filtered: ", filteredCustomFields);
           const filtered = { [row.name]: filteredCustomFields };
           customFieldNames = { ...customFieldNames, filtered };
           return { name: row.name, customFields: filteredCustomFields };
         })
         setCustomFields(rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
-        console.log(customFieldNames, rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
       })
       .catch(error => console.log('error>', error));
   }, [module]);
@@ -804,32 +867,56 @@ const ModalPolicies = ({
                       {tab === 2 && (
                         <PortletBody>
                           <div className='__container-send-api'>
-                            <div className='__container-url-disabled'>
-                              <div className='__container-url'>
+                            <div className='__container-post'>
+                              <div className='token_textField'>
                                 <TextField
                                   className={classes.textField}
                                   id='standard-url'
                                   label='URL'
                                   margin='normal'
                                   onChange={handleChangeName('urlAPI')}
-                                  style={{ width: '600px' }}
+                                  style={{ width: '90%' }}
                                   value={values.urlAPI}
                                 />
-                              </div>
-                              <div className='__container-disabled'>
                                 <FormControlLabel
                                   value='start'
                                   control={
                                     <Switch
                                       checked={values.apiDisabled}
                                       color='primary'
-                                      onChange={handleChangeCheck(
-                                        'apiDisabled'
-                                      )}
+                                      onChange={handleChangeCheck('apiDisabled')}
                                     />
                                   }
                                   label='Disabled'
                                   labelPlacement='start'
+                                />
+                              </div>
+                            </div>
+                            <div className='__container-post'>
+                              <div className='token_textField'>
+                                <FormControlLabel
+                                  value='start'
+                                  classes={{
+                                    labelPlacementStart: classes.formControlLabel
+                                  }}
+                                  control={
+                                    <Switch
+                                      checked={values.tokenEnabled}
+                                      color="primary"
+                                      onChange={handleChangeCheck('tokenEnabled')}
+                                    />
+                                  }
+                                  label='Web Token'
+                                  labelPlacement='start'
+                                />
+                                <TextField
+                                  className={classes.textField}
+                                  id="Token-TextField"
+                                  label="Web Token"
+                                  margin="normal"
+                                  onChange={handleChangeName('token')}
+                                  style={{ width: '90%', marginLeft: '20px' }}
+                                  value={values.token}
                                 />
                               </div>
                             </div>
@@ -842,7 +929,7 @@ const ModalPolicies = ({
                                 multiline
                                 onChange={handleChangeName('bodyAPI')}
                                 rows='4'
-                                style={{ width: '100%' }}
+                                style={{ width: '90%' }}
                                 value={values.bodyAPI}
                               />
                             </div>

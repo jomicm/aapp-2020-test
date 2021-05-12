@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { getCurrentDateTime, simplePost } from '../../utils';
 import { collections } from '../../constants';
 
@@ -8,7 +9,9 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
     (policy) => policy.selectedAction === actionName && policy.selectedCatalogue === selectedCatalogue && policy.module === module
   );
 
-  filteredPolicies.forEach(({
+  filteredPolicies.forEach(async ({
+    apiDisabled,
+    bodyAPI,
     layout: html,
     messageDisabled,
     messageFrom,
@@ -19,7 +22,10 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
     notificationTo,
     selectedIcon: icon,
     subjectMessage,
-    subjectNotification
+    subjectNotification,
+    urlAPI,
+    token,
+    tokenEnabled
   }) => {
     if (!messageDisabled) {
       const messageObj = {
@@ -46,6 +52,19 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
         to: notificationTo
       };
       simplePost(collections.notifications, notificationObj);
+    }
+    if (!apiDisabled) {
+      try {
+        const validBody = JSON.parse(bodyAPI);
+        const headers = { Authorization: `Bearer ${token}` };
+        await axios.post(
+          urlAPI,
+          validBody,
+          { ...(tokenEnabled ? { headers } : {}) }
+        );
+      } catch (error) {
+        console.log(error);
+      }
     }
   })
 };
