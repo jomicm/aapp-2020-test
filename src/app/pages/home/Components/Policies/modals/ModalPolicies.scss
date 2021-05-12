@@ -117,7 +117,6 @@
     margin: 10px;
 }
 
-
 .__container-url-disabled {
     display: flex;
     justify-content: flex-start;
@@ -127,8 +126,8 @@
 .__container-url {
     align-items: center;
     display: flex;
-    width: 100%;
     padding: 0 20px;
+    width: 100%;
 }
 
 .__container-disabled {
@@ -137,8 +136,8 @@
 }
 
 .token_textField {
+	align-items: baseline;
 	display: flex;
 	flex-direction: row;
-	align-items: baseline;
     width: 90%;
 }

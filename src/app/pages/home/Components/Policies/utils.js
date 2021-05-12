@@ -9,8 +9,6 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
     (policy) => policy.selectedAction === actionName && policy.selectedCatalogue === selectedCatalogue && policy.module === module
   );
 
-  debugger
-
   filteredPolicies.forEach(async ({
     apiDisabled,
     bodyAPI,
@@ -58,16 +56,12 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
     if (!apiDisabled) {
       try {
         const validBody = JSON.parse(bodyAPI);
-        
-        if (tokenEnabled) {
-          await axios.post(urlAPI, validBody, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-        } else {
-          await axios.post(urlAPI, validBody);
-        }
+        const headers = { Authorization: `Bearer ${token}` };
+        await axios.post(
+          urlAPI,
+          validBody,
+          { ...(tokenEnabled ? { headers } : {}) }
+        );
       } catch (error) {
         console.log(error);
       }

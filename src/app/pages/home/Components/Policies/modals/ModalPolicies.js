@@ -121,22 +121,22 @@ const useStyles = makeStyles((theme) => ({
     flexWrap: 'wrap'
   },
   customField: {
-    width: '40%',
     marginLeft: '15px',
+    width: '40%',
     [theme.breakpoints.down('sm')]: {
-      width: '100%',
       marginLeft: '0px',
-      marginTop: '0px'
+      marginTop: '0px',
+      width: '100%'
     }
   },
   customFieldTitle: {
     display: 'flex',
-    width: '80px',
     flexWrap: 'wrap',
     textAlign: 'justify',
+    width: '80px',
     [theme.breakpoints.down('sm')]: {
-      width: 'auto',
       marginTop: '20px',
+      width: 'auto'
     }
   },
   dense: {
@@ -465,7 +465,13 @@ const ModalPolicies = ({
           'tokenEnabled'
         ]);
 
-        // obj = !obj.token && obj.tokenDisabled === undefined ? { ...obj, token: '', tokenDisabled: true } : obj;
+        obj = !obj.apiDisabled ? { ...obj, apiDisabled: false } : obj;
+
+        obj = !obj.token ? { ...obj, token: '' } : obj;
+
+        obj = !obj.bodyAPI ? { ...obj, bodyAPI: '' } : obj;
+
+        obj = !obj.urlAPI ? { ...obj, urlAPI: '' } : obj;
 
         if (!obj.tokenEnabled && typeof obj.tokenEnabled !== 'boolean') {
           obj.tokenEnabled = false;
