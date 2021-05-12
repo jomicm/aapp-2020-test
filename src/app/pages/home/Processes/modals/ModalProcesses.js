@@ -299,20 +299,20 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
   };
 
   const handleCloseModal = () => {
-    setCustomFieldsTab({});
-    setProfilePermissions([]);
-    setTabs([]);
-    setProfileSelected(null);
+    setProcessStages([]);
+    setStages([]);
     setValues({ 
       name: '',
       goBackEnabled: false,
       selectedUserNotification: '',
       selectedUserApprovals: ''
-    });
+    }); 
+    setCustomFieldsTab({});
+    setProfilePermissions([]);
+    setTabs([]);
+    setProfileSelected(null);
     setShowModal(false);
     setValue4(0);
-    setProcessStages([]);
-    setStages([]);
     setOriginalStages([]);
     setUsersProcess({
       selectedUserNotification: '',
@@ -358,10 +358,11 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
   }, [id]);
 
   useEffect(() => {
+    const selectedStages = processStages.map(st => (st.id));
     getDB('processStages')
     .then(response => response.json())
     .then(data => {
-      const stages = data.response.map(({ _id, name, notifications, approvals, customFieldsTab }) => ({ id: _id, name, notifications, approvals, customFieldsTab }));
+      const stages = data.response.map(({ _id, name, notifications, approvals, customFieldsTab }) => ({ id: _id, name, notifications, approvals, customFieldsTab })).filter(st => !selectedStages.includes(st.id));
       setStages(stages);
       setOriginalStages(stages);
     })
@@ -374,7 +375,7 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
       setStageLayouts(stageLayoutsData);
     })
     .catch(error => console.log(error));
-  }, [showModal]);
+  }, [id, processStages]);
 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
   const [profilePermissions, setProfilePermissions] = useState({});
