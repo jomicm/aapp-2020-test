@@ -490,12 +490,13 @@ const ModalPolicies = ({
           'selectedIcon',
           'token',
           'tokenDisabled',
-          'tokenEnabled'
+          'tokenEnabled',
           'tokenOnLoad',
           'tokenOnLoadEnabled',
           'urlAPI',
           'urlOnLoad',
         ]);
+
         obj = !obj.apiDisabled ? { ...obj, apiDisabled: false } : obj;
 
         obj = !obj.token ? { ...obj, token: '' } : obj;
@@ -972,25 +973,26 @@ const ModalPolicies = ({
                             <div className='__container-post'>
                               <div className='token_textField'>
                                 <FormControlLabel
-                                  value='start'
                                   classes={{
                                     labelPlacementStart: classes.formControlLabel
                                   }}
                                   control={
                                     <Switch
-                                      checked={values.tokenEnabled}
-                                      color="primary"
-                                      onChange={handleChangeCheck('tokenEnabled')}
+                                    checked={values.tokenEnabled}
+                                    color="primary"
+                                    onChange={handleChangeCheck('tokenEnabled')}
                                     />
                                   }
                                   label='Web Token'
                                   labelPlacement='start'
+                                  value='start'
                                 />
                                 <TextField
                                   className={classes.textField}
                                   id="Token-TextField"
                                   label="Web Token"
                                   margin="normal"
+                                  multiline
                                   onChange={handleChangeName('token')}
                                   style={{ width: '90%', marginLeft: '20px' }}
                                   value={values.token}
@@ -1059,6 +1061,7 @@ const ModalPolicies = ({
                                 id='onLoad-tokenURL'
                                 label='Web Token'
                                 margin='normal'
+                                multiline
                                 onChange={handleChangeName('tokenOnLoad')}
                                 style={{ width: '80%', marginLeft: '20px' }}
                                 value={values.tokenOnLoad}

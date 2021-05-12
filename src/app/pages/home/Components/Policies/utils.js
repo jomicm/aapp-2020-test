@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { getCurrentDateTime, simplePost } from '../../utils';
 import { collections } from '../../constants';
-import axios from 'axios';
 import objectPath from 'object-path';
 
 export const executePolicies = (actionName, module, selectedCatalogue, policies) => {

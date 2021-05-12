@@ -149,3 +149,10 @@
 	flex-direction: row;
     width: 90%;
 }
+
+.__token-on-load-container {
+    align-items: baseline;
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 25px;
+}
