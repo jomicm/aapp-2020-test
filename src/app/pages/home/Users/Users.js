@@ -15,12 +15,11 @@ import * as general from "../../../store/ducks/general.duck";
 import TableComponent2 from '../Components/TableComponent2';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import { executePolicies } from '../Components/Policies/utils';
-import { usePolicies } from '../Components/Policies/hooks';
 import ModalUserProfiles from './modals/ModalUserProfiles';
 import ModalUsers from './modals/ModalUsers';
 
 //DB API methods
-import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB, getDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 import Policies from '../Components/Policies/Policies';
 import { allBaseFields } from '../constants';
@@ -29,7 +28,6 @@ function Users({ globalSearch, setGeneralSearch }) {
   const dispatch = useDispatch();
   const { showDeletedAlert, showErrorAlert } = actions;
   const [tab, setTab] = useState(0);
-  const policies = usePolicies();
 
   const policiesBaseFields = {
     list: allBaseFields.userList,
@@ -145,7 +143,7 @@ function Users({ globalSearch, setGeneralSearch }) {
     });
   };
 
-  
+
   useEffect(() => {
     loadUsersData('user');
   }, [tableControl.user.page, tableControl.user.rowsPerPage, tableControl.user.order, tableControl.user.orderBy, tableControl.user.search, tableControl.user.locationsFilter]);
@@ -213,16 +211,22 @@ function Users({ globalSearch, setGeneralSearch }) {
       },
       onDelete(id) {
         if (!id || !Array.isArray(id)) return;
-        id.forEach(_id => {
-          deleteDB(`${collection.name}/`, _id)
-            .then(response => {
-              dispatch(showDeletedAlert());
-              const currentCollection = collection.name === 'user' ? 'list' : 'references';
-              executePolicies('OnDelete', 'user', currentCollection, policies);
-              loadUsersData(collection.name)
-            })
-            .catch(error => dispatch(showErrorAlert()));
-        });
+        getDB('policies')
+          .then((response) => response.json())
+          .then((data) => {
+            id.forEach(_id => {
+              deleteDB(`${collection.name}/`, _id)
+                .then(_ => {
+                  dispatch(showDeletedAlert());
+                  const currentCollection = collection.name === 'user' ? 'list' : 'references';
+                  executePolicies('OnDelete', 'user', currentCollection, data.response);
+                  loadUsersData(collection.name)
+                })
+                .catch(_ => dispatch(showErrorAlert()));
+            });
+          })
+          .catch((_) => dispatch(showErrorAlert()));
+
       },
       onSelect(id) {
         if (collectionName === 'userProfiles') {

@@ -121,22 +121,22 @@ const useStyles = makeStyles((theme) => ({
     flexWrap: 'wrap'
   },
   customField: {
-    width: '40%',
     marginLeft: '15px',
+    width: '40%',
     [theme.breakpoints.down('sm')]: {
-      width: '100%',
       marginLeft: '0px',
-      marginTop: '0px'
+      marginTop: '0px',
+      width: '100%'
     }
   },
   customFieldTitle: {
     display: 'flex',
-    width: '80px',
     flexWrap: 'wrap',
     textAlign: 'justify',
+    width: '80px',
     [theme.breakpoints.down('sm')]: {
-      width: 'auto',
       marginTop: '20px',
+      width: 'auto'
     }
   },
   dense: {
@@ -226,6 +226,8 @@ const ModalPolicies = ({
     selectedOnLoadCategory: {},
     subjectMessage: '',
     subjectNotification: '',
+    token: '',
+    tokenEnabled: false,
     tokenOnLoad: '',
     tokenOnLoadEnabled: false,
     urlAPI: '',
@@ -301,6 +303,23 @@ const ModalPolicies = ({
     setValues({ ...values, [name]: value });
   };
 
+  const handleBodyAPI = () => {
+    let jsonBodyAPI = '';
+
+    try {
+      jsonBodyAPI = JSON.parse(values.bodyAPI);
+
+      if (typeof jsonBodyAPI !== 'object') {
+        jsonBodyAPI = JSON.parse('{}');
+      }
+
+    } catch (error) {
+      jsonBodyAPI = JSON.parse('{}');
+    }
+
+    return jsonBodyAPI
+  }
+
   const handleSave = () => {
     const { selectedAction, selectedCatalogue } = values;
     if (!selectedAction || !selectedCatalogue) {
@@ -308,9 +327,11 @@ const ModalPolicies = ({
       return;
     }
     const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
+    const jsonBodyAPI = handleBodyAPI();
 
     const body = {
       ...values,
+      bodyAPI: JSON.stringify(jsonBodyAPI, null, 2),
       messageFrom,
       messageTo,
       layout,
@@ -318,6 +339,9 @@ const ModalPolicies = ({
       notificationTo,
       module
     };
+
+    console.log(body);
+
     if (!id) {
       postDB('policies', body)
         .then((data) => data.json())
@@ -449,6 +473,7 @@ const ModalPolicies = ({
         } = data.response;
         let obj = pick(data.response, [
           'apiDisabled',
+          'bodyAPI',
           'messageDisabled',
           'messageInternal',
           'messageMail',
@@ -463,14 +488,26 @@ const ModalPolicies = ({
           'subjectMessage',
           'subjectNotification',
           'selectedIcon',
+          'token',
+          'tokenDisabled',
+          'tokenEnabled'
           'tokenOnLoad',
           'tokenOnLoadEnabled',
           'urlAPI',
           'urlOnLoad',
-          'tokenEnabled'
         ]);
+        obj = !obj.apiDisabled ? { ...obj, apiDisabled: false } : obj;
 
-        console.log(obj);
+        obj = !obj.token ? { ...obj, token: '' } : obj;
+
+        obj = !obj.bodyAPI ? { ...obj, bodyAPI: '' } : obj;
+
+        obj = !obj.urlAPI ? { ...obj, urlAPI: '' } : obj;
+
+        if (!obj.tokenEnabled && typeof obj.tokenEnabled !== 'boolean') {
+          obj.tokenEnabled = false;
+          delete obj.tokenDisabled;
+        }
 
         obj = !obj.onLoadDisabled && typeof obj.onLoadDisabled !== 'boolean' ? { ...obj, onLoadDisabled: true } : obj;
 
@@ -907,32 +944,56 @@ const ModalPolicies = ({
                       {tab === 2 && (
                         <PortletBody>
                           <div className='__container-send-api'>
-                            <div className='__container-url-disabled'>
-                              <div className='__container-url'>
+                            <div className='__container-post'>
+                              <div className='token_textField'>
                                 <TextField
                                   className={classes.textField}
                                   id='standard-url'
                                   label='URL'
                                   margin='normal'
                                   onChange={handleChangeName('urlAPI')}
-                                  style={{ width: '600px' }}
+                                  style={{ width: '90%' }}
                                   value={values.urlAPI}
                                 />
-                              </div>
-                              <div className='__container-disabled'>
                                 <FormControlLabel
                                   value='start'
                                   control={
                                     <Switch
                                       checked={values.apiDisabled}
                                       color='primary'
-                                      onChange={handleChangeCheck(
-                                        'apiDisabled'
-                                      )}
+                                      onChange={handleChangeCheck('apiDisabled')}
                                     />
                                   }
                                   label='Disabled'
                                   labelPlacement='start'
+                                />
+                              </div>
+                            </div>
+                            <div className='__container-post'>
+                              <div className='token_textField'>
+                                <FormControlLabel
+                                  value='start'
+                                  classes={{
+                                    labelPlacementStart: classes.formControlLabel
+                                  }}
+                                  control={
+                                    <Switch
+                                      checked={values.tokenEnabled}
+                                      color="primary"
+                                      onChange={handleChangeCheck('tokenEnabled')}
+                                    />
+                                  }
+                                  label='Web Token'
+                                  labelPlacement='start'
+                                />
+                                <TextField
+                                  className={classes.textField}
+                                  id="Token-TextField"
+                                  label="Web Token"
+                                  margin="normal"
+                                  onChange={handleChangeName('token')}
+                                  style={{ width: '90%', marginLeft: '20px' }}
+                                  value={values.token}
                                 />
                               </div>
                             </div>
@@ -945,7 +1006,7 @@ const ModalPolicies = ({
                                 multiline
                                 onChange={handleChangeName('bodyAPI')}
                                 rows='4'
-                                style={{ width: '100%' }}
+                                style={{ width: '90%' }}
                                 value={values.bodyAPI}
                               />
                             </div>

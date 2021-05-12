@@ -10,10 +10,9 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
-import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB, getDB } from '../../../crud/api';
 import * as general from "../../../store/ducks/general.duck";
 import { executePolicies } from '../Components/Policies/utils';
-import { usePolicies } from '../Components/Policies/hooks';
 import TableComponent2 from '../Components/TableComponent2';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import ModalYesNo from '../Components/ModalYesNo';
@@ -26,7 +25,6 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
   const dispatch = useDispatch();
   const { showCustomAlert, showDeletedAlert, showErrorAlert } = actions;
   const [employeeLayoutSelected, setEmployeeLayoutSelected] = useState({});
-  const policies = usePolicies();
   const [referencesSelectedId, setReferencesSelectedId] = useState(null);
   const [
     selectReferenceConfirmation,
@@ -249,16 +247,22 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
       },
       onDelete(id) {
         if (!id || !Array.isArray(id)) return;
-        id.forEach((_id) => {
-          deleteDB(`${collection.name}/`, _id)
-            .then((response) => {
-              dispatch(showDeletedAlert());
-              const currentCollection = collection.name === 'employees' ? 'list' : 'references';
-              executePolicies('OnDelete', 'employees', currentCollection, policies);
-              loadEmployeesData(collection.name);
-            })
-            .catch((error) => dispatch(showErrorAlert()));
-        });
+        getDB('policies')
+          .then((response) => response.json())
+          .then((data) => {
+            id.forEach((_id) => {
+              deleteDB(`${collection.name}/`, _id)
+                .then((_) => {
+                  dispatch(showDeletedAlert());
+                  const currentCollection = collection.name === 'employees' ? 'list' : 'references';
+                  executePolicies('OnDelete', 'employees', currentCollection, data.response);
+                  loadEmployeesData(collection.name);
+                })
+                .catch((_) => dispatch(showErrorAlert()));
+            });
+          })
+          .catch((_) => dispatch(showErrorAlert()));
+        
         loadEmployeesData(collection.name);
       },
       onSelect(id) {

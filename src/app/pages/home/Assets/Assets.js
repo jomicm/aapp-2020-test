@@ -33,7 +33,6 @@ import ModalAssetList from './modals/ModalAssetList';
 import Policies from '../Components/Policies/Policies';
 import { allBaseFields } from '../constants';
 import { executePolicies } from '../Components/Policies/utils';
-import { usePolicies } from '../Components/Policies/hooks';
 
 import './Assets.scss';
 
@@ -76,7 +75,6 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
   const dispatch = useDispatch();
   const [tab, setTab] = useState(0);
   const [userLocations, setUserLocations] = useState([]);
-  const policies = usePolicies();
 
   const policiesBaseFields = {
     list: { ...allBaseFields.assets1, ...allBaseFields.assets2 },
@@ -389,16 +387,21 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
       },
       onDelete(id) {
         if (!id || !Array.isArray(id)) return;
-        id.forEach(_id => {
-          deleteDB(`${collection.name}/`, _id)
-            .then(response => {
-              dispatch(showDeletedAlert());
-              const currentCollection = collection.name === 'assets' ? 'list' : collection.name;
-              executePolicies('OnDelete', 'assets', currentCollection, policies);
-              loadAssetsData(collection.name);
-            })
-            .catch(error => showErrorAlert());
-        });
+        getDB('policies')
+          .then((response) => response.json())
+          .then((data => {
+            id.forEach(_id => {
+              deleteDB(`${collection.name}/`, _id)
+                .then(_ => {
+                  dispatch(showDeletedAlert());
+                  const currentCollection = collection.name === 'assets' ? 'list' : collection.name;
+                  executePolicies('OnDelete', 'assets', currentCollection, data.response);
+                  loadAssetsData(collection.name);
+                })
+                .catch((_) => showErrorAlert());
+            });
+          }))
+          .catch((_) => dispatch(showErrorAlert()));
       },
       onSelect(id) {
         if (collectionName === 'references') {
