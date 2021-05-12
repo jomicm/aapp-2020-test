@@ -289,7 +289,14 @@ const ModalPolicies = ({
 
     if (name === 'selectedAction' && values.selectedAction === 'OnLoad' && value !== 'OnLoad') setTab(0);
 
-    if (value === 'OnLoad') setTab(3);
+    if (value === 'OnLoad') {
+      setTab(3);
+      const lastModuleCatalogue = module === 'assets' ? 'categories' : 'references';
+      if (values.selectedCatalogue === lastModuleCatalogue) {
+        setValues({ ...values, selectedCatalogue: Object.keys(baseFields)[0], [name]: value });
+        return;
+      }
+    };
 
     setValues({ ...values, [name]: value });
   };
@@ -301,7 +308,7 @@ const ModalPolicies = ({
       return;
     }
     const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
-    
+
     const body = {
       ...values,
       messageFrom,
@@ -592,11 +599,17 @@ const ModalPolicies = ({
                             value={values.selectedCatalogue}
                           >
                             {
-                              Object.keys(baseFields).map((keyName) => (
-                                <MenuItem key={keyName} value={keyName}>
-                                  {keyName.replace(/\w\S*/g, (w) => (w.replace(/^\w/, (c) => c.toUpperCase())))}
-                                </MenuItem>
-                              ))
+                              Object.keys(baseFields).map((keyName, index) => {
+                                if (values.selectedAction === 'OnLoad' && index === Object.entries(baseFields).length - 1) {
+                                  return null;
+                                }
+
+                                return (
+                                  <MenuItem key={keyName} value={keyName}>
+                                    {keyName.replace(/\w\S*/g, (w) => (w.replace(/^\w/, (c) => c.toUpperCase())))}
+                                  </MenuItem>
+                                );
+                              })
                             }
                           </Select>
                         </FormControl>

@@ -32,7 +32,7 @@ import { CustomFieldsPreview } from '../../constants';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import LocationAssignment from '../components/LocationAssignment';
 import Permission from '../components/Permission';
-import { executePolicies } from '../../Components/Policies/utils';
+import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
 import { usePolicies } from '../../Components/Policies/hooks';
 
 const { apiHost, localHost } = hosts;
@@ -140,6 +140,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     categoryPicDefault: '/media/misc/placeholder-image.jpg'
   });
   const [profileSelected, setProfileSelected] = useState(0);
+  const [customFieldsPathResponse, setCustomFieldsPathResponse] = useState();
 
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value });
@@ -256,9 +257,11 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
 
     getOneDB('user/', id[0])
       .then(response => response.json())
-      .then(data => {
+      .then( async (data) => {
+        console.log(data.response);
         const { name, lastName, email, customFieldsTab, profilePermissions, idUserProfile, locationsTable, fileExt, selectedBoss } = data.response;
-        executePolicies('OnLoad', 'user', 'list', policies);
+        const onLoadResponse = await executeOnLoadPolicy(idUserProfile, 'user', 'list', policies);
+        setCustomFieldsPathResponse(onLoadResponse);
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
         setProfileSelected(userProfilesFiltered.filter(profile => profile.value === idUserProfile));
@@ -314,12 +317,10 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       setTabs([]);
       return;
     }
-    console.log('onChangeUserProfile>>>', e);
     setProfileSelected(e);
     getOneDB('userProfiles/', e.value)
       .then(response => response.json())
       .then(data => {
-        console.log(data.response);
         const { customFieldsTab, profilePermissions } = data.response;
         const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
         tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
@@ -346,9 +347,6 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     isValidForm: {}
   });
 
-  useEffect(() => {
-    console.log('debug2', profileSelected)
-  }, [profileSelected])
 
   const baseFieldsLocalProps = {
     userProfile: {
@@ -477,17 +475,18 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
                         <div className='modal-asset-reference__list-field' >
                           {tab.content[colIndex].map(customField => (
                             <CustomFieldsPreview
+                              columnIndex={colIndex}
+                              customFieldsPathResponse={customFieldsPathResponse}
+                              data={tab.content[colIndex]}
+                              from='form'
                               id={customField.id}
-                              type={customField.content}
-                              values={customField.values}
+                              onClick={() => alert(customField.content)}
                               onDelete={() => { }}
                               onSelect={() => { }}
-                              columnIndex={colIndex}
-                              from='form'
-                              tab={tab}
                               onUpdateCustomField={handleUpdateCustomFields}
-                              onClick={() => alert(customField.content)}
-                              data={tab.content[colIndex]}
+                              tab={tab}
+                              type={customField.content}
+                              values={customField.values}
                             />
                           ))}
                         </div>

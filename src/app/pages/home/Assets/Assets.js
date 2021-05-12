@@ -529,13 +529,14 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                       </Grid>
                     </span>
                     <ModalAssetList
-                      key={control.idAsset}
-                      showModal={control.openAssetsModal}
-                      setShowModal={(onOff) => setControl({ ...control, openAssetsModal: onOff })}
-                      reloadTable={() => loadAssetsData('assets')}
-                      id={control.idAsset}
                       categoryRows={control.categoryRows}
+                      id={control.idAsset}
+                      key={control.idAsset}
+                      referenceRows={control.referenceRows}
                       referencesSelectedId={referencesSelectedId}
+                      reloadTable={() => loadAssetsData('assets')}
+                      setShowModal={(onOff) => setControl({ ...control, openAssetsModal: onOff })}
+                      showModal={control.openAssetsModal}
                     />
                     <div className='kt-separator kt-separator--dashed' />
                     <div className='kt-section__content'>

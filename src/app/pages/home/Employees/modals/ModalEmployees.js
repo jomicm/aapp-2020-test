@@ -18,7 +18,7 @@ import { withStyles, useTheme, makeStyles } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import { useDispatch } from 'react-redux';
 import { actions } from '../../../../store/ducks/general.duck';
-import { executePolicies } from '../../Components/Policies/utils';
+import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
 import { usePolicies } from '../../Components/Policies/hooks';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import { CustomFieldsPreview } from '../../constants';
@@ -163,86 +163,7 @@ const ModalEmployees = ({
     enabled: false,
     isValidForm: {}
   });
-
-  // const executePolicies = (catalogueName) => {
-  //   const formatDate = new Date();
-  //   const { dateFormatted: currentDate, timeFormatted: currentTime } = getCurrentDateTime();
-  //   const timeStamp = `${currentDate} ${currentTime}`;
-  //   const read = false;
-  //   const status = 'new';
-  //   const filteredPolicies = policies.filter(
-  //     (policy) => policy.selectedAction === catalogueName);
-  //   filteredPolicies.forEach(({
-  //     apiDisabled,
-  //     selectedIcon,
-  //     layout,
-  //     messageDisabled,
-  //     messageFrom,
-  //     messageNotification,
-  //     messageTo,
-  //     notificationDisabled,
-  //     notificationFrom,
-  //     notificationTo,
-  //     policyName,
-  //     selectedAction,
-  //     selectedCatalogue,
-  //     subjectMessage,
-  //     subjectNotification
-  //   }) => {
-  //     if (!messageDisabled) {
-  //       return (
-  //         dispatch(
-  //           showCustomAlert({
-  //             open: true,
-  //             message: `Policy <${policyName}> with action <${selectedAction}> of type <Message> and catalogue ${selectedCatalogue} will be executed`,
-  //             type: 'info'
-  //           })
-  //         ),
-  //         postDB('messages', {
-  //           formatDate: formatDate,
-  //           from: messageFrom,
-  //           html: layout,
-  //           read: read,
-  //           status: status,
-  //           subject: subjectMessage,
-  //           timeStamp: timeStamp,
-  //           to: messageTo
-  //         })
-  //           .then(data => data.json())
-  //           .then((response) => {
-  //             const { } = response.response[0];
-  //           })
-  //           .catch((error) => console.log('ERROR', error))
-  //       )
-  //     } else if (!notificationDisabled) {
-  //       return (
-  //         dispatch(
-  //           showCustomAlert({
-  //             open: true,
-  //             message: `Policy <${policyName}> with action <${selectedAction}> of type <Notification> and catalogue ${selectedCatalogue} will be executed`,
-  //             type: 'info'
-  //           })
-  //         ),
-  //         postDB('notifications', {
-  //           formatDate: formatDate,
-  //           from: notificationFrom,
-  //           icon: selectedIcon,
-  //           message: messageNotification,
-  //           read: read,
-  //           status: status,
-  //           subject: subjectNotification,
-  //           timeStamp: timeStamp,
-  //           to: notificationTo
-  //         })
-  //           .then(data => data.json())
-  //           .then((response) => {
-  //             const { } = response.response[0];
-  //           })
-  //           .catch((error) => console.log('ERROR', error))
-  //       )
-  //     }
-  //   })
-  // };
+  const [customFieldsPathResponse, setCustomFieldsPathResponse] = useState();
 
   const handleAssignmentsOnSaving = (id) => {
     assetsToDelete.map(asset => {
@@ -482,7 +403,8 @@ const ModalEmployees = ({
 
     getOneDB('employees/', id[0])
       .then((response) => response.json())
-      .then((data) => {
+      .then( async (data) => {
+        console.log(data.response);
         const {
           name,
           lastName,
@@ -495,7 +417,8 @@ const ModalEmployees = ({
           fileExt,
           assetsAssigned = []
         } = data.response;
-        executePolicies('OnLoad', 'employees', 'list', policies);
+        const onLoadResponse = await executeOnLoadPolicy(idUserProfile, 'employees', 'list', policies);
+        setCustomFieldsPathResponse(onLoadResponse);
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
         setLayoutSelected(layoutSelected);
@@ -628,6 +551,8 @@ const ModalEmployees = ({
                             {tab.content[colIndex].map((customField) => (
                               <CustomFieldsPreview
                                 columnIndex={colIndex}
+                                customFieldsPathResponse={customFieldsPathResponse}
+                                data={tab.content[colIndex]}
                                 from='form'
                                 id={customField.id}
                                 onClick={() => dispatch(
@@ -643,7 +568,6 @@ const ModalEmployees = ({
                                 tab={tab}
                                 type={customField.content}
                                 values={customField.values}
-                                data={tab.content[colIndex]}
                               />
                             ))}
                           </div>

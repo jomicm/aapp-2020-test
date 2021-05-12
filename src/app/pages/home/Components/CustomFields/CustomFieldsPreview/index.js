@@ -45,23 +45,24 @@ import './index.scss';
 
 // Custom Fields Preview
 const SingleLine = (props) => {
-  const defaultValues = {
-    fieldName: 'Single Line',
-    initialValue: '',
-  };
   const { customFieldsPathResponse } = props;
-  let onLoadField;
-  Object.entries(customFieldsPathResponse).forEach((field) => {
+  let onLoadField = '';
+  Object.entries(customFieldsPathResponse || {}).forEach((field) => {
     if (field[0] === props.id) {
       onLoadField = field[1];
     }
-  })
+  });
+  const defaultValues = {
+    fieldName: 'Single Line',
+    initialValue: onLoadField
+  };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
     props.onSelect(props.id, 'singleLine', values, setValues);
   };
   useEffect(() => {
-    if (!isEmpty(props.values)) {
+    console.log(props.id, props.values);
+    if (!isEmpty(props.values) && !onLoadField.length) {
       setValues(props.values);
     } else {
       setValues(defaultValues);
@@ -81,7 +82,7 @@ const SingleLine = (props) => {
         label={values.fieldName}
         type="text"
         margin="normal"
-        value={onLoadField || values.initialValue}
+        value={values.initialValue}
         onChange={handleOnChange}
       />
       { isPreview &&
@@ -94,16 +95,23 @@ const SingleLine = (props) => {
 };
 
 const MultiLine = (props) => {
+  const { customFieldsPathResponse } = props;
+  let onLoadField = '';
+  Object.entries(customFieldsPathResponse || {}).forEach((field) => {
+    if (field[0] === props.id) {
+      onLoadField = field[1];
+    }
+  });
   const defaultValues = {
     fieldName: 'Multi Line',
-    initialValue: ''
+    initialValue: onLoadField
   };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
     props.onSelect(props.id, 'multiLine', values, setValues);
   };
   useEffect(() => {
-    if (!isEmpty(props.values)) {
+    if (!isEmpty(props.values) && !onLoadField.length) {
       setValues(props.values);
     } else {
       setValues(defaultValues);

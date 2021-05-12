@@ -31,7 +31,7 @@ import {
 import { getOneDB, postDB, updateDB } from '../../../../crud/api';
 import { CustomFieldsPreview } from '../../constants';
 import { getFileExtension, getImageURL, saveImage } from '../../utils';
-import { executePolicies } from '../../Components/Policies/utils';
+import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
 import { usePolicies } from '../../Components/Policies/hooks';
 import GoogleMaps from '../../Components/GoogleMaps';
 import ImageUpload from '../../Components/ImageUpload';
@@ -171,6 +171,7 @@ const ModalLocationList = ({
     profileLevel: '',
     parent: ''
   });
+  const [customFieldsPathResponse, setCustomFieldsPathResponse] = useState();
 
   const defaultCoords = {
     lat: 19.432608,
@@ -288,7 +289,7 @@ const ModalLocationList = ({
           level: profileLevel,
           customFieldsTab
         } = data.response;
-        executePolicies('OnLoad', 'locations', 'list', policies);
+        // executePolicies('OnLoad', 'locations', 'list', policies);
         setValues((prev) => ({ ...prev, name: '', profileName, profileId, profileLevel, customFieldsTab }));
         setProfileLabel(profile.name);
         const tabs = Object.keys(customFieldsTab).map((key) => ({
@@ -316,7 +317,7 @@ const ModalLocationList = ({
     }
     getOneDB('locationsReal/', parent)
       .then((response) => response.json())
-      .then((data) => {
+      .then( async (data) => {
         const {
           _id,
           customFieldsTab,
@@ -329,6 +330,8 @@ const ModalLocationList = ({
           profileName
         } = data.response;
         const imageURL = realParent !== "root" ? getImageURL(realParent, 'locationsReal', parentExt) : '';
+        const onLoadResponse = await executeOnLoadPolicy(profileId, 'locations', 'list', policies);
+        setCustomFieldsPathResponse(onLoadResponse);
         setValues({ ...values, name, profileId, profileLevel, profileName, customFieldsTab, imageURL });
         setMarkers(imageInfo !== null ? mapInfo ? [{ top: imageInfo.top, left: imageInfo.left }] :[] : []);
         setMapCenter(mapInfo ? { lat: mapInfo.lat, lng: mapInfo.lng } : defaultCoords);
@@ -484,6 +487,8 @@ const ModalLocationList = ({
                           {tab.content[colIndex].map((customField) => (
                             <CustomFieldsPreview
                               columnIndex={colIndex}
+                              customFieldsPathResponse={customFieldsPathResponse}
+                              data={tab.content[colIndex]}
                               from='form'
                               id={customField.id}
                               onClick={() => alert(customField.content)}
@@ -493,7 +498,6 @@ const ModalLocationList = ({
                               tab={tab}
                               type={customField.content}
                               values={customField.values}
-                              data={tab.content[colIndex]}
                             />
                           ))}
                         </div>

@@ -371,18 +371,18 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
                         <div className="modal-asset-reference__list-field" >
                           {tab.content[colIndex].map(customField => (
                             <CustomFieldsPreview
+                              columnIndex={colIndex}
                               customFieldsPathResponse={customFieldsPathResponse}
+                              data={tab.content[colIndex]}
+                              from="form"
                               id={customField.id}
-                              type={customField.content}
-                              values={customField.values}
+                              onClick={() => alert(customField.content)}
                               onDelete={() => { }}
                               onSelect={() => { }}
-                              columnIndex={colIndex}
-                              from="form"
-                              tab={tab}
                               onUpdateCustomField={handleUpdateCustomFields}
-                              onClick={() => alert(customField.content)}
-                              data={tab.content[colIndex]}
+                              tab={tab}
+                              type={customField.content}
+                              values={customField.values}
                             />
                           ))}
                         </div>
