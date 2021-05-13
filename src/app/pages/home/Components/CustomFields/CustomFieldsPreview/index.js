@@ -45,6 +45,7 @@ import './index.scss';
 
 // Custom Fields Preview
 const SingleLine = (props) => {
+  console.log('Mount');
   const { customFieldsPathResponse } = props;
   let onLoadField = '';
   Object.entries(customFieldsPathResponse || {}).forEach((field) => {
@@ -53,7 +54,7 @@ const SingleLine = (props) => {
     }
   });
   const defaultValues = {
-    fieldName: 'Single Line',
+    fieldName: props.values.fieldName || 'Single Line',
     initialValue: onLoadField
   };
   const [values, setValues] = useState(defaultValues);
@@ -61,13 +62,12 @@ const SingleLine = (props) => {
     props.onSelect(props.id, 'singleLine', values, setValues);
   };
   useEffect(() => {
-    console.log(props.id, props.values);
     if (!isEmpty(props.values) && !onLoadField.length) {
       setValues(props.values);
     } else {
       setValues(defaultValues);
     }
-  }, [props.values]);
+  }, [props.values, onLoadField]);
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
@@ -103,7 +103,7 @@ const MultiLine = (props) => {
     }
   });
   const defaultValues = {
-    fieldName: 'Multi Line',
+    fieldName: props.values.fieldName || 'Multi Line',
     initialValue: onLoadField
   };
   const [values, setValues] = useState(defaultValues);
@@ -112,8 +112,10 @@ const MultiLine = (props) => {
   };
   useEffect(() => {
     if (!isEmpty(props.values) && !onLoadField.length) {
+      console.log('Pass');
       setValues(props.values);
     } else {
+      console.log('Pass 2');
       setValues(defaultValues);
     }
   }, [props.values]);

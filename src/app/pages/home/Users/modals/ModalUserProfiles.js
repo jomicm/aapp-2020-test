@@ -90,14 +90,13 @@ const useStyles4 = makeStyles(theme => ({
   }
 }));
 
-const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
+const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id, policies }) => {
   const dispatch = useDispatch();
   const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
-  const policies = usePolicies();
   function handleChange4(event, newValue) {
     setValue4(newValue);
   }

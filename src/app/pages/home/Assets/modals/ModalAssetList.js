@@ -43,7 +43,6 @@ import './ModalAssetList.scss';
 import OtherModalTabs from '../components/OtherModalTabs';
 import { pick } from 'lodash';
 import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
-import { usePolicies } from '../../Components/Policies/hooks';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -131,7 +130,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const ModalAssetList = ({ showModal, setShowModal, referenceRows, referencesSelectedId, reloadTable, id, categoryRows }) => {
+const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadTable, id, policies }) => {
   const dispatch = useDispatch();
   const { showCustomAlert, showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
 
@@ -142,7 +141,6 @@ const ModalAssetList = ({ showModal, setShowModal, referenceRows, referencesSele
   const [mapMarker, setMapMarker] = useState();
   const [assetsBeforeSaving, setAssetsBeforeSaving] = useState([]);
   const [assetsToDelete, setAssetsToDelete] = useState([]);
-  const policies = usePolicies();
 
   // Example 4 - Tabs
   const classes4 = useStyles4();
@@ -580,17 +578,20 @@ const ModalAssetList = ({ showModal, setShowModal, referenceRows, referencesSele
     }
 
     if (!id || !Array.isArray(id)) return;
-
     getOneDB('assets/', id[0])
       .then(response => response.json())
       .then((data) => {
         const { name, brand, model, category, referenceId, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt, assigned, layoutCoords, mapCoords, children } = data.response;
+        setAssetLocation(location);
+        setLayoutMarker(layoutCoords) //* null if not specified
+        setMapMarker(mapCoords) //* null if not specified
+        setAssetsBeforeSaving(children ? children : []) //* null if not specified
+
         getOneDB('references/', referenceId)
           .then((response) => response.json())
           .then(async (data) => {
             const { selectedProfile: { value } } = data.response;
             const onLoadResponse = await executeOnLoadPolicy(value, 'assets', 'list', policies);
-            console.log(onLoadResponse);
             setCustomFieldsPathResponse(onLoadResponse);
           })
           .catch((error) => showCustomAlert(({
@@ -598,10 +599,7 @@ const ModalAssetList = ({ showModal, setShowModal, referenceRows, referencesSele
             message: error,
             open: true
           })));
-        setAssetLocation(location);
-        setLayoutMarker(layoutCoords) //* null if not specified
-        setMapMarker(mapCoords) //* null if not specified
-        setAssetsBeforeSaving(children ? children : []) //* null if not specified
+
         if (assigned) {
           getOneDB('employees/', assigned)
             .then(response => response.json())
@@ -667,7 +665,6 @@ const ModalAssetList = ({ showModal, setShowModal, referenceRows, referencesSele
       })
       .catch(error => dispatch(showErrorAlert()));
   }, [showModal]);
-
 
   useEffect(() => {
     setValues(prev => ({ ...prev, total_price: prev.purchase_price + prev.price }));

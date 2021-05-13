@@ -75,8 +75,6 @@ export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, pol
     (policy) => policy.selectedAction === 'OnLoad' && policy.selectedOnLoadCategory?.id === itemID && policy.selectedCatalogue === selectedCatalogue && policy.module === module
   );
 
-  debugger
-
   if (!filteredPolicies) return;
 
   const { onLoadDisabled, onLoadFields, tokenOnLoad, tokenOnLoadEnabled, urlOnLoad } = filteredPolicies;

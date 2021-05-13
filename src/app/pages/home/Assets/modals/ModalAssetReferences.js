@@ -30,7 +30,6 @@ import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetReferences.scss';
 import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
-import { usePolicies } from '../../Components/Policies/hooks';
 
 import BaseFields from '../../Components/BaseFields/BaseFields';
 
@@ -94,14 +93,13 @@ const useStyles4 = makeStyles(theme => ({
   }
 }));
 
-const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, categoryRows }) => {
+const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, policies }) => {
   const dispatch = useDispatch();
   const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
-  const policies = usePolicies();
   function handleChange4(event, newValue) {
     setValue4(newValue);
   }
@@ -281,7 +279,6 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
       .then( async (data) => {
         const { name, brand, model, price, depreciation, customFieldsTab, fileExt, selectedProfile } = data.response;
         const { value } = selectedProfile;
-        // executePolicies('OnLoad', 'assets', 'references', policies);
         const onLoadResponse = await executeOnLoadPolicy(value, 'assets', 'references', policies);
         setCustomFieldsPathResponse(onLoadResponse);
         setValues({

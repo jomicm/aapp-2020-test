@@ -3,7 +3,7 @@ import { utcToZonedTime } from 'date-fns-tz';
 import {
   PortletBody,
 } from '../../../../../partials/content/Portlet';
-import { deleteDB, getDBComplex, getCountDB } from '../../../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB, getDB } from '../../../../../crud/api';
 import TableComponent2 from '../../TableComponent2';
 import ModalPolicies from '../modals/ModalPolicies';
 
@@ -44,7 +44,7 @@ const createPoliciesRow = (
   };
 };
 
-const PoliciesTable = ({ module, baseFields }) => {
+const PoliciesTable = ({ module, setPolicies, baseFields }) => {
   const [control, setControl] = useState({
     idPolicies: null,
     openPoliciesModal: false,
@@ -73,7 +73,12 @@ const PoliciesTable = ({ module, baseFields }) => {
         if (!id || !Array.isArray(id)) return;
         id.forEach((_id) => {
           deleteDB(`${collection.name}/`, _id)
-            .then((response) => loadPoliciesData(collection.name))
+            .then((response) => {
+              getDB('policies')
+                .then((response) => response.json())
+                .then((data) => setPolicies(data));
+              loadPoliciesData(collection.name);
+            })
             .catch((error) => console.log('Error', error));
         });
       },
@@ -223,6 +228,7 @@ const PoliciesTable = ({ module, baseFields }) => {
               module={module}
               baseFields={baseFields}
               reloadTable={() => loadPoliciesData('policies')}
+              setPolicies={setPolicies}
               setShowModal={(onOff) =>
                 setControl({ ...control, openPoliciesModal: onOff })
               }

@@ -15,6 +15,7 @@ import * as general from "../../../store/ducks/general.duck";
 import TableComponent2 from '../Components/TableComponent2';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import { executePolicies } from '../Components/Policies/utils';
+import { usePolicies } from '../Components/Policies/hooks';
 import ModalUserProfiles from './modals/ModalUserProfiles';
 import ModalUsers from './modals/ModalUsers';
 
@@ -28,6 +29,8 @@ function Users({ globalSearch, setGeneralSearch }) {
   const dispatch = useDispatch();
   const { showDeletedAlert, showErrorAlert } = actions;
   const [tab, setTab] = useState(0);
+
+  const { policies, setPolicies } = usePolicies();
 
   const policiesBaseFields = {
     list: allBaseFields.userList,
@@ -271,6 +274,7 @@ function Users({ globalSearch, setGeneralSearch }) {
                       This section will integrate <code>Users List</code>
                     </span>
                     <ModalUsers
+                      policies={policies}
                       showModal={control.openUsersModal}
                       setShowModal={(onOff) => setControl({ ...control, openUsersModal: onOff })}
                       reloadTable={() => loadUsersData('user')}
@@ -282,15 +286,6 @@ function Users({ globalSearch, setGeneralSearch }) {
                       <TableComponent2
                         controlValues={tableControl.user}
                         headRows={usersHeadRows}
-                        // locationControl={(locations) => {
-                        //   setTableControl(prev => ({
-                        //     ...prev,
-                        //     users: {
-                        //       ...prev.users,
-                        //       locationsFilter: locations
-                        //     }
-                        //   }))
-                        // }}
                         onAdd={tableActions('users').onAdd}
                         onDelete={tableActions('users').onDelete}
                         onEdit={tableActions('users').onEdit}
@@ -345,6 +340,7 @@ function Users({ globalSearch, setGeneralSearch }) {
                       This section will integrate <code>User Profiles</code>
                     </span>
                     <ModalUserProfiles
+                      policies={policies}
                       showModal={control.openUserProfilesModal}
                       setShowModal={(onOff) => setControl({ ...control, openUserProfilesModal: onOff })}
                       reloadTable={() => loadUsersData('userProfiles')}
@@ -400,7 +396,7 @@ function Users({ globalSearch, setGeneralSearch }) {
             </PortletBody>
           )}
 
-          {tab === 2 && <Policies module="user" baseFields={policiesBaseFields} />}
+          {tab === 2 && <Policies setPolicies={setPolicies} module="user" baseFields={policiesBaseFields} />}
         </Portlet>
       </div>
     </>

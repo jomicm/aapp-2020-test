@@ -163,6 +163,7 @@ const ModalPolicies = ({
   id,
   module,
   reloadTable,
+  setPolicies,
   setShowModal,
   showModal,
   baseFields
@@ -291,6 +292,24 @@ const ModalPolicies = ({
 
     if (name === 'selectedAction' && values.selectedAction === 'OnLoad' && value !== 'OnLoad') setTab(0);
 
+    if ((value === 'OnLoad' && values.selectedCatalogue.length) || (name === 'selectedCatalogue' && values.selectedAction.length)) {
+      getDB('policies')
+        .then((res) => res.json())
+        .then(({ response }) => {
+          const valid = response.find((policy) => policy.module === module && policy.selectedAction === 'OnLoad' && policy.selectedCatalogue === (name === 'selectedCatalogue' ? value : values.selectedCatalogue));
+          if (valid) {
+            dispatch(
+              showCustomAlert(({
+                open: true,
+                type: 'warning',
+                message: `An on load policy that targets ${(name === 'selectedCatalogue' ? value : values.selectedCatalogue)} catalogue already exists. You should be aware what category is selected in that policy in order to avoid on load conflicts.`
+              }))
+            );
+          }
+        })
+        .catch((error) => console.log(error));
+    }
+
     if (value === 'OnLoad') {
       setTab(3);
       const lastModuleCatalogue = module === 'assets' ? 'categories' : 'references';
@@ -340,8 +359,6 @@ const ModalPolicies = ({
       module
     };
 
-    console.log(body);
-
     if (!id) {
       postDB('policies', body)
         .then((data) => data.json())
@@ -349,6 +366,10 @@ const ModalPolicies = ({
           const { _id } = response.response[0];
           dispatch(showSavedAlert());
           saveAndReload('policies', _id);
+          getDB('policies')
+            .then((response) => response.json())
+            .then((data) => setPolicies(data.response))
+            .catch((error) => console.log(error));
         })
         .catch((error) => dispatch(showErrorAlert()));
     } else {
@@ -356,6 +377,10 @@ const ModalPolicies = ({
         .then((response) => {
           dispatch(showUpdatedAlert());
           saveAndReload('policies', id[0]);
+          getDB('policies')
+            .then((response) => response.json())
+            .then((data) => setPolicies(data.response))
+            .catch((error) => console.log(error));
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -577,11 +602,6 @@ const ModalPolicies = ({
         setCustomFields(rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
       })
       .catch(error => dispatch(showErrorAlert()));
-
-    // getDBComplex({
-    //   collection: collection?.custom,
-
-    // });
   }, [module]);
 
   return (
@@ -978,9 +998,9 @@ const ModalPolicies = ({
                                   }}
                                   control={
                                     <Switch
-                                    checked={values.tokenEnabled}
-                                    color="primary"
-                                    onChange={handleChangeCheck('tokenEnabled')}
+                                      checked={values.tokenEnabled}
+                                      color="primary"
+                                      onChange={handleChangeCheck('tokenEnabled')}
                                     />
                                   }
                                   label='Web Token'

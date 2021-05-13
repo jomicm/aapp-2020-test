@@ -33,6 +33,7 @@ import ModalAssetList from './modals/ModalAssetList';
 import Policies from '../Components/Policies/Policies';
 import { allBaseFields } from '../constants';
 import { executePolicies } from '../Components/Policies/utils';
+import { usePolicies } from '../Components/Policies/hooks';
 
 import './Assets.scss';
 
@@ -75,6 +76,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
   const dispatch = useDispatch();
   const [tab, setTab] = useState(0);
   const [userLocations, setUserLocations] = useState([]);
+  const { policies, setPolicies } = usePolicies();
 
   const policiesBaseFields = {
     list: { ...allBaseFields.assets1, ...allBaseFields.assets2 },
@@ -532,10 +534,9 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                       </Grid>
                     </span>
                     <ModalAssetList
-                      categoryRows={control.categoryRows}
                       id={control.idAsset}
                       key={control.idAsset}
-                      referenceRows={control.referenceRows}
+                      policies={policies}
                       referencesSelectedId={referencesSelectedId}
                       reloadTable={() => loadAssetsData('assets')}
                       setShowModal={(onOff) => setControl({ ...control, openAssetsModal: onOff })}
@@ -611,6 +612,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                       This section will integrate <code>Assets References</code>
                     </span>
                     <ModalAssetReferences
+                      policies={policies}
                       showModal={control.openReferencesModal}
                       setShowModal={(onOff) => setControl({ ...control, openReferencesModal: onOff })}
                       reloadTable={() => loadAssetsData('references')}
@@ -677,6 +679,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                     </span>
                     <div className='kt-separator kt-separator--dashed' />
                     <ModalAssetCategories
+                      policies={policies}
                       showModal={control.openCategoriesModal}
                       setShowModal={(onOff) => setControl({ ...control, openCategoriesModal: onOff })}
                       reloadTable={() => loadAssetsData('categories')}
@@ -731,7 +734,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
             </PortletBody>
           )}
 
-          {tab === 3 && <Policies module="assets" baseFields={policiesBaseFields} />}
+          {tab === 3 && <Policies setPolicies={setPolicies} module="assets" baseFields={policiesBaseFields} />}
         </Portlet>
       </div>
     </>

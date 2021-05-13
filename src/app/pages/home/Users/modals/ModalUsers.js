@@ -112,9 +112,8 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows, user, updateUserPic }) => {
+const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows, user, updateUserPic, policies }) => {
   const dispatch = useDispatch();
-  const policies = usePolicies();
   const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
   const classes4 = useStyles4();
   const theme4 = useTheme();

@@ -7,7 +7,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Divider,
   Typography,
   IconButton,
   Tab,
@@ -19,7 +18,6 @@ import CloseIcon from '@material-ui/icons/Close';
 import { useDispatch } from 'react-redux';
 import { actions } from '../../../../store/ducks/general.duck';
 import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
-import { usePolicies } from '../../Components/Policies/hooks';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import { CustomFieldsPreview } from '../../constants';
 import ImageUpload from '../../Components/ImageUpload'
@@ -118,6 +116,7 @@ const collections = {
 const ModalEmployees = ({
   id,
   employeeProfileRows,
+  policies,
   reloadTable,
   showModal,
   setShowModal
@@ -143,7 +142,6 @@ const ModalEmployees = ({
   const [layoutOptions, setLayoutOptions] = useState([]);
   const [layoutSelected, setLayoutSelected] = useState(0);
   const [locationsTable, setLocationsTable] = useState([]);
-  const policies = usePolicies();
   const [profilePermissions, setProfilePermissions] = useState({});
   const [profileSelected, setProfileSelected] = useState(0);
   const [tabs, setTabs] = useState([]);

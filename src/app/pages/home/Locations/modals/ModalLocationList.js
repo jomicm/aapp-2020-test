@@ -141,6 +141,7 @@ const ModalLocationList = ({
   modalId,
   parent,
   parentExt,
+  policies,
   profile,
   realParent,
   reload,
@@ -157,7 +158,6 @@ const ModalLocationList = ({
   const [profileLabel, setProfileLabel] = useState('');
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const [tabs, setTabs] = useState([]);
-  const policies = usePolicies();
   const theme4 = useTheme();
   const { showCustomAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const [value4, setValue4] = useState(0);
