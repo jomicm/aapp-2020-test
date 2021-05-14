@@ -307,10 +307,11 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
           dataTable.headerObject.map(({ label }) => headers.push(label));
           const { rows } = formatData(collectionName, response);
           const jsonToCsvParser = new Parser({
+            delimiter: '|',
             transforms: [
               unwind({ paths: headers, blankOut: true })
             ],
-            delimiter: '|'
+            quote: '',
           });
           const csv = jsonToCsvParser.parse(rows);
           console.log(csv);
