@@ -145,6 +145,7 @@ const columnPickerControl = (headRows) => headRows.map((column) => ({ ...column,
 const TableReportsGeneral = props => {
   const {
     controlValues,
+    handleCSVDownload,
     headRows,
     locationControl,
     noEdit = false,
@@ -344,7 +345,7 @@ const TableReportsGeneral = props => {
             />
           </div>
           <Tooltip title='Download CSV'>
-            <IconButton aria-label='Download CSV' onClick={() => { }}>
+            <IconButton aria-label='Download CSV' onClick={handleCSVDownload}>
               <CloudDownloadIcon />
             </IconButton>
           </Tooltip>
@@ -597,6 +598,7 @@ const TableReportsGeneral = props => {
       </Popover>
     )
   };
+  
   return (
     <div className={classes.root} style={{ padding: '0px' }}>
       <ModalYesNo

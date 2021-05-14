@@ -26,6 +26,7 @@ import {
 } from './reportsHelpers';
 import ChangeReportName from './modals/ChangeReportName';
 
+const { Parser, transforms: { unwind } } = require('json2csv');
 const dataTableDefault = { header: [], tableRows: [], title: '', headerObject: [] };
 
 const modules = [
@@ -41,7 +42,7 @@ const modules = [
 ];
 
 const specificFilters = {
-  processes: [ 
+  processes: [
     {
       id: "folios",
       label: "Folios"
@@ -63,7 +64,7 @@ const specificFilters = {
       label: "Approval User"
     },
   ],
-  inventories: [ 
+  inventories: [
     {
       id: "inventoryUser",
       label: "Inventory User"
@@ -78,15 +79,15 @@ const specificFilters = {
 //The following Variable is temporal, it should be replaced later when the Processes Module is finished.
 const specificFiltersOptions = {
   processes: {
-    folios: [{label:"3345"}, {label:"123"}, {label:"25899"}],
-    processes: [{label:"Creation"}, {label:"Maintenance"}],
-    stage: [{label:"1"}, {label:"3"}, {label:"last"}],
-    creationUser: [{label:"Joe Doe"}, {label:"John Smith"}],
-    approvalUser: [{label:"Joe Doe"}, {label:"John Smith"}],
+    folios: [{ label: "3345" }, { label: "123" }, { label: "25899" }],
+    processes: [{ label: "Creation" }, { label: "Maintenance" }],
+    stage: [{ label: "1" }, { label: "3" }, { label: "last" }],
+    creationUser: [{ label: "Joe Doe" }, { label: "John Smith" }],
+    approvalUser: [{ label: "Joe Doe" }, { label: "John Smith" }],
   },
   inventories: {
-    inventoryUser: [{label:"Joe Doe"}, {label:"John Smith"}],
-    idSession: [{label:"3345"}, {label:"123"}, {label:"25899"}],
+    inventoryUser: [{ label: "Joe Doe" }, { label: "John Smith" }],
+    idSession: [{ label: "3345" }, { label: "123" }, { label: "25899" }],
   }
 }
 
@@ -118,33 +119,33 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
   });
   const [filtersSelected, setFiltersSelected] = useState({
     customFields: {
-      base:[],
+      base: [],
       category: [],
       all: [],
       selected: [],
     },
     processes: {
       folios: [],
-      processes:[],
+      processes: [],
       stage: [],
       creationUser: [],
       approvalUser: [],
       daysDelayed: 0,
     },
-    inventories:{
+    inventories: {
       inventoryUser: [],
-      idSession : [],
+      idSession: [],
     }
   });
-  
+
   const permissions = user.profilePermissions.reports || [];
 
   const loadCustomFields = (selectedReport, customSelected) => {
     if (!customSelected) {
-      setFiltersSelected(prev => ({ 
-        ...prev, 
+      setFiltersSelected(prev => ({
+        ...prev,
         customFields: {
-          base:[],
+          base: [],
           category: [],
           all: [],
           selected: [],
@@ -156,7 +157,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       setLoading(true);
       getDBComplex({
         collection: collection?.custom,
-        customQuery: JSON.stringify({"customFieldsTab":{"$ne":{}}})
+        customQuery: JSON.stringify({ "customFieldsTab": { "$ne": {} } })
       })
         .then(response => response.json())
         .then(data => {
@@ -176,8 +177,8 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
             return filteredCustomFields;
           })
           const customFieldsSimplified = convertRowsToDataTableObjects(normalizeRows(rowToObjectsCustom, customFieldNames));
-          setFiltersSelected(prev => ({ 
-            ...prev, 
+          setFiltersSelected(prev => ({
+            ...prev,
             customFields: {
               ...prev.customFields,
               all: customFieldsSimplified.headerObject || ["There are no Custom Fields yet"],
@@ -190,7 +191,8 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
           console.log('error>', error);
           setLoading(false);
         });
-    }};
+    }
+  };
 
   const handleChange = (name) => (event) => {
     const { value } = event.target;
@@ -214,7 +216,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       handleGenerateReport(id);
     }
   }, [id])
-  
+
   const handleClickGenerateReport = (e) => {
     const { value } = e.target;
     handleGenerateReport(value);
@@ -285,6 +287,38 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
     searchBy: '',
   });
 
+  const handleCSVDownload = () => {
+    let queryLike = '';
+
+    if (collectionName) {
+      queryLike = tableControl.searchBy ? (
+        [{ key: tableControl.searchBy, value: tableControl.search }]
+      ) : (
+        ['name', 'lastname', 'email', 'model', 'price', 'brand', 'level'].map(key => ({ key, value: tableControl.search }))
+      );
+      getDBComplex(({
+        collection: collectionName,
+        queryLike,
+        sort: [{ key: tableControl.orderBy, value: tableControl.order }],
+      }))
+        .then((response) => response.json())
+        .then(({ response }) => {
+          let headers = [];
+          dataTable.headerObject.map(({ label }) => headers.push(label));
+          const { rows } = formatData(collectionName, response);
+          const jsonToCsvParser = new Parser({
+            transforms: [
+              unwind({ paths: headers, blankOut: true })
+            ],
+            delimiter: '|'
+          });
+          const csv = jsonToCsvParser.parse(rows);
+          console.log(csv);
+        })
+        .catch((error) => console.log(error));
+    }
+  };
+
   const loadReportsData = (collectionNames) => {
     if (!collectionNames) return;
     const collection = modules.find(({ id }) => id === collectionNames);
@@ -325,8 +359,8 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
           const dataTable = formatData(collection.id, response);
           //Get just the CustomFields
           const baseFieldsHeaders = dataTable.headerObject.filter(e => !filtersSelected.customFields.all.some(custom => custom.id === e.id));
-          setFiltersSelected(prev => ({ 
-            ...prev, 
+          setFiltersSelected(prev => ({
+            ...prev,
             customFields: {
               ...prev.customFields,
               base: baseFieldsHeaders
@@ -340,8 +374,8 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
   };
 
   const changeFiltersSelected = (module, filter) => (event, values) => {
-    setFiltersSelected(prev => ({ 
-      ...prev, 
+    setFiltersSelected(prev => ({
+      ...prev,
       [module]: {
         ...prev[module],
         [filter]: values
@@ -349,8 +383,8 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
     }));
   }
   const changeCustomFieldsSelected = (event, values) => {
-    setFiltersSelected(prev => ({ 
-      ...prev, 
+    setFiltersSelected(prev => ({
+      ...prev,
       customFields: {
         ...prev.customFields,
         selected: values
@@ -387,11 +421,11 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>Generate Reports</h2>
-        <div style={{display:'flex', flexDirection: 'row'}}>
+        <div style={{ display: 'flex', flexDirection: 'row' }}>
           {loading && (
-              <div style={{width: '30px', display:'flex', justifyContent: 'center', alignContent: 'center', margin: '10px'}}>
-                <CircularProgressCustom size={25} />
-              </div>
+            <div style={{ width: '30px', display: 'flex', justifyContent: 'center', alignContent: 'center', margin: '10px' }}>
+              <CircularProgressCustom size={25} />
+            </div>
           )}
           <Button
             className={classes.button}
@@ -477,95 +511,96 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         </FormControl>
       </div>
       {(filtersSelected.customFields.all.length > 0 || filtersSelected.customFields.selected.length > 0) && (
-          <div
-            name="SpecificFilter"
-            style={{ margin: '30px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap'}}
-          >
-            <div style={{ display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap', width: '100%'}}>
-              <Autocomplete
-                defaultValue={filtersSelected.customFields.selected}
-                id='CustomFields'
-                getOptionLabel={(option) => option.label}
-                multiple
-                onChange={changeCustomFieldsSelected}
-                options={filtersSelected.customFields.all}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label='Custom Fields'
-                    variant='standard'
-                    style={{ width: '400px'}}
-                  />
-                )}
-                value={filtersSelected.customFields.selected}
-              />
-            </div>
+        <div
+          name="SpecificFilter"
+          style={{ margin: '30px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap' }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap', width: '100%' }}>
+            <Autocomplete
+              defaultValue={filtersSelected.customFields.selected}
+              id='CustomFields'
+              getOptionLabel={(option) => option.label}
+              multiple
+              onChange={changeCustomFieldsSelected}
+              options={filtersSelected.customFields.all}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label='Custom Fields'
+                  variant='standard'
+                  style={{ width: '400px' }}
+                />
+              )}
+              value={filtersSelected.customFields.selected}
+            />
           </div>
+        </div>
       )}
       { Object.keys(specificFilters).includes(values.selectedReport) && (
-          <>
-            <div
-              name="SpecificFilter"
-              style={{ margin: '30px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap'}}
-            >
-              <Typography className={classes.filterTitles} style={{marginTop:'0px'}}> {`${modules.map(({ id, name }) => id === values.selectedReport ? name : null).join('')} Specific Filters`} </Typography>
-              <div style={{marginTop: '10px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap', width: '100%'}}>
-                { specificFilters[values.selectedReport].map((e) => (
-                    <Autocomplete
-                      className={classes.filters}
-                      defaultValue={filtersSelected[values.selectedReport][e.id]}
-                      getOptionLabel={(option) => option.label}
-                      multiple
-                      onChange={changeFiltersSelected( values.selectedReport, e.id)}
-                      options={specificFiltersOptions[values.selectedReport][e.id]}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label={e.label}
-                          variant='standard'
-                          style={{ width: '200px', margin:'10px 40px 10px 0px' }}
-                        />
-                      )}
-                      value={filtersSelected[values.selectedReport][e.id]}
+        <>
+          <div
+            name="SpecificFilter"
+            style={{ margin: '30px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap' }}
+          >
+            <Typography className={classes.filterTitles} style={{ marginTop: '0px' }}> {`${modules.map(({ id, name }) => id === values.selectedReport ? name : null).join('')} Specific Filters`} </Typography>
+            <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap', width: '100%' }}>
+              {specificFilters[values.selectedReport].map((e) => (
+                <Autocomplete
+                  className={classes.filters}
+                  defaultValue={filtersSelected[values.selectedReport][e.id]}
+                  getOptionLabel={(option) => option.label}
+                  multiple
+                  onChange={changeFiltersSelected(values.selectedReport, e.id)}
+                  options={specificFiltersOptions[values.selectedReport][e.id]}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label={e.label}
+                      variant='standard'
+                      style={{ width: '200px', margin: '10px 40px 10px 0px' }}
                     />
-                ))}
-                { values.selectedReport === 'processes' && (
-                    <div style={{display:'flex', alignItems:'center', marginTop: '20px'}}>
-                      <Typography style={{color:'black'}}> {'Delayed >='} </Typography>
-                      <TextField
-                        variant="outlined"
-                        style={{ width: '60px', marginLeft: '8px', marginRight:'5px'}}
-                        type="number"
-                        inputProps={{
-                          min: 0,
-                          style: {
-                            padding: '8px'
-                          }
-                        }}
-                        onChange={(event) =>{
-                          setFiltersSelected(prev => ({ 
-                            ...prev, 
-                            processes: {
-                              ...prev.processes,
-                              daysDelayed: event.target.value
-                            }
-                          }));
-                        }}
-                        value={filtersSelected[values.selectedReport].daysDelayed}
-                      />
-                      <Typography style={{color:'black'}}> Days </Typography>
-                    </div>
-                )}
-              </div>
+                  )}
+                  value={filtersSelected[values.selectedReport][e.id]}
+                />
+              ))}
+              {values.selectedReport === 'processes' && (
+                <div style={{ display: 'flex', alignItems: 'center', marginTop: '20px' }}>
+                  <Typography style={{ color: 'black' }}> {'Delayed >='} </Typography>
+                  <TextField
+                    variant="outlined"
+                    style={{ width: '60px', marginLeft: '8px', marginRight: '5px' }}
+                    type="number"
+                    inputProps={{
+                      min: 0,
+                      style: {
+                        padding: '8px'
+                      }
+                    }}
+                    onChange={(event) => {
+                      setFiltersSelected(prev => ({
+                        ...prev,
+                        processes: {
+                          ...prev.processes,
+                          daysDelayed: event.target.value
+                        }
+                      }));
+                    }}
+                    value={filtersSelected[values.selectedReport].daysDelayed}
+                  />
+                  <Typography style={{ color: 'black' }}> Days </Typography>
+                </div>
+              )}
             </div>
-          </>
+          </div>
+        </>
       )}
       <div>
         <Divider style={{ width: '100%', marginTop: '30px' }} />
-        <h3 style={{ marginTop: '20px' }}>Table</h3>
+        <h3 style={{ marginTop: '20px' }}> Table </h3>
         <TableReportsGeneral
           controlValues={tableControl}
           disableLoading={!!collectionName}
+          handleCSVDownload={handleCSVDownload}
           headRows={dataTable.headerObject}
           onDelete={() => { }}
           onEdit={() => { }}
