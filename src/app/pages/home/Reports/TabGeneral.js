@@ -303,18 +303,24 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       }))
         .then((response) => response.json())
         .then(({ response }) => {
+          const { name } = modules.find(({ id }) => id === collectionName);
           let headers = [];
           dataTable.headerObject.map(({ label }) => headers.push(label));
-          const { rows } = formatData(collectionName, response);
+          const { rows } = formatData(collectionName, response, headers);
           const jsonToCsvParser = new Parser({
-            delimiter: '|',
+            // delimiter: '|',
             transforms: [
-              unwind({ paths: headers, blankOut: true })
+              unwind({ paths: headers, blankOut: false })
             ],
-            quote: '',
+            quote: ''
           });
           const csv = jsonToCsvParser.parse(rows);
-          console.log(csv);
+          var a = document.createElement('a');
+          a.href = 'data:attachment/csv,' + csv;
+          a.target = '_Blank';
+          a.download = `${name}_reports.csv`;
+          document.body.appendChild(a);
+          a.click();
         })
         .catch((error) => console.log(error));
     }
@@ -357,7 +363,9 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         .then(data => {
           const { response } = data;
           const baseHeaders = getGeneralFieldsHeaders(collection.id);
-          const dataTable = formatData(collection.id, response);
+          let headers = []
+          baseHeaders.concat(filtersSelected.customFields.selected).forEach(({ label }) => headers.push(label));
+          const dataTable = formatData(collection.id, response, headers);
           //Get just the CustomFields
           const baseFieldsHeaders = dataTable.headerObject.filter(e => !filtersSelected.customFields.all.some(custom => custom.id === e.id));
           setFiltersSelected(prev => ({
