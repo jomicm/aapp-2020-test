@@ -68,7 +68,7 @@
     "material-ui-color": "^0.4.6",
     "material-ui-popup-state": "^1.4.1",
     "mui-datatables": "^3.1.4",
-    "object-path": "^0.11.4",
+    "object-path": "^0.11.5",
     "perfect-scrollbar": "^1.4.0",
     "prop-types": "^15.7.2",
     "react": "^16.12.0",

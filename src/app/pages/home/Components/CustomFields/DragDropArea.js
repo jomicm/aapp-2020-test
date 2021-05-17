@@ -98,7 +98,6 @@ const move = (source, destination, droppableSource, droppableDestination) => {
 };
 
 const DragDropArea = (props) => {
-  console.log('DragDropAreaProps:', props)
   const [droppables, setDroppables] = useState([]);
   const [id2List, setId2List] = useState({
     droppable: null,

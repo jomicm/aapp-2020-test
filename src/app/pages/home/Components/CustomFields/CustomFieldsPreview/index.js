@@ -45,21 +45,29 @@ import './index.scss';
 
 // Custom Fields Preview
 const SingleLine = (props) => {
+  console.log('Mount');
+  const { customFieldsPathResponse } = props;
+  let onLoadField = '';
+  Object.entries(customFieldsPathResponse || {}).forEach((field) => {
+    if (field[0] === props.id) {
+      onLoadField = field[1];
+    }
+  });
   const defaultValues = {
-    fieldName: 'Single Line',
-    initialValue: '',
+    fieldName: props.values.fieldName || 'Single Line',
+    initialValue: onLoadField
   };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
     props.onSelect(props.id, 'singleLine', values, setValues);
   };
   useEffect(() => {
-    if (!isEmpty(props.values)) {
+    if (!isEmpty(props.values) && !onLoadField.length) {
       setValues(props.values);
     } else {
       setValues(defaultValues);
     }
-  }, [props.values]);
+  }, [props.values, onLoadField]);
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
@@ -76,7 +84,6 @@ const SingleLine = (props) => {
         margin="normal"
         value={values.initialValue}
         onChange={handleOnChange}
-        //onChange={e => setValues({...values, initialValue: e.target.value})}
       />
       { isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
@@ -88,18 +95,27 @@ const SingleLine = (props) => {
 };
 
 const MultiLine = (props) => {
+  const { customFieldsPathResponse } = props;
+  let onLoadField = '';
+  Object.entries(customFieldsPathResponse || {}).forEach((field) => {
+    if (field[0] === props.id) {
+      onLoadField = field[1];
+    }
+  });
   const defaultValues = {
-    fieldName: 'Multi Line',
-    initialValue: ''
+    fieldName: props.values.fieldName || 'Multi Line',
+    initialValue: onLoadField
   };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
     props.onSelect(props.id, 'multiLine', values, setValues);
   };
   useEffect(() => {
-    if (!isEmpty(props.values)) {
+    if (!isEmpty(props.values) && !onLoadField.length) {
+      console.log('Pass');
       setValues(props.values);
     } else {
+      console.log('Pass 2');
       setValues(defaultValues);
     }
   }, [props.values]);

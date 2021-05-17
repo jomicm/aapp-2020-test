@@ -26,6 +26,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Grid,
   IconButton,
   FormControl,
   FormControlLabel,
@@ -40,6 +41,7 @@ import {
   Typography,
   withStyles,
 } from '@material-ui/core';
+import { TabPanel } from '@material-ui/lab';
 import CloseIcon from '@material-ui/icons/Close';
 import {
   PortletBody,
@@ -58,8 +60,6 @@ import BaseFieldAccordion from '../components/BaseFieldsAccordion';
 import CustomFieldAccordion from '../components/CustomFieldsAccordion';
 import { extractCustomFieldId } from '../../../Reports/reportsHelpers';
 import './ModalPolicies.scss';
-
-const localStorageActiveTabKey = 'builderActiveTab';
 
 const styles5 = (theme) => ({
   root: {
@@ -160,10 +160,10 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const ModalPolicies = ({
-  employeeProfileRows,
   id,
   module,
   reloadTable,
+  setPolicies,
   setShowModal,
   showModal,
   baseFields
@@ -172,6 +172,7 @@ const ModalPolicies = ({
   const { showErrorAlert, showCustomAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
   const [alignment, setAlignment] = useState('');
   const [customFields, setCustomFields] = useState([]);
+  const [selectedCustomFieldTab, setSelectedCustomFieldTab] = useState();
   const actionsReader = [
     { value: 'OnAdd', label: 'On Add' },
     { value: 'OnEdit', label: 'On Edit' },
@@ -189,40 +190,10 @@ const ModalPolicies = ({
     { id: 'processes', name: 'Processes', custom: '' },
     { id: 'inventories', name: 'Inventories', custom: '' }
   ];
-  const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const classes = useStyles();
   const classes4 = useStyles4();
   const [cursorPosition, setCursorPosition] = useState([0, 0]);
   const [editor, setEditor] = useState(EditorState.createEmpty());
-  const employeesFields = {
-    references: {
-      baseFields: {
-        name: { id: 'nameReferences', label: 'name' },
-        ssn: { id: 'ssn', label: 'Social Service Number' }
-      },
-      customFields: {
-        recepcionist: {
-          ootoDay: { id: 'ootoDay', label: 'Ooto Day' },
-          favoriteOffice: { id: 'favoriteOffice', label: 'Favorite Office' }
-        },
-        emp02: {
-          birthday: { id: 'birthday', label: 'Birthday' }
-        },
-        emp03: {
-          age: { id: 'age', label: 'Age' }
-        }
-      },
-      name: 'BF - References'
-    },
-    list: {
-      baseFields: {
-        name: { id: 'nameList', label: 'name' },
-        lastName: { id: 'lastName', label: 'Laste Name' },
-        email: { id: 'email', label: 'Email' }
-      },
-      name: 'BF - List'
-    }
-  };
   const iconsList = {
     notificationImportantIcon: <NotificationImportantIcon />,
     notificationsIcon: <NotificationsIcon />,
@@ -236,7 +207,8 @@ const ModalPolicies = ({
   const [notificationFrom, setNotificationFrom] = useState([]);
   const [notificationTo, setNotificationTo] = useState([]);
   const [selectedControl, setSelectedControl] = useState(null);
-  const [tab, setTab] = useState(activeTab ? +activeTab : 0);
+  const [tab, setTab] = useState(0);
+  const [onLoadTab, setOnLoadTab] = useState(0);
   const [users, setUsers] = useState([]);
   const [values, setValues] = useState({
     apiDisabled: false,
@@ -246,19 +218,36 @@ const ModalPolicies = ({
     messageMail: false,
     messageNotification: '',
     notificationDisabled: false,
+    onLoadDisabled: true,
+    onLoadFields: {},
     policyName: '',
     selectedAction: '',
     selectedCatalogue: '',
     selectedIcon: '',
+    selectedOnLoadCategory: {},
     subjectMessage: '',
     subjectNotification: '',
     token: '',
     tokenEnabled: false,
-    urlAPI: ''
+    tokenOnLoad: '',
+    tokenOnLoadEnabled: false,
+    urlAPI: '',
+    urlOnLoad: ''
   });
 
   const handleAlignment = (event, newAlignment) => {
     setAlignment(newAlignment);
+  };
+
+  const handleCustomFieldInputChange = (customField) => (event) => {
+    const text = event.target.value;
+    setValues(prev => ({
+      ...prev,
+      onLoadFields: {
+        ...prev.onLoadFields,
+        [customField.id]: text
+      }
+    }));
   };
 
   const handleChangeCheck = (name) => (event) => {
@@ -283,6 +272,53 @@ const ModalPolicies = ({
 
   const handleOnChangeValue = (name) => (event) => {
     const { target: { value } } = event;
+
+    if (name === 'selectedOnLoadCategory') {
+      setOnLoadTab(0);
+      const { left, right } = value.rawCF['tab-0'];
+      const res = [...left, ...right];
+      const onlyTextCustomFields = res.filter((e) => ['singleLine', 'multiLine'].includes(e.content));
+      setValues(prev => {
+        let inputs = {};
+        onlyTextCustomFields.forEach((customField) => {
+          if (inputs[customField.id] === null || inputs[customField.id] === undefined) {
+            inputs = { ...inputs, [customField.id]: '' };
+          }
+        });
+        return { ...prev, onLoadFields: inputs };
+      });
+      setSelectedCustomFieldTab(onlyTextCustomFields);
+    }
+
+    if (name === 'selectedAction' && values.selectedAction === 'OnLoad' && value !== 'OnLoad') setTab(0);
+
+    if ((value === 'OnLoad' && values.selectedCatalogue.length) || (name === 'selectedCatalogue' && values.selectedAction.length)) {
+      getDB('policies')
+        .then((res) => res.json())
+        .then(({ response }) => {
+          const valid = response.find((policy) => policy.module === module && policy.selectedAction === 'OnLoad' && policy.selectedCatalogue === (name === 'selectedCatalogue' ? value : values.selectedCatalogue));
+          if (valid) {
+            dispatch(
+              showCustomAlert(({
+                open: true,
+                type: 'warning',
+                message: `An on load policy that targets ${(name === 'selectedCatalogue' ? value : values.selectedCatalogue)} catalogue already exists. You should be aware what category is selected in that policy in order to avoid on load conflicts.`
+              }))
+            );
+          }
+        })
+        .catch((error) => console.log(error));
+    }
+
+    if (value === 'OnLoad') {
+      setTab(3);
+      const lastModuleCatalogue = module === 'assets' ? 'categories' : 'references';
+      if (values.selectedCatalogue === lastModuleCatalogue) {
+        setValues({ ...values, selectedCatalogue: Object.keys(baseFields)[0], [name]: value });
+        return;
+      }
+    };
+
     setValues({ ...values, [name]: value });
   };
 
@@ -323,8 +359,6 @@ const ModalPolicies = ({
       module
     };
 
-    console.log(body);
-
     if (!id) {
       postDB('policies', body)
         .then((data) => data.json())
@@ -332,6 +366,10 @@ const ModalPolicies = ({
           const { _id } = response.response[0];
           dispatch(showSavedAlert());
           saveAndReload('policies', _id);
+          getDB('policies')
+            .then((response) => response.json())
+            .then((data) => setPolicies(data.response))
+            .catch((error) => console.log(error));
         })
         .catch((error) => dispatch(showErrorAlert()));
     } else {
@@ -339,6 +377,10 @@ const ModalPolicies = ({
         .then((response) => {
           dispatch(showUpdatedAlert());
           saveAndReload('policies', id[0]);
+          getDB('policies')
+            .then((response) => response.json())
+            .then((data) => setPolicies(data.response))
+            .catch((error) => console.log(error));
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -395,19 +437,28 @@ const ModalPolicies = ({
       messageMail: false,
       messageNotification: '',
       notificationDisabled: false,
+      onLoadDisabled: true,
+      onLoadFields: {},
       policyName: '',
       selectedAction: '',
       selectedCatalogue: '',
       selectedIcon: '',
+      selectedOnLoadCategory: {},
       subjectMessage: '',
       subjectNotification: '',
-      urlAPI: ''
+      tokenOnLoad: '',
+      tokenOnLoadEnabled: false,
+      urlAPI: '',
+      urlOnLoad: ''
     });
     setMessageFrom([]);
     setMessageTo([]);
     setNotificationFrom([]);
     setNotificationTo([]);
     setEditor(EditorState.createEmpty());
+    setTab(0);
+    setOnLoadTab(0);
+    setSelectedCustomFieldTab();
   };
 
   const saveAndReload = (folderName, id) => {
@@ -453,16 +504,22 @@ const ModalPolicies = ({
           'messageMail',
           'messageNotification',
           'notifiactionDisabled',
+          'onLoadDisabled',
+          'onLoadFields',
           'policyName',
           'selectedAction',
           'selectedCatalogue',
+          'selectedOnLoadCategory',
           'subjectMessage',
           'subjectNotification',
           'selectedIcon',
-          'urlAPI',
           'token',
           'tokenDisabled',
-          'tokenEnabled'
+          'tokenEnabled',
+          'tokenOnLoad',
+          'tokenOnLoadEnabled',
+          'urlAPI',
+          'urlOnLoad',
         ]);
 
         obj = !obj.apiDisabled ? { ...obj, apiDisabled: false } : obj;
@@ -478,6 +535,32 @@ const ModalPolicies = ({
           delete obj.tokenDisabled;
         }
 
+        obj = !obj.onLoadDisabled && typeof obj.onLoadDisabled !== 'boolean' ? { ...obj, onLoadDisabled: true } : obj;
+
+        obj = !obj.onLoadFields ? { ...obj, onLoadFields: {} } : obj;
+
+        obj = !obj.urlOnLoad ? { ...obj, urlOnLoad: '' } : obj;
+
+        obj = !obj.selectedOnLoadCategory ? { ...obj, selectedOnLoadCategory: {} } : obj;
+
+        obj = !obj.tokenEnabled && typeof obj.tokenEnabled !== 'boolean' ? { ...obj, tokenEnabled: false } : obj;
+
+        obj = !obj.tokenOnLoad ? { ...obj, tokenOnLoad: '' } : obj;
+
+        obj = !obj.tokenOnLoadEnabled && typeof obj.tokenOnLoadEnabled !== 'boolean' ? { ...obj, tokenOnLoadEnabled: false } : obj;
+
+        if (Object.entries(obj.selectedOnLoadCategory).length > 0) {
+          // update custom fields
+          const currentCustomFields = customFields.find(({ id }) => id === obj.selectedOnLoadCategory.id);
+          obj = currentCustomFields ? { ...obj, selectedOnLoadCategory: currentCustomFields } : obj;
+          const { left, right } = obj.selectedOnLoadCategory.rawCF[`tab-0`];
+          const res = [...left, ...right];
+          const onlyTextCustomFields = res.filter((e) => ['singleLine', 'multiLine'].includes(e.content));
+          setSelectedCustomFieldTab(onlyTextCustomFields);
+        }
+
+        if (obj.selectedAction === 'OnLoad') setTab(3);
+
         const contentBlock = htmlToDraft(layout);
         const contentState = ContentState.createFromBlockArray(
           contentBlock.contentBlocks
@@ -489,8 +572,8 @@ const ModalPolicies = ({
         setNotificationFrom(notificationFrom);
         setNotificationTo(notificationTo);
       })
-      .catch(error => dispatch(showErrorAlert()));
-  }, [id, employeeProfileRows]);
+      .catch(error => dispatch(showErrorAlert));
+  }, [id]);
 
   useEffect(() => {
     const collection = modules.filter(({ id }) => id === module)[0];
@@ -514,11 +597,11 @@ const ModalPolicies = ({
           });
           const filtered = { [row.name]: filteredCustomFields };
           customFieldNames = { ...customFieldNames, filtered };
-          return { name: row.name, customFields: filteredCustomFields };
+          return { name: row.name, customFields: filteredCustomFields, rawCF: row.customFieldsTab, id: row._id };
         })
         setCustomFields(rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
       })
-      .catch(error => console.log('error>', error));
+      .catch(error => dispatch(showErrorAlert()));
   }, [module]);
 
   return (
@@ -574,11 +657,17 @@ const ModalPolicies = ({
                             value={values.selectedCatalogue}
                           >
                             {
-                              Object.keys(baseFields).map((keyName) => (
-                                <MenuItem key={keyName} value={keyName}>
-                                  {keyName.replace(/\w\S*/g, (w) => (w.replace(/^\w/, (c) => c.toUpperCase())))}
-                                </MenuItem>
-                              ))
+                              Object.keys(baseFields).map((keyName, index) => {
+                                if (values.selectedAction === 'OnLoad' && index === Object.entries(baseFields).length - 1) {
+                                  return null;
+                                }
+
+                                return (
+                                  <MenuItem key={keyName} value={keyName}>
+                                    {keyName.replace(/\w\S*/g, (w) => (w.replace(/^\w/, (c) => c.toUpperCase())))}
+                                  </MenuItem>
+                                );
+                              })
                             }
                           </Select>
                         </FormControl>
@@ -612,18 +701,27 @@ const ModalPolicies = ({
                               <Tabs
                                 className='builder-tabs'
                                 component='div'
-                                onChange={(_, nextTab) => {
-                                  setTab(nextTab);
-                                  localStorage.setItem(
-                                    localStorageActiveTabKey,
-                                    nextTab
-                                  );
-                                }}
+                                onChange={(_, nextTab) => setTab(nextTab)}
                                 value={tab}
                               >
-                                <Tab label='Send Message' />
-                                <Tab label='Send Notification' />
-                                <Tab label='Send API' />
+                                <Tab
+                                  label='Send Message'
+                                  style={{ display: values.selectedAction === 'OnLoad' ? 'none' : null }}
+                                />
+                                <Tab
+                                  label='Send Notification'
+                                  style={{ display: values.selectedAction === 'OnLoad' ? 'none' : null }}
+                                />
+                                <Tab
+                                  label='Send API'
+                                  style={{ display: values.selectedAction === 'OnLoad' ? 'none' : null }}
+                                />
+                                {values.selectedAction === 'OnLoad' && (
+                                  <Tab
+                                    label="On Load"
+                                    style={{ display: values.selectedAction === 'OnLoad' ? null : 'none' }}
+                                  />
+                                )}
                               </Tabs>
                             </PortletHeaderToolbar>
                           }
@@ -895,7 +993,6 @@ const ModalPolicies = ({
                             <div className='__container-post'>
                               <div className='token_textField'>
                                 <FormControlLabel
-                                  value='start'
                                   classes={{
                                     labelPlacementStart: classes.formControlLabel
                                   }}
@@ -908,12 +1005,14 @@ const ModalPolicies = ({
                                   }
                                   label='Web Token'
                                   labelPlacement='start'
+                                  value='start'
                                 />
                                 <TextField
                                   className={classes.textField}
                                   id="Token-TextField"
                                   label="Web Token"
                                   margin="normal"
+                                  multiline
                                   onChange={handleChangeName('token')}
                                   style={{ width: '90%', marginLeft: '20px' }}
                                   value={values.token}
@@ -932,6 +1031,144 @@ const ModalPolicies = ({
                                 style={{ width: '90%' }}
                                 value={values.bodyAPI}
                               />
+                            </div>
+                          </div>
+                        </PortletBody>
+                      )}
+                      {/* OnLoad Action */}
+                      {tab === 3 && values.selectedAction === 'OnLoad' && (
+                        <PortletBody>
+                          <div className="__container-on-load">
+                            <div className="__token-on-load-container">
+                              <TextField
+                                className={classes.textField}
+                                id='onLoad-URL'
+                                label='URL'
+                                margin='normal'
+                                onChange={handleChangeName('urlOnLoad')}
+                                style={{ width: '90%' }}
+                                value={values.urlOnLoad}
+                              />
+                              <FormControlLabel
+                                value='start'
+                                control={
+                                  <Switch
+                                    checked={values.onLoadDisabled}
+                                    color='primary'
+                                    onChange={handleChangeCheck('onLoadDisabled')}
+                                  />
+                                }
+                                label='Disabled'
+                                labelPlacement='start'
+                              />
+                            </div>
+                            <div className="__token-on-load-container">
+                              <FormControlLabel
+                                value='start'
+                                classes={{ labelPlacementStart: classes.formControlLabel }}
+                                control={
+                                  <Switch
+                                    checked={values.tokenOnLoadEnabled}
+                                    color='primary'
+                                    onChange={handleChangeCheck('tokenOnLoadEnabled')}
+                                  />
+                                }
+                                label='Web Token'
+                                labelPlacement='start'
+                              />
+                              <TextField
+                                className={classes.textField}
+                                id='onLoad-tokenURL'
+                                label='Web Token'
+                                margin='normal'
+                                multiline
+                                onChange={handleChangeName('tokenOnLoad')}
+                                style={{ width: '80%', marginLeft: '20px' }}
+                                value={values.tokenOnLoad}
+                              />
+                            </div>
+                            <FormControl style={{ marginBottom: '20px' }} className={classes.textField}>
+                              <InputLabel htmlFor='age-simple'>
+                                {module === 'assets' ? 'Category' : 'References'}
+                              </InputLabel>
+                              <Select
+                                onChange={handleOnChangeValue('selectedOnLoadCategory')}
+                                renderValue={selected => {
+                                  if (values.selectedOnLoadCategory.name) {
+                                    return values.selectedOnLoadCategory.name;
+                                  }
+                                  return '';
+                                }}
+                                value={values.selectedOnLoadCategory || ''}
+                              >
+                                {customFields.map((customField, index) => (
+                                  <MenuItem key={`${customField.name}-${index}`} value={customField}>
+                                    {customField.name.replace(/\w\S*/g, (w) => (w.replace(/^\w/, (c) => c.toUpperCase())))}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              {Object.entries(values.selectedOnLoadCategory).length > 0 && (
+                                <Tabs
+                                  style={{ marginLeft: '10px' }}
+                                  className='builder-tabs'
+                                  component='div'
+                                  onChange={(_, nextTab) => {
+                                    setOnLoadTab(nextTab);
+                                    const { left, right } = values.selectedOnLoadCategory.rawCF[`tab-${nextTab}`];
+                                    const res = [...left, ...right];
+                                    const onlyTextCustomFields = res.filter((e) => ['singleLine', 'multiLine'].includes(e.content));
+                                    setValues(prev => {
+                                      let inputs = prev.onLoadFields;
+                                      onlyTextCustomFields.forEach((customField) => {
+                                        if (inputs[customField.id] === null || inputs[customField.id] === undefined) {
+                                          inputs = { ...inputs, [customField.id]: '' };
+                                        }
+                                      });
+                                      return { ...prev, onLoadFields: inputs };
+                                    });
+                                    setSelectedCustomFieldTab(onlyTextCustomFields);
+                                  }}
+                                  value={onLoadTab}
+                                >
+                                  {Object.values(values.selectedOnLoadCategory.rawCF || {}).map(({ info: { name } }, index) => (
+                                    <Tab key={`Tab-${index}`} label={name} />
+                                  ))}
+                                </Tabs>
+                              )}
+                              <Grid
+                                container
+                                direction="column"
+                                style={{ paddingLeft: '10px', paddingRight: '10px' }}
+                              >
+                                {selectedCustomFieldTab && (
+                                  selectedCustomFieldTab?.length ? (
+                                    selectedCustomFieldTab.map((customField) => (
+                                      <Grid
+                                        alignItems="baseline"
+                                        container
+                                        direction="row"
+                                        item
+                                        justify="flex-start"
+                                        key={customField.id}
+                                      >
+                                        <h6 className={classes.customFieldTitle}>
+                                          {customField.values?.fieldName || customField.content}
+                                        </h6>
+                                        <TextField
+                                          className={classes.customField}
+                                          id={`TextField-${customField.id}`}
+                                          label='Object Path'
+                                          margin='normal'
+                                          onChange={handleCustomFieldInputChange(customField)}
+                                          value={values.onLoadFields[customField.id] || ''}
+                                        />
+                                      </Grid>
+                                    )))
+                                    : <h6 style={{ marginTop: '15px' }}> No Text Custom Fields Found In This Tab </h6>
+                                )}
+                              </Grid>
                             </div>
                           </div>
                         </PortletBody>

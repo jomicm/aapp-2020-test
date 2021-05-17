@@ -120,10 +120,9 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id }) => {
+const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, policies }) => {
   const dispatch = useDispatch();
   const { showFillFieldsAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
-  const policies = usePolicies();
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
