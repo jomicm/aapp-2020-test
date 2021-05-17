@@ -41,6 +41,7 @@ import './Locations.scss';
 import ModalYesNo from '../Components/ModalYesNo';
 import Policies from '../Components/Policies/Policies';
 import { executePolicies } from '../Components/Policies/utils';
+import { usePolicies } from '../Components/Policies/hooks';
 import { hosts, getImageURL } from '../utils';
 import { allBaseFields } from '../constants';
 
@@ -90,6 +91,9 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   const [selectedLocationProfileRows, setSelectedLocationProfileRows] = useState([]);
   const [tab, setTab] = useState(0);
   const [value4, setValue4] = useState(0);
+
+  const { policies, setPolicies } = usePolicies();
+
   const { layoutConfig } = useSelector(
     ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
     shallowEqual
@@ -518,6 +522,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
                           dataFromParent={modalData}
                           parent={parentSelected}
                           parentExt={parentFileExt}
+                          policies={policies}
                           profile={profileSelected}
                           realParent={realParentSelected}
                           reload={handleLoadLocations}
@@ -645,6 +650,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
                         </span>
                         <ModalLocationProfiles
                           id={id}
+                          policies={policies}
                           reloadTable={loadLocationsProfilesData}
                           setShowModal={setOpenProfileModal}
                           showModal={openProfileModal}
@@ -698,7 +704,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
                   </div>
                 </PortletBody>
               )}
-              {tab === 2 && <Policies module="locations" baseFields={policiesBaseFields} />}
+              {tab === 2 && <Policies setPolicies={setPolicies} module="locations" baseFields={policiesBaseFields} />}
               {tab === 3 && (
                 <PortletBody>
                   <div className='kt-section kt-margin-t-0'>

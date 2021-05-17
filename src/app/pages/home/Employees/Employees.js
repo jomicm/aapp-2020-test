@@ -17,6 +17,7 @@ import TableComponent2 from '../Components/TableComponent2';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import ModalYesNo from '../Components/ModalYesNo';
 import Policies from '../Components/Policies/Policies';
+import { usePolicies } from '../Components/Policies/hooks';
 import ModalEmployees from './modals/ModalEmployees';
 import ModalEmployeeProfiles from './modals/ModalEmployeeProfiles';
 import { allBaseFields } from '../constants';
@@ -36,6 +37,8 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
     list: allBaseFields.employees,
     references: allBaseFields.employeeReferences
   };
+
+  const { policies, setPolicies } = usePolicies();
 
   const createUserProfilesRow = (id, name, creator, creation_date) => {
     return { id, name, creator, creation_date };
@@ -273,23 +276,6 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
     };
   };
 
-  // const executePolicies = (catalogueName) => {
-  //   const filteredPolicies = policies.filter(
-  //     ({ selectedAction }) => selectedAction === catalogueName
-  //   );
-  //   filteredPolicies.forEach(
-  //     ({ policyName, selectedAction, selectedCatalogue }) =>{
-  //       dispatch(
-  //         showCustomAlert({
-  //           open: true,
-  //           message: `Policy <${policyName}> with action <${selectedAction}> of type <${selectedCatalogue}> will be executed`,
-  //           type: 'info'
-  //         })
-  //       );
-  //     }
-  //   );
-  // };
-
   return (
     <>
       <ModalYesNo
@@ -328,6 +314,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
                     <ModalEmployees
                       employeeProfileRows={control.employeeProfilesRows}
                       id={control.idEmployee}
+                      policies={policies}
                       reloadTable={() => loadEmployeesData('employees')}
                       setShowModal={(onOff) =>
                         setControl({
@@ -396,6 +383,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
                       This section will integrate <code>User Profiles</code>
                     </span>
                     <ModalEmployeeProfiles
+                      policies={policies}
                       reloadTable={() =>
                         loadEmployeesData('employeeProfiles')
                       }
@@ -458,7 +446,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
             </PortletBody>
           )}
 
-          {tab === 2 && <Policies module='employees' baseFields={policiesBaseFields} />}
+          {tab === 2 && <Policies setPolicies={setPolicies} module='employees' baseFields={policiesBaseFields} />}
         </Portlet>
       </div>
     </>
