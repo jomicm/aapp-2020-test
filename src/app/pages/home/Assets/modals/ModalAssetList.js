@@ -489,6 +489,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       postDB('assets', body)
         .then(data => data.json())
         .then(response => {
+          console.log(`Post`);
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('assets', _id);
