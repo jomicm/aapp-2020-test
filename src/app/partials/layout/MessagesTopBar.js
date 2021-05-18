@@ -145,7 +145,7 @@ const MessagesTopBar = ({
 
     getDBComplex({
       collection: 'messages',
-      condition: { "to": { "$elemMatch": { "_id": user.id } } }
+      condition: [{ "to": { "$elemMatch": { "_id": user.id } } }]
     })
       .then(response => response.json())
       .then(data => {

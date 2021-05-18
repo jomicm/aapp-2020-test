@@ -15,17 +15,25 @@ import LiveProcessInfo from './LiveProcessInfo';
 const LiveProcessTab = ({
   onSelectionChange,
   processInfo,
+  processType,
   setCartRows,
-  onSetRows
+  onSetRows,
+  user
 }) => {
   const [tabIndex, setTabIndex] = useState(0);
   const [openModal, setOpenModal] = useState(false);
   const [selection, setSelection] = useState([]);
   const [localCartRows, setLocalCartRows] = useState([]);
+  const [currentStage, setCurrentStage] = useState([]);
   
   useEffect(() => {
-    setLocalCartRows(processInfo.cartRows);
-  }, [processInfo.cartRows])
+    if(Object.keys(processInfo).length){
+      setLocalCartRows(processInfo.cartRows);
+      const stageKeys = Object.keys(processInfo.processData.stages);
+      const _currentStage = processInfo.processData.stages[stageKeys[processInfo.processData.currentStage-1]];
+      setCurrentStage(_currentStage);
+    }
+  }, [processInfo]);
 
   const handleRejectionClick = () => {
     if (selection.length) {
@@ -51,6 +59,18 @@ const LiveProcessTab = ({
   };
   const handleSelection = ({ rows }) => {
     setSelection(rows);
+  };
+  const showButtons = () => {
+   if(!Object.keys(currentStage).length > 0){
+     return false;
+   };
+
+   const stageApprovals = currentStage.approvals.map(({_id}) => _id);
+   if(!stageApprovals.includes(user.id) || currentStage.stageFulfilled){
+     return false;
+   }
+   
+    return true;
   };
 
   return (
@@ -82,25 +102,29 @@ const LiveProcessTab = ({
           />
         </TabContainer>
         <TabContainer>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px', marginBottom: '25px' }}>
-            <Button
-              color="secondary"
-              endIcon={<Icon>thumb_down</Icon>}
-              onClick={handleRejectionClick}
-              variant="contained"
-            >
-              Reject
-            </Button>
-            <Button
-              color="secondary"
-              endIcon={<Icon>thumb_up</Icon>}
-              style={{ backgroundColor: 'green', marginLeft: '20px' }}
-              onClick={handleApproveOkClick}
-              variant="contained"
-            >
-              Approve
-            </Button>
-          </div>
+          {
+            showButtons() && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px', marginBottom: '25px' }}>
+                <Button
+                  color="secondary"
+                  endIcon={<Icon>thumb_down</Icon>}
+                  onClick={handleRejectionClick}
+                  variant="contained"
+                >
+                  Reject
+                </Button>
+                <Button
+                  color="secondary"
+                  endIcon={<Icon>thumb_up</Icon>}
+                  style={{ backgroundColor: 'green', marginLeft: '20px' }}
+                  onClick={handleApproveOkClick}
+                  variant="contained"
+                >
+                  Approve
+                </Button>
+              </div>
+            )
+          }
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <AssetFinderPreview
               isAssetReference={true}
@@ -110,6 +134,7 @@ const LiveProcessTab = ({
               onSelectionChange={handleSelection}
               rows={localCartRows}
               onSetRows={setCartRows}
+              processType={processType}
             />
           </div>
         </TabContainer>
