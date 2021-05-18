@@ -480,23 +480,20 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
 
     if (!id) {
       body.referenceId = referencesSelectedId;
-      var i;
-      for (i = 0; i < 1500; i++) {
-        postDB('assets', {
-          ...body,
-          serial: body.serial + i.toString(),
-          notes: body.notes + i.toString()
+      postDB('assets', {
+        ...body,
+        serial: body.serial + i.toString(),
+        notes: body.notes + i.toString()
+      })
+        .then(data => data.json())
+        .then(response => {
+          console.log(`Post`);
+          dispatch(showSavedAlert());
+          const { _id } = response.response[0];
+          saveAndReload('assets', _id);
+          executePolicies('OnAdd', 'assets', 'list', policies);
         })
-          .then(data => data.json())
-          .then(response => {
-            console.log(`Post`);
-            dispatch(showSavedAlert());
-            const { _id } = response.response[0];
-            saveAndReload('assets', _id);
-            executePolicies('OnAdd', 'assets', 'list', policies);
-          })
-          .catch(error => dispatch(showErrorAlert()));
-      }
+        .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('assets/', body, id[0])
         .then(response => {
