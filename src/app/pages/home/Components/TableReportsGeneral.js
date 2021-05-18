@@ -211,8 +211,8 @@ const TableReportsGeneral = props => {
     }
   }, [])
 
+  //! FIXME
   useEffect(() => {
-    loadLocationsData();
     if (rows.length > 0 || controlValues.search.length || disableLoading) {
       setLoading(false);
     }
@@ -224,54 +224,6 @@ const TableReportsGeneral = props => {
   useEffect(() => {
     setPage(controlValues.page)
   }, [controlValues.page]);
-
-  const locationsTreeData = {
-    id: 'root',
-    name: 'Locations',
-    profileLevel: -1,
-    parent: null
-  };
-
-  let locations;
-  const loadLocationsData = () => {
-    getDB('locationsReal')
-      .then(response => response.json())
-      .then(data => {
-        locations = data.response.map(res => ({ ...res, id: res._id }));
-        const homeLocations = data.response.filter(loc => loc.profileLevel === 0);
-        const children = constructLocationTreeRecursive(homeLocations);
-        locationsTreeData.children = children;
-        setLocationsTree(locationsTreeData);
-      });
-  };
-
-  const constructLocationTreeRecursive = (locs) => {
-    if (!locs || !Array.isArray(locs) || !locs.length) return [];
-    let res = [];
-    locs.forEach((location) => {
-      const locObj = (({ _id: id, name, profileLevel, parent }) => ({ id, name, profileLevel, parent }))(location);
-      const children = locations.filter(loc => loc.parent === locObj.id);
-      locObj.children = constructLocationTreeRecursive(children);
-      res.push(locObj);
-    });
-    return res;
-  };
-
-  const selectLocation = (locationId, level, parent, locationName, children) => {
-    let res = [];
-    let allchildren = locationsChildren(children, res);
-    allchildren.push(locationId);
-    locationControl(allchildren);
-  };
-
-  const locationsChildren = (children, res) => {
-    if (!children || !Array.isArray(children) || !children.length) return [];
-    children.map((child) => {
-      locationsChildren(child.children, res);
-      res.push(child.id);
-    })
-    return res;
-  }
 
   const recordButtonPosition = (event) => {
     setAnchorEl(event.currentTarget);
@@ -461,6 +413,8 @@ const TableReportsGeneral = props => {
     const createSortHandler = property => event => {
       onRequestSort(event, property);
     };
+
+    
 
     return (
       <TableHead>

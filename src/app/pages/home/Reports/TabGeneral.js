@@ -104,7 +104,7 @@ const useStyles = makeStyles(theme => ({
 
 const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
   const dispatch = useDispatch();
-  const { showErrorAlert, showSavedAlert, showSelectValuesAlert } = actions;
+  const { showErrorAlert, showSavedAlert, showSelectValuesAlert, showCustomAlert } = actions;
   const classes = useStyles();
   const [control, setControl] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -288,42 +288,50 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
   });
 
   const handleCSVDownload = () => {
+    if (!collectionName) {
+      dispatch(showCustomAlert({
+        message: 'You should generate a report of any collection in order to execute the download',
+        open: true,
+        type: 'warning',
+      }))
+      return;
+    }
+
     let queryLike = '';
 
-    if (collectionName) {
-      queryLike = tableControl.searchBy ? (
-        [{ key: tableControl.searchBy, value: tableControl.search }]
-      ) : (
-        ['name', 'lastname', 'email', 'model', 'price', 'brand', 'level'].map(key => ({ key, value: tableControl.search }))
-      );
-      getDBComplex(({
-        collection: collectionName,
-        queryLike,
-        sort: [{ key: tableControl.orderBy, value: tableControl.order }],
-      }))
-        .then((response) => response.json())
-        .then(({ response }) => {
-          const { name } = modules.find(({ id }) => id === collectionName);
-          let headers = [];
-          dataTable.headerObject.map(({ label }) => headers.push(label));
-          const { rows } = formatData(collectionName, response, headers);
-          const jsonToCsvParser = new Parser({
-            // delimiter: '|',
-            transforms: [
-              unwind({ paths: headers, blankOut: false })
-            ],
-            quote: ''
-          });
-          const csv = jsonToCsvParser.parse(rows);
-          var a = document.createElement('a');
-          a.href = 'data:attachment/csv,' + csv;
-          a.target = '_Blank';
-          a.download = `${name}_reports.csv`;
-          document.body.appendChild(a);
-          a.click();
-        })
-        .catch((error) => console.log(error));
-    }
+    queryLike = tableControl.searchBy ? (
+      [{ key: tableControl.searchBy, value: tableControl.search }]
+    ) : (
+      ['name', 'lastname', 'email', 'model', 'price', 'brand', 'level'].map(key => ({ key, value: tableControl.search }))
+    );
+    getDBComplex(({
+      collection: collectionName,
+      queryLike,
+      sort: [{ key: tableControl.orderBy, value: tableControl.order }],
+    }))
+      .then((response) => response.json())
+      .then(({ response }) => {
+        const { name } = modules.find(({ id }) => id === collectionName);
+        let headers = [];
+        dataTable.headerObject.map(({ label }) => headers.push(label));
+        const { rows } = formatData(collectionName, response, headers);
+        const jsonToCsvParser = new Parser({
+          delimiter: '|',
+          fields: headers,
+          transforms: [
+            unwind({ paths: headers, blankOut: false })
+          ],
+          quote: ''
+        });
+        const csv = jsonToCsvParser.parse(rows);
+        var a = document.createElement('a');
+        a.href = 'data:attachment/csv,' + csv;
+        a.target = '_Blank';
+        a.download = `${name}_reports.csv`;
+        document.body.appendChild(a);
+        a.click();
+      })
+      .catch((error) => console.log(error));
   };
 
   const loadReportsData = (collectionNames) => {
