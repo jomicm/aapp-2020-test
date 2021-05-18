@@ -20,7 +20,7 @@ import ModalUserProfiles from './modals/ModalUserProfiles';
 import ModalUsers from './modals/ModalUsers';
 
 //DB API methods
-import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB, getDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 import Policies from '../Components/Policies/Policies';
 import { allBaseFields } from '../constants';
@@ -29,7 +29,8 @@ function Users({ globalSearch, setGeneralSearch }) {
   const dispatch = useDispatch();
   const { showDeletedAlert, showErrorAlert } = actions;
   const [tab, setTab] = useState(0);
-  const policies = usePolicies();
+
+  const { policies, setPolicies } = usePolicies();
 
   const policiesBaseFields = {
     list: allBaseFields.userList,
@@ -145,7 +146,7 @@ function Users({ globalSearch, setGeneralSearch }) {
     });
   };
 
-  
+
   useEffect(() => {
     loadUsersData('user');
   }, [tableControl.user.page, tableControl.user.rowsPerPage, tableControl.user.order, tableControl.user.orderBy, tableControl.user.search, tableControl.user.locationsFilter]);
@@ -213,16 +214,22 @@ function Users({ globalSearch, setGeneralSearch }) {
       },
       onDelete(id) {
         if (!id || !Array.isArray(id)) return;
-        id.forEach(_id => {
-          deleteDB(`${collection.name}/`, _id)
-            .then(response => {
-              dispatch(showDeletedAlert());
-              const currentCollection = collection.name === 'user' ? 'list' : 'references';
-              executePolicies('OnDelete', 'user', currentCollection, policies);
-              loadUsersData(collection.name)
-            })
-            .catch(error => dispatch(showErrorAlert()));
-        });
+        getDB('policies')
+          .then((response) => response.json())
+          .then((data) => {
+            id.forEach(_id => {
+              deleteDB(`${collection.name}/`, _id)
+                .then(_ => {
+                  dispatch(showDeletedAlert());
+                  const currentCollection = collection.name === 'user' ? 'list' : 'references';
+                  executePolicies('OnDelete', 'user', currentCollection, data.response);
+                  loadUsersData(collection.name)
+                })
+                .catch(_ => dispatch(showErrorAlert()));
+            });
+          })
+          .catch((_) => dispatch(showErrorAlert()));
+
       },
       onSelect(id) {
         if (collectionName === 'userProfiles') {
@@ -267,6 +274,7 @@ function Users({ globalSearch, setGeneralSearch }) {
                       This section will integrate <code>Users List</code>
                     </span>
                     <ModalUsers
+                      policies={policies}
                       showModal={control.openUsersModal}
                       setShowModal={(onOff) => setControl({ ...control, openUsersModal: onOff })}
                       reloadTable={() => loadUsersData('user')}
@@ -278,15 +286,6 @@ function Users({ globalSearch, setGeneralSearch }) {
                       <TableComponent2
                         controlValues={tableControl.user}
                         headRows={usersHeadRows}
-                        // locationControl={(locations) => {
-                        //   setTableControl(prev => ({
-                        //     ...prev,
-                        //     users: {
-                        //       ...prev.users,
-                        //       locationsFilter: locations
-                        //     }
-                        //   }))
-                        // }}
                         onAdd={tableActions('users').onAdd}
                         onDelete={tableActions('users').onDelete}
                         onEdit={tableActions('users').onEdit}
@@ -341,6 +340,7 @@ function Users({ globalSearch, setGeneralSearch }) {
                       This section will integrate <code>User Profiles</code>
                     </span>
                     <ModalUserProfiles
+                      policies={policies}
                       showModal={control.openUserProfilesModal}
                       setShowModal={(onOff) => setControl({ ...control, openUserProfilesModal: onOff })}
                       reloadTable={() => loadUsersData('userProfiles')}
@@ -396,7 +396,7 @@ function Users({ globalSearch, setGeneralSearch }) {
             </PortletBody>
           )}
 
-          {tab === 2 && <Policies module="user" baseFields={policiesBaseFields} />}
+          {tab === 2 && <Policies setPolicies={setPolicies} module="user" baseFields={policiesBaseFields} />}
         </Portlet>
       </div>
     </>

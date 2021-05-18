@@ -42,8 +42,7 @@ import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetList.scss';
 import OtherModalTabs from '../components/OtherModalTabs';
 import { pick } from 'lodash';
-import { executePolicies } from '../../Components/Policies/utils';
-import { usePolicies } from '../../Components/Policies/hooks';
+import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -131,7 +130,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadTable, id }) => {
+const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadTable, id, policies }) => {
   const dispatch = useDispatch();
   const { showCustomAlert, showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
 
@@ -142,7 +141,6 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   const [mapMarker, setMapMarker] = useState();
   const [assetsBeforeSaving, setAssetsBeforeSaving] = useState([]);
   const [assetsToDelete, setAssetsToDelete] = useState([]);
-  const policies = usePolicies();
 
   // Example 4 - Tabs
   const classes4 = useStyles4();
@@ -156,6 +154,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   const classes5 = useStyles5();
   const [value5, setValue5] = useState(0);
   const [openHistory, setOpenHistory] = useState(false);
+  const [customFieldsPathResponse, setCustomFieldsPathResponse] = useState();
 
   function handleChange5(event, newValue) {
     setValue5(newValue);
@@ -457,6 +456,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
         const { customFieldsTab, depreciation } = data.response;
         const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
         tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
+
         setCustomFieldsTab(customFieldsTab);
         setValues(prev => ({ ...prev, depreciation }));
         setTabs(tabs);
@@ -483,6 +483,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       mapCoords: mapMarker ? mapMarker : null,
       children: assetsBeforeSaving,
     };
+
     if (!id) {
       body.referenceId = referencesSelectedId;
       postDB('assets', body)
@@ -589,16 +590,29 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     }
 
     if (!id || !Array.isArray(id)) return;
-
     getOneDB('assets/', id[0])
       .then(response => response.json())
       .then(data => {
-        const { name, brand, model, category, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt, assigned, layoutCoords, mapCoords, children, history } = data.response;
+        const { name, brand, model, category, referenceId, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt, assigned, layoutCoords, mapCoords, children, history } = data.response;
         executePolicies('OnLoad', 'assets', 'list', policies);
         setAssetLocation(location);
         setLayoutMarker(layoutCoords) //* null if not specified
         setMapMarker(mapCoords) //* null if not specified
         setAssetsBeforeSaving(children ? children : []) //* null if not specified
+
+        getOneDB('references/', referenceId)
+          .then((response) => response.json())
+          .then(async (data) => {
+            const { selectedProfile: { value } } = data.response;
+            const onLoadResponse = await executeOnLoadPolicy(value, 'assets', 'list', policies);
+            setCustomFieldsPathResponse(onLoadResponse);
+          })
+          .catch((error) => showCustomAlert(({
+            type: 'error',
+            message: error,
+            open: true
+          })));
+
         if (assigned) {
           getOneDB('employees/', assigned)
             .then(response => response.json())
@@ -673,7 +687,6 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       });
   }, [showModal]);
 
-
   useEffect(() => {
     setValues(prev => ({ ...prev, total_price: prev.purchase_price + prev.price }));
   }, [values.purchase_price, values.price])
@@ -681,7 +694,6 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   // Function to update customFields
   const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
     const colValue = ['left', 'right'];
-    console.log('Looking for you', tab, id, colIndex, values);
     const customFieldsTabTmp = { ...customFieldsTab };
 
     const field = customFieldsTabTmp[tab][colValue[colIndex]]
@@ -818,18 +830,18 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                         <div className="modal-asset-reference__list-field" >
                           {tab.content[colIndex].map(customField => (
                             <CustomFieldsPreview
+                              columnIndex={colIndex}
+                              customFieldsPathResponse={customFieldsPathResponse}
+                              data={tab.content[colIndex]}
+                              from="form"
                               id={customField.id}
-                              type={customField.content}
-                              values={customField.values}
+                              onClick={() => alert(customField.content)}
                               onDelete={() => { }}
                               onSelect={() => { }}
-                              columnIndex={colIndex}
-                              from="form"
-                              tab={tab}
                               onUpdateCustomField={handleUpdateCustomFields}
-                              // customFieldIndex={props.customFieldIndex}
-                              onClick={() => alert(customField.content)}
-                              data={tab.content[colIndex]}
+                              tab={tab}
+                              type={customField.content}
+                              values={customField.values}
                             />
                           ))}
                         </div>

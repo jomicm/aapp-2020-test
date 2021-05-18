@@ -59,7 +59,6 @@ const locationsTreeData = {
 const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   const { showCustomAlert, showDeletedAlert, showErrorAlert } = actions;
   const theme4 = useTheme();
-  const policies = usePolicies();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [coordinates, setCoordinates] = useState([]);
   const [modalData, setModalData] = useState([])
@@ -92,6 +91,9 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   const [selectedLocationProfileRows, setSelectedLocationProfileRows] = useState([]);
   const [tab, setTab] = useState(0);
   const [value4, setValue4] = useState(0);
+
+  const { policies, setPolicies } = usePolicies();
+
   const { layoutConfig } = useSelector(
     ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
     shallowEqual
@@ -120,13 +122,18 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
       setOpenYesNoModal(false);
     },
     removeLocation() {
-      deleteDB('locationsReal/', parentSelected)
-        .then((response) => {
-          dispatch(showDeletedAlert());
-          executePolicies('OnDelete', 'locations', 'list', policies);
-          handleLoadLocations();
+      getDB('policies')
+        .then((response) => response.json())
+        .then((data) => {
+          deleteDB('locationsReal/', parentSelected)
+            .then((_) => {
+              dispatch(showDeletedAlert());
+              executePolicies('OnDelete', 'locations', 'list', data.response);
+              handleLoadLocations();
+            })
+            .catch((_) => dispatch(showErrorAlert()));
         })
-        .catch((error) => dispatch(showErrorAlert()));
+        .catch((_) => dispatch(showErrorAlert()));
       setOpenYesNoModal(false);
     },
     openProfilesListBox(e) {
@@ -237,15 +244,20 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
 
   const onDeleteProfileLocation = (id) => {
     if (!id || !Array.isArray(id)) return;
-    id.forEach(_id => {
-      deleteDB('locations/', _id)
-        .then((response) => {
-          dispatch(showDeletedAlert());
-          executePolicies('OnDelete', 'locations', 'profiles', policies);
-          loadLocationsProfilesData();
-        })
-        .catch((error) => dispatch(showErrorAlert()));
-    });
+    getDB('policies')
+      .then((response) => response.json())
+      .then((data => {
+        id.forEach(_id => {
+          deleteDB('locations/', _id)
+            .then((_) => {
+              dispatch(showDeletedAlert());
+              executePolicies('OnDelete', 'locations', 'profiles', data.response);
+              loadLocationsProfilesData();
+            })
+            .catch((_) => dispatch(showErrorAlert()));
+        });
+      })
+        .catch((_) => dispatch(showErrorAlert())));
   };
 
   const onEditProfileLocation = (_id) => {
@@ -510,6 +522,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
                           dataFromParent={modalData}
                           parent={parentSelected}
                           parentExt={parentFileExt}
+                          policies={policies}
                           profile={profileSelected}
                           realParent={realParentSelected}
                           reload={handleLoadLocations}
@@ -637,6 +650,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
                         </span>
                         <ModalLocationProfiles
                           id={id}
+                          policies={policies}
                           reloadTable={loadLocationsProfilesData}
                           setShowModal={setOpenProfileModal}
                           showModal={openProfileModal}
@@ -690,7 +704,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
                   </div>
                 </PortletBody>
               )}
-              {tab === 2 && <Policies module="locations" baseFields={policiesBaseFields} />}
+              {tab === 2 && <Policies setPolicies={setPolicies} module="locations" baseFields={policiesBaseFields} />}
               {tab === 3 && (
                 <PortletBody>
                   <div className='kt-section kt-margin-t-0'>

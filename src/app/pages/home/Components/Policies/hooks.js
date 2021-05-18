@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getDB } from '../../../../crud/api';
 
-export const usePolicies = () => {
+export const usePolicies = (module) => {
   const [policies, setPolicies] = useState([]);
 
   useEffect(() => {
@@ -11,7 +11,7 @@ export const usePolicies = () => {
         setPolicies(data.response);
       })
       .catch((error) => console.log('error: ', error));
-  }, []);
+  }, [module]);
 
-  return policies;
+  return { policies, setPolicies };
 };

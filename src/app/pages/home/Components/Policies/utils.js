@@ -1,5 +1,7 @@
+import axios from 'axios';
 import { getCurrentDateTime, simplePost } from '../../utils';
 import { collections } from '../../constants';
+import objectPath from 'object-path';
 
 export const executePolicies = (actionName, module, selectedCatalogue, policies) => {
   const { dateFormatted, rawDate, timeFormatted } = getCurrentDateTime();
@@ -8,7 +10,9 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
     (policy) => policy.selectedAction === actionName && policy.selectedCatalogue === selectedCatalogue && policy.module === module
   );
 
-  filteredPolicies.forEach(({
+  filteredPolicies.forEach(async ({
+    apiDisabled,
+    bodyAPI,
     layout: html,
     messageDisabled,
     messageFrom,
@@ -19,7 +23,10 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
     notificationTo,
     selectedIcon: icon,
     subjectMessage,
-    subjectNotification
+    subjectNotification,
+    urlAPI,
+    token,
+    tokenEnabled
   }) => {
     if (!messageDisabled) {
       const messageObj = {
@@ -47,5 +54,63 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
       };
       simplePost(collections.notifications, notificationObj);
     }
+    if (!apiDisabled) {
+      try {
+        const validBody = JSON.parse(bodyAPI);
+        const headers = { Authorization: `Bearer ${token}` };
+        await axios.post(
+          urlAPI,
+          validBody,
+          { ...(tokenEnabled ? { headers } : {}) }
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    }
   })
+};
+
+export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, policies) => {
+  const filteredPolicies = policies.find(
+    (policy) => policy.selectedAction === 'OnLoad' && policy.selectedOnLoadCategory?.id === itemID && policy.selectedCatalogue === selectedCatalogue && policy.module === module
+  );
+
+  if (!filteredPolicies) return;
+
+  const { onLoadDisabled, onLoadFields, tokenOnLoad, tokenOnLoadEnabled, urlOnLoad } = filteredPolicies;
+
+  let res;
+
+  if (!onLoadDisabled) {
+    if (tokenOnLoadEnabled) {
+      try {
+        const { data: { response } } = await axios.get(urlOnLoad, {
+          headers: {
+            Authorization: `Bearer ${tokenOnLoad}`,
+          }
+        });
+        res = handlePathResponse(response, onLoadFields);
+      } catch (error) {
+        console.log(error)
+      }
+    } else {
+      try {
+        const { data: { response } } = await axios.get(urlOnLoad);
+        res = handlePathResponse(response, onLoadFields);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }
+
+  return res;
+};
+
+const handlePathResponse = (response, onLoadFields, res = {}) => {
+  Object.entries(onLoadFields).forEach((customField) => {
+    const pathResponse = objectPath.get(response, customField[1]);
+    res = { ...res, [customField[0]]: pathResponse };
+  });
+
+  return res;
 };

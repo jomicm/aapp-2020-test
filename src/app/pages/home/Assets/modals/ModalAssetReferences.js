@@ -29,8 +29,7 @@ import { postDB, getOneDB, updateDB, getDB } from '../../../../crud/api';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetReferences.scss';
-import { executePolicies } from '../../Components/Policies/utils';
-import { usePolicies } from '../../Components/Policies/hooks';
+import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
 
 import BaseFields from '../../Components/BaseFields/BaseFields';
 
@@ -94,14 +93,13 @@ const useStyles4 = makeStyles(theme => ({
   }
 }));
 
-const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, categoryRows }) => {
+const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, policies }) => {
   const dispatch = useDispatch();
   const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
-  const policies = usePolicies();
   function handleChange4(event, newValue) {
     setValue4(newValue);
   }
@@ -128,6 +126,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
   });
   const [customFieldsTab, setCustomFieldsTab] = useState({});
   const [tabs, setTabs] = useState([]);
+  const [customFieldsPathResponse, setCustomFieldsPathResponse] = useState();
 
   const handleChange = name => event => {
     const value = name === 'selectedProfile' ? event : event.target.value;
@@ -241,7 +240,6 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
   };
 
   const handleCloseModal = () => {
-    console.log('HANDLE CLOSE MODAL!')
     setCustomFieldsTab({});
     setValues({
       name: '',
@@ -265,7 +263,6 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
 
   useEffect(() => {
     if (!showModal) return;
-    console.log('Use Eff Ref>', id)
 
     getDB('categories/')
       .then(response => response.json())
@@ -279,9 +276,11 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
 
     getOneDB('references/', id[0])
       .then(response => response.json())
-      .then(data => {
+      .then( async (data) => {
         const { name, brand, model, price, depreciation, customFieldsTab, fileExt, selectedProfile } = data.response;
-        executePolicies('OnLoad', 'assets', 'references', policies);
+        const { value } = selectedProfile;
+        const onLoadResponse = await executeOnLoadPolicy(value, 'assets', 'references', policies);
+        setCustomFieldsPathResponse(onLoadResponse);
         setValues({
           ...values,
           name,
@@ -369,18 +368,18 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, catego
                         <div className="modal-asset-reference__list-field" >
                           {tab.content[colIndex].map(customField => (
                             <CustomFieldsPreview
+                              columnIndex={colIndex}
+                              customFieldsPathResponse={customFieldsPathResponse}
+                              data={tab.content[colIndex]}
+                              from="form"
                               id={customField.id}
-                              type={customField.content}
-                              values={customField.values}
+                              onClick={() => alert(customField.content)}
                               onDelete={() => { }}
                               onSelect={() => { }}
-                              columnIndex={colIndex}
-                              from="form"
-                              tab={tab}
                               onUpdateCustomField={handleUpdateCustomFields}
-                              // customFieldIndex={props.customFieldIndex}
-                              onClick={() => alert(customField.content)}
-                              data={tab.content[colIndex]}
+                              tab={tab}
+                              type={customField.content}
+                              values={customField.values}
                             />
                           ))}
                         </div>

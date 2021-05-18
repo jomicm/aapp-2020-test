@@ -76,7 +76,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
   const dispatch = useDispatch();
   const [tab, setTab] = useState(0);
   const [userLocations, setUserLocations] = useState([]);
-  const policies = usePolicies();
+  const { policies, setPolicies } = usePolicies();
 
   const policiesBaseFields = {
     list: { ...allBaseFields.assets1, ...allBaseFields.assets2 },
@@ -389,16 +389,21 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
       },
       onDelete(id) {
         if (!id || !Array.isArray(id)) return;
-        id.forEach(_id => {
-          deleteDB(`${collection.name}/`, _id)
-            .then(response => {
-              dispatch(showDeletedAlert());
-              const currentCollection = collection.name === 'assets' ? 'list' : collection.name;
-              executePolicies('OnDelete', 'assets', currentCollection, policies);
-              loadAssetsData(collection.name);
-            })
-            .catch(error => showErrorAlert());
-        });
+        getDB('policies')
+          .then((response) => response.json())
+          .then((data => {
+            id.forEach(_id => {
+              deleteDB(`${collection.name}/`, _id)
+                .then(_ => {
+                  dispatch(showDeletedAlert());
+                  const currentCollection = collection.name === 'assets' ? 'list' : collection.name;
+                  executePolicies('OnDelete', 'assets', currentCollection, data.response);
+                  loadAssetsData(collection.name);
+                })
+                .catch((_) => showErrorAlert());
+            });
+          }))
+          .catch((_) => dispatch(showErrorAlert()));
       },
       onSelect(id) {
         if (collectionName === 'references') {
@@ -449,6 +454,22 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
       setGeneralSearch({});
     }
   }, [globalSearch.tabIndex, globalSearch.searchValue]);
+
+  useEffect(() => {
+    kpis.forEach(({ kpi, queryExact }) => {
+      getCountDB({ collection: 'assets', queryExact })
+        .then(response => response.json())
+        .then(data => {
+          setAssetsKPI(prev => ({
+            ...prev,
+            [kpi]: {
+              ...prev[kpi],
+              number: data.response.count
+            }
+          }));
+        });
+    });
+  }, []);
 
   return (
     <>
@@ -513,13 +534,13 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                       </Grid>
                     </span>
                     <ModalAssetList
-                      key={control.idAsset}
-                      showModal={control.openAssetsModal}
-                      setShowModal={(onOff) => setControl({ ...control, openAssetsModal: onOff })}
-                      reloadTable={() => loadAssetsData('assets')}
                       id={control.idAsset}
-                      categoryRows={control.categoryRows}
+                      key={control.idAsset}
+                      policies={policies}
                       referencesSelectedId={referencesSelectedId}
+                      reloadTable={() => loadAssetsData('assets')}
+                      setShowModal={(onOff) => setControl({ ...control, openAssetsModal: onOff })}
+                      showModal={control.openAssetsModal}
                     />
                     <div className='kt-separator kt-separator--dashed' />
                     <div className='kt-section__content'>
@@ -591,6 +612,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                       This section will integrate <code>Assets References</code>
                     </span>
                     <ModalAssetReferences
+                      policies={policies}
                       showModal={control.openReferencesModal}
                       setShowModal={(onOff) => setControl({ ...control, openReferencesModal: onOff })}
                       reloadTable={() => loadAssetsData('references')}
@@ -657,6 +679,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                     </span>
                     <div className='kt-separator kt-separator--dashed' />
                     <ModalAssetCategories
+                      policies={policies}
                       showModal={control.openCategoriesModal}
                       setShowModal={(onOff) => setControl({ ...control, openCategoriesModal: onOff })}
                       reloadTable={() => loadAssetsData('categories')}
@@ -711,7 +734,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
             </PortletBody>
           )}
 
-          {tab === 3 && <Policies module="assets" baseFields={policiesBaseFields} />}
+          {tab === 3 && <Policies setPolicies={setPolicies} module="assets" baseFields={policiesBaseFields} />}
         </Portlet>
       </div>
     </>

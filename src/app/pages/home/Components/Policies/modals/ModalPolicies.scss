@@ -72,6 +72,14 @@
     width: 100%;
 }
 
+.__container-on-load {
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
+    width: 100%;
+    padding: 10px 15px;
+}
+
 .__container-form-checkbox {
     display: flex;
     justify-content: space-around;
@@ -117,7 +125,6 @@
     margin: 10px;
 }
 
-
 .__container-url-disabled {
     display: flex;
     justify-content: flex-start;
@@ -127,11 +134,25 @@
 .__container-url {
     align-items: center;
     display: flex;
-    width: 71%;
     padding: 0 20px;
+    width: 100%;
 }
 
 .__container-disabled {
     padding: 50px 0 0 0.4rem;
     width: 25%;
+}
+
+.token_textField {
+	align-items: baseline;
+	display: flex;
+	flex-direction: row;
+    width: 90%;
+}
+
+.__token-on-load-container {
+    align-items: baseline;
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 25px;
 }
