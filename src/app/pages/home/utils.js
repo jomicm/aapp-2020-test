@@ -84,3 +84,31 @@ export const simplePost = (collection, object) => {
   postDB(collection, object)
     .catch((error) => console.error('ERROR', error))
 };
+
+export const getLocationPath = async (locationId) => {
+  const allLocations = await getAllLocations();
+  const firstLocation = allLocations.find(({ id }) => id === locationId);
+  const response = recursiveLocationPath(firstLocation, allLocations);
+  return response;
+};
+
+const getAllLocations = async () => {
+  return await getDB('locationsReal/')
+    .then(response => response.json())
+    .then(data => {
+      const filtered = data.response.map(({ _id: id, name, parent }) => ({ id, name, parent }))
+      return filtered;
+    })
+    .catch(error => console.log(error));
+}
+
+const recursiveLocationPath = (currentLocation, allLocations) => {
+  const { name, parent } = currentLocation;
+  if (parent === 'root') {
+    return name;
+  }
+  else {
+    const newLocation = allLocations.find(({ id }) => id === parent);
+    return recursiveLocationPath(newLocation, allLocations).concat('/', name);
+  }
+};

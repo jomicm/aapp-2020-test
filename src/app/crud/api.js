@@ -133,11 +133,13 @@ const getDBComplex = ({
       res[key] = isValueBool ? value : { "$regex": `(?i).*${value}.*` };
       return res;
     });
-    const queryString = JSON.stringify({ "$and": [{ "$or": qLike }, condition] });
+    const text = condition.map((e) => JSON.stringify(e)).join(",");
+    const queryString = JSON.stringify({ "$and": [{ "$or": qLike }, text] }).replace(/\\+/g, "").replace(/"{/g, "{").replace(/}"/g, "}");
     additionalParams += `query=${queryString}`;
     count++;
   } else if (!queryLike && condition) {
-    const queryString = JSON.stringify({ "$and": [condition] });
+    const text = condition.map((e) => JSON.stringify(e)).join(",");
+    const queryString = JSON.stringify({ "$and": [text] }).replace(/\\+/g, "").replace(/"{/g, "{").replace(/}"/g, "}");
     additionalParams += `query=${queryString}`;
     count++;
   }
@@ -191,10 +193,12 @@ const getCountDB = ({
       res[key] = isValueBool ? value : { "$regex": `(?i).*${value}.*` };
       return res;
     });
-    const queryString = JSON.stringify({ "$and": [{ "$or": qLike }, condition] });
+    const text = condition.map((e) => JSON.stringify(e)).join(",");
+    const queryString = JSON.stringify({ "$and": [{ "$or": qLike }, text] }).replace(/\\+/g, "").replace(/"{/g, "{").replace(/}"/g, "}");
     additionalParams += `query=${queryString}`;
   } else if (!queryLike && condition) {
-    const queryString = JSON.stringify({ "$and": [condition] });
+    const text = condition.map((e) => JSON.stringify(e)).join(",");
+    const queryString = JSON.stringify({ "$and": [text] }).replace(/\\+/g, "").replace(/"{/g, "{").replace(/}"/g, "}");
     additionalParams += `query=${queryString}`;
   }
   if (queryExact) {

@@ -18,7 +18,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ThumbUpIcon from '@material-ui/icons/ThumbUp';
 import ThumbDownIcon from '@material-ui/icons/ThumbDown';
 import { getDBComplex } from '../../../../crud/api';
-import { getImageURL } from '../../utils';
+import { getImageURL, getLocationPath } from '../../utils';
 import LocationsTreeView from '../LocationsTreeView/LocationsTreeView';
 import Table from './Table';
 import AssetPreviewBox from './AssetPreviewBox';
@@ -31,7 +31,8 @@ const AssetFinder = ({
   onSelectionChange = () => {},
   rows = [],
   onSetRows = () => {},
-  isPreviewTable = false
+  isPreviewTable = false,
+  processType = 'default'
 }) => {
   const collection = isAssetReference ? 'references' : 'assets';
   const classes = useStyles();
@@ -40,22 +41,33 @@ const AssetFinder = ({
   const [selectedRows, setSelectedRows] = useState([]); 
   const [selectedAsset, setSelectedAsset] = useState(defaultAsset);
 
+  useEffect(() => {
+    console.log(isSelectionTable, isPreviewTable)
+  }, [isSelectionTable, isPreviewTable])
+  
   const handleOnSearchClick = () => {
+    if(!searchText.length){
+      return;
+    }
     const queryLike = ['name', 'brand', 'model'].map(key => ({ key, value: searchText }));
     // queryLike.push({ key: 'status', value: 'active' });
+    const condition = !isAssetReference ? [{"status" : "active"}] : null;
 
-    getDBComplex({ collection, queryLike })
+    getDBComplex({ collection, queryLike, condition})
       .then(response => response.json())
-      .then(data => {
-        const rows = data.response.map(row => {
-          const { name, brand, model, _id: id, sn = 'sn', fileExt } = row;
+      .then( async data => {
+        const rows = await Promise.all(data.response.map( async row => {
+          const { name, brand, model, _id: id, sn = 'sn', fileExt, } = row;
           const assigned = !!row.assigned;
           if( isAssetReference ){
             const {selectedProfile} = row;
             return { name, brand, model, id, sn, assigned, fileExt, selectedProfile };
           }
-          return { name, brand, model, id, sn, assigned, fileExt };
-        });
+          const locationPath = await getLocationPath(row.location);
+          const history = row.history || [];
+          return { name, brand, model, id, sn, assigned, fileExt, originalLocation: locationPath, history,};
+        }));
+        console.log('RowsA', rows);
         setAssetRows(rows);
       })
       .catch(error => console.log(error));
@@ -106,7 +118,17 @@ const AssetFinder = ({
             <i className="la la-trash" /> Remove Assets
           </button>
           <div style={{ display: 'flex' }}>
-            <Table columns={[...getColumns(isAssetReference), locationColumn]} rows={rows} setTableRowsInner={handleSelectionChange} />
+            {
+              processType === 'creation' ? (
+                <Table columns={[...getColumns(isAssetReference), locationColumn]} rows={rows} setTableRowsInner={handleSelectionChange} />
+              ) : processType === 'decommission' || processType === 'maintenance' ? (
+                <Table columns={[...getColumns(isAssetReference), originalLocationColumn]} rows={rows} setTableRowsInner={handleSelectionChange} />
+              ) : processType === 'movement' || processType === 'short' ? (
+                <Table columns={[...getColumns(isAssetReference), originalLocationColumn, locationColumn]} rows={rows} setTableRowsInner={handleSelectionChange} />
+              ) : (
+                <Table columns={[...getColumns(isAssetReference)]} rows={rows} setTableRowsInner={handleSelectionChange} /> 
+              )
+            }
             <div style={{ width: '350px', marginLeft: '15px' }} >
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />} >
@@ -131,7 +153,17 @@ const AssetFinder = ({
     } else if (isPreviewTable) {
       return (
         <div style={{ display: 'flex' }}>
-          <Table columns={[...getColumns(isAssetReference), ...processColumns]} rows={rows} setTableRowsInner={handleSelectionChange} />
+          {
+              processType === 'creation' ? (
+                <Table columns={[...getColumns(isAssetReference), locationColumn, ...processColumns]} rows={rows} setTableRowsInner={handleSelectionChange} />
+              ) : processType === 'decommission' || processType === 'maintenance' ? (
+                <Table columns={[...getColumns(isAssetReference), originalLocationColumn, ...processColumns]} rows={rows} setTableRowsInner={handleSelectionChange} />
+              ) : processType === 'movement' || processType === 'short' ? (
+                <Table columns={[...getColumns(isAssetReference), originalLocationColumn, locationColumn, ...processColumns]} rows={rows} setTableRowsInner={handleSelectionChange} />
+              ) : (
+                <Table columns={[...getColumns(isAssetReference), ...processColumns]} rows={rows} setTableRowsInner={handleSelectionChange} /> 
+              )
+            }
           <Card style={{ width: '350px', marginLeft: '15px' }}>
             <CardContent style={{ display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
               <AssetPreviewBox selectedAsset={selectedAsset} />
@@ -142,7 +174,13 @@ const AssetFinder = ({
     } else {
       return (
         <div style={{ display: 'flex' }}>
-          <Table columns={getColumns(isAssetReference)} rows={assetRows} setTableRowsInner={handleSelectionChange} />
+          {
+            isAssetReference ? (
+              <Table columns={[...getColumns(isAssetReference)]} rows={assetRows} setTableRowsInner={handleSelectionChange} />
+            ) : (
+              <Table columns={[...getColumns(isAssetReference), originalLocationColumn]} rows={assetRows} setTableRowsInner={handleSelectionChange} />
+            )
+          }
           <Card style={{ width: '350px', marginLeft: '15px' }}>
             <CardContent style={{ display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
               <AssetPreviewBox selectedAsset={selectedAsset} />
@@ -193,7 +231,8 @@ const getColumns = (isAssetReference) => {
   }
 }; 
 
-const locationColumn = { field: 'locationName', headerName: 'Location', width: 130 };
+const locationColumn = { field: 'locationName', headerName: 'Final Location', width: 200 };
+const originalLocationColumn = { field: 'originalLocation', headerName: 'Original Location', width: 500 };
 
 const processColumns = [
   {
