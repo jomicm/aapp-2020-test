@@ -139,7 +139,7 @@ const PoliciesTable = ({ module, baseFields }) => {
       getCountDB({
         collection: collectionName,
         queryLike: tableControl[collectionName].search ? queryLike : null,
-        condition: { "module": { "$eq": module } }
+        condition: [{ "module": { "$eq": module } }]
       })
         .then(response => response.json())
         .then(data => {
@@ -158,7 +158,7 @@ const PoliciesTable = ({ module, baseFields }) => {
         skip: tableControl[collectionName].rowsPerPage * tableControl[collectionName].page,
         sort: [{ key: tableControl[collectionName].orderBy, value: tableControl[collectionName].order }],
         queryLike: tableControl[collectionName].search ? queryLike : null,
-        condition: { "module": { "$eq": module } }
+        condition: [{ "module": { "$eq": module } }]
       })
         .then(response => response.json())
         .then(data => {

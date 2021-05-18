@@ -174,12 +174,16 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     assetsToDelete.map(asset => {
       updateDB('assets/', { parent: null }, asset.id)
         .then((response) => { })
-        .catch(error => dispatch(showErrorAlert()));
+        .catch(error => {
+          dispatch(showErrorAlert())
+        });
     });
     assetsBeforeSaving.map(asset => {
       updateDB('assets/', { parent: id[0] }, asset.id)
         .then(response => { })
-        .catch(error => dispatch(showErrorAlert()));
+        .catch(error => {
+          dispatch(showErrorAlert())
+        });
     });
   };
 
@@ -447,22 +451,19 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
 
   const handleLoadCustomFields = (profile) => {
     if (!profile || !profile.id) return;
-    console.log('id:', id)
     getOneDB('categories/', profile.id)
       .then(response => response.json())
       .then(data => {
-        console.log(data.response);
         const { customFieldsTab, depreciation } = data.response;
-        console.log('customFieldsTab:', customFieldsTab)
         const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
         tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
-
-        console.log('tabs:', tabs)
         setCustomFieldsTab(customFieldsTab);
         setValues(prev => ({ ...prev, depreciation }));
         setTabs(tabs);
       })
-      .catch(error => dispatch(showErrorAlert()));
+      .catch(error => {
+        dispatch(showErrorAlert())
+      });
   };
 
   const handleSave = () => {
@@ -482,8 +483,6 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       mapCoords: mapMarker ? mapMarker : null,
       children: assetsBeforeSaving,
     };
-    console.log('body:', body)
-    // console.log('isNew:', isNew)
     if (!id) {
       body.referenceId = referencesSelectedId;
       postDB('assets', body)
@@ -494,7 +493,9 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
           saveAndReload('assets', _id);
           executePolicies('OnAdd', 'assets', 'list', policies);
         })
-        .catch(error => dispatch(showErrorAlert()));
+        .catch(error => {
+          dispatch(showErrorAlert())
+        });
     } else {
       updateDB('assets/', body, id[0])
         .then(response => {
@@ -502,7 +503,9 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
           saveAndReload('assets', id[0]);
           executePolicies('OnEdit', 'assets', 'list', policies);
         })
-        .catch(error => dispatch(showErrorAlert()));
+        .catch(error => {
+          dispatch(showErrorAlert())
+        });
     }
     handleCloseModal();
   };
@@ -563,7 +566,6 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
 
   useEffect(() => {
     if (!showModal) return;
-    console.log('referencesSelectedId:', referencesSelectedId)
 
     if (referencesSelectedId) {
       getOneDB('references/', referencesSelectedId)
@@ -581,18 +583,17 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
           setCustomFieldsTab(customFieldsTab);
           setTabs(tabs);
         })
-        .catch(error => dispatch(showErrorAlert()));
+        .catch(error => {
+          dispatch(showErrorAlert())
+        });
     }
 
-    // const profiles = categoryRows.map(cat => ({ id: cat.id, name: cat.name }));
-    // console.log('profiles:', profiles)
-    // setValues(prev => ({ ...prev, profiles }));
     if (!id || !Array.isArray(id)) return;
 
     getOneDB('assets/', id[0])
       .then(response => response.json())
       .then(data => {
-        const { name, brand, model, category, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt, assigned, layoutCoords, mapCoords, children } = data.response;
+        const { name, brand, model, category, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt, assigned, layoutCoords, mapCoords, children, history } = data.response;
         executePolicies('OnLoad', 'assets', 'list', policies);
         setAssetLocation(location);
         setLayoutMarker(layoutCoords) //* null if not specified
@@ -625,11 +626,14 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                 creation_date,
                 labeling_user,
                 labeling_date,
+                history,
                 imageURL: getImageURL(id, 'assets', fileExt),
                 assignedTo: `${nameRes ? nameRes : ''} ${lastName ? lastName : ''}`,
               });
             })
-            .catch(error => dispatch(showErrorAlert()));
+            .catch(error => {
+              dispatch(showErrorAlert())
+            });
         }
         else {
           setValues({
@@ -653,15 +657,20 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
             creation_date,
             labeling_user,
             labeling_date,
+            history,
             imageURL: getImageURL(id, 'assets', fileExt),
           });
         }
-        const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
+        if(customFieldsTab){
+          const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
         tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
         setCustomFieldsTab(customFieldsTab);
         setTabs(tabs);
+        }
       })
-      .catch(error => dispatch(showErrorAlert()));
+      .catch(error => {
+        dispatch(showErrorAlert())
+      });
   }, [showModal]);
 
 
@@ -684,56 +693,35 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     <div style={{ width: '1000px' }}>
       <Dialog onClose={() => setOpenHistory(false)} aria-labelledby="simple-dialog-title" open={openHistory}>
         <DialogTitle id="simple-dialog-title">History</DialogTitle>
-        <Timeline >
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography color="textSecondary">03/08/2017</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography>Down for maintenance</Typography>
-            </TimelineContent>
-          </TimelineItem>
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography color="textSecondary">21/03/2018</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography>Asigned to a new user</Typography>
-            </TimelineContent>
-          </TimelineItem>
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography color="textSecondary">12/12/2019</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography>Location was changed</Typography>
-            </TimelineContent>
-          </TimelineItem>
-          <TimelineItem>
-            <TimelineOppositeContent>
-              <Typography color="textSecondary">26/02/2020</Typography>
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineDot />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent>
-              <Typography>Asset was Deleted</Typography>
-            </TimelineContent>
-          </TimelineItem>
+        {
+          !values || !values.history && (
+            <div style={{padding: '10px', margin: '10px'}}>
+              <Typography>This Asset has no History</Typography>
+            </div>
+          )
+        }
+        {
+          <Timeline >
+          {
+            values?.history?.map(({processName,processType, date, label}) => (
+              <TimelineItem>
+                <TimelineOppositeContent>
+                  <Typography>{processName}</Typography>
+                  <Typography color="textSecondary">{processType}</Typography>
+                  <Typography color="textSecondary">{date}</Typography>
+                </TimelineOppositeContent>
+                <TimelineSeparator>
+                  <TimelineDot />
+                  <TimelineConnector />
+                </TimelineSeparator>
+                <TimelineContent>
+                  <Typography>{label}</Typography>
+                </TimelineContent>
+              </TimelineItem>
+            ))
+          }
         </Timeline>
+        }
       </Dialog>
       <Dialog
         onClose={handleCloseModal}

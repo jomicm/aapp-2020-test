@@ -250,7 +250,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
       getCountDB({
         collection: collectionName,
         queryLike: tableControl[collectionName].search || tableControl['assets'].locationsFilter.length ? queryLike : null,
-        condition: collectionName === 'assets' ? { "location": { "$in": userLocations } } : null
+        condition: collectionName === 'assets' ? [{ "location": { "$in": userLocations }}] : null
       })
         .then(response => response.json())
         .then(data => {
@@ -269,7 +269,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
         skip: tableControl[collectionName].rowsPerPage * tableControl[collectionName].page,
         sort: [{ key: tableControl[collectionName].orderBy, value: tableControl[collectionName].order }],
         queryLike: tableControl[collectionName].search || tableControl['assets'].locationsFilter.length ? queryLike : null,
-        condition: collectionName === 'assets' ? { "location": { "$in": userLocations } } : null
+        condition: collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : null
       })
         .then(response => response.json())
         .then(data => {
