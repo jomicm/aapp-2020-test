@@ -480,11 +480,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
 
     if (!id) {
       body.referenceId = referencesSelectedId;
-      postDB('assets', {
-        ...body,
-        serial: body.serial + i.toString(),
-        notes: body.notes + i.toString()
-      })
+      postDB('assets', body)
         .then(data => data.json())
         .then(response => {
           console.log(`Post`);
