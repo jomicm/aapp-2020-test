@@ -397,22 +397,19 @@ const ModalPolicies = ({
       );
       setEditor(EditorState.push(editor, contentState, 'insert-characters'));
     } else {
-      const text = values[selectedControl];
-
-      if (!text) {
+      try {
+        const text = values[selectedControl];
+        const left = text.substr(0, cursorPosition[0]);
+        const right = text.substr(cursorPosition[1], text.length);
+        const final = `${left}%{${varId}}${right}`;
+        setValues({ ...values, [selectedControl]: final });
+      } catch (error) {
         dispatch(showCustomAlert({
-          type: 'warning',
-          message: 'Please focus the message body to insert a field',
-          open: true
+          message: 'Please select a field or message body to place variables',
+          open: true,
+          type: 'warning'
         }));
-
-        return;
       }
-
-      const left = text.substr(0, cursorPosition[0]);
-      const right = text.substr(cursorPosition[1], text.length);
-      const final = `${left}%{${varId}}${right}`;
-      setValues({ ...values, [selectedControl]: final });
     }
   };
 
@@ -883,12 +880,9 @@ const ModalPolicies = ({
                                   id='standard-subjectNotification'
                                   label='Subject'
                                   margin='normal'
-                                  onChange={handleChangeName(
-                                    'subjectNotification'
-                                  )}
-                                  onClick={() =>
-                                    setSelectedControl('subjectNotification')
-                                  }
+                                  name="subjectNotification"
+                                  onChange={handleChangeName('subjectNotification')}
+                                  onClick={setSelectedControlAndIndexes}
                                   value={values.subjectNotification}
                                 />
                               </div>
@@ -972,7 +966,9 @@ const ModalPolicies = ({
                                   id='standard-url'
                                   label='URL'
                                   margin='normal'
+                                  name="urlAPI"
                                   onChange={handleChangeName('urlAPI')}
+                                  onClick={setSelectedControlAndIndexes}
                                   style={{ width: '90%' }}
                                   value={values.urlAPI}
                                 />
@@ -1026,7 +1022,9 @@ const ModalPolicies = ({
                                 label='Body'
                                 margin='normal'
                                 multiline
+                                name="bodyAPI"
                                 onChange={handleChangeName('bodyAPI')}
+                                onClick={setSelectedControlAndIndexes}
                                 rows='4'
                                 style={{ width: '90%' }}
                                 value={values.bodyAPI}
@@ -1045,7 +1043,9 @@ const ModalPolicies = ({
                                 id='onLoad-URL'
                                 label='URL'
                                 margin='normal'
+                                name="urlOnLoad"
                                 onChange={handleChangeName('urlOnLoad')}
+                                onClick={setSelectedControlAndIndexes}
                                 style={{ width: '90%' }}
                                 value={values.urlOnLoad}
                               />
