@@ -197,7 +197,9 @@ const LiveProcesses = ({ user }) => {
         <ModalProcessesLive
           showModal={control.openProcessLiveModal}
           setShowModal={(onOff) => setControl({ ...control, openProcessLiveModal: onOff })}
-          reloadTable={() => loadLayoutsData('processLive')}
+          reloadTable={() => {
+            loadLayoutsData()
+          }}
           // reloadTable={() => loadLayoutsData()}
           id={control.idProcessLive}
           // employeeProfileRows={[]}

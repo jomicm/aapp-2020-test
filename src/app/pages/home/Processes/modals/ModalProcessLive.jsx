@@ -30,7 +30,7 @@ import { postDB, getDB, getOneDB, updateDB, postFILE, getDBComplex } from '../..
 import CircularProgressCustom from '../../Components/CircularProgressCustom';
 import CustomFields from '../../Components/CustomFields/CustomFields';
 import { CustomFieldsPreview } from '../../constants';
-import { getCurrentDateTime, simplePost } from '../../utils';
+import { getCurrentDateTime, simplePost, getLocationPath } from '../../utils';
 import AssetFinderPreview from '../../Components/AssetFinderPreview';
 import TableComponent from '../../Components/TableComponent';
 import { collections } from '../../constants';
@@ -133,6 +133,9 @@ const ModalProcessLive = (props) => {
   const [value4, setValue4] = useState(0);
   const [stageTabSelected, setStageTabSelected] = useState(0);
   const [customTabSelected, setCustomTabSelected] = useState(0);
+  const [locationsAssetRepository, setLocationsAssetRepository] = useState([]);
+  const [allLocations, setAllLocations] = useState([]);
+
   function handleChange4(event, newValue) {
     setValue4(newValue);
   }
@@ -181,7 +184,7 @@ const ModalProcessLive = (props) => {
   };
 
   const checkValidLocations = (processType) => {
-    if (['creation', 'movement'].includes(processType)) {
+    if (['creation', 'movement', 'short'].includes(processType)) {
       if (!cartRows.length) {
         dispatch(showCustomAlert({
           type: 'warning',
@@ -196,7 +199,22 @@ const ModalProcessLive = (props) => {
       const sameLocation = cartRows.every((row) => row.locationId === firstLocationId);
 
       if (!locationsSet || !sameLocation) {
-        alert('In Creation and Movement processes, all assets should have the same location selected');
+        dispatch(showCustomAlert({
+          type: 'warning',
+          open: true,
+          message: 'In Creation and Movement processes, all assets should have the same location selected'
+        }));
+        return false;
+      }
+      const {profileId: selectedLocationProfile} = allLocations.find(({id}) => firstLocationId === id);
+      const selectedLocationIsAssetRepository = locationsAssetRepository.find(({_id}) => _id === selectedLocationProfile);
+      
+      if(!selectedLocationIsAssetRepository){
+        dispatch(showCustomAlert({
+          type: 'warning',
+          open: true,
+          message: 'In Creation and Movement processes, the location selected should be Asset Repository'
+        }));
         return false;
       }
 
@@ -278,7 +296,6 @@ const ModalProcessLive = (props) => {
   
   const checkValidLocationWitness = async(_cartRows, _processData, _stageKeys) => {
     const {locationId, locationName} = _cartRows[0];
-    const allLocations = await getLocations();
     const allWitnesses = await getWitnesses();
     var currentLocation = allLocations.find(({id}) => locationId === id);
     var recursiveResult = await recursiveFindWitnessByLocation(allLocations, allWitnesses, currentLocation);
@@ -301,7 +318,6 @@ const ModalProcessLive = (props) => {
 
   const checkValidAssetSpecialist = async(_cartRows, _processData, _stageKeys) => {
     const {locationId, locationName} = _cartRows[0];
-    const allLocations = await getLocations();
     const allSpecialists = await getAssetSpecialists();
     var allCategories = _cartRows.map(({selectedProfile}) => selectedProfile.value);
     var currentLocation = allLocations.find(({id}) => locationId === id);
@@ -372,6 +388,26 @@ const ModalProcessLive = (props) => {
        return;
      }
    }
+      const biggestFolio =  await getDBComplex({collection: 'processLive', fields: [{key:'folio', value: 1}], sort:[{key:'folio', value: -1}], limit: 1 })
+        .then(response => response.json())
+        .then(data => {
+          const {folio} = data.response[0];
+          return Number(folio);
+        })
+      .catch(error => console.log(error));
+      if(!biggestFolio){
+        dispatch(showCustomAlert({
+          type: 'error',
+          open: true,
+          message: 'There was an error calculating the Folio, please try again.'
+        }));
+        return;
+      }
+      const whiteFolio = [0, 0, 0, 0, 0, 0];
+      const prefix = whiteFolio.slice(0, 6 - String(biggestFolio+1).length);
+      const newFolio = prefix.join("").concat(String(biggestFolio+1));
+      body.processData.processStatus = 'inProcess';
+      body.folio = newFolio;
       postDB('processLive', body)
         .then(data => data.json())
         .then(async response => {
@@ -379,6 +415,7 @@ const ModalProcessLive = (props) => {
           const { _id } = processLiveResponse;
           groomProcess(processLiveResponse);
           const { processData: { selectedProcessType } } = processLiveResponse;
+          processLiveResponse.processLiveId = _id;
           if (selectedProcessType !== 'short') {
             updateDB('processLive/', omit(processLiveResponse, '_id'), _id)
                 .then(() => saveAndReload('processLive', processLiveResponse._id))
@@ -413,6 +450,7 @@ const ModalProcessLive = (props) => {
                 updateDB('processApprovals/', { fulfilled: true, fulfillDate: `${dateFormatted} ${timeFormatted}` }, _id)
                   .then(data => data.json())
                   .then(response => {
+                    reloadTable();
                   })
                   .catch(error => console.log(error));
               })
@@ -425,12 +463,22 @@ const ModalProcessLive = (props) => {
     handleCloseModal();
   };
 
-  const setAssetsStatus = ({ cartRows = [] }, selectedProcessType) => {
+  const setAssetsStatus = (processLiveResponse, selectedProcessType) => {
+    const { cartRows = [] } = processLiveResponse;
     const status = selectedProcessType === 'maintenance' ? 'maintenance' : 'inProcess';
-    cartRows.forEach(({ id }) => {
-      updateDB('assets/', { status }, id)
-        .catch(error => console.log(error));
-    });
+    if(status === 'maintenance'){
+      const { dateFormatted, timeFormatted } = getCurrentDateTime();
+      cartRows.forEach(({ id, history = []}) => {
+        updateDB('assets/', { status, history: [...history, {processId: processLiveResponse._id, processName: processLiveResponse.processData.name, processType: processLiveResponse.processData.selectedProcessType, label: 'Went down for Maintenance', date: `${dateFormatted} ${timeFormatted}`}]}, id)
+          .catch(error => console.log(error));
+      });
+    }
+    else {
+      cartRows.forEach(({ id }) => {
+        updateDB('assets/', { status }, id)
+          .catch(error => console.log(error));
+      });
+    }
   };
 
   const checkApprovalComplete = () => {
@@ -474,17 +522,8 @@ const ModalProcessLive = (props) => {
     if (!isLastStage) {
       initializeStage(process);
     } else {
-      finishProcess(process);
+      finishProcess(process, (status) => processData.processStatus = status);
     }
-  };
-  const getLocations = () => {
-    return getDB('locationsReal/')
-      .then(response => response.json())
-      .then(data => {
-        const filtered = data.response.map(({_id : id, name, parent}) => ({ id, name, parent}))
-        return filtered;
-      })
-      .catch(error => console.log(error));
   };
 
   const getWitnesses = () => {
@@ -626,21 +665,35 @@ const ModalProcessLive = (props) => {
     filteredMessages.forEach(({ message, type }) => sendStageMessages(message, type));
   };
 
-  const finishProcess = (process) => {
+  const finishProcess = (process, updateProcessStatus) => {
     const { cartRows, processData } = process;
     const { selectedProcessType } = processData;
     const validAssets = extractValidAssets(cartRows, processData);
+    const validAssetsID = validAssets.map(({id}) => (id)); 
+    const invalidAssets = cartRows.filter(({id}) => !validAssetsID.includes(id)) || [];
+    if(invalidAssets.length <= 0 && validAssets.length > 0){
+      updateProcessStatus('approved');
+    }
+    else if(invalidAssets.length > 0 && validAssets.length <= 0){
+      updateProcessStatus('rejected');
+    }
+    else if(invalidAssets.length > 0 && validAssets.length > 0){
+      updateProcessStatus('partiallyApproved');
+    }
+    const { dateFormatted, timeFormatted } = getCurrentDateTime();
 
     const finishActions = {
       creation: () => {
-        validAssets.forEach(({ name, brand, model, locationId: location, id: referenceId }) => {
+        validAssets.forEach( async ({ name, brand, model, locationId: location, id: referenceId, history = [] }) => {
+          const locationPath = await getLocationPath(location);
           const assetObj = {
             name,
             brand,
             model,
             location,
             referenceId,
-            status: 'active'
+            status: 'active',
+            history: [...history, {processId: processInfo._id, processName: processInfo.processData.name, processType: processInfo.processData.selectedProcessType, label: `Asset Created at: ${locationPath}`, date: `${dateFormatted} ${timeFormatted}`}]
           };
           simplePost('assets', assetObj);
           dispatch(showCustomAlert({
@@ -651,8 +704,15 @@ const ModalProcessLive = (props) => {
         });
       },
       decommission: () => {
-        validAssets.forEach(({ id }) => {
-          updateDB('assets/', { status: 'decommissioned' } , id)
+        if(invalidAssets.length){
+          invalidAssets.forEach(({ id }) => {
+            updateDB('assets/', { status: 'active'} , id)
+              .then(() => {})
+              .catch(error => console.log(error));
+          });
+        }
+        validAssets.forEach(({ id, history = [] }) => {
+          updateDB('assets/', { status: 'decommissioned', history: [...history, {processId: processInfo._id, processName: processInfo.processData.name, processType: processInfo.processData.selectedProcessType, label: 'Decommissioned', date: `${dateFormatted} ${timeFormatted}`}]} , id)
             .then(() => {})
             .catch(error => console.log(error));
         });
@@ -662,9 +722,17 @@ const ModalProcessLive = (props) => {
           message: `${validAssets.length} Assets Decommissioned!`
         }));
       },
-      movement: () => {
-        validAssets.forEach(({ id, locationId: location }) => {
-          updateDB('assets/', { location, status: 'active' } , id)
+      movement: async () => {
+        if(invalidAssets.length){
+          invalidAssets.forEach(({ id }) => {
+            updateDB('assets/', { status: 'active'} , id)
+              .then(() => {})
+              .catch(error => console.log(error));
+          });
+        }
+        validAssets.forEach( async ({ id, locationId: location, originalLocation, history = [] }) => {
+          const locationPath = await getLocationPath(location);
+          updateDB('assets/', { location, status: 'active', history: [...history, {processId: processInfo._id, processName: processInfo.processData.name, processType: processInfo.processData.selectedProcessType, label: `Moved from: ${originalLocation} to: ${locationPath}`, date: `${dateFormatted} ${timeFormatted}`}] } , id)
             .then(() => {})
             .catch(error => console.log(error));
         });
@@ -675,8 +743,9 @@ const ModalProcessLive = (props) => {
         }));
       },
       short: () => {
-        validAssets.forEach(({ id, locationId: location }) => {
-          updateDB('assets/', { location, status: 'active' } , id)
+        validAssets.forEach( async ({ id, locationId: location, originalLocation, history = [] }) => {
+          const locationPath = await getLocationPath(location);
+          updateDB('assets/', { location, status: 'active', history: [...history, {processId: processInfo._id, processName: processInfo.processData.name, processType: processInfo.processData.selectedProcessType, label: `Moved from: ${originalLocation} to: ${locationPath}`, date: `${dateFormatted} ${timeFormatted}`}] } , id)
             .then(() => {})
             .catch(error => console.log(error));
         });
@@ -687,8 +756,15 @@ const ModalProcessLive = (props) => {
         }));
       },
       maintenance: () => {
-        validAssets.forEach(({ id }) => {
-          updateDB('assets/', { status: 'active' } , id)
+        if(invalidAssets.length){
+          invalidAssets.forEach(({ id, history }) => {
+            updateDB('assets/', { status: 'active', history: [...history, {processId: processInfo._id, processName: processInfo.processData.name, processType: processInfo.processData.selectedProcessType, label: 'Maintenance was cancelled', date: `${dateFormatted} ${timeFormatted}`}]} , id)
+              .then(() => {})
+              .catch(error => console.log(error));
+          });
+        }
+        validAssets.forEach(({ id, history }) => {
+          updateDB('assets/', { status: 'active', history: [...history, {processId: processInfo._id, processName: processInfo.processData.name, processType: processInfo.processData.selectedProcessType, label: 'Finshed Maintenance', date: `${dateFormatted} ${timeFormatted}`}]} , id)
             .then(() => {})
             .catch(error => console.log(error));
         });
@@ -772,7 +848,7 @@ const ModalProcessLive = (props) => {
   };
 
   const [processes, setProcesses] = useState([]);
-  const [processInfo, setProcessInfo] = useState([]);
+  const [processInfo, setProcessInfo] = useState({});
   const [processLayouts, setProcessLayouts] = useState([]);
   const [customFieldsTab, setCustomFieldsTab] = useState([]);
   const [customTabs, setCustomTabs] = useState([]);
@@ -799,6 +875,8 @@ const ModalProcessLive = (props) => {
     if (!id || !Array.isArray(id)) {
       return;
     }
+
+    
       
     getOneDB('processStages/', id[0])
       .then(response => response.json())
@@ -834,12 +912,34 @@ const ModalProcessLive = (props) => {
       .catch(error => console.log(error));
   }, [id]);
 
+  useEffect(() => {
+    const queryLike = [{ key: 'isAssetRepository', value: true }];
+    const fields = [{ key: '_id', value: 1 }];
+      
+    getDBComplex({collection: 'locations', queryLike, fields})
+      .then(response => response.json())
+      .then(data => {
+        setLocationsAssetRepository(data.response);
+      })
+    .catch(error => console.log(error));
+    
+    getDB('locationsReal/')
+      .then(response => response.json())
+      .then(data => {
+        const filtered = data.response.map(({_id : id, name, parent, profileId}) => ({ id, name, parent, profileId}));
+        setAllLocations(filtered);
+      })
+    .catch(error => console.log(error));
+    
+  }, []);
+
   const [image, setImage] = useState(null);
   // const [notifications, setNotifications] = useState([]);
   // const [approvals, setApprovals] = useState([]);
   const [assetsSelected, setAssetsSelected] = useState([]);
   const [cartRows, setCartRows] = useState([]);
   const [isAssetReference, setIsAssetReference] = useState(null);
+  const [selectedProcessType, setSelectedProcessType] = useState('');
   // const onChangeNotificationsApprovals = name => (event, values) => {
   //   if (name === 'notifications') {
   //     setNotifications(values);
@@ -847,7 +947,6 @@ const ModalProcessLive = (props) => {
   //     setApprovals(values);
   // }
   const onSelectionChange = (selection) => {
-    console.log('selection:', selection)
     
     setAssetsSelected(selection.rows || []);
   };
@@ -884,6 +983,7 @@ const ModalProcessLive = (props) => {
     const handleSelectProcessChange = (event) => {
       setValues((prev) => ({ ...prev, selectedProcess: event.target.value }));
       const { selectedProcessType } = processes.find(({ id }) => id === event.target.value);
+      setSelectedProcessType(selectedProcessType);
       setIsAssetReference(selectedProcessType === 'creation' ? true : false);
     };
 
@@ -897,7 +997,7 @@ const ModalProcessLive = (props) => {
           <TabContainer4 dir={theme4.direction}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                <FormControl className={classes.textField}>
+                <FormControl className={classes.textField} disabled={values.selectedProcess ? true : false }>
                   <InputLabel htmlFor="age-simple">Select Process</InputLabel>
                   <Select
                     onChange={handleSelectProcessChange}
@@ -925,6 +1025,7 @@ const ModalProcessLive = (props) => {
                 onSelectionChange={onSelectionChange}
                 rows={cartRows}
                 onSetRows={setCartRows}
+                processType={selectedProcessType}
               />
             }
           </TabContainer4>
@@ -942,7 +1043,9 @@ const ModalProcessLive = (props) => {
               onSelectionChange={onSelectionChange}
               onSetRows={setCartRows}
               processInfo={processInfo}
+              processType={processInfo.processData ? processInfo.processData.selectedProcessType : selectedProcessType}
               rows={cartRows}
+              user={user}
             />
           </TabContainer4>
           <TabContainerCustom dir={theme4.direction}>

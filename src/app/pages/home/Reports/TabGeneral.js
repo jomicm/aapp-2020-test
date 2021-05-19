@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { uniqBy } from "lodash";
 import {
   Button,
   Divider,
@@ -26,6 +27,7 @@ import {
 } from './reportsHelpers';
 import ChangeReportName from './modals/ChangeReportName';
 
+const { Parser, transforms: { unwind } } = require('json2csv');
 const dataTableDefault = { header: [], tableRows: [], title: '', headerObject: [] };
 
 const modules = [
@@ -36,26 +38,34 @@ const modules = [
   { index: 4, id: 'references', name: 'References', custom: 'categories' },
   { index: 5, id: 'assets', name: 'Assets', custom: 'categories' },
   { index: 6, id: 'depreciation', name: 'Depreciation', custom: '' },
-  { index: 7, id: 'processes', name: 'Processes', custom: '' },
+  { index: 7, id: 'processLive', name: 'Processes', custom: '' },
   { index: 8, id: 'inventories', name: 'Inventories', custom: '' }
 ];
 
 const specificFilters = {
-  processes: [ 
+  processLive: [
     {
       id: "folios",
       label: "Folios"
     },
     {
-      id: "processes",
-      label: "Processes"
+      id: "processName",
+      label: "Process Name"
+    },
+    {
+      id: "selectedProcessType",
+      label: "Process Type"
+    },
+    {
+      id: "processStatus",
+      label: "Process Status"
     },
     {
       id: "stage",
       label: "Stage"
     },
     {
-      id: "creationUser",
+      id: "creationUserId",
       label: "Creation User"
     },
     {
@@ -63,7 +73,7 @@ const specificFilters = {
       label: "Approval User"
     },
   ],
-  inventories: [ 
+  inventories: [
     {
       id: "inventoryUser",
       label: "Inventory User"
@@ -74,22 +84,6 @@ const specificFilters = {
     },
   ]
 };
-
-//The following Variable is temporal, it should be replaced later when the Processes Module is finished.
-const specificFiltersOptions = {
-  processes: {
-    folios: [{label:"3345"}, {label:"123"}, {label:"25899"}],
-    processes: [{label:"Creation"}, {label:"Maintenance"}],
-    stage: [{label:"1"}, {label:"3"}, {label:"last"}],
-    creationUser: [{label:"Joe Doe"}, {label:"John Smith"}],
-    approvalUser: [{label:"Joe Doe"}, {label:"John Smith"}],
-  },
-  inventories: {
-    inventoryUser: [{label:"Joe Doe"}, {label:"John Smith"}],
-    idSession: [{label:"3345"}, {label:"123"}, {label:"25899"}],
-  }
-}
-
 
 const useStyles = makeStyles(theme => ({
   button: {
@@ -103,7 +97,7 @@ const useStyles = makeStyles(theme => ({
 
 const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
   const dispatch = useDispatch();
-  const { showErrorAlert, showSavedAlert, showSelectValuesAlert } = actions;
+  const { showErrorAlert, showSavedAlert, showSelectValuesAlert, showCustomAlert } = actions;
   const classes = useStyles();
   const [control, setControl] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -116,35 +110,54 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
     enabled: false,
     reportName: ''
   });
-  const [filtersSelected, setFiltersSelected] = useState({
+  const [specificFiltersOptions, setSpecificFiltersOptions] = useState({
+    processLive: {
+      folios: [],
+      processName: [],
+      selectedProcessType: [{ id: 'creation', label: "Creation" }, { id: 'maintenance', label: "Maintenance" }, { id: 'decommission', label: "Decommission" }, { id: 'movement', label: "Movement" }, { id: 'short', label: "Short Movement" }],
+      processStatus: [{ id: 'approved', label: "Approved" }, { id: 'partiallyApproved', label: "Partially Approved" }, { id: 'rejected', label: "Rejected" }, { id: 'inProcess', label: "In Process" }],
+      stage: [],
+      creationUserId: [],
+      approvalUser: [],
+    },
+    inventories: {
+      inventoryUser: [{ label: "Joe Doe" }, { label: "John Smith" }],
+      idSession: [{ label: "3345" }, { label: "123" }, { label: "25899" }],
+    }
+  });
+  const defaultFilterSelected = {
     customFields: {
-      base:[],
+      base: [],
       category: [],
       all: [],
       selected: [],
     },
-    processes: {
+    processLive: {
       folios: [],
-      processes:[],
+      processName: [],
+      selectedProcessType: [],
+      processStatus: [],
       stage: [],
-      creationUser: [],
+      creationUserId: [],
       approvalUser: [],
       daysDelayed: 0,
     },
-    inventories:{
+    inventories: {
       inventoryUser: [],
-      idSession : [],
+      idSession: [],
     }
-  });
-  
+  };
+
+  const [filtersSelected, setFiltersSelected] = useState(defaultFilterSelected);
+
   const permissions = user.profilePermissions.reports || [];
 
   const loadCustomFields = (selectedReport, customSelected) => {
     if (!customSelected) {
-      setFiltersSelected(prev => ({ 
-        ...prev, 
+      setFiltersSelected(prev => ({
+        ...prev,
         customFields: {
-          base:[],
+          base: [],
           category: [],
           all: [],
           selected: [],
@@ -156,7 +169,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       setLoading(true);
       getDBComplex({
         collection: collection?.custom,
-        customQuery: JSON.stringify({"customFieldsTab":{"$ne":{}}})
+        customQuery: JSON.stringify({ "customFieldsTab": { "$ne": {} } })
       })
         .then(response => response.json())
         .then(data => {
@@ -176,8 +189,8 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
             return filteredCustomFields;
           })
           const customFieldsSimplified = convertRowsToDataTableObjects(normalizeRows(rowToObjectsCustom, customFieldNames));
-          setFiltersSelected(prev => ({ 
-            ...prev, 
+          setFiltersSelected(prev => ({
+            ...prev,
             customFields: {
               ...prev.customFields,
               all: customFieldsSimplified.headerObject || ["There are no Custom Fields yet"],
@@ -190,7 +203,81 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
           console.log('error>', error);
           setLoading(false);
         });
-    }};
+    }
+  };
+
+  const loadProcessData = () => {
+    //GET Folios 
+    getDBComplex({
+      collection: 'processLive',
+      fields: [{ key: 'creationUserFullName', value: 1 }, { key: 'creationUserId', value: 1 }, { key: 'creationDate', value: 1 }, { key: '_id', value: 1 }, { key: 'folio', value: 1 }]
+    })
+      .then(response => response.json())
+      .then(data => {
+        const users = uniqBy(data.response.map(({ creationUserId, creationUserFullName }) => ({ id: creationUserId, label: creationUserFullName })), 'id');
+        const folios = uniqBy(data.response.map(({ _id, folio }) => ({ id: _id, label: folio })), 'id');
+        setSpecificFiltersOptions(prev => ({
+          ...prev,
+          processLive: {
+            ...prev.processLive,
+            creationUserId: users || ["There are no creation users yet"],
+            folios: folios || ["There are no ProcessLive yet"]
+          }
+        }));
+      })
+      .catch(error => console.log('error>', error));
+
+    getDBComplex({
+      collection: 'processStages',
+      fields: [{ key: 'name', value: 1 }, { key: '_id', value: 1 }]
+    })
+      .then(response => response.json())
+      .then(data => {
+        const stages = data.response.map(({ name, _id }) => ({ id: _id, label: name }));
+        setSpecificFiltersOptions(prev => ({
+          ...prev,
+          processLive: {
+            ...prev.processLive,
+            stage: stages || ["There are no Stages yet"],
+          }
+        }));
+      })
+      .catch(error => console.log('error>', error));
+
+    getDBComplex({
+      collection: 'processes',
+      fields: [{ key: 'name', value: 1 }, { key: '_id', value: 1 }]
+    })
+      .then(response => response.json())
+      .then(data => {
+        const processNames = data.response.map(({ name, _id }) => ({ id: _id, label: name }));
+        setSpecificFiltersOptions(prev => ({
+          ...prev,
+          processLive: {
+            ...prev.processLive,
+            processName: processNames || ["There are no Processes yet"],
+          }
+        }));
+      })
+      .catch(error => console.log('error>', error));
+
+    getDBComplex({
+      collection: 'processApprovals',
+      fields: [{ key: 'userId', value: 1 }, { key: 'email', value: 1 }]
+    })
+      .then(response => response.json())
+      .then(data => {
+        const processApprovals = uniqBy(data.response.map(({ userId, email }) => ({ id: userId, label: email })), 'id').filter((e) => e.id && e.label);
+        setSpecificFiltersOptions(prev => ({
+          ...prev,
+          processLive: {
+            ...prev.processLive,
+            approvalUser: processApprovals || ["There are Approval Users yet"],
+          }
+        }));
+      })
+      .catch(error => console.log('error>', error));
+  };
 
   const handleChange = (name) => (event) => {
     const { value } = event.target;
@@ -200,7 +287,14 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       setValues({ ...values, selectedReport: '', startDate: '', endDate: '' });
     }
     if (name === 'selectedReport') {
-      loadCustomFields(value);
+      setFiltersSelected(defaultFilterSelected);
+      setId('');
+      if (value === 'processLive') {
+        loadProcessData();
+      }
+      else {
+        loadCustomFields(value);
+      }
       setDataTable(dataTableDefault);
     }
   };
@@ -214,7 +308,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       handleGenerateReport(id);
     }
   }, [id])
-  
+
   const handleClickGenerateReport = (e) => {
     const { value } = e.target;
     handleGenerateReport(value);
@@ -222,7 +316,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
   }
 
   const handleGenerateReport = (id) => {
-    savedReports.map(({ _id, endDate, selectedReport, startDate, customFields }) => {
+    savedReports.map(({ _id, endDate, selectedReport, startDate, customFields, processFilters }) => {
       if (_id === id) {
         setValues({
           ...values,
@@ -230,6 +324,12 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
           startDate,
           endDate
         });
+        if (selectedReport === 'processLive') {
+          setFiltersSelected(prev => ({
+            ...prev,
+            processLive: processFilters
+          }));
+        }
         loadCustomFields(selectedReport, customFields)
         setCollectionName(selectedReport);
         loadReportsData(selectedReport);
@@ -259,7 +359,13 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       dispatch(showSelectValuesAlert());
       return;
     }
-    const body = { ...values, reportName, customFields: filtersSelected.customFields.selected }
+    var body;
+    if (selectedReport === 'processLive') {
+      body = { ...values, reportName, processFilters: filtersSelected.processLive };
+    }
+    else {
+      body = { ...values, reportName, customFields: filtersSelected.customFields.selected };
+    }
     postDB('reports', body)
       .then((response) => response.json())
       .then(() => {
@@ -285,11 +391,113 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
     searchBy: '',
   });
 
-  const loadReportsData = (collectionNames) => {
+  const handleCSVDownload = () => {
+    if (!collectionName) {
+      dispatch(showCustomAlert({
+        message: 'You should generate a report of any collection in order to execute the download',
+        open: true,
+        type: 'warning',
+      }))
+      return;
+    }
+
+    let queryLike = '';
+
+    queryLike = tableControl.searchBy ? (
+      [{ key: tableControl.searchBy, value: tableControl.search }]
+    ) : (
+      ['name', 'lastname', 'email', 'model', 'price', 'brand', 'level'].map(key => ({ key, value: tableControl.search }))
+    );
+    getDBComplex(({
+      collection: collectionName,
+      queryLike,
+      sort: [{ key: tableControl.orderBy, value: tableControl.order }],
+    }))
+      .then((response) => response.json())
+      .then(({ response }) => {
+        const { name } = modules.find(({ id }) => id === collectionName);
+        let headers = [];
+        dataTable.headerObject.map(({ label }) => headers.push(label));
+        const { rows } = formatData(collectionName, response, headers);
+        const jsonToCsvParser = new Parser({
+          delimiter: '|',
+          fields: headers,
+          transforms: [
+            unwind({ paths: headers, blankOut: false })
+          ],
+          quote: ''
+        });
+        const csv = jsonToCsvParser.parse(rows);
+        var a = document.createElement('a');
+        a.href = 'data:attachment/csv,' + csv;
+        a.target = '_Blank';
+        a.download = `${name}_reports.csv`;
+        document.body.appendChild(a);
+        a.click();
+      })
+      .catch((error) => console.log(error));
+  };
+
+  const getFiltersProcess = async () => {
+    var result = [];
+    var lookById = [];
+    const keys = Object.keys(filtersSelected.processLive);
+    await Promise.all(keys.map(async (key) => {
+      if (!filtersSelected.processLive[key].length) {
+        return;
+      }
+      if (['processName', 'selectedProcessType', 'processStatus'].includes(key)) {
+        const extendedKey = 'processData'.concat('.', key !== 'processName' ? key : 'id');
+        result.push({ [extendedKey]: { "$in": filtersSelected.processLive[key].map(({ id }) => (id)) } });
+      }
+      else if (key === 'folios') {
+        filtersSelected.processLive[key].map(({ id }) => {
+          lookById.push(id);
+        });
+      }
+      else if (key === 'stage' || key === 'approvalUser') {
+        const stages = {
+          condition: [{ processStages: { $elemMatch: { id: { "$in": filtersSelected.processLive[key].map(({ id }) => (id)) } } } }],
+          fields: [{ key: '_id', value: 1 }]
+        }
+        const approval = {
+          condition: [{ userId: { "$in": filtersSelected.processLive[key].map(({ id }) => (id)) } }],
+          fields: [{ key: 'processId', value: 1 }]
+        }
+        const data = await getDBComplex({
+          collection: key === 'stage' ? 'processes' : 'processApprovals',
+          condition: key === 'stage' ? stages.condition : approval.condition,
+          fields: key === 'stage' ? stages.fields : approval.fields,
+        })
+          .then(response => response.json())
+          .then(data => {
+            return data.response;
+          })
+          .catch(error => console.log('error>', error));
+        if (key === 'stage') {
+          result.push({ "selectedProcess": { "$in": data.map(({ _id }) => (_id)) } });
+        }
+        else {
+          data.map(({ processId }) => {
+            lookById.push(processId);
+          });
+        }
+      }
+      else {
+        result.push({ [key]: { "$in": filtersSelected.processLive[key].map(({ id }) => (id)) } });
+      }
+    }));
+    if (lookById.length) {
+      result.push({ "processLiveId": { "$in": lookById } });
+    }
+    return result.length > 0 ? result : null;
+  };
+
+  const loadReportsData = async (collectionNames) => {
     if (!collectionNames) return;
     const collection = modules.find(({ id }) => id === collectionNames);
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
-    collectionNames.forEach(collectionName => {
+    collectionNames.forEach(async collectionName => {
       let queryLike = '';
 
       if (collectionName) {
@@ -299,9 +507,13 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
           ['name', 'lastname', 'email', 'model', 'price', 'brand', 'level'].map(key => ({ key, value: tableControl.search }))
         )
       }
+
+      const condition = collectionName === 'processLive' ? await getFiltersProcess() : null;
+
       getCountDB({
         collection: collectionName,
-        queryLike: tableControl.search ? queryLike : null
+        queryLike: tableControl.search ? queryLike : null,
+        condition: collectionName === 'processLive' ? condition : null
       })
         .then(response => response.json())
         .then(data => {
@@ -315,24 +527,35 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         collection: collectionName,
         limit: tableControl.rowsPerPage,
         skip: tableControl.rowsPerPage * tableControl.page,
-        sort: [{ key: tableControl.orderBy, value: tableControl.order }],
-        queryLike: tableControl.search ? queryLike : null
+        sort: collectionName === 'processLive' ? [{ key: 'folio', value: 1 }] : [{ key: tableControl.orderBy, value: tableControl.order }],
+        queryLike: tableControl.search ? queryLike : null,
+        condition: collectionName === 'processLive' ? condition : null
       })
         .then(response => response.json())
         .then(data => {
           const { response } = data;
           const baseHeaders = getGeneralFieldsHeaders(collection.id);
-          const dataTable = formatData(collection.id, response);
+          let headers = []
+          baseHeaders.concat(filtersSelected.customFields.selected).forEach(({ label }) => headers.push(label));
+          var dataTable;
+          if (collectionName === 'processLive') {
+            const processRows = response.map(({ processData, creationUserFullName, totalStages, creationDate, _id, folio }) => {
+              return ({ folio, name: processData.name, stages: totalStages, type: processData.selectedProcessType, creator: creationUserFullName, date: creationDate });
+            });
+            dataTable = { rows: processRows, headerObject: baseHeaders };
+          }
+          else {
+            dataTable = formatData(collection.id, response);
+          }
           //Get just the CustomFields
           const baseFieldsHeaders = dataTable.headerObject.filter(e => !filtersSelected.customFields.all.some(custom => custom.id === e.id));
-          setFiltersSelected(prev => ({ 
-            ...prev, 
+          setFiltersSelected(prev => ({
+            ...prev,
             customFields: {
               ...prev.customFields,
               base: baseFieldsHeaders
             }
           }));
-
           setDataTable({ ...dataTable, headerObject: baseHeaders.concat(filtersSelected.customFields.selected), title: collection.name });
         })
         .catch(error => console.log('error>', error));
@@ -340,8 +563,8 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
   };
 
   const changeFiltersSelected = (module, filter) => (event, values) => {
-    setFiltersSelected(prev => ({ 
-      ...prev, 
+    setFiltersSelected(prev => ({
+      ...prev,
       [module]: {
         ...prev[module],
         [filter]: values
@@ -349,8 +572,8 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
     }));
   }
   const changeCustomFieldsSelected = (event, values) => {
-    setFiltersSelected(prev => ({ 
-      ...prev, 
+    setFiltersSelected(prev => ({
+      ...prev,
       customFields: {
         ...prev.customFields,
         selected: values
@@ -387,11 +610,11 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>Generate Reports</h2>
-        <div style={{display:'flex', flexDirection: 'row'}}>
+        <div style={{ display: 'flex', flexDirection: 'row' }}>
           {loading && (
-              <div style={{width: '30px', display:'flex', justifyContent: 'center', alignContent: 'center', margin: '10px'}}>
-                <CircularProgressCustom size={25} />
-              </div>
+            <div style={{ width: '30px', display: 'flex', justifyContent: 'center', alignContent: 'center', margin: '10px' }}>
+              <CircularProgressCustom size={25} />
+            </div>
           )}
           <Button
             className={classes.button}
@@ -477,95 +700,96 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         </FormControl>
       </div>
       {(filtersSelected.customFields.all.length > 0 || filtersSelected.customFields.selected.length > 0) && (
-          <div
-            name="SpecificFilter"
-            style={{ margin: '30px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap'}}
-          >
-            <div style={{ display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap', width: '100%'}}>
-              <Autocomplete
-                defaultValue={filtersSelected.customFields.selected}
-                id='CustomFields'
-                getOptionLabel={(option) => option.label}
-                multiple
-                onChange={changeCustomFieldsSelected}
-                options={filtersSelected.customFields.all}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label='Custom Fields'
-                    variant='standard'
-                    style={{ width: '400px'}}
-                  />
-                )}
-                value={filtersSelected.customFields.selected}
-              />
-            </div>
+        <div
+          name="SpecificFilter"
+          style={{ margin: '30px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap' }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap', width: '100%' }}>
+            <Autocomplete
+              defaultValue={filtersSelected.customFields.selected}
+              id='CustomFields'
+              getOptionLabel={(option) => option.label}
+              multiple
+              onChange={changeCustomFieldsSelected}
+              options={filtersSelected.customFields.all}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label='Custom Fields'
+                  variant='standard'
+                  style={{ width: '400px' }}
+                />
+              )}
+              value={filtersSelected.customFields.selected}
+            />
           </div>
+        </div>
       )}
       { Object.keys(specificFilters).includes(values.selectedReport) && (
-          <>
-            <div
-              name="SpecificFilter"
-              style={{ margin: '30px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap'}}
-            >
-              <Typography className={classes.filterTitles} style={{marginTop:'0px'}}> {`${modules.map(({ id, name }) => id === values.selectedReport ? name : null).join('')} Specific Filters`} </Typography>
-              <div style={{marginTop: '10px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap', width: '100%'}}>
-                { specificFilters[values.selectedReport].map((e) => (
-                    <Autocomplete
-                      className={classes.filters}
-                      defaultValue={filtersSelected[values.selectedReport][e.id]}
-                      getOptionLabel={(option) => option.label}
-                      multiple
-                      onChange={changeFiltersSelected( values.selectedReport, e.id)}
-                      options={specificFiltersOptions[values.selectedReport][e.id]}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label={e.label}
-                          variant='standard'
-                          style={{ width: '200px', margin:'10px 40px 10px 0px' }}
-                        />
-                      )}
-                      value={filtersSelected[values.selectedReport][e.id]}
+        <>
+          <div
+            name="SpecificFilter"
+            style={{ margin: '30px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap' }}
+          >
+            <Typography className={classes.filterTitles} style={{ marginTop: '0px' }}> {`${modules.map(({ id, name }) => id === values.selectedReport ? name : null).join('')} Specific Filters`} </Typography>
+            <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'flex-start', flexWrap: 'wrap', width: '100%' }}>
+              {specificFilters[values.selectedReport].map((e) => (
+                <Autocomplete
+                  className={classes.filters}
+                  defaultValue={filtersSelected[values.selectedReport][e.id]}
+                  getOptionLabel={(option) => option.label}
+                  multiple
+                  onChange={changeFiltersSelected(values.selectedReport, e.id)}
+                  options={specificFiltersOptions[values.selectedReport][e.id]}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label={e.label}
+                      variant='standard'
+                      style={{ width: '200px', margin: '10px 40px 10px 0px' }}
                     />
-                ))}
-                { values.selectedReport === 'processes' && (
-                    <div style={{display:'flex', alignItems:'center', marginTop: '20px'}}>
-                      <Typography style={{color:'black'}}> {'Delayed >='} </Typography>
-                      <TextField
-                        variant="outlined"
-                        style={{ width: '60px', marginLeft: '8px', marginRight:'5px'}}
-                        type="number"
-                        inputProps={{
-                          min: 0,
-                          style: {
-                            padding: '8px'
-                          }
-                        }}
-                        onChange={(event) =>{
-                          setFiltersSelected(prev => ({ 
-                            ...prev, 
-                            processes: {
-                              ...prev.processes,
-                              daysDelayed: event.target.value
-                            }
-                          }));
-                        }}
-                        value={filtersSelected[values.selectedReport].daysDelayed}
-                      />
-                      <Typography style={{color:'black'}}> Days </Typography>
-                    </div>
-                )}
-              </div>
+                  )}
+                  value={filtersSelected[values.selectedReport][e.id]}
+                />
+              ))}
+              {values.selectedReport === 'processLive' && (
+                <div style={{ display: 'flex', alignItems: 'center', marginTop: '20px' }}>
+                  <Typography style={{ color: 'black' }}> {'Delayed >='} </Typography>
+                  <TextField
+                    variant="outlined"
+                    style={{ width: '60px', marginLeft: '8px', marginRight: '5px' }}
+                    type="number"
+                    inputProps={{
+                      min: 0,
+                      style: {
+                        padding: '8px'
+                      }
+                    }}
+                    onChange={(event) => {
+                      setFiltersSelected(prev => ({
+                        ...prev,
+                        processLive: {
+                          ...prev.processLive,
+                          daysDelayed: event.target.value
+                        }
+                      }));
+                    }}
+                    value={filtersSelected[values.selectedReport].daysDelayed}
+                  />
+                  <Typography style={{ color: 'black' }}> Days </Typography>
+                </div>
+              )}
             </div>
-          </>
+          </div>
+        </>
       )}
       <div>
         <Divider style={{ width: '100%', marginTop: '30px' }} />
-        <h3 style={{ marginTop: '20px' }}>Table</h3>
+        <h3 style={{ marginTop: '20px' }}> Table </h3>
         <TableReportsGeneral
           controlValues={tableControl}
           disableLoading={!!collectionName}
+          handleCSVDownload={handleCSVDownload}
           headRows={dataTable.headerObject}
           onDelete={() => { }}
           onEdit={() => { }}
