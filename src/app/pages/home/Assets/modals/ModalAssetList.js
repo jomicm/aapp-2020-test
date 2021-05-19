@@ -42,7 +42,7 @@ import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetList.scss';
 import OtherModalTabs from '../components/OtherModalTabs';
 import { pick } from 'lodash';
-import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
+import { executeOnLoadPolicy, executePolicies } from '../../Components/Policies/utils';
 
 // Example 5 - Modal
 const styles5 = theme => ({

@@ -91,7 +91,6 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   const [selectedLocationProfileRows, setSelectedLocationProfileRows] = useState([]);
   const [tab, setTab] = useState(0);
   const [value4, setValue4] = useState(0);
-
   const { policies, setPolicies } = usePolicies();
 
   const { layoutConfig } = useSelector(

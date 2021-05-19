@@ -276,7 +276,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
 
     getOneDB('references/', id[0])
       .then(response => response.json())
-      .then( async (data) => {
+      .then(async(data) => {
         const { name, brand, model, price, depreciation, customFieldsTab, fileExt, selectedProfile } = data.response;
         const { value } = selectedProfile;
         const onLoadResponse = await executeOnLoadPolicy(value, 'assets', 'references', policies);

@@ -45,7 +45,6 @@ import './index.scss';
 
 // Custom Fields Preview
 const SingleLine = (props) => {
-  console.log('Mount');
   const { customFieldsPathResponse } = props;
   let onLoadField = '';
   Object.entries(customFieldsPathResponse || {}).forEach((field) => {
@@ -112,10 +111,8 @@ const MultiLine = (props) => {
   };
   useEffect(() => {
     if (!isEmpty(props.values) && !onLoadField.length) {
-      console.log('Pass');
       setValues(props.values);
     } else {
-      console.log('Pass 2');
       setValues(defaultValues);
     }
   }, [props.values]);

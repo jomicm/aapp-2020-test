@@ -256,7 +256,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
 
     getOneDB('user/', id[0])
       .then(response => response.json())
-      .then( async (data) => {
+      .then(async(data) => {
         console.log(data.response);
         const { name, lastName, email, customFieldsTab, profilePermissions, idUserProfile, locationsTable, fileExt, selectedBoss } = data.response;
         const onLoadResponse = await executeOnLoadPolicy(idUserProfile, 'user', 'list', policies);
