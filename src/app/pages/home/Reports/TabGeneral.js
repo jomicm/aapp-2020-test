@@ -391,7 +391,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
     searchBy: '',
   });
 
-  const handleCSVDownload = () => {
+  const handleCSVDownload = async () => {
     if (!collectionName) {
       dispatch(showCustomAlert({
         message: 'You should generate a report of any collection in order to execute the download',
@@ -401,24 +401,19 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       return;
     }
 
-    let queryLike = '';
+    const condition = collectionName === 'processLive' ? await getFiltersProcess() : null;
 
-    queryLike = tableControl.searchBy ? (
-      [{ key: tableControl.searchBy, value: tableControl.search }]
-    ) : (
-      ['name', 'lastname', 'email', 'model', 'price', 'brand', 'level'].map(key => ({ key, value: tableControl.search }))
-    );
     getDBComplex(({
       collection: collectionName,
-      queryLike,
-      sort: [{ key: tableControl.orderBy, value: tableControl.order }],
+      condition
     }))
       .then((response) => response.json())
       .then(({ response }) => {
+        let csv;
         const { name } = modules.find(({ id }) => id === collectionName);
         let headers = [];
         dataTable.headerObject.map(({ label }) => headers.push(label));
-        const { rows } = formatData(collectionName, response, headers);
+        const { rows } = formatData(collectionName, response);
         const jsonToCsvParser = new Parser({
           delimiter: '|',
           fields: headers,
@@ -427,7 +422,16 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
           ],
           quote: ''
         });
-        const csv = jsonToCsvParser.parse(rows);
+
+        if (collectionName === 'processLive') {
+          const processRows = response.map(({ processData, creationUserFullName, totalStages, creationDate, _id, folio }) => {
+            return ({ folio, name: processData.name, stages: totalStages, type: processData.selectedProcessType, creator: creationUserFullName, date: creationDate });
+          });
+          csv = jsonToCsvParser.parse(processRows);
+        } else {
+          csv = jsonToCsvParser.parse(rows);
+        }
+        
         var a = document.createElement('a');
         a.href = 'data:attachment/csv,' + csv;
         a.target = '_Blank';
@@ -513,7 +517,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       getCountDB({
         collection: collectionName,
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : null
+        condition
       })
         .then(response => response.json())
         .then(data => {
@@ -529,7 +533,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         skip: tableControl.rowsPerPage * tableControl.page,
         sort: collectionName === 'processLive' ? [{ key: 'folio', value: 1 }] : [{ key: tableControl.orderBy, value: tableControl.order }],
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : null
+        condition
       })
         .then(response => response.json())
         .then(data => {
