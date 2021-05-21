@@ -97,7 +97,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const TabGeneral = ({ id, savedReports, setId, reloadData, user, generalLoading }) => {
+const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
   const dispatch = useDispatch();
   const { setGeneralLoading, showErrorAlert, showSavedAlert, showSelectValuesAlert, showCustomAlert } = actions;
   const classes = useStyles();
@@ -352,8 +352,6 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, generalLoading 
     setControl(true);
   }
 
-  useEffect(() => console.log(generalLoading), [generalLoading]);
-
   useEffect(() => {
     if (id) {
       handleGenerateReport(id);
@@ -458,7 +456,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, generalLoading 
 
     getDBComplex(({
       collection: collectionName,
-      condition
+      condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations }}] : null
     }))
       .then((response) => response.json())
       .then(({ response }) => {
@@ -892,8 +890,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, generalLoading 
   )
 }
 
-const mapStateToProps = ({ auth: { user }, general: { generalLoading } }) => ({
-  user,
-  generalLoading
+const mapStateToProps = ({ auth: { user } }) => ({
+  user
 });
 export default connect(mapStateToProps)(TabGeneral);
