@@ -84,19 +84,19 @@ export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, pol
   if (!onLoadDisabled) {
     if (tokenOnLoadEnabled) {
       try {
-        const { data: { response } } = await axios.get(urlOnLoad, {
+        const { data } = await axios.get(urlOnLoad, {
           headers: {
             Authorization: `Bearer ${tokenOnLoad}`,
           }
         });
-        res = handlePathResponse(response, onLoadFields);
+        res = handlePathResponse(data, onLoadFields);
       } catch (error) {
         console.log(error)
       }
     } else {
       try {
-        const { data: { response } } = await axios.get(urlOnLoad);
-        res = handlePathResponse(response, onLoadFields);
+        const { data } = await axios.get(urlOnLoad);
+        res = handlePathResponse(data, onLoadFields);
       } catch (error) {
         console.log(error);
       }
@@ -108,7 +108,7 @@ export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, pol
 
 const handlePathResponse = (response, onLoadFields, res = {}) => {
   Object.entries(onLoadFields).forEach((customField) => {
-    const pathResponse = objectPath.get(response, customField[1]);
+    const pathResponse = objectPath.get(response, customField[1], 'Not Found');
     res = { ...res, [customField[0]]: pathResponse };
   });
 
