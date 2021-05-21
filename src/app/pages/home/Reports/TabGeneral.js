@@ -95,9 +95,9 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
+const TabGeneral = ({ id, savedReports, setId, reloadData, user, generalLoading }) => {
   const dispatch = useDispatch();
-  const { showErrorAlert, showSavedAlert, showSelectValuesAlert, showCustomAlert } = actions;
+  const { setGeneralLoading, showErrorAlert, showSavedAlert, showSelectValuesAlert, showCustomAlert } = actions;
   const classes = useStyles();
   const [control, setControl] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -303,6 +303,8 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
     setControl(true);
   }
 
+  useEffect(() => console.log(generalLoading), [generalLoading]);
+
   useEffect(() => {
     if (id) {
       handleGenerateReport(id);
@@ -401,6 +403,8 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       return;
     }
 
+    dispatch(setGeneralLoading({ active: true }));
+
     const condition = collectionName === 'processLive' ? await getFiltersProcess() : null;
 
     getDBComplex(({
@@ -439,7 +443,12 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         document.body.appendChild(a);
         a.click();
       })
-      .catch((error) => console.log(error));
+      .catch((error) => dispatch(showCustomAlert({
+        message: `Something wrong happened in the download. Please try again later.\n Error: ${error}`,
+        open: true,
+        type: 'error'
+      })))
+      .finally(() => dispatch(setGeneralLoading({ active: false })));
   };
 
   const getFiltersProcess = async () => {
@@ -830,7 +839,8 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
   )
 }
 
-const mapStateToProps = ({ auth: { user } }) => ({
-  user
+const mapStateToProps = ({ auth: { user }, general: { generalLoading } }) => ({
+  user,
+  generalLoading
 });
 export default connect(mapStateToProps)(TabGeneral);
