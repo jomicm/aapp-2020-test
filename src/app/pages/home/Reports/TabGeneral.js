@@ -13,6 +13,7 @@ import {
 import { makeStyles } from '@material-ui/core';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import { connect, useDispatch } from 'react-redux';
+import { utcToZonedTime } from 'date-fns-tz';
 import { actions } from '../../../store/ducks/general.duck';
 import { postDB, getCountDB, getDBComplex } from '../../../crud/api';
 import TableReportsGeneral from '../Components/TableReportsGeneral';
@@ -429,7 +430,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, generalLoading 
 
         if (collectionName === 'processLive') {
           const processRows = response.map(({ processData, creationUserFullName, totalStages, creationDate, _id, folio }) => {
-            return ({ folio, name: processData.name, stages: totalStages, type: processData.selectedProcessType, creator: creationUserFullName, date: creationDate });
+            return ({ folio, name: processData.name, stages: totalStages, type: processData.selectedProcessType, creator: creationUserFullName, date: utcToZonedTime(creationDate).toLocaleString() });
           });
           csv = jsonToCsvParser.parse(processRows);
         } else {
@@ -553,7 +554,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, generalLoading 
           var dataTable;
           if (collectionName === 'processLive') {
             const processRows = response.map(({ processData, creationUserFullName, totalStages, creationDate, _id, folio }) => {
-              return ({ folio, name: processData.name, stages: totalStages, type: processData.selectedProcessType, creator: creationUserFullName, date: creationDate });
+              return ({ folio, name: processData.name, stages: totalStages, type: processData.selectedProcessType, creator: creationUserFullName, date: utcToZonedTime(creationDate).toLocaleString() });
             });
             dataTable = { rows: processRows, headerObject: baseHeaders };
           }
