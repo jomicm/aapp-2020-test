@@ -484,7 +484,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         }
         
         var a = document.createElement('a');
-        a.href = 'data:attachment/csv,' + csv;
+        a.href = 'data:attachment/csv,' + encodeURI(csv);
         a.target = '_Blank';
         a.download = `${name}_reports.csv`;
         document.body.appendChild(a);
