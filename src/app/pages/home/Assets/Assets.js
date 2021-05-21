@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useEffect, useState } from 'react';
+import { uniq } from 'lodash';
 import {
   Card,
   CardContent,
@@ -180,8 +181,8 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
         getDB('locationsReal')
           .then((response) => response.json())
           .then((data) => {
+            let res = [];
             locationsTable.forEach((location) => {
-              let res = [];
               const currentLoc = data.response.find((e) => e._id === location.parent);
 
               if (!userLocations.includes(currentLoc._id)) {
@@ -194,22 +195,9 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                 children.forEach((e) => res.push(e._id));
                 children.forEach((e) => locationsRecursive(data, e, res));
               }
-              setUserLocations(prev => {
-                let index = 0;
-                const found = prev.some(e => {
-                  index = res.indexOf(e)
-                  if (index >= 0) {
-                    return true;
-                  }
-                });
-
-                if (found) {
-                  res.splice(index, 1);
-                }
-
-                return prev.concat(res);
-              });
             });
+            const resFiltered = uniq(res);
+            setUserLocations(resFiltered);
           })
           .catch((error) => dispatch(showErrorAlert()));
       })
@@ -417,11 +405,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
 
   useEffect(() => {
     loadAssetsData('assets');
-  }, [userLocations]);
-
-  useEffect(() => {
-    loadAssetsData('assets');
-  }, [tableControl.assets.page, tableControl.assets.rowsPerPage, tableControl.assets.order, tableControl.assets.orderBy, tableControl.assets.search, tableControl.assets.locationsFilter]);
+  }, [tableControl.assets.page, tableControl.assets.rowsPerPage, tableControl.assets.order, tableControl.assets.orderBy, tableControl.assets.search, tableControl.assets.locationsFilter, userLocations]);
 
   useEffect(() => {
     loadAssetsData('references');
@@ -432,11 +416,11 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
   }, [tableControl.categories.page, tableControl.categories.rowsPerPage, tableControl.categories.order, tableControl.categories.orderBy, tableControl.categories.search]);
 
   const kpis = [
-    { kpi: 'total', queryExact: null },
-    { kpi: 'available', queryExact: [{ key: 'status', value: 'active' }] },
-    { kpi: 'onProcess', queryExact: [{ key: 'status', value: 'inProcess' }] },
-    { kpi: 'maintenance', queryExact: [{ key: 'status', value: 'maintenance' }] },
-    { kpi: 'decommissioned', queryExact: [{ key: 'status', value: 'decommissioned' }] }
+    { kpi: 'total', condition: [{"location": { "$in": userLocations }}] },
+    { kpi: 'available', condition: [{'status': 'active'}, {"location": { "$in": userLocations }}] },
+    { kpi: 'onProcess', condition: [{'status': 'inProcess'}, {"location": { "$in": userLocations }}] },
+    { kpi: 'maintenance', condition: [{'status': 'maintenance'}, {"location": { "$in": userLocations }}] },
+    { kpi: 'decommissioned', condition: [{'status': 'decommissioned'}, {"location": { "$in": userLocations }}] }
   ];
 
   const tabIntToText = ['assets', 'references', 'categories'];
@@ -455,21 +439,42 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
     }
   }, [globalSearch.tabIndex, globalSearch.searchValue]);
 
+  const updateKPIS = async () => {
+    const info = kpis.map(({ condition }) => getCountDB({ collection: 'assets', condition }));
+    Promise.all(info)
+      .then(responses => Promise.all(responses.map(response => response.json())))
+      .then(data => {
+        const formatData = data.map(({response}) => response.count)
+        setAssetsKPI(prev => ({
+          ...prev,
+          total: {
+            ...prev.total,
+            number: formatData[0]
+          },
+          available: {
+            ...prev.available,
+            number: formatData[1]
+          },
+          onProcess: {
+            ...prev.onProcess,
+            number: formatData[2]
+          },
+          maintenance: {
+            ...prev.maintenance,
+            number: formatData[3]
+          },
+          decommissioned: {
+            ...prev.decommissioned,
+            number: formatData[4]
+          },
+        }));
+      })
+      .catch(error => console.log('error>', error));
+  };
+
   useEffect(() => {
-    kpis.forEach(({ kpi, queryExact }) => {
-      getCountDB({ collection: 'assets', queryExact })
-        .then(response => response.json())
-        .then(data => {
-          setAssetsKPI(prev => ({
-            ...prev,
-            [kpi]: {
-              ...prev[kpi],
-              number: data.response.count
-            }
-          }));
-        });
-    });
-  }, []);
+    updateKPIS();
+  }, [userLocations]);
 
   return (
     <>
