@@ -191,6 +191,20 @@ function Settings({ user }) {
                   </div>
                 </PortletBody>
               )}
+               {/* Settings - Groups Tab */}
+               {tab === 7 && (
+                <PortletBody>
+                  <div className="kt-section kt-margin-t-0">
+                    <div className="kt-section__body">
+                      <div className="kt-section">
+                        <div className="kt-section__content">
+                          <h1> Groups </h1>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </PortletBody>
+              )}
             </Portlet>
           </div>
         )}
