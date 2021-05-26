@@ -254,11 +254,12 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
               dispatch(showDeletedAlert());
               executePolicies('OnDelete', 'locations', 'profiles', data.response);
               loadLocationsProfilesData();
+              updateGeneralProfileLocations();
             })
             .catch((_) => dispatch(showErrorAlert()));
         });
-      })
-        .catch((_) => dispatch(showErrorAlert())));
+      }))
+      .catch((_) => dispatch(showErrorAlert()));
   };
 
   const onEditProfileLocation = (_id) => {
@@ -345,17 +346,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   const handleLoadLocations = () => {
 
     if (!Object.entries(locationsTree).length) {
-      getDB('locations')
-        .then((response) => response.json())
-        .then((data) => {
-          const profileRows = data.response.map((row) => {
-            const { _id, level, name, creationUserFullName, creationDate } = row;
-            const date = utcToZonedTime(creationDate).toLocaleString();
-            return createLocationProfileRow(_id, level, name, creationUserFullName, date);
-          });
-          setAllLocationsProfiles(profileRows);
-        })
-        .catch((error) => console.log(error));
+      updateGeneralProfileLocations();
     }
 
     setLocationsTree({});
@@ -387,6 +378,20 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
       searchBy: '',
     },
   });
+
+  const updateGeneralProfileLocations = () => {
+    getDB('locations')
+      .then((response) => response.json())
+      .then((data) => {
+        const profileRows = data.response.map((row) => {
+          const { _id, level, name, creationUserFullName, creationDate } = row;
+          const date = utcToZonedTime(creationDate).toLocaleString();
+          return createLocationProfileRow(_id, level, name, creationUserFullName, date);
+        });
+        setAllLocationsProfiles(profileRows);
+      })
+      .catch((error) => console.log(error));
+  };
 
   const loadLocationsProfilesData = (collectionNames = ['locations']) => {
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
@@ -450,7 +455,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
     getSelfCenter(parent);
     setParentSelected(parent);
     setRealParentSelected(realParent);
-    let locationProf = allLocationsProfiles.filter((row) => row.level === lvl);
+    let locationProf = allLocationsProfiles.filter((row) => row.level === lvl || row.level === lvl?.toString());
     setSelectedLocationProfileRows(locationProf);
   };
 
@@ -670,6 +675,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
                           reloadTable={loadLocationsProfilesData}
                           setShowModal={setOpenProfileModal}
                           showModal={openProfileModal}
+                          updateGeneralProfileLocations={updateGeneralProfileLocations}
                         />
 
                         <div className='kt-separator kt-separator--dashed' />

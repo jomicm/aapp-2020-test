@@ -277,7 +277,7 @@ const ModalLocationList = ({
   };
 
   useEffect(() => {
-    if (!profile || !profile.id || editOrNew === 'edit' || !showModal || parent === 'root') {
+    if (!profile || !profile.id || editOrNew === 'edit' || !showModal) {
       return;
     }
     getOneDB('locations/', profile.id)
@@ -289,7 +289,6 @@ const ModalLocationList = ({
           level: profileLevel,
           customFieldsTab
         } = data.response;
-        // executePolicies('OnLoad', 'locations', 'list', policies);
         setValues((prev) => ({ ...prev, name: '', profileName, profileId, profileLevel, customFieldsTab }));
         setProfileLabel(profile.name);
         const tabs = Object.keys(customFieldsTab).map((key) => ({
@@ -304,7 +303,7 @@ const ModalLocationList = ({
     getOneDB('locationsReal/', parent)
       .then((response) => response.json())
       .then((data) => {
-        const { fileExt } = data.response;
+        const fileExt = data.response?.fileExt;
         const imageURL = parent !== "root" ? getImageURL(parent, 'locationsReal', fileExt) : '';
         setValues((prev) => ({ ...prev, imageURL }));
       })

@@ -120,7 +120,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, policies }) => {
+const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, policies, updateGeneralProfileLocations }) => {
   const dispatch = useDispatch();
   const { showFillFieldsAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   // Example 4 - Tabs
@@ -197,6 +197,7 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, polic
           const { _id } = response.response[0];
           saveAndReload('locations', _id);
           executePolicies('OnAdd', 'locations', 'profiles', policies);
+          updateGeneralProfileLocations();
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -205,6 +206,7 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, polic
           dispatch(showUpdatedAlert());
           saveAndReload('locations', id[0]);
           executePolicies('OnEdit', 'locations', 'profiles', policies);
+          updateGeneralProfileLocations();
         })
         .catch(error => dispatch(showErrorAlert()));
     }
