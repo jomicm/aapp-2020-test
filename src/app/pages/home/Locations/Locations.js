@@ -75,6 +75,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [loadingReset, setLoadingReset] = useState(false);
   const [locationsList, setLocationsList] = useState([]);
+  const [allLocationsProfiles, setAllLocationsProfiles] = useState([]);
   const [locationProfileRows, setLocationProfileRows] = useState([]);
   const [locationsTree, setLocationsTree] = useState({});
   const [mapCenter, setMapCenter] = useState({ lat: 19.432608, lng: -99.133209 });
@@ -342,6 +343,21 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   };
 
   const handleLoadLocations = () => {
+
+    if (!Object.entries(locationsTree).length) {
+      getDB('locations')
+        .then((response) => response.json())
+        .then((data) => {
+          const profileRows = data.response.map((row) => {
+            const { _id, level, name, creationUserFullName, creationDate } = row;
+            const date = utcToZonedTime(creationDate).toLocaleString();
+            return createLocationProfileRow(_id, level, name, creationUserFullName, date);
+          });
+          setAllLocationsProfiles(profileRows);
+        })
+        .catch((error) => console.log(error));
+    }
+
     setLocationsTree({});
     getDB('locationsReal')
       .then((response) => response.json())
@@ -434,7 +450,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
     getSelfCenter(parent);
     setParentSelected(parent);
     setRealParentSelected(realParent);
-    let locationProf = locationProfileRows.filter((row) => row.level == lvl);
+    let locationProf = allLocationsProfiles.filter((row) => row.level === lvl);
     setSelectedLocationProfileRows(locationProf);
   };
 
