@@ -245,7 +245,7 @@ const ModalAssetsSpecialists = ({ showModal, setShowModal, reloadTable, id, empl
                 <FormLabel style={{marginTop: '0px'}} component="legend">User Finder</FormLabel>
                 <FormGroup>
                   <Select
-                    onChange={userSelected => setValues(prev => ({ ...prev, userSelected }))}
+                    onChange={userSelected =>  setValues(prev => ({ ...prev, userSelected }))}
                     value={values.userSelected}
                     classNamePrefix="select"
                     isClearable={true}

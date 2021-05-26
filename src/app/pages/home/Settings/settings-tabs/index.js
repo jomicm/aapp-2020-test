@@ -1,4 +1,5 @@
 import General from './General';
+import Groups from './Groups';
 import Design from './Design';
 import LayoutsPresets from './LayoutsPresets';
 import Fields from './Fields';
@@ -8,6 +9,7 @@ import Processes from './Processes';
 
 export {
   General,
+  Groups,
   Design,
   LayoutsPresets,
   Fields,

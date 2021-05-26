@@ -12,7 +12,6 @@ export const TabsTitles = (module) => {
     
     if (tabs) {
       const titles = tabs.titles.map((tab) => tabsConfig.titles.filter((tabTitle) => tabTitle.title === tab)[0]);
-      console.log(titles);
       setTitles(titles);
     }
   }, [module]);
