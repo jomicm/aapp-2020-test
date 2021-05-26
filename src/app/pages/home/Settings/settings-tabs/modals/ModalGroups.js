@@ -83,7 +83,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export default function ModalGroups({ showModal, setShowModal, reloadTable, id, employeeProfileRows, groups }) {
+export default function ModalGroups({ showModal, setShowModal, setGroups, reloadTable, id, employeeProfileRows, groups }) {
   const classes = useStyles();
   const dispatch = useDispatch();
   const { showCustomAlert, showErrorAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
@@ -117,18 +117,41 @@ export default function ModalGroups({ showModal, setShowModal, reloadTable, id, 
     let valid = true;
 
     groups.forEach((group) => {
-      if (group.name === name) {
-        valid = false;
+      if (!id) {
+        if (group.name.toLowerCase() === name.toLowerCase()) {
+          valid = false;
+        }
+      } else {
+        if (group.id !== id[0] && group.name.toLowerCase() === name.toLowerCase()) {
+          valid = false;
+        }
       }
     })
 
     if (!valid) {
-      displayWarningError(`A group with the name ${name} already exists`);
+      displayWarningError(`A group with the name "${name}" already exists`);
       return;
     }
 
-    console.log('Save');
+    const body = { ...values, numberOfMembers: values.members.length };
 
+    if (!id) {
+      postDB('settingsGroups', body)
+        .then(data => data.json())
+        .then(response => {
+          dispatch(showSavedAlert());
+          saveAndReload();
+        })
+        .catch(error => dispatch(showErrorAlert()));
+    } else {
+      updateDB('settingsGroups/', body, id[0])
+        .then(response => {
+          dispatch(showUpdatedAlert());
+          saveAndReload();
+        })
+        .catch(error => dispatch(showErrorAlert()));
+    }
+    handleCloseModal();
   };
 
   const saveAndReload = (folderName, id) => {

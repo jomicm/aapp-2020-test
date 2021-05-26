@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { utcToZonedTime } from 'date-fns-tz';
 import { actions } from '../../../../store/ducks/general.duck';
-import { getDB, postDB, getOneDB, updateDB } from '../../../../crud/api';
+import { getDB, deleteDB } from '../../../../crud/api';
 import TableComponent from '../../Components/TableComponent';
 import ModalGroups from './modals/ModalGroups';
 
@@ -27,13 +27,22 @@ const Groups = ({ permissions }) => {
     return { id, name, numberOfMembers, creator, creation_date };
   };
 
-  const tableActions = (collectionName) => {
+  const tableActions = () => {
     return {
       onAdd() {
         setControl({ ...control, idGroup: null, showModal: true });
       },
-      onEdit(id) { },
-      onDelete(id) { },
+      onEdit(id) {
+        setControl({ ...control, idGroup: id, showModal: true });
+      },
+      onDelete(id) {
+        if (!id || !Array.isArray(id)) return;
+        id.forEach(_id => {
+          deleteDB('settingsGroups/', _id)
+            .then(response => loadInitData())
+            .catch(error => console.log('Error', error));
+        });
+      },
       onselect(id) { }
     };
   };
@@ -63,16 +72,17 @@ const Groups = ({ permissions }) => {
           employeeProfileRows={[]}
           id={control.idGroup}
           groups={control.rows}
-          reloadTable={() => loadInitData('settingsGroups')}
+          reloadTable={() => loadInitData()}
+          setGroups={(newGroups) => setControl({ ...control, rows: newGroups })}
           setShowModal={(onOff) => setControl({ ...control, showModal: onOff })}
           showModal={control.showModal}
         />
         <TableComponent
           headRows={headRows}
-          onAdd={tableActions('settingsGroups').onAdd}
-          onDelete={tableActions('settingsGroups').onDelete}
-          onEdit={tableActions('settingsGroups').onEdit}
-          onSelect={tableActions('settingsGroups').onSelect}
+          onAdd={tableActions().onAdd}
+          onDelete={tableActions().onDelete}
+          onEdit={tableActions().onEdit}
+          onSelect={tableActions().onSelect}
           rows={control.rows}
           title="Groups"
         />
