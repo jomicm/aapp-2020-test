@@ -110,7 +110,7 @@ export default function ModalGroups({ showModal, setShowModal, setGroups, reload
     }
 
     if (members.length < 2) {
-      displayWarningError('Not enough members. Please assign more at least 2 users to a group.');
+      displayWarningError('Not enough members. Please assign at least 2 users to a group.');
       return;
     }
 
