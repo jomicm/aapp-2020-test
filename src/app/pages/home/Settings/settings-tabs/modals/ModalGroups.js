@@ -142,14 +142,14 @@ export default function ModalGroups({ showModal, setShowModal, setGroups, reload
           dispatch(showSavedAlert());
           saveAndReload();
         })
-        .catch(error => dispatch(showErrorAlert()));
+        .catch((error) => dispatch(showErrorAlert()))
     } else {
       updateDB('settingsGroups/', body, id[0])
         .then(response => {
           dispatch(showUpdatedAlert());
           saveAndReload();
         })
-        .catch(error => dispatch(showErrorAlert()));
+        .catch((error) => dispatch(showErrorAlert()))
     }
     handleCloseModal();
   };
@@ -195,10 +195,12 @@ export default function ModalGroups({ showModal, setShowModal, setGroups, reload
     getOneDB('settingsGroups/', id[0])
       .then(response => response.json())
       .then(data => {
-        const { name, members } = data.response;
-        setValues(prev => ({ ...prev, members, name }));
+        if (data.response) {
+          const { name, members } = data.response;
+          setValues(prev => ({ ...prev, members, name }));
+        }
       })
-      .catch(error => dispatch(showErrorAlert()));
+      .catch((error) => console.log(error))
   }, [id, employeeProfileRows]);
 
   return (

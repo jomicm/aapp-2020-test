@@ -8,7 +8,7 @@ import ModalGroups from './modals/ModalGroups';
 
 const Groups = ({ permissions }) => {
   const dispatch = useDispatch();
-  const { showCustomAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
+  const { showCustomAlert, showErrorAlert, showDeletedAlert, showSavedAlert, showUpdatedAlert } = actions;
   const [control, setControl] = useState({
     idGroup: null,
     rows: [],
@@ -39,8 +39,11 @@ const Groups = ({ permissions }) => {
         if (!id || !Array.isArray(id)) return;
         id.forEach(_id => {
           deleteDB('settingsGroups/', _id)
-            .then(response => loadInitData())
-            .catch(error => console.log('Error', error));
+            .then(response => {
+              loadInitData();
+              dispatch(showDeletedAlert());
+            })
+            .catch((error) =>  dispatch(showErrorAlert()))
         });
       },
       onselect(id) { }
@@ -58,7 +61,7 @@ const Groups = ({ permissions }) => {
         });
         setControl(prev => ({ ...prev, rows, rowsSelected: [] }));
       })
-      .catch((error) => dispatch(showErrorAlert()))
+      .catch((error) =>  dispatch(showErrorAlert()))
   };
 
   useEffect(() => {
