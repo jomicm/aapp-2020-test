@@ -132,9 +132,9 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
               executePolicies('OnDelete', 'locations', 'list', data.response);
               handleLoadLocations();
             })
-            .catch((_) => dispatch(showErrorAlert()));
+            .catch((error) => dispatch(showErrorAlert()));
         })
-        .catch((_) => dispatch(showErrorAlert()));
+        .catch((error) => dispatch(showErrorAlert()));
       setOpenYesNoModal(false);
     },
     openProfilesListBox(e) {
@@ -256,10 +256,10 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
               loadLocationsProfilesData();
               updateGeneralProfileLocations();
             })
-            .catch((_) => dispatch(showErrorAlert()));
+            .catch((error) => dispatch(showErrorAlert()));
         });
       }))
-      .catch((_) => dispatch(showErrorAlert()));
+      .catch((error) => dispatch(showErrorAlert()));
   };
 
   const onEditProfileLocation = (_id) => {
@@ -390,7 +390,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
         });
         setAllLocationsProfiles(profileRows);
       })
-      .catch((error) => console.log(error));
+      .catch((error) => dispatch(showErrorAlert()));
   };
 
   const loadLocationsProfilesData = (collectionNames = ['locations']) => {

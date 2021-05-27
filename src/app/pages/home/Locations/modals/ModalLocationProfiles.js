@@ -241,18 +241,20 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, polic
     getOneDB('locations/', id[0])
       .then(response => response.json())
       .then(data => {
-        const { name, level, isAssetRepository, isLocationControl, customFieldsTab, fileExt } = data.response;
-        const obj = {
-          name,
-          level,
-          isAssetRepository: isAssetRepository || false,
-          isLocationControl: isLocationControl || false,
-          imageURL: getImageURL(id, 'locations', fileExt)
-        };
-        executePolicies('OnLoad', 'locations', 'profiles', policies);
-        setValues(obj);
-        setCustomFieldsTab(customFieldsTab);
-        setIsNew(false);
+        if (data.response) {
+          const { name, level, isAssetRepository, isLocationControl, customFieldsTab, fileExt } = data.response;
+          const obj = {
+            name,
+            level,
+            isAssetRepository: isAssetRepository || false,
+            isLocationControl: isLocationControl || false,
+            imageURL: getImageURL(id, 'locations', fileExt)
+          };
+          executePolicies('OnLoad', 'locations', 'profiles', policies);
+          setValues(obj);
+          setCustomFieldsTab(customFieldsTab);
+          setIsNew(false);
+        }
       })
       .catch(error => dispatch(showErrorAlert()));
   }, [id]);
