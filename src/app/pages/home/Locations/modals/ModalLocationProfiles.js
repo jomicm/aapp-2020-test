@@ -188,7 +188,7 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, polic
 
     const fileExt = getFileExtension(image);
     const body = { ...values, customFieldsTab, fileExt };
-    console.log('isNew:', isNew)
+    
     if (isNew) {
       postDB('locations', body)
         .then(data => data.json())
