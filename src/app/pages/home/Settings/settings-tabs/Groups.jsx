@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { utcToZonedTime } from 'date-fns-tz';
 import { actions } from '../../../../store/ducks/general.duck';
-import { getDB, deleteDB } from '../../../../crud/api';
+import { getDB, deleteDB, getOneDB, updateDB } from '../../../../crud/api';
 import TableComponent from '../../Components/TableComponent';
 import ModalGroups from './modals/ModalGroups';
 
@@ -38,12 +38,32 @@ const Groups = ({ permissions }) => {
       onDelete(id) {
         if (!id || !Array.isArray(id)) return;
         id.forEach(_id => {
-          deleteDB('settingsGroups/', _id)
-            .then(response => {
-              loadInitData();
-              dispatch(showDeletedAlert());
+          getOneDB('settingsGroups/', _id)
+            .then(response => response.json())
+            .then((data) => {
+              deleteDB('settingsGroups/', _id)
+                .then(response => {
+                  loadInitData();
+                  dispatch(showDeletedAlert());
+                })
+                .catch((error) => console.log(error));
+              console.log(data);
+              const { response } = data;
+              const members = response.members.map(({ value: id }) => id);
+              members.forEach((userId) => {
+                getOneDB('user/', userId)
+                  .then((response) => response.json())
+                  .then((data) => {
+                    const { response: { groups } } = data;
+                    const body = groups.filter(({ id }) => id !== _id) || [];
+                    console.log(body);
+                    updateDB('user/', { groups: body }, userId)
+                      .catch((error) => console.log(error));
+                  })
+                  .catch((error) => console.log(error));
+              });
             })
-            .catch((error) =>  dispatch(showErrorAlert()))
+            .catch((error) => console.log(error));
         });
       },
       onselect(id) { }
@@ -61,7 +81,7 @@ const Groups = ({ permissions }) => {
         });
         setControl(prev => ({ ...prev, rows, rowsSelected: [] }));
       })
-      .catch((error) =>  dispatch(showErrorAlert()))
+      .catch((error) => dispatch(showErrorAlert()))
   };
 
   useEffect(() => {

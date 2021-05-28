@@ -18,6 +18,7 @@ import {
 import CloseIcon from "@material-ui/icons/Close";
 import { actions } from '../../../../../store/ducks/general.duck';
 import { getDB, getOneDB, updateDB, postDB } from '../../../../../crud/api';
+import { forEach } from 'lodash';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -88,6 +89,7 @@ export default function ModalGroups({ showModal, setShowModal, setGroups, reload
   const dispatch = useDispatch();
   const { showCustomAlert, showErrorAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
   const [users, setUsers] = useState([]);
+  const [removedUsers, setRemovedUsers] = useState([]);
   const [values, setValues] = useState({
     name: '',
     members: []
@@ -104,12 +106,17 @@ export default function ModalGroups({ showModal, setShowModal, setGroups, reload
   const handleSave = () => {
     const { name, members } = values;
 
-    if (!name.length && members.length < 2) {
+    if (!name.length && members.length < 1) {
       displayWarningError('Please fill all the fields.');
       return;
     }
 
-    if (members.length < 2) {
+    if (!name.length) {
+      displayWarningError('Please name the group');
+      return;
+    }
+
+    if (members.length < 1) {
       displayWarningError('Not enough members. Please assign at least 2 users to a group.');
       return;
     }
@@ -137,19 +144,60 @@ export default function ModalGroups({ showModal, setShowModal, setGroups, reload
 
     if (!id) {
       postDB('settingsGroups', body)
-        .then(data => data.json())
-        .then(response => {
+        .then((response) => response.json())
+        .then((data) => {
+          const { response } = data;
           dispatch(showSavedAlert());
           saveAndReload();
+          body.members.forEach(({ value: userId }) => {
+            const { _id: groupId, name, numberOfMembers } = response[0];
+            const userGroup = { id: groupId, name, numberOfMembers };
+            getOneDB('user/', userId)
+              .then((response) => response.json())
+              .then((data) => {
+                const { response: { groups } } = data;
+                const userBody = groups ? [...groups, userGroup] : [userGroup];
+                updateDB('user/', { groups: userBody }, userId)
+                  .catch((error) => console.log(error));
+              })
+              .catch((error) => console.log(error));
+          });
         })
-        .catch((error) => dispatch(showErrorAlert()))
+        .catch((error) => console.log(error))
     } else {
       updateDB('settingsGroups/', body, id[0])
-        .then(response => {
+        .then(response => response.json())
+        .then((data) => {
           dispatch(showUpdatedAlert());
           saveAndReload();
+          const { response: { value: response } } = data;
+          body.members.forEach(({ value: userId }) => {
+            const { name, numberOfMembers } = response;
+            const userGroup = { id: id[0], name, numberOfMembers };
+            getOneDB('user/', userId)
+              .then((response) => response.json())
+              .then((data) => {
+                const { response: { groups } } = data;
+                const userBody = groups ? [...groups, userGroup] : [userGroup];
+                updateDB('user/', { groups: userBody }, userId)
+                  .catch((error) => console.log(error));
+              })
+              .catch((error) => console.log(error));
+          });
+          removedUsers.forEach((userId) => {
+            getOneDB('user/', userId)
+              .then((response) => response.json())
+              .then((data) => {
+                const { response: { groups } } = data;
+                let userBody = groups || [];
+                userBody = groups.filter(({ id: groupId }) => groupId !== id[0]);
+                updateDB('user/', { groups: userBody }, userId)
+                  .catch((error) => console.log(error));
+              })
+              .catch((error) => console.log(error));
+          });
         })
-        .catch((error) => dispatch(showErrorAlert()))
+        .catch((error) => console.log(error))
     }
     handleCloseModal();
   };
@@ -173,6 +221,7 @@ export default function ModalGroups({ showModal, setShowModal, setGroups, reload
       name: '',
       members: []
     });
+    setRemovedUsers([]);
   };
 
   const loadInitData = () => {
@@ -236,7 +285,17 @@ export default function ModalGroups({ showModal, setShowModal, setGroups, reload
                   isClearable
                   isMulti
                   name="color"
-                  onChange={members => setValues(prev => ({ ...prev, members }))}
+                  onChange={members => {
+                    const membersUpdated = members || [];
+                    if (values.members.length > membersUpdated.length) {
+                      const userRemoved = values.members.find((member) => !membersUpdated.includes(member));
+                      setRemovedUsers(prev => prev.push(userRemoved.value));
+                    } else {
+                      const userAssigned = membersUpdated.find((member) => !values.members.includes(member));
+                      setRemovedUsers(prev => prev.filter((member) => member !== userAssigned.id));
+                    }
+                    setValues(prev => ({ ...prev, members: membersUpdated }));
+                  }}
                   options={users}
                   value={values.members}
                 />
