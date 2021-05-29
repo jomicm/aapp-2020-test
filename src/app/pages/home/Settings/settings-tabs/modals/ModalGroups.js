@@ -151,7 +151,7 @@ export default function ModalGroups({ showModal, setShowModal, reloadTable, id, 
           saveAndReload();
           body.members.forEach(({ value: userId }) => {
             const { _id: groupId, name } = response[0];
-            const userGroup = { id: groupId, name };
+            const userGroup = { id: groupId, name, numberOfMembers: body.numberOfMembers };
             getOneDB('user/', userId)
               .then((response) => response.json())
               .then((data) => {

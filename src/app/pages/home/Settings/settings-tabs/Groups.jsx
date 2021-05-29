@@ -55,7 +55,6 @@ const Groups = ({ permissions }) => {
                   .then((data) => {
                     const { response: { groups } } = data;
                     const body = groups.filter(({ id }) => id !== _id) || [];
-                    console.log(body);
                     updateDB('user/', { groups: body }, userId)
                       .catch((error) => console.log(error));
                   })
