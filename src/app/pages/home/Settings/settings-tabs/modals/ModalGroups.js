@@ -84,10 +84,10 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export default function ModalGroups({ showModal, setShowModal, setGroups, reloadTable, id, employeeProfileRows, groups }) {
+export default function ModalGroups({ showModal, setShowModal, reloadTable, id, employeeProfileRows, groups }) {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const { showCustomAlert, showErrorAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
+  const { showCustomAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   const [users, setUsers] = useState([]);
   const [removedUsers, setRemovedUsers] = useState([]);
   const [values, setValues] = useState({
@@ -117,7 +117,7 @@ export default function ModalGroups({ showModal, setShowModal, setGroups, reload
     }
 
     if (members.length < 1) {
-      displayWarningError('Not enough members. Please assign at least 2 users to a group.');
+      displayWarningError('Not enough members. Please assign at least one user to a group.');
       return;
     }
 
@@ -141,7 +141,7 @@ export default function ModalGroups({ showModal, setShowModal, setGroups, reload
     }
 
     const body = { ...values, numberOfMembers: values.members.length };
-
+    
     if (!id) {
       postDB('settingsGroups', body)
         .then((response) => response.json())
@@ -150,8 +150,8 @@ export default function ModalGroups({ showModal, setShowModal, setGroups, reload
           dispatch(showSavedAlert());
           saveAndReload();
           body.members.forEach(({ value: userId }) => {
-            const { _id: groupId, name, numberOfMembers } = response[0];
-            const userGroup = { id: groupId, name, numberOfMembers };
+            const { _id: groupId, name } = response[0];
+            const userGroup = { id: groupId, name };
             getOneDB('user/', userId)
               .then((response) => response.json())
               .then((data) => {
@@ -172,13 +172,23 @@ export default function ModalGroups({ showModal, setShowModal, setGroups, reload
           saveAndReload();
           const { response: { value: response } } = data;
           body.members.forEach(({ value: userId }) => {
-            const { name, numberOfMembers } = response;
-            const userGroup = { id: id[0], name, numberOfMembers };
+            const { name } = body;
+            const userGroup = { id: id[0], name };
             getOneDB('user/', userId)
               .then((response) => response.json())
               .then((data) => {
                 const { response: { groups } } = data;
-                const userBody = groups ? [...groups, userGroup] : [userGroup];
+                let userBody = [];
+                // Validate if the user already have the actual group in its information
+                groups.forEach((group) => {
+                  if (group.id !== id[0]) {
+                    userBody.push(group);
+                  }
+                });
+
+                userBody = [...userBody, userGroup];
+                console.log(userBody);
+
                 updateDB('user/', { groups: userBody }, userId)
                   .catch((error) => console.log(error));
               })
@@ -189,8 +199,8 @@ export default function ModalGroups({ showModal, setShowModal, setGroups, reload
               .then((response) => response.json())
               .then((data) => {
                 const { response: { groups } } = data;
-                let userBody = groups || [];
-                userBody = groups.filter(({ id: groupId }) => groupId !== id[0]);
+                const userBody = (groups || []).filter(({ id: groupId }) => groupId !== id[0]);
+                console.log(userBody);
                 updateDB('user/', { groups: userBody }, userId)
                   .catch((error) => console.log(error));
               })
@@ -289,10 +299,10 @@ export default function ModalGroups({ showModal, setShowModal, setGroups, reload
                     const membersUpdated = members || [];
                     if (values.members.length > membersUpdated.length) {
                       const userRemoved = values.members.find((member) => !membersUpdated.includes(member));
-                      setRemovedUsers(prev => prev.push(userRemoved.value));
+                      setRemovedUsers(prev => [...prev, userRemoved.value]);
                     } else {
                       const userAssigned = membersUpdated.find((member) => !values.members.includes(member));
-                      setRemovedUsers(prev => prev.filter((member) => member !== userAssigned.id));
+                      setRemovedUsers(prev => prev.filter((member) => member !== userAssigned.value));
                     }
                     setValues(prev => ({ ...prev, members: membersUpdated }));
                   }}

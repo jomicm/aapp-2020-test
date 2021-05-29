@@ -234,11 +234,14 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       enabled: false,
       isValidForm: false
     });
-
+    setSelectedGroups([]);
   };
 
   const [userProfilesFiltered, setUserProfilesFiltered] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
+  const [allGroups, setAllGroups] = useState([]);
+  const [selectedGroups, setSelectedGroups] = useState([]);
+  const [removedGroups, setRemovedGroups] = useState([]);
 
   useEffect(() => {
     if (!id || !Array.isArray(id)) {
@@ -256,8 +259,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
 
     getOneDB('user/', id[0])
       .then(response => response.json())
-      .then( async (data) => {
-        console.log(data.response);
+      .then(async (data) => {
         const { name, lastName, email, customFieldsTab, profilePermissions, idUserProfile, locationsTable, fileExt, selectedBoss } = data.response;
         const onLoadResponse = await executeOnLoadPolicy(idUserProfile, 'user', 'list', policies);
         setCustomFieldsPathResponse(onLoadResponse);
@@ -289,8 +291,22 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       .then(data => {
         const users = data.response.map(({ _id: value, email: label, name, lastName }) => ({ value, label, name, lastName }));
         setAllUsers(users);
+
+        if (Array.isArray(id)) {
+          const { groups } = data.response.find(({ _id }) => _id === id[0]);
+          const userGroups = groups.map(({ id: value, name: label }) => ({ value, label }));
+          setSelectedGroups(userGroups);
+        }
       })
-      .catch(error => dispatch(showErrorAlert()));
+      .catch(error => console.log(error));
+    getDB('settingsGroups')
+      .then((response) => response.json())
+      .then((data) => {
+        const { response } = data;
+        const groups = response.map(({ _id: value, name: label }) => ({ value, label }));
+        setAllGroups(groups);
+      })
+      .catch((error) => console.log(error))
   };
 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
@@ -378,19 +394,33 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
         onChange: handleChange('password')
       }
     },
-    userGroups: {
-      componentProps: {
-        isClearable: true,
-        label: 'Groups',
-        options: colourOptions
-      }
-    },
     boss: {
       componentProps: {
         isClearable: true,
         onChange: (selectedBoss) => setValues(prev => ({ ...prev, selectedBoss })),
         value: values.selectedBoss,
         options: allUsers
+      }
+    },
+    userGroups: {
+      componentProps: {
+        isClearable: true,
+        isMulti: true,
+        label: 'Groups',
+        onChange: (groups) => {
+          // Track the removed group
+          const groupsUpdated = groups || [];
+          if (selectedGroups.length > groups.length) {
+            const groupRemoved = selectedGroups.find((group) => !groupsUpdated.includes(group));
+            setRemovedGroups(prev => [...prev, groupRemoved]);
+          } else {
+            const groupAssigned = groupsUpdated.find((group) => !selectedGroups.includes(group));
+            setRemovedGroups(prev => prev.filter(({ value }) => value !== groupAssigned.value));
+          }
+          setSelectedGroups(groupsUpdated);
+        },
+        options: allGroups,
+        value: selectedGroups
       }
     }
   };

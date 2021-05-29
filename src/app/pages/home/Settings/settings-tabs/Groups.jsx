@@ -47,7 +47,6 @@ const Groups = ({ permissions }) => {
                   dispatch(showDeletedAlert());
                 })
                 .catch((error) => console.log(error));
-              console.log(data);
               const { response } = data;
               const members = response.members.map(({ value: id }) => id);
               members.forEach((userId) => {
@@ -96,7 +95,6 @@ const Groups = ({ permissions }) => {
           id={control.idGroup}
           groups={control.rows}
           reloadTable={() => loadInitData()}
-          setGroups={(newGroups) => setControl({ ...control, rows: newGroups })}
           setShowModal={(onOff) => setControl({ ...control, showModal: onOff })}
           showModal={control.showModal}
         />
