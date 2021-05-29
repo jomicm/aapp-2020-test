@@ -120,7 +120,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, policies }) => {
+const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, policies, updateGeneralProfileLocations }) => {
   const dispatch = useDispatch();
   const { showFillFieldsAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
   // Example 4 - Tabs
@@ -188,7 +188,7 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, polic
 
     const fileExt = getFileExtension(image);
     const body = { ...values, customFieldsTab, fileExt };
-    console.log('isNew:', isNew)
+    
     if (isNew) {
       postDB('locations', body)
         .then(data => data.json())
@@ -197,6 +197,7 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, polic
           const { _id } = response.response[0];
           saveAndReload('locations', _id);
           executePolicies('OnAdd', 'locations', 'profiles', policies);
+          updateGeneralProfileLocations();
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -205,6 +206,7 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, polic
           dispatch(showUpdatedAlert());
           saveAndReload('locations', id[0]);
           executePolicies('OnEdit', 'locations', 'profiles', policies);
+          updateGeneralProfileLocations();
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -239,18 +241,20 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, polic
     getOneDB('locations/', id[0])
       .then(response => response.json())
       .then(data => {
-        const { name, level, isAssetRepository, isLocationControl, customFieldsTab, fileExt } = data.response;
-        const obj = {
-          name,
-          level,
-          isAssetRepository: isAssetRepository || false,
-          isLocationControl: isLocationControl || false,
-          imageURL: getImageURL(id, 'locations', fileExt)
-        };
-        executePolicies('OnLoad', 'locations', 'profiles', policies);
-        setValues(obj);
-        setCustomFieldsTab(customFieldsTab);
-        setIsNew(false);
+        if (data.response) {
+          const { name, level, isAssetRepository, isLocationControl, customFieldsTab, fileExt } = data.response;
+          const obj = {
+            name,
+            level,
+            isAssetRepository: isAssetRepository || false,
+            isLocationControl: isLocationControl || false,
+            imageURL: getImageURL(id, 'locations', fileExt)
+          };
+          executePolicies('OnLoad', 'locations', 'profiles', policies);
+          setValues(obj);
+          setCustomFieldsTab(customFieldsTab);
+          setIsNew(false);
+        }
       })
       .catch(error => dispatch(showErrorAlert()));
   }, [id]);

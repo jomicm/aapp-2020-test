@@ -82,7 +82,7 @@ export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, pol
   let res;
 
   if (!onLoadDisabled) {
-    if (tokenOnLoadEnabled) {
+    if (tokenOnLoadEnabled) {      
       try {
         const { data } = await axios.get(urlOnLoad, {
           headers: {
@@ -102,7 +102,6 @@ export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, pol
       }
     }
   }
-
   return res;
 };
 
