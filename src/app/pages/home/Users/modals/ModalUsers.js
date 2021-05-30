@@ -24,7 +24,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import { useDispatch } from 'react-redux';
 import { actions } from '../../../../store/ducks/general.duck';
 import * as auth from '../../../../store/ducks/auth.duck';
-import { postDBEncryptPassword, getOneDB, getDB, updateDB } from '../../../../crud/api';
+import { postDBEncryptPassword, getOneDB, getDB, updateDB, postDB } from '../../../../crud/api';
 import ImageUpload from '../../Components/ImageUpload';
 import { hosts, getFileExtension, saveImage, getImageURL } from '../../utils';
 import { modules } from '../../constants';
@@ -152,13 +152,6 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       return;
     }
 
-    const fileExt = getFileExtension(image);
-    const body = { ...values, customFieldsTab, profilePermissions, locationsTable, fileExt };
-    if (!isEmpty(values.selectedBoss)) {
-      const { name, lastName } = allUsers.find(({ value }) => value === values.selectedBoss.value);
-      values.selectedBoss = { ...values.selectedBoss, name, lastName };
-    }
-
     const userGroups = selectedGroups.map(({ value: id, label: name, numberOfMembers }) => {
       if (removedGroups.findIndex(({ value }) => value === id) !== -1) {
         return;
@@ -171,7 +164,13 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       return { id, name, numberOfMembers };
     }) || [];
 
-    console.log(userGroups);
+    const fileExt = getFileExtension(image);
+    const body = { ...values, customFieldsTab, profilePermissions, locationsTable, fileExt, groups: userGroups };
+
+    if (!isEmpty(values.selectedBoss)) {
+      const { name, lastName } = allUsers.find(({ value }) => value === values.selectedBoss.value);
+      values.selectedBoss = { ...values.selectedBoss, name, lastName };
+    }
 
     if (!id) {
       body.idUserProfile = idUserProfile;
@@ -183,6 +182,21 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
           saveAndReload('user', _id);
           updateLocationsAssignments(locationsTable, { userId: _id, email, name, lastName });
           executePolicies('OnAdd', 'user', 'list', policies);
+          getDB('settingsGroups')
+            .then((response) => response.json())
+            .then((data) => {
+              addedGroups.forEach(({ value }) => {
+                const groupFounded = data.response.find(({ _id: groupId }) => groupId === value);
+                console.log(groupFounded);
+                const { _id: groupId, numberOfMembers } = groupFounded;
+                const newMember = { value: _id, label: email, name, lastName };
+                const members = [...groupFounded.members, newMember];
+                console.log('New Members With Addition: ', members);
+                updateDB('settingsGroups', { members, numberOfMembers: numberOfMembers + 1 }, groupId)
+                  .catch((error) => console.log(error));
+              });
+            })
+            .catch((error) => dispatch(showErrorAlert()));
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -195,6 +209,35 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
           executePolicies('OnEdit', 'user', 'list', policies);
         })
         .catch(error => dispatch(showErrorAlert()));
+      getDB('settingsGroups')
+        .then((response) => response.json())
+        .then((data) => {
+          addedGroups.forEach(({ value }) => {
+            const groupFounded = data.response.find(({ _id: groupId }) => groupId === value);
+            console.log(groupFounded);
+            const { _id: groupId, numberOfMembers } = groupFounded;
+            getOneDB('user', id[0])
+              .then((response) => response.json())
+              .then((data) => {
+                const { email, name, lastName } = data.response;
+                const newMember = { value: id[0], label: email, name, lastName };
+                const members = [...groupFounded.members, newMember];
+                console.log('New Members With Addition: ', members);
+                updateDB('settingsGroups', { members, numberOfMembers: numberOfMembers + 1 }, groupId)
+                  .catch((error) => console.log(error));
+              })
+              .catch((error) => console.log(error))
+          });
+          removedGroups.forEach(({ value }) => {
+            const groupFounded = data.response.find(({ _id: groupId }) => groupId === value);
+            console.log(groupFounded);
+            const { _id: groupId, numberOfMembers } = groupFounded;
+            const members = groupFounded.members.filter(({ value: userId }) => userId !== id[0]);
+            console.log('New Members With Deletion: ', members);
+            updateDB('settingsGroups', { members, numberOfMembers: numberOfMembers - 1 }, groupId)
+              .catch((error) => console.log(error));
+          });
+        })
     }
     handleCloseModal();
   };
