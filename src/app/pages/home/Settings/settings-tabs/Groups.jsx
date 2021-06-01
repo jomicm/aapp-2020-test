@@ -5,6 +5,7 @@ import { actions } from '../../../../store/ducks/general.duck';
 import { getDB, deleteDB, getOneDB, updateDB } from '../../../../crud/api';
 import TableComponent from '../../Components/TableComponent';
 import ModalGroups from './modals/ModalGroups';
+import { id } from 'date-fns/locale';
 
 const Groups = ({ permissions }) => {
   const dispatch = useDispatch();
@@ -37,29 +38,24 @@ const Groups = ({ permissions }) => {
       },
       onDelete(id) {
         if (!id || !Array.isArray(id)) return;
-        id.forEach(_id => {
-          getOneDB('settingsGroups/', _id)
-            .then(response => response.json())
-            .then((data) => {
-              deleteDB('settingsGroups/', _id)
-                .then(response => {
-                  loadInitData();
-                  dispatch(showDeletedAlert());
-                })
+        getDB('user')
+          .then((response) => response.json())
+          .then((data) => {
+            const users = data.response.filter(({ groups }) => groups.findIndex(({ id: groupId }) => id.includes(groupId)) !== -1) || [];
+            console.log(users);
+            users.forEach(({ _id: userId, groups }) => {
+              const newUserGroups = groups.filter(({ id: groupId }) => !id.includes(groupId)) || [];
+              console.log(newUserGroups);
+              updateDB('user/', { groups: newUserGroups }, userId)
                 .catch((error) => console.log(error));
-              const { response } = data;
-              const members = response.members.map(({ value: id }) => id);
-              members.forEach((userId) => {
-                getOneDB('user/', userId)
-                  .then((response) => response.json())
-                  .then((data) => {
-                    const { response: { groups } } = data;
-                    const body = groups.filter(({ id: groupId }) => groupId !== _id) || [];
-                    updateDB('user/', { groups: body }, userId)
-                      .catch((error) => console.log(error));
-                  })
-                  .catch((error) => console.log(error));
-              });
+            });
+          })
+          .catch((error) => console.log(error));
+        id.forEach(_id => {
+          deleteDB('settingsGroups/', _id)
+            .then(response => {
+              loadInitData();
+              dispatch(showDeletedAlert());
             })
             .catch((error) => console.log(error));
         });

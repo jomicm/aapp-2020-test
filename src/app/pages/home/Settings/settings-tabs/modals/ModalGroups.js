@@ -18,7 +18,6 @@ import {
 import CloseIcon from "@material-ui/icons/Close";
 import { actions } from '../../../../../store/ducks/general.duck';
 import { getDB, getOneDB, updateDB, postDB } from '../../../../../crud/api';
-import { forEach } from 'lodash';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -170,10 +169,9 @@ export default function ModalGroups({ showModal, setShowModal, reloadTable, id, 
         .then((data) => {
           dispatch(showUpdatedAlert());
           saveAndReload();
-          const { response: { value: response } } = data;
           body.members.forEach(({ value: userId }) => {
             const { name } = body;
-            const userGroup = { id: id[0], name };
+            const userGroup = { id: id[0], name, numberOfMembers: body.numberOfMembers };
             getOneDB('user/', userId)
               .then((response) => response.json())
               .then((data) => {
@@ -187,7 +185,6 @@ export default function ModalGroups({ showModal, setShowModal, reloadTable, id, 
                 });
 
                 userBody = [...userBody, userGroup];
-                console.log(userBody);
 
                 updateDB('user/', { groups: userBody }, userId)
                   .catch((error) => console.log(error));
@@ -199,8 +196,7 @@ export default function ModalGroups({ showModal, setShowModal, reloadTable, id, 
               .then((response) => response.json())
               .then((data) => {
                 const { response: { groups } } = data;
-                const userBody = (groups || []).filter(({ id: groupId }) => groupId !== id[0]);
-                console.log(userBody);
+                const userBody = (groups || []).filter(({ id: groupId }) => groupId !== id[0]) || [];
                 updateDB('user/', { groups: userBody }, userId)
                   .catch((error) => console.log(error));
               })
@@ -265,8 +261,8 @@ export default function ModalGroups({ showModal, setShowModal, reloadTable, id, 
   return (
     <div>
       <Dialog
-        onClose={handleCloseModal}
         aria-labelledby="customized-dialog-title"
+        onClose={handleCloseModal}
         open={showModal}
       >
         <DialogTitle5
@@ -291,9 +287,12 @@ export default function ModalGroups({ showModal, setShowModal, reloadTable, id, 
               <FormLabel style={{ marginTop: '0px' }} component="legend"> Members </FormLabel>
               <FormGroup>
                 <Select
+                  sty
                   classNamePrefix="select"
                   isClearable
                   isMulti
+                  menuPlacement="bottom"
+                  menuPosition="fixed"
                   name="color"
                   onChange={members => {
                     const membersUpdated = members || [];

@@ -20,7 +20,7 @@ import ModalUserProfiles from './modals/ModalUserProfiles';
 import ModalUsers from './modals/ModalUsers';
 
 //DB API methods
-import { deleteDB, getDBComplex, getCountDB, getDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB, getDB, getOneDB, updateDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 import Policies from '../Components/Policies/Policies';
 import { allBaseFields } from '../constants';
@@ -33,8 +33,8 @@ function Users({ globalSearch, setGeneralSearch }) {
   const { policies, setPolicies } = usePolicies();
 
   const policiesBaseFields = {
-    list: allBaseFields.userList,
-    references: allBaseFields.userReferences
+    list: { id: { validationId: 'userId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.userList },
+    references: { id: { validationId: 'userReferenceId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.userReferences }
   };
 
   const createUserProfilesRow = (id, name, creator, creation_date) => {
@@ -205,11 +205,9 @@ function Users({ globalSearch, setGeneralSearch }) {
     const collection = collections[collectionName];
     return {
       onAdd() {
-        console.log('MAIN ON ADD>> ', referencesSelectedId);
         setControl({ ...control, [collection.id]: null, [collection.modal]: true })
       },
       onEdit(id) {
-        console.log('onEdit:', id, collection, collection.id)
         setControl({ ...control, [collection.id]: id, [collection.modal]: true })
       },
       onDelete(id) {
@@ -217,18 +215,36 @@ function Users({ globalSearch, setGeneralSearch }) {
         getDB('policies')
           .then((response) => response.json())
           .then((data) => {
+            const { response } = data;
             id.forEach(_id => {
               deleteDB(`${collection.name}/`, _id)
-                .then(_ => {
+                .then((response) => response.json())
+                .then((data) => {
                   dispatch(showDeletedAlert());
                   const currentCollection = collection.name === 'user' ? 'list' : 'references';
-                  executePolicies('OnDelete', 'user', currentCollection, data.response);
+                  executePolicies('OnDelete', 'user', currentCollection, response);
                   loadUsersData(collection.name)
+                  
+                  if (currentCollection === 'list') {
+                    const { response: { value: { groups } } } = data;
+                    groups.forEach(({ id: groupId }) => {
+                      getOneDB('settingsGroups/', groupId)
+                        .then((response) => response.json())
+                        .then((data) => {
+                          const { name, members } = data.response;
+                          const membersUpdated = members.filter(({ value: userId }) => userId !== _id) || [];
+                          console.log(`Members Updated Of ${name}: `, membersUpdated);
+                          updateDB('settingsGroups/', { members: membersUpdated, numberOfMembers: membersUpdated.length }, groupId)
+                            .catch((error) => console.log(error));
+                        })
+                        .catch((error) => console.log(error));
+                    });
+                  }
                 })
-                .catch(_ => dispatch(showErrorAlert()));
+                .catch((error) => console.log(error));
             });
           })
-          .catch((_) => dispatch(showErrorAlert()));
+          .catch((error) => console.log(error));
 
       },
       onSelect(id) {

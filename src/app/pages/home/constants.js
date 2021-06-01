@@ -112,7 +112,6 @@ export const CustomFieldsPreview = (props) => {
 
 export const allBaseFields = {
   userList: {
-    id: { validationId: 'userId', component: 'textField', compLabel: 'ID', hidden: true },
     userProfile: {
       component: 'dropSelect',
       compLabel: 'Profile Selected',
@@ -136,16 +135,13 @@ export const allBaseFields = {
     },
   },
   userReferences: {
-    id: { validationId: 'userReferenceId', component: 'textField', compLabel: 'ID', hidden: true },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
   },
   categories: {
-    id: { validationId: 'categoryId', component: 'textField', compLabel: 'ID', hidden: true },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     depreciation: { validationId: 'depreciation', component: 'textField', compLabel: 'Depreciation' },
   },
   references: {
-    id: { validationId: 'referenceId', component: 'textField', compLabel: 'ID', hidden: true },
     category: { validationId: 'category', component: 'dropSelect', compLabel: 'Category' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     brand: { validationId: 'brand', component: 'textField', compLabel: 'Brand' },
@@ -154,7 +150,6 @@ export const allBaseFields = {
     depreciation: { validationId: 'depreciation', component: 'textField', compLabel: 'Depreciation' },
   },
   employees: {
-    id: { validationId: 'employeeId', component: 'textField', compLabel: 'ID', hidden: true },
     employeeProfile: { validationId: 'employeeProfile', component: 'dropSelect', compLabel: 'Employee Profile' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     lastName: { validationId: 'lastName', component: 'textField', compLabel: 'Last Name' },
@@ -162,23 +157,19 @@ export const allBaseFields = {
     responsibilityLayout: { validationId: 'responsibilityLayout', component: 'dropSelect', compLabel: 'Responsibility Layout' },
   },
   employeeReferences: {
-    id: { validationId: 'employeeReferenceId', component: 'textField', compLabel: 'ID', hidden: true },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
   },
   locations: {
-    id: { validationId: 'locationProfileId', component: 'textField', compLabel: 'ID', hidden: true },
     selectedLevel: { validationId: 'selectedLevel', component: 'textField', compLabel: 'Level' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
   },
   locationsList: {
-    id: { validationId: 'locationId', component: 'textField', compLabel: 'ID', hidden: true },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     fileExt: { validationId: 'fileExt', compLabel: 'Layout' },
     imageInfo: { validationId: 'imageInfo', compLabel: 'Pin Layout' },
     mapInfo: { validationId: 'mapInfo', compLabel: 'Pin Map' },
   },
   assets1: {
-    id: { validationId: 'assetId', component: 'textField', compLabel: 'ID', hidden: true },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     brand: { validationId: 'brand', component: 'textField', compLabel: 'Brand' },
     model: { validationId: 'model', component: 'textField', compLabel: 'Model' },

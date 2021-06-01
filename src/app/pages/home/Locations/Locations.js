@@ -101,8 +101,8 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   );
 
   const policiesBaseFields = {
-    list: allBaseFields.locationsList,
-    profiles: allBaseFields.locations
+    list: { id: { validationId: 'locationId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.locationsList },
+    profiles: { id: { validationId: 'locationProfileId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.locations }
   };
 
   const dispatch = useDispatch();

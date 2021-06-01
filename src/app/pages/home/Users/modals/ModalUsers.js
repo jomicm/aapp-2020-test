@@ -187,12 +187,10 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
             .then((data) => {
               addedGroups.forEach(({ value }) => {
                 const groupFounded = data.response.find(({ _id: groupId }) => groupId === value);
-                console.log(groupFounded);
                 const { _id: groupId, numberOfMembers } = groupFounded;
                 const newMember = { value: _id, label: email, name, lastName };
                 const members = [...groupFounded.members, newMember];
-                console.log('New Members With Addition: ', members);
-                updateDB('settingsGroups', { members, numberOfMembers: numberOfMembers + 1 }, groupId)
+                updateDB('settingsGroups/', { members, numberOfMembers: numberOfMembers + 1 }, groupId)
                   .catch((error) => console.log(error));
               });
             })
@@ -201,43 +199,46 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
         .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('user/', body, id[0])
-        .then(response => {
+        .then((response) => response.json())
+        .then((data) => {
           dispatch(showUpdatedAlert());
           saveAndReload('user', id[0]);
           updateCurrentUserPic(id[0], fileExt);
           updateLocationsAssignments(locationsTable, { userId: id[0], name: body.name, email: body.email, lastName: body.lastName });
           executePolicies('OnEdit', 'user', 'list', policies);
-        })
-        .catch(error => dispatch(showErrorAlert()));
-      getDB('settingsGroups')
-        .then((response) => response.json())
-        .then((data) => {
-          addedGroups.forEach(({ value }) => {
-            const groupFounded = data.response.find(({ _id: groupId }) => groupId === value);
-            console.log(groupFounded);
-            const { _id: groupId, numberOfMembers } = groupFounded;
-            getOneDB('user', id[0])
-              .then((response) => response.json())
-              .then((data) => {
-                const { email, name, lastName } = data.response;
+          getDB('settingsGroups')
+            .then((response) => response.json())
+            .then((data) => {
+              const groupsToUpdate = selectedGroups.filter((group) => addedGroups.findIndex(({ value }) => value === group.value) === -1 && removedGroups.findIndex(({ value }) => value === group.value) === -1 );
+              const { email, name, lastName } = body;
+              addedGroups.forEach(({ value }) => {
+                const groupFounded = data.response.find(({ _id: groupId }) => groupId === value);
+                const { _id: groupId, numberOfMembers } = groupFounded;
                 const newMember = { value: id[0], label: email, name, lastName };
                 const members = [...groupFounded.members, newMember];
-                console.log('New Members With Addition: ', members);
-                updateDB('settingsGroups', { members, numberOfMembers: numberOfMembers + 1 }, groupId)
+                updateDB('settingsGroups/', { members, numberOfMembers: numberOfMembers + 1 }, groupId)
                   .catch((error) => console.log(error));
-              })
-              .catch((error) => console.log(error))
-          });
-          removedGroups.forEach(({ value }) => {
-            const groupFounded = data.response.find(({ _id: groupId }) => groupId === value);
-            console.log(groupFounded);
-            const { _id: groupId, numberOfMembers } = groupFounded;
-            const members = groupFounded.members.filter(({ value: userId }) => userId !== id[0]);
-            console.log('New Members With Deletion: ', members);
-            updateDB('settingsGroups', { members, numberOfMembers: numberOfMembers - 1 }, groupId)
-              .catch((error) => console.log(error));
-          });
+              });
+              removedGroups.forEach(({ value }) => {
+                const groupFounded = data.response.find(({ _id: groupId }) => groupId === value);
+                const { _id: groupId, numberOfMembers } = groupFounded;
+                const members = groupFounded.members.filter(({ value: userId }) => userId !== id[0]);
+                updateDB('settingsGroups/', { members, numberOfMembers: numberOfMembers - 1 }, groupId)
+                  .catch((error) => console.log(error));
+              });
+              groupsToUpdate.forEach(({ value }) => {
+                const groupFounded = data.response.find(({ _id: groupId }) => groupId === value);
+                const { _id: groupId } = groupFounded;
+                const newMember = { value: id[0], label: email, name, lastName };
+                const filteredMembers = groupFounded.members.filter(({ value: userId }) => userId !== id[0]);
+                const members = [...filteredMembers, newMember];
+                updateDB('settingsGroups/', { members }, groupId)
+                  .catch((error) => console.log(error));
+              });
+            })
+            .catch((error) => dispatch(showErrorAlert()));
         })
+        .catch(error => dispatch(showErrorAlert()));
     }
     handleCloseModal();
   };
@@ -292,6 +293,9 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       isValidForm: false
     });
     setSelectedGroups([]);
+    setRemovedGroups([]);
+    setAddedGroups([]);
+    setUserInitialGroups([]);
   };
 
   const [userProfilesFiltered, setUserProfilesFiltered] = useState([]);
