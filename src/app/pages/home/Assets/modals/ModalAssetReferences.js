@@ -164,8 +164,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
     }
 
     const fileExt = getFileExtension(image);
-    const body = { ...values, customFieldsTab, fileExt };
-    body.price = Number(body.price)
+    const body = { ...values, price: values.price.toString(), customFieldsTab, fileExt };
     body.depreciation = Number(body.depreciation)
     if (!id) {
       postDB('references', body)
@@ -222,7 +221,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
       ownValidFn: () => !!values.price || values.price === 0,
       componentProps: {
         onChange: handleChange('price'),
-        value: values.price,
+        value: Number(values.price),
         type: "number",
         InputProps: {
           startAdornment: <InputAdornment position="start">$</InputAdornment>,
