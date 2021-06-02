@@ -606,6 +606,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
           }
           else {
             dataTable = formatData(collection.id, response);
+            console.log(dataTable);
           }
           //Get just the CustomFields
           const baseFieldsHeaders = dataTable.headerObject.filter(e => !filtersSelected.customFields.all.some(custom => custom.id === e.id));
