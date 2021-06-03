@@ -13,7 +13,8 @@ const policiesHeadRows = [
   { id: 'action', numeric: false, disablePadding: false, label: 'Action', searchByDisabled: false },
   { id: 'type', numeric: false, disablePadding: false, label: 'Type', searchByDisabled: true },
   { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
-  { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
+  { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true },
+  { id: 'updateDate', numeric: false, disablePadding: false, label: 'Update Date', searchByDisabled: true }
 ];
 
 const collections = {
@@ -31,7 +32,8 @@ const createPoliciesRow = (
   action,
   type,
   creator,
-  creationDate
+  creationDate,
+  updateDate
 ) => {
   return {
     id,
@@ -40,7 +42,8 @@ const createPoliciesRow = (
     action,
     type,
     creator,
-    creationDate
+    creationDate,
+    updateDate
   };
 };
 
@@ -179,8 +182,10 @@ const PoliciesTable = ({ module, setPolicies, baseFields }) => {
                 selectedCatalogue,
                 creationUserFullName,
                 creationDate,
+                updateDate
               } = row;
-              const date = utcToZonedTime(creationDate).toLocaleString();
+              const date = String(new Date(creationDate)).split('GMT')[0];
+              const uptDate = String(new Date(updateDate)).split('GMT')[0];
               const typeString = getTypeString(
                 messageDisabled,
                 notificationDisabled,
@@ -193,7 +198,8 @@ const PoliciesTable = ({ module, setPolicies, baseFields }) => {
                 selectedAction,
                 typeString,
                 creationUserFullName,
-                date
+                date,
+                uptDate
               );
             });
             setControl((prev) => ({

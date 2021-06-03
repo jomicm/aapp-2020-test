@@ -20,7 +20,7 @@ const useStyles = makeStyles((theme) => ({
     flexWrap: 'wrap',
   },
   tile: {
-    margin: 2,
+    margin: '5px 10px 0px 15px',
     position: 'relative',
     borderWidth: 1,
     borderStyle: 'solid',

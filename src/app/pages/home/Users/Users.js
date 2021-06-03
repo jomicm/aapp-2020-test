@@ -37,18 +37,19 @@ function Users({ globalSearch, setGeneralSearch }) {
     references: allBaseFields.userReferences
   };
 
-  const createUserProfilesRow = (id, name, creator, creation_date) => {
-    return { id, name, creator, creation_date };
+  const createUserProfilesRow = (id, name, creator, creationDate, updateDate) => {
+    return { id, name, creator, creationDate, updateDate };
   };
 
   const userProfilesHeadRows = [
     { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
-    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
+    { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true },
+    { id: 'updateDate', numeric: false, disablePadding: false, label: 'Update Date', searchByDisabled: true }
   ];
 
-  const createUserRow = (id, name, lastName, email, designation, manager, creator, creation_date) => {
-    return { id, name, lastName, email, designation, manager, creator, creation_date };
+  const createUserRow = (id, name, lastName, email, designation, manager, creator, creationDate, updateDate) => {
+    return { id, name, lastName, email, designation, manager, creator, creationDate, updateDate };
   };
 
   const usersHeadRows = [
@@ -58,7 +59,8 @@ function Users({ globalSearch, setGeneralSearch }) {
     { id: 'designation', numeric: true, disablePadding: false, label: 'Designation', searchByDisabled: true },
     { id: 'manager', numeric: true, disablePadding: false, label: 'Manager', searchByDisabled: true },
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
-    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
+    { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true },
+    { id: 'updateDate', numeric: false, disablePadding: false, label: 'Update Date', searchByDisabled: true }
   ];
 
   const [tableControl, setTableControl] = useState({
@@ -129,15 +131,19 @@ function Users({ globalSearch, setGeneralSearch }) {
         .then(data => {
           if (collectionName === 'userProfiles') {
             const rows = data.response.map(row => {
-              const date = utcToZonedTime(row.creationDate).toLocaleString();
-              return createUserProfilesRow(row._id, row.name, row.creationUserFullName, date);
+              const date = String(new Date(row.creationDate)).split('GMT')[0];
+              const updateDate = String(new Date(row.updateDate)).split('GMT')[0];
+              return createUserProfilesRow(row._id, row.name, row.creationUserFullName, date, updateDate);
             });
             setControl(prev => ({ ...prev, userProfilesRows: rows, userProfilesRowsSelected: [] }));
           }
           if (collectionName === 'user') {
             const rows = data.response.map(row => {
-              const date = utcToZonedTime(row.creationDate).toLocaleString();
-              return createUserRow(row._id, row.name, row.lastName, row.email, row.designation, row.manager, row.creationUserFullName, date);
+              const { selectedBoss } = row;
+              console.log(selectedBoss);
+              const date = String(new Date(row.creationDate)).split('GMT')[0];
+              const updateDate = String(new Date(row.updateDate)).split('GMT')[0];
+              return createUserRow(row._id, row.name, row.lastName, row.email, row.designation, selectedBoss ? `${selectedBoss.name} ${selectedBoss.lastName}` : '', row.creationUserFullName, date, updateDate);
             });
             setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));
           }

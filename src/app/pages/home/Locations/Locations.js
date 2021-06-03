@@ -172,9 +172,10 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
     level,
     name,
     creator,
-    creation_date
+    creationDate,
+    updateDate
   ) => {
-    return { id, level, name, creator, creation_date };
+    return { id, level, name, creator, creationDate, updateDate };
   };
 
   const CustomMarker = (MarkerComponentProps) => {
@@ -208,7 +209,8 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
     { id: 'level', numeric: true, disablePadding: false, label: 'Level' },
     { id: 'name', numeric: true, disablePadding: false, label: 'Description' },
     { id: 'creator', numeric: true, disablePadding: false, label: 'Creator', searchByDisabled: true },
-    { id: 'creation_date', numeric: true, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
+    { id: 'creationDate', numeric: true, disablePadding: false, label: 'Creation Date', searchByDisabled: true },
+    { id: 'updateDate', numeric: true, disablePadding: false, label: 'Update Date', searchByDisabled: true }
   ];
 
   const TabContainer4 = ({ children, dir }) => {
@@ -434,9 +436,10 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
         .then(data => {
           if (collectionName === 'locations') {
             const profileRows = data.response.map((row) => {
-              const { _id, level, name, creationUserFullName, creationDate } = row;
-              const date = utcToZonedTime(creationDate).toLocaleString();
-              return createLocationProfileRow(_id, level, name, creationUserFullName, date);
+              const { _id, level, name, creationUserFullName, creationDate, updateDate } = row;
+              const date = String(new Date(creationDate)).split('GMT')[0];
+              const uptDate = String(new Date(updateDate)).split('GMT')[0];
+              return createLocationProfileRow(_id, level, name, creationUserFullName, date, uptDate);
             });
             setLocationProfileRows(profileRows);
             setSelectedLocationProfileRows([]);

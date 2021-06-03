@@ -60,7 +60,7 @@ const DialogActions5 = withStyles(theme => ({
 }))(DialogActions);
 
 export default function ModalAssetFinder({
-  showModal, setShowModal, onAssetFinderSubmit, id
+  showModal, setShowModal, onAssetFinderSubmit, id, userLocations
 }) {
 
   /* States */
@@ -126,7 +126,7 @@ export default function ModalAssetFinder({
               style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', minHeight: '100px' }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', margin: '0px 8px' }}>
-                <AssetFinder setTableRowsInner={setTableRowsInner} />
+                <AssetFinder setTableRowsInner={setTableRowsInner} userLocations={userLocations} />
               </div>
             </div>
           </div>
