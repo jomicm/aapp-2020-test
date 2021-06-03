@@ -95,7 +95,8 @@ const ModalAssetFinder = ({
   onAssetFinderSubmit,
   reloadTable,
   showModal,
-  setShowModal
+  setShowModal,
+  userLocations
 }) => {
   const classes = useStyles();
   const [tableRowsInner, setTableRowsInner] = useState({ rows: [] });
@@ -174,7 +175,7 @@ const ModalAssetFinder = ({
               style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', minHeight: '100px' }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', margin: '0px 8px' }}>
-                <AssetFinder setTableRowsInner={setTableRowsInner} />
+                <AssetFinder setTableRowsInner={setTableRowsInner} userLocations={userLocations} />
               </div>
             </div>
           </div>

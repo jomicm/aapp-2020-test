@@ -11,7 +11,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-export default function OtherModalChildrenTab({ assetRows, onAssetFinderSubmit, onDeleteAssetAssigned }) {
+export default function OtherModalChildrenTab({ assetRows, onAssetFinderSubmit, onDeleteAssetAssigned, userLocations }) {
   const classes = useStyles();
   return (
     <div className={classes.root}>
@@ -19,6 +19,7 @@ export default function OtherModalChildrenTab({ assetRows, onAssetFinderSubmit, 
         assetRows={assetRows}
         onAssetFinderSubmit={onAssetFinderSubmit}
         onDeleteAssetAssigned={onDeleteAssetAssigned}
+        userLocations={userLocations}
       />
     </div>
   )

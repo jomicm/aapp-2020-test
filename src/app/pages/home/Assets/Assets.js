@@ -85,33 +85,35 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
     categories: allBaseFields.categories
   };
 
-  const createAssetCategoryRow = (id, name, depreciation, creator, creationDate, fileExt) => {
-    return { id, name, depreciation, creator, creationDate, fileExt };
+  const createAssetCategoryRow = (id, name, depreciation, creator, creationDate, updateDate, fileExt) => {
+    return { id, name, depreciation, creator, creationDate, updateDate, fileExt };
   };
 
   const assetCategoriesHeadRows = [
     { id: 'name', numeric: false, disablePadding: false, label: 'Description' },
     { id: 'depreciation', numeric: true, disablePadding: false, label: 'Depreciation' },
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
-    { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
+    { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true },
+    { id: 'updateDate', numeric: false, disablePadding: false, label: 'Update Date', searchByDisabled: true }
   ];
 
-  const createAssetReferenceRow = (id, name, brand, model, category, creator, creationDate, price, fileExt) => {
-    return { id, name, brand, model, category, creator, creationDate, price, fileExt };
+  const createAssetReferenceRow = (id, name, brand, model, category, price, creator, creationDate, updateDate, fileExt) => {
+    return { id, name, brand, model, category, creator, price, creationDate, updateDate, fileExt };
   };
 
   const assetReferencesHeadRows = [
     { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
     { id: 'brand', numeric: true, disablePadding: false, label: 'Brand' },
     { id: 'model', numeric: true, disablePadding: false, label: 'Model' },
+    { id: 'price', numeric: false, disablePadding: false, label: 'Price' },
     { id: 'category', numeric: true, disablePadding: false, label: 'Category', searchByDisabled: true },
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
     { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true },
-    { id: 'price', numeric: false, disablePadding: false, label: 'Price' }
+    { id: 'updateDate', numeric: false, disablePadding: false, label: 'Update Date', searchByDisabled: true }
   ];
 
-  const createAssetListRow = (id, name, brand, model, category, serial, EPC, status, price, creator, creationDate, location, fileExt) => {
-    return { id, name, brand, model, category, serial, EPC, status, price, creator, creationDate, location, fileExt };
+  const createAssetListRow = (id, name, brand, model, category, serial, EPC, status, price, creator, creationDate, updateDate, location, fileExt) => {
+    return { id, name, brand, model, category: typeof category === 'object' ? category.label || '' : '', serial, EPC, status, price, creator, creationDate, updateDate, location, fileExt };
   };
 
   const assetListHeadRows = [
@@ -124,7 +126,8 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
     { id: 'status', numeric: false, disablePadding: false, label: 'Status' },
     { id: 'price', numeric: false, disablePadding: false, label: 'Price' },
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
-    { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
+    { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true },
+    { id: 'updateDate', numeric: false, disablePadding: false, label: 'Update Date', searchByDisabled: true }
   ];
 
   const [assetsKPI, setAssetsKPI] = useState({
@@ -268,21 +271,24 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
             console.log(data.response);
             const rows = data.response.map(row => {
               const creationDate = String(new Date(row.creationDate)).split('GMT')[0];
-              return createAssetListRow(row._id, row.name, row.brand, row.model, row.category, row.serial, row.EPC, row.status, row.price, row.creationUserFullName, creationDate, row.location, row.fileExt);
+              const updateDate = String(new Date(row.updateDate)).split('GMT')[0];
+              return createAssetListRow(row._id, row.name, row.brand, row.model, row.category, row.serial, row.EPC, row.status, row.price, row.creationUserFullName, creationDate, updateDate, row.location, row.fileExt);
             });
             setControl(prev => ({ ...prev, assetRows: rows, assetRowsSelected: [] }));
           }
           if (collectionName === 'references') {
             const rows = data.response.map(row => {
               const creationDate = String(new Date(row.creationDate)).split('GMT')[0];
-              return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.category, row.creationUserFullName, creationDate, row.price, row.fileExt);
+              const updateDate = String(new Date(row.updateDate)).split('GMT')[0];
+              return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.category, row.price, row.creationUserFullName, creationDate, updateDate, row.fileExt);
             });
             setControl(prev => ({ ...prev, referenceRows: rows, referenceRowsSelected: [] }));
           }
           if (collectionName === 'categories') {
             const rows = data.response.map(row => {
               const creationDate = String(new Date(row.creationDate)).split('GMT')[0];
-              return createAssetCategoryRow(row._id, row.name, row.depreciation, row.creationUserFullName, creationDate, row.fileExt);
+              const updateDate = String(new Date(row.updateDate)).split('GMT')[0];
+              return createAssetCategoryRow(row._id, row.name, row.depreciation, row.creationUserFullName, creationDate, updateDate, row.fileExt);
             });
             setControl(prev => ({ ...prev, categoryRows: rows, categoryRowsSelected: [] }));
           }
@@ -550,6 +556,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                       reloadTable={() => loadAssetsData('assets')}
                       setShowModal={(onOff) => setControl({ ...control, openAssetsModal: onOff })}
                       showModal={control.openAssetsModal}
+                      userLocations={userLocations}
                     />
                     <div className='kt-separator kt-separator--dashed' />
                     <div className='kt-section__content'>

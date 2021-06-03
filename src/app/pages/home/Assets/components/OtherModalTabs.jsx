@@ -20,6 +20,7 @@ export default function OtherModalTabs({
   locationReal, layoutMarker, setLayoutMarker,
   mapMarker, setMapMarker, assetRows,
   onAssetFinderSubmit, onDeleteAssetAssigned,
+  userLocations
 }) {
 
   /* States */
@@ -110,6 +111,7 @@ export default function OtherModalTabs({
             assetRows={assetRows}
             onAssetFinderSubmit={onAssetFinderSubmit}
             onDeleteAssetAssigned={onDeleteAssetAssigned}
+            userLocations={userLocations}
           />
         </PortletBody>
       )}

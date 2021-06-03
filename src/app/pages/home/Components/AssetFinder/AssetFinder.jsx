@@ -7,7 +7,7 @@ import SearchIcon from '@material-ui/icons/Search';
 import { postDBEncryptPassword, getDB, getOneDB, updateDB, postDB, getDBComplex } from '../../../../crud/api';
 import Table from './Table';
 
-const AssetFinder = ({ setTableRowsInner = () => { } }) => {
+const AssetFinder = ({ setTableRowsInner = () => { }, userLocations }) => {
   const classes = useStyles();
   const [assetRows, setAssetRows] = useState([]);
   const [searchText, setSearchText] = useState('');
@@ -15,7 +15,8 @@ const AssetFinder = ({ setTableRowsInner = () => { } }) => {
   const handleOnSearchClick = () => {
     if (searchText) {
       const queryLike = ['name', 'brand', 'model'].map(key => ({ key, value: searchText }));
-      getDBComplex({ collection: 'assets', queryLike })
+      const condition = [{ "location": { "$in": userLocations }}];
+      getDBComplex({ collection: 'assets', queryLike, condition })
         .then(response => response.json())
         .then(data => {
           const rows = data.response.map(row => {
