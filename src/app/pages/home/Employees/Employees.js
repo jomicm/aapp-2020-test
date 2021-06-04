@@ -42,8 +42,8 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
 
   const { policies, setPolicies } = usePolicies();
 
-  const createUserProfilesRow = (id, name, creator, creationDate, updateDate) => {
-    return { id, name, creator, creationDate, updateDate };
+  const createUserProfilesRow = (id, name, creator, creationDate, updateDate, fileExt) => {
+    return { id, name, creator, creationDate, updateDate, fileExt };
   };
 
   const employeeProfilesHeadRows = [
@@ -62,7 +62,8 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
     manager,
     creator,
     creationDate,
-    updateDate
+    updateDate,
+    fileExt
   ) => {
     return {
       id,
@@ -73,7 +74,8 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
       manager,
       creator,
       creationDate,
-      updateDate
+      updateDate,
+      fileExt
     };
   };
 
@@ -200,7 +202,7 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
         .then(data => {
           if (collectionName === 'employeeProfiles') {
             const rows = data.response.map((row) => {
-              const { _id, name, creationUserFullName, creationDate, updateDate } = row;
+              const { _id, name, creationUserFullName, creationDate, updateDate, fileExt } = row;
               const date = String(new Date(creationDate)).split('GMT')[0];
               const uptDate = String(new Date(updateDate)).split('GMT')[0];
               return createUserProfilesRow(
@@ -208,14 +210,15 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
                 name,
                 creationUserFullName,
                 date,
-                uptDate
+                uptDate,
+                fileExt
               );
             });
             setControl(prev => ({ ...prev, employeeProfilesRows: rows, employeeProfilesRowsSelected: [] }));
           }
           if (collectionName === 'employees') {
             const rows = data.response.map((row) => {
-              const { _id, name, lastName, email, designation, manager, creationUserFullName, creationDate, updateDate } = row;
+              const { _id, name, lastName, email, designation, manager, creationUserFullName, creationDate, updateDate, fileExt } = row;
               const date = String(new Date(creationDate)).split('GMT')[0];
               const uptDate = String(new Date(updateDate)).split('GMT')[0];
               return createEmployeeRow(
@@ -227,7 +230,8 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
                 manager,
                 creationUserFullName,
                 date,
-                uptDate
+                uptDate,
+                fileExt
               );
             });
             setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));
