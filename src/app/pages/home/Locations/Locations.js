@@ -730,20 +730,6 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
                 </PortletBody>
               )}
               {tab === 2 && <Policies setPolicies={setPolicies} module="locations" baseFields={policiesBaseFields} />}
-              {tab === 3 && (
-                <PortletBody>
-                  <div className='kt-section kt-margin-t-0'>
-                    <div className='kt-section__body'>
-                      <div className='kt-section'>
-                        <span className='kt-section__sub'>
-                          This section will integrate <code>Locations Settings</code>
-                        </span>
-                        <div className='kt-separator kt-separator--dashed' />
-                      </div>
-                    </div>
-                  </div>
-                </PortletBody>
-              )}
             </Portlet>
           </div>
         )}

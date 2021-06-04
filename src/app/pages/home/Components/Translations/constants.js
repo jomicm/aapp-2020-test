@@ -84,7 +84,7 @@ export const tabsConfig = {
     },
     {
       name: 'locations',
-      titles: ['List','Profiles','Policies','Settings']
+      titles: ['List','Profiles','Policies']
     },
     {
       name: 'reports',

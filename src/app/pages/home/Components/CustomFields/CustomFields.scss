@@ -69,6 +69,8 @@
 
   &__tab-name {
     max-width: 350px;
+    display: flex;
+    flex-direction: row;
   }
 
   &__tab-layout {
