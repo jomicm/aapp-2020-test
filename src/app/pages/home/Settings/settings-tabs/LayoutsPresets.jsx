@@ -107,12 +107,6 @@ const LayoutsPresets = props => {
           });
           setControl(prev => ({ ...prev, layoutStagesRows: rows, layoutStagesRowsSelected: [] }));
         }
-        // if (collectionName === 'employees') {
-        //   const rows = data.response.map(row => {
-        //     return createEmployeeRow(row._id, row.name, row.lastName, row.email, row.designation, row.manager, 'Admin', '11/03/2020');
-        //   });
-        //   setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));
-        // }
       })
       .catch(error => console.log('error>', error));
     });

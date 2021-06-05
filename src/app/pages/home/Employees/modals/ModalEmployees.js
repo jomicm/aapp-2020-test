@@ -157,6 +157,11 @@ const ModalEmployees = ({
     name: '',
     selectedUserProfile: null
   });
+  const [responsibilityLayout, setResponsabilityLayout] = useState({
+    added: {},
+    initial: {},
+    removed: {}
+  });
 
   const [formValidation, setFormValidation] = useState({
     enabled: false,
@@ -245,7 +250,21 @@ const ModalEmployees = ({
       },
       componentProps: {
         isClearable: true,
-        onChange: (e) => setLayoutSelected(e),
+        onChange: (layout) => {
+          if (layout) {
+            if (responsibilityLayout.initial?.value !== layout?.value && id) {
+              setResponsabilityLayout(prev => ({ ...prev, added: layout, removed: prev.initial || {} }));
+            } else if (!id) {
+              setResponsabilityLayout(prev => ({ ...prev, added: layout }));
+            } else {
+              setResponsabilityLayout(prev => ({ ...prev, added: {}, removed: {} }));
+            }
+          } else {
+            setResponsabilityLayout(prev => ({ ...prev, added: {}, removed: prev.initial }));
+          }
+
+          setLayoutSelected(layout);
+        },
         options: layoutOptions,
         value: layoutSelected,
       }
@@ -275,6 +294,11 @@ const ModalEmployees = ({
     setFormValidation({
       enabled: false,
       isValidForm: false
+    });
+    setResponsabilityLayout({
+      added: {},
+      initial: {},
+      removed: {}
     });
   };
 
@@ -346,6 +370,18 @@ const ModalEmployees = ({
           saveAndReload('employees', _id);
           executePolicies('OnAdd', 'employees', 'list', policies);
           handleAssignmentsOnSaving(_id);
+          
+          if (Object.entries(responsibilityLayout.added || {}).length) {
+            getOneDB('settingsLayoutsEmployees/', responsibilityLayout.added.value)
+            .then((response) => response.json())
+            .then((data) => {
+              const { used } = data.response;
+              const value = (typeof used === 'number' ? used : 0) + 1;
+              updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.added.value)
+                .catch((error) => console.log(error));
+            })
+            .catch((error) => console.log(error));
+          }
         })
         .catch((error) => dispatch(showErrorAlert()));
     } else {
@@ -355,6 +391,30 @@ const ModalEmployees = ({
           saveAndReload('employees', id[0]);
           handleAssignmentsOnSaving(id[0]);
           executePolicies('OnEdit', 'employees', 'list', policies);
+
+          if (Object.entries(responsibilityLayout.added || {}).length) {
+            getOneDB('settingsLayoutsEmployees/', responsibilityLayout.added.value)
+            .then((response) => response.json())
+            .then((data) => {
+              const { used } = data.response;
+              const value = (typeof used === 'number' ? used : 0) + 1;
+              updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.added.value)
+                .catch((error) => console.log(error));
+            })
+            .catch((error) => console.log(error));
+          }
+
+          if (Object.entries(responsibilityLayout.removed || {}).length) {
+            getOneDB('settingsLayoutsEmployees/', responsibilityLayout.removed.value)
+            .then((response) => response.json())
+            .then((data) => {
+              const { used } = data.response;
+              const value = (typeof used === 'number' ? used : 1) - 1;
+              updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.removed.value)
+                .catch((error) => console.log(error));
+            })
+            .catch((error) => console.log(error));
+          }
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -402,7 +462,7 @@ const ModalEmployees = ({
 
     getOneDB('employees/', id[0])
       .then((response) => response.json())
-      .then( async (data) => {
+      .then(async (data) => {
         console.log(data.response);
         const {
           name,
@@ -420,6 +480,7 @@ const ModalEmployees = ({
         setCustomFieldsPathResponse(onLoadResponse);
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
+        setResponsabilityLayout(prev => ({ ...prev, initial: typeof layoutSelected === 'object' ? layoutSelected : {} }));
         setLayoutSelected(layoutSelected);
         setProfileSelected(
           employeeProfilesFiltered.filter(

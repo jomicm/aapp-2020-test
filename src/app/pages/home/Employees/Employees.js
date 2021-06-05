@@ -11,7 +11,7 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
-import { deleteDB, getDBComplex, getCountDB, getDB, getOneDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB, getDB, getOneDB, updateDB } from '../../../crud/api';
 import * as general from "../../../store/ducks/general.duck";
 import { executePolicies } from '../Components/Policies/utils';
 import TableComponent2 from '../Components/TableComponent2';
@@ -317,11 +317,26 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
           .then((data) => {
             id.forEach((_id) => {
               deleteDB(`${collection.name}/`, _id)
-                .then((_) => {
+                .then((response) => response.json())
+                .then((data) => {
                   dispatch(showDeletedAlert());
                   const currentCollection = collection.name === 'employees' ? 'list' : 'references';
                   executePolicies('OnDelete', 'employees', currentCollection, data.response);
                   loadEmployeesData(collection.name);
+
+                  const { response: { value: { layoutSelected } } } = data;
+                  
+                  if (layoutSelected) {
+                    getOneDB('settingsLayoutsEmployees/', layoutSelected.value)
+                      .then((response) => response.json())
+                      .then((data) => {
+                        const { used } = data.response;
+                        const value = (typeof used === 'number' ? used : 1) - 1;
+                        updateDB('settingsLayoutsEmployees/', { used: value }, layoutSelected.value)
+                          .catch((error) => console.log(error));
+                      })
+                      .catch((error) => console.log(error));
+                  }
                 })
                 .catch((_) => dispatch(showErrorAlert()));
             });
