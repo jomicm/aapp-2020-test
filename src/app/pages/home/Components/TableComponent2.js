@@ -245,7 +245,6 @@ const TableComponentTile = props => {
         let userHomeLocations = [];
         let validChildren = [];
         locations = data.response.map(res => ({ ...res, id: res._id }));
-        console.log(userLocations);
         userLocations.forEach((e) => getUserHomeLocations(data.response, e, userHomeLocations, validChildren));
         const children = constructLocationTreeRecursive(userHomeLocations, validChildren);
         locationsTreeData.children = children;

@@ -190,7 +190,7 @@ function Users({ globalSearch, setGeneralSearch, user }) {
               const { selectedBoss } = row;
               const date = String(new Date(row.creationDate)).split('GMT')[0];
               const updateDate = String(new Date(row.updateDate)).split('GMT')[0];
-              return createUserRow(row._id, row.name, row.lastName, row.email, row.designation, selectedBoss ? `${selectedBoss.name} ${selectedBoss.lastName}` : '', row.creationUserFullName, date, updateDate, row.fileExt);
+              return createUserRow(row._id, row.name, row.lastName, row.email, row.selectedUserProfile ? row.selectedUserProfile.label || '' : '', selectedBoss ? `${selectedBoss.name} ${selectedBoss.lastName}` : '', row.creationUserFullName, date, updateDate, row.fileExt);
             });
             setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));
           }
@@ -200,7 +200,6 @@ function Users({ globalSearch, setGeneralSearch, user }) {
   };
 
   useEffect(() => loadUserLocations(), []);
-  useEffect(() => console.log(userLocations), [userLocations]);
 
   useEffect(() => {
     loadUsersData('user');
@@ -260,11 +259,9 @@ function Users({ globalSearch, setGeneralSearch, user }) {
     const collection = collections[collectionName];
     return {
       onAdd() {
-        console.log('MAIN ON ADD>> ', referencesSelectedId);
         setControl({ ...control, [collection.id]: null, [collection.modal]: true })
       },
       onEdit(id) {
-        console.log('onEdit:', id, collection, collection.id)
         setControl({ ...control, [collection.id]: id, [collection.modal]: true })
       },
       onDelete(id) {
@@ -342,6 +339,7 @@ function Users({ globalSearch, setGeneralSearch, user }) {
                         controlValues={tableControl.user}
                         headRows={usersHeadRows}
                         locationControl={(locations) => {
+                          console.log(locations);
                           setTableControl(prev => ({
                             ...prev,
                             user: {

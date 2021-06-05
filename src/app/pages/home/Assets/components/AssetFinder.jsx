@@ -13,10 +13,12 @@ const AssetFinder = ({ setTableRowsInner = () => { }, userLocations }) => {
   const classes = useStyles();
   const [assetRows, setAssetRows] = useState([]);
   const [searchText, setSearchText] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleOnSearchClick = () => {
     if (searchText) {
-      const queryLike = ['name', 'brand', 'model'].map(key => ({ key, value: searchText }));
+      setLoading(true);
+      const queryLike = ['name', 'brand', 'model', 'EPC', 'serial'].map(key => ({ key, value: searchText }));
       const condition = [{ "location": { "$in": userLocations }}];
       getDBComplex({ collection: 'assets', queryLike, condition })
         .then(response => response.json())
@@ -27,7 +29,8 @@ const AssetFinder = ({ setTableRowsInner = () => { }, userLocations }) => {
           });
           setAssetRows(rows);
         })
-        .catch(error => console.log(error));
+        .catch(error => console.log(error))
+        .finally(() => setLoading(false));
     } else {
       setAssetRows([]);
     }
@@ -47,7 +50,7 @@ const AssetFinder = ({ setTableRowsInner = () => { }, userLocations }) => {
           <SearchIcon />
         </IconButton>
       </Paper>
-      <Table columns={getColumns()} rows={assetRows} setTableRowsInner={setTableRowsInner} />
+      <Table columns={getColumns()} rows={assetRows} setTableRowsInner={setTableRowsInner} loading={loading} />
     </div>
   );
 };

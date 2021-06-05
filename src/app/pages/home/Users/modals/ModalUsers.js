@@ -153,7 +153,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     }
 
     const fileExt = getFileExtension(image);
-    const body = { ...values, customFieldsTab, profilePermissions, locationsTable, fileExt };
+    const body = { ...values, customFieldsTab, profilePermissions, locationsTable, fileExt, selectedUserProfile: profileSelected ? profileSelected[0] : null };
     if (!isEmpty(values.selectedBoss)) {
       const { name, lastName } = allUsers.find(({ value }) => value === values.selectedBoss.value);
       values.selectedBoss = { ...values.selectedBoss, name, lastName };
@@ -375,7 +375,8 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     },
     password: {
       componentProps: {
-        onChange: handleChange('password')
+        onChange: handleChange('password'),
+        hidden: (!id || !Array.isArray(id)) ? false : true
       }
     },
     userGroups: {
