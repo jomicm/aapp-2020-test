@@ -17,7 +17,7 @@ const _generalFields = {
   references: ['_id', 'name', 'brand', 'model', 'price'],
   assets: ['_id', 'name', 'brand', 'model', 'category', 'status', 'serial', 'responsible', 'notes', 'quantity', 'purchase_date', 'purchase_price', 'price', 'total_price', 'EPC', 'location', 'creator', 'creation_date', 'labeling_user', 'labeling_date'],
   depreciation: [],
-  processLive: ['folio', 'name', 'stages', 'type', 'creator', 'date']
+  processLive: ['folio', 'name', 'stages', 'type', 'dueDate', 'creator', 'creationDate']
 };
 
 export const formatCollection = (collectionName, completeFields) => {
