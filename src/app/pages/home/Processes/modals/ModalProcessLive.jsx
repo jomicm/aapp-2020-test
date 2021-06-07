@@ -1269,6 +1269,9 @@ const ModalProcessLive = (props) => {
                           width: '45%',
                         }}
                         type="date"
+                        inputProps={{
+                          min: new Date().toISOString().split('T')[0]
+                        }}
                         value={dueDate}
                         onChange={(event) => setDueDate(event.target.value)}
                         InputLabelProps={{
