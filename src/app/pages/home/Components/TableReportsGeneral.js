@@ -301,11 +301,11 @@ const TableReportsGeneral = props => {
               <CloudDownloadIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title='Print'>
+          {/* <Tooltip title='Print'>
             <IconButton aria-label='Print' onClick={() => { }}>
               <PrintIcon />
             </IconButton>
-          </Tooltip>
+          </Tooltip> */}
           <Tooltip title='Column Picker'>
             <IconButton aria-label='Column Picker' onClick={recordButtonPosition}>
               <ViewColumnRoundedIcon />

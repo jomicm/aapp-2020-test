@@ -69,7 +69,23 @@ export const formatData = (collectionName, completeFields) => {
 export const extractGeneralField = (collectionName, row) => {
   let filteredGeneralFields = {};
   _generalFields[collectionName].map((field) => {
-    filteredGeneralFields = { ...filteredGeneralFields, [field]: row[field] || '' }
+    let currentField = field;
+    let objectValue;
+
+    if (collectionName === 'assets' && field === 'category') {
+      objectValue = row[field] ? row[field].label : ''
+    }
+
+    if (collectionName === 'user' && (field === 'boss' || field === 'groups')) {
+      if (field === 'boss') {
+        objectValue = row['selectedBoss'] ? `${row['selectedBoss'].name} ${row['selectedBoss'].lastName}` : ''; 
+      }
+
+      if (field === 'groups') {
+        objectValue = (row[field] || []).map(({ name }) => name).join(', ') || '';
+      }
+    }
+    filteredGeneralFields = { ...filteredGeneralFields, [currentField]: objectValue ? objectValue : row[currentField] || '' }
   });
   return filteredGeneralFields;
 };

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { uniq } from 'lodash';
 import { uniqBy } from "lodash";
 import {
   Button,
@@ -13,8 +14,9 @@ import {
 import { makeStyles } from '@material-ui/core';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import { connect, useDispatch } from 'react-redux';
+import { utcToZonedTime } from 'date-fns-tz';
 import { actions } from '../../../store/ducks/general.duck';
-import { postDB, getCountDB, getDBComplex } from '../../../crud/api';
+import { postDB, getCountDB, getDBComplex, getOneDB, getDB } from '../../../crud/api';
 import TableReportsGeneral from '../Components/TableReportsGeneral';
 import CircularProgressCustom from '../Components/CircularProgressCustom';
 import {
@@ -97,12 +99,13 @@ const useStyles = makeStyles(theme => ({
 
 const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
   const dispatch = useDispatch();
-  const { showErrorAlert, showSavedAlert, showSelectValuesAlert, showCustomAlert } = actions;
+  const { setGeneralLoading, showErrorAlert, showSavedAlert, showSelectValuesAlert, showCustomAlert } = actions;
   const classes = useStyles();
   const [control, setControl] = useState(false);
   const [loading, setLoading] = useState(false);
   const [collectionName, setCollectionName] = useState(null);
   const [dataTable, setDataTable] = useState(dataTableDefault);
+  const [userLocations, setUserLocations] = useState([]);
   const [values, setValues] = useState({
     selectedReport: '',
     startDate: '',
@@ -151,6 +154,52 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
   const [filtersSelected, setFiltersSelected] = useState(defaultFilterSelected);
 
   const permissions = user.profilePermissions.reports || [];
+
+  const locationsRecursive = (data, currentLocation, res) => {
+    const children = data.response.filter((e) => e.parent === currentLocation._id);
+
+    if (!children.length) {
+      return;
+    }
+
+    children.forEach((e) => {
+      if (!res.includes(e._id)) {
+        res.push(e._id);
+      }
+    });
+    children.forEach((e) => locationsRecursive(data, e, res));
+  };
+
+  const loadUserLocations = () => {
+    getOneDB('user/', user.id)
+      .then((response) => response.json())
+      .then((data) => {
+        const locationsTable = data.response.locationsTable;
+        getDB('locationsReal')
+          .then((response) => response.json())
+          .then((data) => {
+            let res = [];
+            locationsTable.forEach((location) => {
+              const currentLoc = data.response.find((e) => e._id === location.parent);
+
+              if (!userLocations.includes(currentLoc._id)) {
+                res.push(currentLoc._id);
+              }
+
+              const children = data.response.filter((e) => e.parent === currentLoc._id);
+
+              if (children.length) {
+                children.forEach((e) => res.push(e._id));
+                children.forEach((e) => locationsRecursive(data, e, res));
+              }
+            });
+            const resFiltered = uniq(res);
+            setUserLocations(resFiltered);
+          })
+          .catch((error) => console.log(error));
+      })
+      .catch((error) => console.log(error));
+  };
 
   const loadCustomFields = (selectedReport, customSelected) => {
     if (!customSelected) {
@@ -391,7 +440,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
     searchBy: '',
   });
 
-  const handleCSVDownload = () => {
+  const handleCSVDownload = async () => {
     if (!collectionName) {
       dispatch(showCustomAlert({
         message: 'You should generate a report of any collection in order to execute the download',
@@ -401,24 +450,21 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       return;
     }
 
-    let queryLike = '';
+    dispatch(setGeneralLoading({ active: true }));
 
-    queryLike = tableControl.searchBy ? (
-      [{ key: tableControl.searchBy, value: tableControl.search }]
-    ) : (
-      ['name', 'lastname', 'email', 'model', 'price', 'brand', 'level'].map(key => ({ key, value: tableControl.search }))
-    );
+    const condition = collectionName === 'processLive' ? await getFiltersProcess() : null;
+
     getDBComplex(({
       collection: collectionName,
-      queryLike,
-      sort: [{ key: tableControl.orderBy, value: tableControl.order }],
+      condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations }}] : null
     }))
       .then((response) => response.json())
       .then(({ response }) => {
+        let csv;
         const { name } = modules.find(({ id }) => id === collectionName);
         let headers = [];
         dataTable.headerObject.map(({ label }) => headers.push(label));
-        const { rows } = formatData(collectionName, response, headers);
+        const { rows } = formatData(collectionName, response);
         const jsonToCsvParser = new Parser({
           delimiter: '|',
           fields: headers,
@@ -427,15 +473,29 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
           ],
           quote: ''
         });
-        const csv = jsonToCsvParser.parse(rows);
+
+        if (collectionName === 'processLive') {
+          const processRows = response.map(({ processData, creationUserFullName, totalStages, creationDate, _id, folio }) => {
+            return ({ folio, name: processData.name, stages: totalStages, type: processData.selectedProcessType, creator: creationUserFullName, date: utcToZonedTime(creationDate).toLocaleString() });
+          });
+          csv = jsonToCsvParser.parse(processRows);
+        } else {
+          csv = jsonToCsvParser.parse(rows);
+        }
+        
         var a = document.createElement('a');
-        a.href = 'data:attachment/csv,' + csv;
+        a.href = 'data:attachment/csv,' + encodeURI(csv);
         a.target = '_Blank';
         a.download = `${name}_reports.csv`;
         document.body.appendChild(a);
         a.click();
       })
-      .catch((error) => console.log(error));
+      .catch((error) => dispatch(showCustomAlert({
+        message: `Something wrong happened in the download. Please try again later.\n Error: ${error}`,
+        open: true,
+        type: 'error'
+      })))
+      .finally(() => dispatch(setGeneralLoading({ active: false })));
   };
 
   const getFiltersProcess = async () => {
@@ -513,7 +573,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       getCountDB({
         collection: collectionName,
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : null
+        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations }}] : null
       })
         .then(response => response.json())
         .then(data => {
@@ -529,7 +589,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         skip: tableControl.rowsPerPage * tableControl.page,
         sort: collectionName === 'processLive' ? [{ key: 'folio', value: 1 }] : [{ key: tableControl.orderBy, value: tableControl.order }],
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : null
+        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations }}] : null
       })
         .then(response => response.json())
         .then(data => {
@@ -540,12 +600,13 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
           var dataTable;
           if (collectionName === 'processLive') {
             const processRows = response.map(({ processData, creationUserFullName, totalStages, creationDate, _id, folio }) => {
-              return ({ folio, name: processData.name, stages: totalStages, type: processData.selectedProcessType, creator: creationUserFullName, date: creationDate });
+              return ({ folio, name: processData.name, stages: totalStages, type: processData.selectedProcessType, creator: creationUserFullName, date: utcToZonedTime(creationDate).toLocaleString() });
             });
             dataTable = { rows: processRows, headerObject: baseHeaders };
           }
           else {
             dataTable = formatData(collection.id, response);
+            console.log(dataTable);
           }
           //Get just the CustomFields
           const baseFieldsHeaders = dataTable.headerObject.filter(e => !filtersSelected.customFields.all.some(custom => custom.id === e.id));
@@ -580,6 +641,10 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       }
     }));
   }
+
+  useEffect(() => {
+    loadUserLocations();
+  }, [])
 
   useEffect(() => {
     if (!values.selectedReport) {

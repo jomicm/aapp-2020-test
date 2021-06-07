@@ -75,6 +75,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [loadingReset, setLoadingReset] = useState(false);
   const [locationsList, setLocationsList] = useState([]);
+  const [allLocationsProfiles, setAllLocationsProfiles] = useState([]);
   const [locationProfileRows, setLocationProfileRows] = useState([]);
   const [locationsTree, setLocationsTree] = useState({});
   const [mapCenter, setMapCenter] = useState({ lat: 19.432608, lng: -99.133209 });
@@ -131,9 +132,9 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
               executePolicies('OnDelete', 'locations', 'list', data.response);
               handleLoadLocations();
             })
-            .catch((_) => dispatch(showErrorAlert()));
+            .catch((error) => dispatch(showErrorAlert()));
         })
-        .catch((_) => dispatch(showErrorAlert()));
+        .catch((error) => dispatch(showErrorAlert()));
       setOpenYesNoModal(false);
     },
     openProfilesListBox(e) {
@@ -171,9 +172,10 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
     level,
     name,
     creator,
-    creation_date
+    creationDate,
+    updateDate
   ) => {
-    return { id, level, name, creator, creation_date };
+    return { id, level, name, creator, creationDate, updateDate };
   };
 
   const CustomMarker = (MarkerComponentProps) => {
@@ -207,7 +209,8 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
     { id: 'level', numeric: true, disablePadding: false, label: 'Level' },
     { id: 'name', numeric: true, disablePadding: false, label: 'Description' },
     { id: 'creator', numeric: true, disablePadding: false, label: 'Creator', searchByDisabled: true },
-    { id: 'creation_date', numeric: true, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
+    { id: 'creationDate', numeric: true, disablePadding: false, label: 'Creation Date', searchByDisabled: true },
+    { id: 'updateDate', numeric: true, disablePadding: false, label: 'Update Date', searchByDisabled: true }
   ];
 
   const TabContainer4 = ({ children, dir }) => {
@@ -253,11 +256,12 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
               dispatch(showDeletedAlert());
               executePolicies('OnDelete', 'locations', 'profiles', data.response);
               loadLocationsProfilesData();
+              updateGeneralProfileLocations();
             })
-            .catch((_) => dispatch(showErrorAlert()));
+            .catch((error) => dispatch(showErrorAlert()));
         });
-      })
-        .catch((_) => dispatch(showErrorAlert())));
+      }))
+      .catch((error) => dispatch(showErrorAlert()));
   };
 
   const onEditProfileLocation = (_id) => {
@@ -342,6 +346,11 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   };
 
   const handleLoadLocations = () => {
+
+    if (!Object.entries(locationsTree).length) {
+      updateGeneralProfileLocations();
+    }
+
     setLocationsTree({});
     getDB('locationsReal')
       .then((response) => response.json())
@@ -371,6 +380,20 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
       searchBy: '',
     },
   });
+
+  const updateGeneralProfileLocations = () => {
+    getDB('locations')
+      .then((response) => response.json())
+      .then((data) => {
+        const profileRows = data.response.map((row) => {
+          const { _id, level, name, creationUserFullName, creationDate } = row;
+          const date = utcToZonedTime(creationDate).toLocaleString();
+          return createLocationProfileRow(_id, level, name, creationUserFullName, date);
+        });
+        setAllLocationsProfiles(profileRows);
+      })
+      .catch((error) => dispatch(showErrorAlert()));
+  };
 
   const loadLocationsProfilesData = (collectionNames = ['locations']) => {
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
@@ -413,9 +436,10 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
         .then(data => {
           if (collectionName === 'locations') {
             const profileRows = data.response.map((row) => {
-              const { _id, level, name, creationUserFullName, creationDate } = row;
-              const date = utcToZonedTime(creationDate).toLocaleString();
-              return createLocationProfileRow(_id, level, name, creationUserFullName, date);
+              const { _id, level, name, creationUserFullName, creationDate, updateDate } = row;
+              const date = String(new Date(creationDate)).split('GMT')[0];
+              const uptDate = String(new Date(updateDate)).split('GMT')[0];
+              return createLocationProfileRow(_id, level, name, creationUserFullName, date, uptDate);
             });
             setLocationProfileRows(profileRows);
             setSelectedLocationProfileRows([]);
@@ -434,7 +458,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
     getSelfCenter(parent);
     setParentSelected(parent);
     setRealParentSelected(realParent);
-    let locationProf = locationProfileRows.filter((row) => row.level == lvl);
+    let locationProf = allLocationsProfiles.filter((row) => row.level === lvl || row.level === lvl?.toString());
     setSelectedLocationProfileRows(locationProf);
   };
 
@@ -654,6 +678,7 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
                           reloadTable={loadLocationsProfilesData}
                           setShowModal={setOpenProfileModal}
                           showModal={openProfileModal}
+                          updateGeneralProfileLocations={updateGeneralProfileLocations}
                         />
 
                         <div className='kt-separator kt-separator--dashed' />
