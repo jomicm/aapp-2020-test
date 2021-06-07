@@ -138,7 +138,6 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
     selectedType: '',
     //
     isAssetEdition: false,
-    isUserFilter: false,
     isCustomLockedStage: false,
     isSelfApprove: false,
     isSelfApproveContinue: false,
@@ -387,12 +386,6 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
                         value="start"
                         control={<Switch color="primary" checked={values.isAssetEdition} onChange={handleChangeCheck('isAssetEdition')}/>}
                         label="Asset Edition"
-                        labelPlacement="start"
-                      />
-                      <FormControlLabel
-                        value="start"
-                        control={<Switch color="primary" checked={values.isUserFilter} onChange={handleChangeCheck('isUserFilter')}/>}
-                        label="User Filter"
                         labelPlacement="start"
                       />
                       <FormControlLabel

@@ -110,7 +110,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
   ];
 
   const createAssetListRow = (id, name, brand, model, category, serial, EPC, creator, creation_date, location) => {
-    return { id, name, brand, model, category, serial, EPC, creator, creation_date, location };
+    return { id, name, brand, model, category: typeof category === 'object' ? category.label || '' : '', serial, EPC, creator, creation_date, location };
   };
 
   const assetListHeadRows = [
