@@ -183,7 +183,6 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
   const classes = useStyles();
   const [values, setValues] = useState({
     name: "",
-    //
     layoutMessageName: '',
     selectedUserNotification: '',
     selectedUserApprovals: '',
@@ -333,9 +332,12 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     setProcessStages([]);
     setStages([]);
     setValues({ 
-      name: '',
+      name: "",
+      layoutMessageName: '',
       selectedUserNotification: '',
-      selectedUserApprovals: ''
+      selectedUserApprovals: '',
+      notificationsForUsers: {},
+      selectedProcessType: ''
     }); 
     setCustomFieldsTab({});
     setProfilePermissions([]);
@@ -386,7 +388,6 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
       setProcessStages(processStages);
       setUsersProcess(usersProcess);
       setValidMessages(validMessages);
-      setValues(prev => ({ ...prev, selectedProcessType }));
     })
     .catch(error => console.log(error));
   }, [id]);

@@ -699,18 +699,24 @@ const ModalProcessLive = (props) => {
   const finishProcess = (process, updateProcessStatus) => {
     const { cartRows, processData } = process;
     const { selectedProcessType } = processData;
-    const validAssets = extractValidAssets(cartRows, processData);
-    const validAssetsID = validAssets.map(({id}) => (id)); 
-    const invalidAssets = cartRows.filter(({id}) => !validAssetsID.includes(id)) || [];
-    if(invalidAssets.length <= 0 && validAssets.length > 0){
-      updateProcessStatus('approved');
+    var validAssets = [];
+    var validAssetsID = [];
+    var invalidAssets = [];
+    if(selectedProcessType !== 'short'){
+      validAssets = extractValidAssets(cartRows, processData);
+      validAssetsID = validAssets.map(({id}) => (id)); 
+      invalidAssets = cartRows.filter(({id}) => !validAssetsID.includes(id)) || [];
+      if(invalidAssets.length <= 0 && validAssets.length > 0){
+        updateProcessStatus('approved');
+      }
+      else if(invalidAssets.length > 0 && validAssets.length <= 0){
+        updateProcessStatus('rejected');
+      }
+      else if(invalidAssets.length > 0 && validAssets.length > 0){
+        updateProcessStatus('partiallyApproved');
+      }
     }
-    else if(invalidAssets.length > 0 && validAssets.length <= 0){
-      updateProcessStatus('rejected');
-    }
-    else if(invalidAssets.length > 0 && validAssets.length > 0){
-      updateProcessStatus('partiallyApproved');
-    }
+    
     const { dateFormatted, timeFormatted } = getCurrentDateTime();
 
     const finishActions = {
@@ -773,17 +779,17 @@ const ModalProcessLive = (props) => {
           message: `${validAssets.length} Assets Transferred!`
         }));
       },
-      short: () => {
-        validAssets.forEach( async ({ id, locationId: location, originalLocation, history = [] }) => {
+      short: async () => {
+        cartRows.forEach( async ({ id, locationId: location, originalLocation, history = [] }) => {
           const locationPath = await getLocationPath(location);
-          updateDB('assets/', { location, status: 'active', history: [...history, {processId: processInfo._id, processName: processInfo.processData.name, processType: processInfo.processData.selectedProcessType, label: `Moved from: ${originalLocation} to: ${locationPath}`, date: `${dateFormatted} ${timeFormatted}`}] } , id)
+          updateDB('assets/', { location, status: 'active', history: [...history, {processId: processData.id, processName: processData.name, processType: processData.selectedProcessType, label: `Moved from: ${originalLocation} to: ${locationPath}`, date: `${dateFormatted} ${timeFormatted}`}] } , id)
             .then(() => {})
             .catch(error => console.log(error));
         });
         dispatch(showCustomAlert({
           type: 'info',
           open: true,
-          message: `${validAssets.length} Assets Short Transferred!`
+          message: `${cartRows.length} Assets Short Transferred!`
         }));
       },
       maintenance: () => {
@@ -923,6 +929,7 @@ const ModalProcessLive = (props) => {
   const handleCloseModal = () => {
     setStageTabSelected(0);
     setCartRows([]);
+    setProcessInfo({})
     setCustomFieldsTab({});
     // setProfilePermissions([]);
     setValues({ 
