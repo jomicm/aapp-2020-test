@@ -928,8 +928,9 @@ const ModalProcessLive = (props) => {
 
   const handleCloseModal = () => {
     setStageTabSelected(0);
+    setAssetFinderTab(0);
     setCartRows([]);
-    setProcessInfo({})
+    setProcessInfo({});
     setCustomFieldsTab({});
     // setProfilePermissions([]);
     setValues({ 
