@@ -16,24 +16,20 @@ const AssetFinder = ({ setTableRowsInner = () => { }, userLocations }) => {
   const [loading, setLoading] = useState(false);
 
   const handleOnSearchClick = () => {
-    if (searchText) {
-      setLoading(true);
-      const queryLike = ['name', 'brand', 'model', 'EPC', 'serial'].map(key => ({ key, value: searchText }));
-      const condition = [{ "location": { "$in": userLocations }}];
-      getDBComplex({ collection: 'assets', queryLike, condition })
-        .then(response => response.json())
-        .then(data => {
-          const rows = data.response.map(row => {
-            const { name, brand, model, EPC, _id: id, serial } = row;
-            return { id, name, brand, model, EPC, serial };
-          });
-          setAssetRows(rows);
-        })
-        .catch(error => console.log(error))
-        .finally(() => setLoading(false));
-    } else {
-      setAssetRows([]);
-    }
+    setLoading(true);
+    const queryLike = ['name', 'brand', 'model', 'EPC', 'serial'].map(key => ({ key, value: searchText || '' }));
+    const condition = [{ "location": { "$in": userLocations } }];
+    getDBComplex({ collection: 'assets', queryLike, condition })
+      .then(response => response.json())
+      .then(data => {
+        const rows = data.response.map(row => {
+          const { name, brand, model, EPC, _id: id, serial } = row;
+          return { id, name, brand, model, EPC, serial };
+        });
+        setAssetRows(rows);
+      })
+      .catch(error => console.log(error))
+      .finally(() => setLoading(false));
   };
 
   return (

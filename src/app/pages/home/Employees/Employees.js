@@ -324,25 +324,27 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
                   executePolicies('OnDelete', 'employees', currentCollection, data.response);
                   loadEmployeesData(collection.name);
 
-                  const { response: { value: { layoutSelected } } } = data;
-                  
-                  if (layoutSelected) {
-                    getOneDB('settingsLayoutsEmployees/', layoutSelected.value)
-                      .then((response) => response.json())
-                      .then((data) => {
-                        const { used } = data.response;
-                        const value = (typeof used === 'number' ? used : 1) - 1;
-                        updateDB('settingsLayoutsEmployees/', { used: value }, layoutSelected.value)
-                          .catch((error) => console.log(error));
-                      })
-                      .catch((error) => console.log(error));
+                  if (collection.name === 'employees') {
+                    const { response: { value: { layoutSelected } } } = data;
+
+                    if (layoutSelected) {
+                      getOneDB('settingsLayoutsEmployees/', layoutSelected.value)
+                        .then((response) => response.json())
+                        .then((data) => {
+                          const { used } = data.response;
+                          const value = (typeof used === 'number' ? used : 1) - 1;
+                          updateDB('settingsLayoutsEmployees/', { used: value }, layoutSelected.value)
+                            .catch((error) => console.log(error));
+                        })
+                        .catch((error) => console.log(error));
+                    }
                   }
                 })
                 .catch((_) => dispatch(showErrorAlert()));
             });
           })
           .catch((_) => dispatch(showErrorAlert()));
-        
+
         loadEmployeesData(collection.name);
       },
       onSelect(id) {

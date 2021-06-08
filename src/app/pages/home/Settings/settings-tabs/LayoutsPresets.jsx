@@ -21,7 +21,8 @@ const stagesLayoutsHeadRows = [
   { id: "type", numeric: false, disablePadding: false, label: "Type" },
   { id: "used", numeric: true, disablePadding: false, label: "Used" },
   { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-  { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
+  { id: "creationDate", numeric: false, disablePadding: false, label: "Creation Date" },
+  { id: "updateDate", numeric: false, disablePadding: false, label: "Update Date" }
 ];
 const createLayoutsStageRow = (id, name, stage, type, used, creator, creation_date) => {
   return { id, name, stage, type, used, creator, creation_date };
@@ -30,10 +31,11 @@ const layoutsHeadRows = [
   { id: "name", numeric: false, disablePadding: false, label: "Name" },
   { id: "used", numeric: true, disablePadding: false, label: "Used" },
   { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-  { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
+  { id: "creationDate", numeric: false, disablePadding: false, label: "Creation Date" },
+  { id: "updateDate", numeric: false, disablePadding: false, label: "Update Date" }
 ];
-const createLayoutsEmployeeRow = (id, name, used, creator, creation_date) => {
-  return { id, name, used, creator, creation_date };
+const createLayoutsEmployeeRow = (id, name, used, creator, creationDate, updateDate) => {
+  return { id, name, used, creator, creationDate, updateDate };
 };
 const collections = {
   layoutsEmployees: {
@@ -74,6 +76,27 @@ const LayoutsPresets = props => {
       },
       onDelete(id) {
         if (!id || !Array.isArray(id)) return;
+
+        if (collection.name === 'settingsLayoutsEmployees') {
+          getDB('employees')
+            .then((response) => response.json())
+            .then((data) => {
+              const employees = data.response.map(({ _id, layoutSelected }) => {
+                if (layoutSelected && typeof layoutSelected === 'object') {
+                  if (id.includes(layoutSelected.value)) {
+                    return _id;
+                  }
+                }
+              }) || [];
+              console.log(employees);
+              employees.forEach(({ employeeId }) => {
+                updateDB('employees/', { layoutSelected: null }, employeeId)
+                  .catch((error) => console.log(error));
+              });
+            })
+            .catch((error) => console.log(error));
+        }
+
         id.forEach(_id => {
           deleteDB(`${collection.name}/`, _id)
             .then(response => loadLayoutsData('settingsLayoutsEmployees'))
@@ -95,15 +118,18 @@ const LayoutsPresets = props => {
       .then(data => {
         if (collectionName === 'settingsLayoutsEmployees') {
           const rows = data.response.map(row => {
-            const date = utcToZonedTime(row.creationDate).toLocaleString();
-            return createLayoutsEmployeeRow(row._id, row.name, 99, row.creationUserFullName, date);
+            const date = String(new Date(row.creationDate)).split('GMT')[0];
+            const uptDate = String(new Date(row.updateDate)).split('GMT')[0];
+            console.log(row);
+            return createLayoutsEmployeeRow(row._id, row.name, row.used, row.creationUserFullName, date, uptDate);
           });
           setControl(prev => ({ ...prev, layoutEmployeesRows: rows, layoutEmployeesRowsSelected: [] }));
         }
         if (collectionName === 'settingsLayoutsStages') {
           const rows = data.response.map(row => {
-            const date = utcToZonedTime(row.creationDate).toLocaleString();
-            return createLayoutsStageRow(row._id, row.name, row.stageName, 99, row.creationUserFullName, date);
+            const date = String(new Date(row.creationDate)).split('GMT')[0];
+            const uptDate = String(new Date(row.updateDate)).split('GMT')[0];
+            return createLayoutsStageRow(row._id, row.name, row.stageName, 99, row.creationUserFullName, date, uptDate);
           });
           setControl(prev => ({ ...prev, layoutStagesRows: rows, layoutStagesRowsSelected: [] }));
         }

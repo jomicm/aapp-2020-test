@@ -155,6 +155,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   const [value5, setValue5] = useState(0);
   const [openHistory, setOpenHistory] = useState(false);
   const [customFieldsPathResponse, setCustomFieldsPathResponse] = useState();
+  const [referenceImage, setReferenceImage] = useState('');
 
   function handleChange5(event, newValue) {
     setValue5(newValue);
@@ -553,6 +554,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     setAssetLocation([]);
     setAssetsBeforeSaving([]);
     setAssetsToDelete([]);
+    setReferenceImage('');
   };
 
   useEffect(() => {
@@ -571,7 +573,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       getOneDB('references/', referencesSelectedId)
         .then(response => response.json())
         .then(data => {
-          const { name, brand, model, customFieldsTab } = data.response;
+          const { name, brand, model, customFieldsTab, fileExt } = data.response;
           setValues({
             ...values,
             name,
@@ -582,6 +584,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
           tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
           setCustomFieldsTab(customFieldsTab);
           setTabs(tabs);
+          setReferenceImage(getImageURL(referencesSelectedId, 'references', fileExt));
         })
         .catch(error => {
           dispatch(showErrorAlert())
@@ -607,6 +610,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
             const onLoadResponse = await executeOnLoadPolicy(value, 'assets', 'list', policies);
             setCustomFieldsPathResponse(onLoadResponse);
             setValues(prev => ({ ...prev, category: { value, label } }));
+            setReferenceImage(getImageURL(referenceId, 'references', data.response.fileExt));
           })
           .catch((error) => showCustomAlert(({
             type: 'error',
@@ -783,6 +787,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                         startIcon={<TimelineIcon />}
                         style={{
                           marginTop: '20px',
+                          marginBottom: '40px',
                           width: '60%',
                           alignSelf: 'center',
                         }}
@@ -790,6 +795,9 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                       >
                         History
                       </Button>
+                      <ImageUpload disabled image={referenceImage} showDeleteButton={false} showButton={false}>
+                        Reference Photo
+                      </ImageUpload>
                     </div>
                     <div className="profile-tab-wrapper__content-left">
                       <BaseFields

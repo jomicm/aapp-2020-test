@@ -4,7 +4,7 @@ import Paper from '@material-ui/core/Paper';
 import InputBase from '@material-ui/core/InputBase';
 import IconButton from '@material-ui/core/IconButton';
 import SearchIcon from '@material-ui/icons/Search';
-import { postDBEncryptPassword, getDB, getOneDB, updateDB, postDB, getDBComplex } from '../../../../crud/api';
+import { getDBComplex } from '../../../../crud/api';
 import Table from './Table';
 
 const AssetFinder = ({ setTableRowsInner = () => { }, userLocations }) => {
@@ -14,25 +14,21 @@ const AssetFinder = ({ setTableRowsInner = () => { }, userLocations }) => {
   const [loading, setLoading] = useState(false);
 
   const handleOnSearchClick = () => {
-    if (searchText) {
-      setLoading(true);
-      const queryLike = ['name', 'brand', 'model', 'EPC', 'serial'].map(key => ({ key, value: searchText }));
-      const condition = [{ "location": { "$in": userLocations }}];
-      getDBComplex({ collection: 'assets', queryLike, condition })
-        .then(response => response.json())
-        .then(data => {
-          const rows = data.response.map(row => {
-            const { name, brand, model, EPC, _id: id, serial } = row;
-            const assigned = !!row.assigned;
-            return { id, name, brand, model, assigned, EPC, serial };
-          });
-          setAssetRows(rows);
-        })
-        .catch(error => console.log(error))
-        .finally(() => setLoading(false));
-    } else {
-      setAssetRows([]);
-    }
+    setLoading(true);
+    const queryLike = ['name', 'brand', 'model', 'EPC', 'serial'].map(key => ({ key, value: searchText || '' }));
+    const condition = [{ "location": { "$in": userLocations } }];
+    getDBComplex({ collection: 'assets', queryLike, condition })
+      .then(response => response.json())
+      .then(data => {
+        const rows = data.response.map(row => {
+          const { name, brand, model, EPC, _id: id, serial } = row;
+          const assigned = !!row.assigned;
+          return { id, name, brand, model, assigned, EPC, serial };
+        });
+        setAssetRows(rows);
+      })
+      .catch(error => console.log(error))
+      .finally(() => setLoading(false));
   };
 
   return (
