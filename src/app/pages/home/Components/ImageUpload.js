@@ -50,7 +50,13 @@ const ImageUpload = ({ children, setImage = () => {}, image = null, disabled = f
           src={values.categoryPic}
         />
       </div>
-      <input accept="image/*" type="file" onChange={updateValues} disabled={disabled} style={{ display: showButton ? null : 'none' }}/>
+      <input
+        accept="image/*"
+        disabled={disabled}
+        onChange={updateValues}
+        type="file"
+        style={{ display: showButton ? null : 'none' }}
+      />
     </div>
   );
 }

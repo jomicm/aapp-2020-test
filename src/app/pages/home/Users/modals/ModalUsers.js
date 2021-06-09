@@ -115,6 +115,7 @@ const useStyles = makeStyles(theme => ({
 const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows, user, updateUserPic, policies }) => {
   const dispatch = useDispatch();
   const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
+  const { fulfillUser } = auth.actions;
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
@@ -182,7 +183,17 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
         })
         .catch(error => dispatch(showErrorAlert()));
     }
+    
     handleCloseModal();
+
+    if (id) {
+      console.log(initialProfilePermissions, body.profilePermissions);
+      if (initialProfilePermissions !== body.profilePermissions && id[0] === user.id) {
+        dispatch(fulfillUser({ ...user, profilePermissions: body.profilePermissions }));
+        window.location.reload();
+      }   
+    }
+
   };
 
   const [image, setImage] = useState(null);
@@ -234,7 +245,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       enabled: false,
       isValidForm: false
     });
-
+    setInitialProfilePermissions({});
   };
 
   const [userProfilesFiltered, setUserProfilesFiltered] = useState([]);
@@ -257,12 +268,12 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     getOneDB('user/', id[0])
       .then(response => response.json())
       .then( async (data) => {
-        console.log(data.response);
         const { name, lastName, email, customFieldsTab, profilePermissions, idUserProfile, locationsTable, fileExt, selectedBoss } = data.response;
         const onLoadResponse = await executeOnLoadPolicy(idUserProfile, 'user', 'list', policies);
         setCustomFieldsPathResponse(onLoadResponse);
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
+        setInitialProfilePermissions(profilePermissions);
         setProfileSelected(userProfilesFiltered.filter(profile => profile.value === idUserProfile));
         setLocationsTable(locationsTable || []);
         setValues({
@@ -295,6 +306,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
   const [profilePermissions, setProfilePermissions] = useState({});
+  const [initialProfilePermissions, setInitialProfilePermissions] = useState({});
   const [tabs, setTabs] = useState([]);
   const [locationsTable, setLocationsTable] = useState([]);
 

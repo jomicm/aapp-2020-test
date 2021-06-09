@@ -251,7 +251,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
           ['description', 'depreciation'].map(key => ({ key, value: tableControl.categories.search }))
         )
       }
-
+      
       const kpi = kpiSelected || {};
       const list = kpi.value ? [{ "location": { "$in": userLocations } }, { 'status': kpi.value }] : [{ "location": { "$in": userLocations } }];
       const condition = collectionName === 'assets' ? list : null;

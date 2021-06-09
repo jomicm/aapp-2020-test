@@ -147,15 +147,25 @@ function Users({ globalSearch, setGeneralSearch, user }) {
         )
       }
       if (collectionName === 'user') {
-        queryLike = tableControl.user.searchBy ? (
-          [{ key: tableControl.user.searchBy, value: tableControl.user.search }]
-        ) : (
-          ['name', 'lastName', 'email'].map(key => ({ key, value: tableControl.user.search }))
-        )
+        if (tableControl.user.locationsFilter.length) {
+          queryLike = tableControl.user.locationsFilter.map(locationID => ({ key: 'locationsTable.parent', value: locationID }))
+          console.log(queryLike);
+        } else {
+          queryLike = tableControl.user.searchBy ? (
+            [{ key: tableControl.user.searchBy, value: tableControl.user.search }]
+          ) : (
+            ['name', 'lastName', 'email'].map(key => ({ key, value: tableControl.user.search }))
+          )
+        }
       }
+
+      const list = [{ "locationsTable.parent": { "$in": userLocations } }];
+      const condition = collectionName === 'user' ? list : null;
+
       getCountDB({
         collection: collectionName,
-        queryLike: tableControl[collectionName].search ? queryLike : null
+        condition,
+        queryLike: tableControl[collectionName].search || tableControl['user'].locationsFilter.length ? queryLike : null
       })
         .then(response => response.json())
         .then(data => {
@@ -168,12 +178,14 @@ function Users({ globalSearch, setGeneralSearch, user }) {
           }))
         });
 
+    
       getDBComplex({
         collection: collectionName,
+        condition,
         limit: tableControl[collectionName].rowsPerPage,
         skip: tableControl[collectionName].rowsPerPage * tableControl[collectionName].page,
         sort: [{ key: tableControl[collectionName].orderBy, value: tableControl[collectionName].order }],
-        queryLike: tableControl[collectionName].search /* || tableControl['user'].locationsFilter.length */ ? queryLike : null
+        queryLike: tableControl[collectionName].search || tableControl['user'].locationsFilter.length ? queryLike : null
       })
         .then(response => response.json())
         .then(data => {
@@ -203,7 +215,7 @@ function Users({ globalSearch, setGeneralSearch, user }) {
 
   useEffect(() => {
     loadUsersData('user');
-  }, [tableControl.user.page, tableControl.user.rowsPerPage, tableControl.user.order, tableControl.user.orderBy, tableControl.user.search, tableControl.user.locationsFilter]);
+  }, [tableControl.user.page, tableControl.user.rowsPerPage, tableControl.user.order, tableControl.user.orderBy, tableControl.user.search, tableControl.user.locationsFilter, userLocations]);
 
   useEffect(() => {
     loadUsersData('userProfiles');
@@ -226,6 +238,19 @@ function Users({ globalSearch, setGeneralSearch, user }) {
       }, 800);
     }
   }, [globalSearch.tabIndex, globalSearch.searchValue]);
+
+  useEffect(() => {
+    const urls = window.location.search.split('=');
+    const idUser = urls[1];
+
+    if (idUser) {
+      setControl(prev => ({
+        ...prev,
+        idUser: [idUser],
+        openUsersModal: true,
+      }));
+    }
+  }, [window.location.search]);
 
   const [control, setControl] = useState({
     idUserProfile: null,

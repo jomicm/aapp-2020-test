@@ -57,13 +57,15 @@ class UserProfile extends React.Component {
               <div className='kt-user-card__name'>{user.fullname}</div>
               <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
                 <div className='kt-user-card__name' style={{ fontSize: '10px' }}>{user.email}</div>
-                <Link
-                  className='kt-user-card__name'
-                  to="/users"
-                  style={{ fontSize: '10px', textDecoration: 'underline' }}
-                >
-                  Go to profile
-                </Link>
+                {user.profilePermissions.users?.includes('view') && (
+                  <Link
+                    className='kt-user-card__name'
+                    to={`users?id=${user.id}`}
+                    style={{ fontSize: '10px', textDecoration: 'underline' }}
+                  >
+                    Go to profile
+                  </Link>
+                )}
               </div>
             </div>
           </div>
