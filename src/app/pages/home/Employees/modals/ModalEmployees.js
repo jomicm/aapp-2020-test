@@ -23,12 +23,13 @@ import { CustomFieldsPreview } from '../../constants';
 import ImageUpload from '../../Components/ImageUpload'
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import {
+  getDB,
   getOneDB,
-  updateDB,
   postDB,
-  getDB
+  updateDB
 } from '../../../../crud/api';
 import AssetTable from '../components/AssetTable';
+import ModalYesNo from '../../Components/ModalYesNo'
 import ModalAssignmentReport from './ModalAssignmentReport';
 
 const styles5 = (theme) => ({
@@ -129,6 +130,9 @@ const ModalEmployees = ({
 
   const [assetsBeforeSaving, setAssetsBeforeSaving] = useState([]);
   const [assetsToDelete, setAssetsToDelete] = useState([]);
+  const [showAssignedConfirmation, setShowAssignedConfirmation] = useState(false);
+  const [assetsAssigned, setAssetsAssigned] = useState([]);
+  const [confirmationText, setConfirmationText] = useState('');
 
   /* General */
 
@@ -291,6 +295,7 @@ const ModalEmployees = ({
     setLayoutSelected(null);
     setAssetsBeforeSaving([]);
     setAssetsToDelete([]);
+    setAssetsAssigned([]);
     setFormValidation({
       enabled: false,
       isValidForm: false
@@ -300,34 +305,53 @@ const ModalEmployees = ({
       initial: {},
       removed: {}
     });
+    setShowAssignedConfirmation(false);
+    setConfirmationText('');
+  };
+
+  const createAssetRow = (id, name, brand, model, assigned, EPC, serial) => {
+    return { id, name, brand, model, assigned, EPC, serial };
   };
 
   const handleOnAssetFinderSubmit = (filteredRows) => {
+    let assetsAlreadyAssigned = [];
     filteredRows.rows.map((rowTR) => {
       if (!assetsBeforeSaving.find((row) => row.id === rowTR.id)) {
         getOneDB('assets/', rowTR.id)
           .then(response => response.json())
           .then(data => {
-            const res = data.response;
-            if (!data.response.parent) {
+            const { response } = data;
+            if (!response.assigned) {
               setAssetsBeforeSaving(prev => [
                 ...prev,
-                {
-                  id: res._id,
-                  name: res.name,
-                  brand: res.brand,
-                  model: res.model,
-                  assigned: false,
-                  EPC: res.EPC,
-                  serial: res.serial,
-                }
+                createAssetRow(response._id, response.name, response.brand, response.model, false, response.EPC, response.serial)
               ]);
               return;
             }
 
-            dispatch(showErrorAlert());
+            const obj = createAssetRow(response._id, response.name, response.brand, response.model, false, response.EPC, response.serial);
+
+            assetsAlreadyAssigned.push({
+              ...obj,
+              employeeId: response.assigned,
+              employeeName: response.assignedTo
+            });
           })
-          .catch(error => { })
+          .catch(error => console.log(error))
+          .finally(() => {
+            if (assetsAlreadyAssigned.length) {
+              setAssetsAssigned(assetsAlreadyAssigned);
+              setShowAssignedConfirmation(true);
+              const text = assetsAlreadyAssigned.map(({ name, employeeName }) => (
+                <span> {name} - {employeeName || 'No Employee Name Founded'} <br /> </span>
+              ));
+              setConfirmationText((
+                <>
+                  {text}
+                </>
+              ))
+            }
+          });
       }
     });
   };
@@ -337,7 +361,9 @@ const ModalEmployees = ({
       if (row.id !== id) {
         return row;
       }
-      setAssetsToDelete(prev => [...prev, row]);
+      if (!row.employeeId) {
+        setAssetsToDelete(prev => [...prev, row]);
+      }
     });
     setAssetsBeforeSaving(restRows);
   };
@@ -350,6 +376,26 @@ const ModalEmployees = ({
     }
 
     const fileExt = getFileExtension(image);
+
+    const reassignedAssets = assetsBeforeSaving.filter(({ employeeId }) => employeeId) || [];
+    console.log(reassignedAssets);
+
+    if (reassignedAssets.length) {
+      reassignedAssets.forEach(({ id, employeeId }) => {
+        getOneDB('employees/', employeeId)
+          .then((response) => response.json())
+          .then((data) => {
+            const { response: { assetsAssigned } } = data;
+            const newAssetsAssigned = assetsAssigned.filter(({ id: assetId }) => id !== assetId);
+            updateDB('employees/', { assetsAssigned: newAssetsAssigned }, employeeId)
+              .catch((error) => console.log(error));
+          })
+          .catch((error) => console.log(error));
+      })
+    }
+
+    const parseAssetsAssigned = assetsBeforeSaving.map(({ id, name, brand, model, assigned, EPC, serial }) => createAssetRow(id, name, brand, model, assigned, EPC, serial));
+
     const body = {
       ...values,
       customFieldsTab,
@@ -357,7 +403,7 @@ const ModalEmployees = ({
       locationsTable,
       layoutSelected,
       fileExt,
-      assetsAssigned: assetsBeforeSaving
+      assetsAssigned: parseAssetsAssigned
     };
 
     if (!id) {
@@ -526,6 +572,22 @@ const ModalEmployees = ({
 
   return (
     <div style={{ width: '1000px' }}>
+      <ModalYesNo
+        message={confirmationText}
+        onCancel={() => {
+          setShowAssignedConfirmation(false);
+          setAssetsAssigned([]);
+        }}
+        onOK={() => {
+          const parseReassignedRows = assetsAssigned.map(({ id, name, brand, model, assigned, EPC, serial, employeeId }) => ({ ...createAssetRow(id, name, brand, model, assigned, EPC, serial), employeeId }));
+          console.log(parseReassignedRows);
+          setAssetsBeforeSaving(prev => [...prev, ...parseReassignedRows]);
+          setShowAssignedConfirmation(false);
+          setAssetsAssigned([]);
+        }}
+        showModal={showAssignedConfirmation}
+        title="Assets already assigned. Do you want to reassign them to you?"
+      />
       <ModalAssignmentReport
         assetRows={assetsBeforeSaving}
         htmlPreview={htmlPreview}

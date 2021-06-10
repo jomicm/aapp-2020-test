@@ -160,6 +160,8 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       values.selectedBoss = { ...values.selectedBoss, name, lastName };
     }
 
+    console.log(body.profilePermissions);
+
     if (!id) {
       body.idUserProfile = idUserProfile;
       postDBEncryptPassword('user', body)
@@ -186,14 +188,17 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     
     handleCloseModal();
 
-    if (id) {
-      console.log(initialProfilePermissions, body.profilePermissions);
+    if (id) {;
       if (initialProfilePermissions !== body.profilePermissions && id[0] === user.id) {
-        dispatch(fulfillUser({ ...user, profilePermissions: body.profilePermissions }));
-        window.location.reload();
-      }   
+        console.log({ ...user, name: body.name, lastName: body.lastName, email: body.email, fullName: `${body.name} ${body.lastName}`, profilePermissions: body.profilePermissions });
+        dispatch(fulfillUser({ ...user, name: body.name, lastName: body.lastName, email: body.email, fullName: `${body.name} ${body.lastName}`, profilePermissions: body.profilePermissions }));
+        updateCurrentUserPic(id[0], fileExt);
+        setTimeout(() => window.location.reload(), 1000);
+      } else if (id[0] === user.id) {
+        dispatch(fulfillUser({ ...user, name: body.name, lastName: body.lastName, fullname: `${body.name} ${body.lastName}`, email: body.email }));
+        updateCurrentUserPic(id[0], fileExt);
+      }
     }
-
   };
 
   const [image, setImage] = useState(null);
