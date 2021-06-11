@@ -29,11 +29,11 @@ const Processes = (props) => {
   const { showDeletedAlert, showErrorAlert  } = actions;
   const [tab, setTab] = useState(0);
 
-  const createProcessStageRow = (id, name, fn, type, custom, notification, creator, creation_date) => {
-    return { id, name, function: fn, type, custom, notification, creator, creation_date };
+  const createProcessStageRow = (id, name, fn, type, custom, notification, creator, creation_date, updateDate) => {
+    return { id, name, function: fn, type, custom, notification, creator, creation_date, updateDate };
   };
-  const createProcessRow = (id, name, numberOfStages, creator, creation_date) => {
-    return { id, name, numberOfStages, creator, creation_date };
+  const createProcessRow = (id, name, numberOfStages, creator, creation_date, updateDate) => {
+    return { id, name, numberOfStages, creator, creation_date, updateDate};
   };
 
   const processStagesHeadRows = [
@@ -43,7 +43,8 @@ const Processes = (props) => {
     { id: 'custom', numeric: false, disablePadding: false, label: 'Custom' },
     { id: 'notification', numeric: false, disablePadding: false, label: 'Notification' },
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator' },
-    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date' }
+    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date' },
+    { id: "updateDate", numeric: false, disablePadding: false, label: "Update Date", searchByDisabled: true}
   ];
 
   const liveProcessesHeadRows = [
@@ -61,7 +62,8 @@ const Processes = (props) => {
     { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
     { id: 'numberOfStages', numeric: false, disablePadding: false, label: 'Number of Stages' },
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
-    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
+    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true },
+    { id: "updateDate", numeric: false, disablePadding: false, label: "Update Date", searchByDisabled: true}
   ];
 
   const [tableControl, setTableControl] = useState({
@@ -131,17 +133,19 @@ const Processes = (props) => {
         .then(data => {
           if (collectionName === 'processStages') {
             const rows = data.response.map(row => {
-              const { functions, selectedFunction, types, selectedType, customFieldTabs, creationUserFullName, creationDate } = row;
+              const { functions, selectedFunction, types, selectedType, customFieldTabs, creationUserFullName, creationDate, updateDate } = row;
               const isCustom = String(!isEmpty(customFieldTabs)).toUpperCase();
-              const date = utcToZonedTime(creationDate).toLocaleString();
-              return createProcessStageRow(row._id, row.name, functions[selectedFunction], types[selectedType], isCustom, 'FALSE', creationUserFullName, date);
+              const update_date = String(new Date(updateDate)).split('GMT')[0];
+              const creation_date = String(new Date(creationDate)).split('GMT')[0];
+              return createProcessStageRow(row._id, row.name, functions[selectedFunction], types[selectedType], isCustom, 'FALSE', creationUserFullName, creation_date, update_date);
             });
             setControl(prev => ({ ...prev, processStagesRows: rows, processStagesRowsSelected: [] }));
           }
           if (collectionName === 'processes') {
             const rows = data.response.map(row => {
-              const date = utcToZonedTime(row.creationDate).toLocaleString();
-              return createProcessRow(row._id, row.name, row.processStages.length || 'N/A', row.creationUserFullName, date);
+              const update_date = String(new Date(row.updateDate)).split('GMT')[0];
+              const creation_date = String(new Date(row.creationDate)).split('GMT')[0];
+              return createProcessRow(row._id, row.name, row.processStages.length || 'N/A', row.creationUserFullName, creation_date, update_date);
             });
             setControl(prev => ({ ...prev, processRows: rows, processRowsSelected: [] }));
           }

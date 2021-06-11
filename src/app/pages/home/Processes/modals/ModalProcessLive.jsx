@@ -11,6 +11,7 @@ import {
   Paper,
   Tab,
   Tabs,
+  TextField,
   Typography,
   FormControl,
   InputLabel,
@@ -22,17 +23,17 @@ import {
   useTheme,
   makeStyles
 } from "@material-ui/core/styles";
-import { forEach, omit, pick } from "lodash";
+import { omit, pick, uniq } from "lodash";
 import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
 import { actions } from '../../../../store/ducks/general.duck';
-import { postDB, getDB, getOneDB, updateDB, postFILE, getDBComplex } from '../../../../crud/api';
+import { postDB, getDB, getOneDB, updateDB, deleteDB, postFILE, getDBComplex, getCountDB } from '../../../../crud/api';
 import CircularProgressCustom from '../../Components/CircularProgressCustom';
 import CustomFields from '../../Components/CustomFields/CustomFields';
 import { CustomFieldsPreview } from '../../constants';
 import { getCurrentDateTime, simplePost, getLocationPath } from '../../utils';
 import AssetFinderPreview from '../../Components/AssetFinderPreview';
-import TableComponent from '../../Components/TableComponent';
+import TableComponent2 from '../../Components/TableComponent2';
 import { collections } from '../../constants';
 import LiveProcessTab from '../components/LiveProcessTab.jsx';
 import { transformProcess } from './utils';
@@ -100,6 +101,10 @@ const useStyles4 = makeStyles(theme => ({
   root: {
     backgroundColor: theme.palette.background.paper,
     width: 1000
+  },
+  subTab: {
+    backgroundColor: theme.palette.background.paper,
+    width: '80%'
   }
 }));
 
@@ -112,20 +117,27 @@ const useStyles = makeStyles(theme => ({
   textField: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
-    width: 200
+    width: '400px',
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between'
   },
   dense: {
-    marginTop: 19
+    marginTop: 19,
   },
   menu: {
-    width: 200
+    width: '100%',
+    marginRight: '200px'
+  },
+  dueDate: {
+    width: '100%'
   }
 }));
 
 const ModalProcessLive = (props) => {
   const { showModal, setShowModal, reloadTable, id, user } = props;
   const dispatch = useDispatch();
-  const { showCustomAlert } = actions;
+  const { showCustomAlert, showErrorAlert } = actions;
   // Example 4 - Tabs
   const [loading, setLoading] = useState(false);
   const classes4 = useStyles4();
@@ -133,8 +145,11 @@ const ModalProcessLive = (props) => {
   const [value4, setValue4] = useState(0);
   const [stageTabSelected, setStageTabSelected] = useState(0);
   const [customTabSelected, setCustomTabSelected] = useState(0);
+  const [assetFinderTab, setAssetFinderTab] = useState(0);
   const [locationsAssetRepository, setLocationsAssetRepository] = useState([]);
   const [allLocations, setAllLocations] = useState([]);
+  const [allStages, setAllStages] = useState([]);
+  const [dueDate, setDueDate] = useState(undefined);
 
   function handleChange4(event, newValue) {
     setValue4(newValue);
@@ -145,6 +160,9 @@ const ModalProcessLive = (props) => {
   }
   const handleChangeCustomFieldTab = (event, newValue) => {
     setCustomTabSelected(newValue);
+  }
+  const handleChangeAssetFinder = (event, newValue) => {
+    setAssetFinderTab(newValue);
   }
   function handleChangeIndex4(index) {
     setValue4(index);
@@ -175,6 +193,9 @@ const ModalProcessLive = (props) => {
   };
 
   const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
+    if(!Object.keys(customFieldsTab).length){
+      return;
+    }
     const colValue = ['left', 'right'];
     const customFieldsTabTmp = { ...customFieldsTab };
 
@@ -359,9 +380,18 @@ const ModalProcessLive = (props) => {
     const body = {
       ...values,
       cartRows,
-      requestUser: pick(user, ['email', 'id', 'lastName', 'name'])
+      requestUser: pick(user, ['email', 'id', 'lastName', 'name']),
+      dueDate,
     };
     if (!id) {
+      if(processes.find(({id}) => id === values.selectedProcess)?.processStages[0]?.isControlDueDate && !dueDate){
+        dispatch(showCustomAlert({
+          type: 'error',
+          open: true,
+          message: 'To start this process please specify a Due Date.'
+        }));
+        return;
+      }
       body.processData = transformProcess(processes, values.selectedProcess);
       const stageKeys = Object.keys(body.processData.stages);
       const allApprovals = stageKeys.map(e => (body.processData.stages[e].approvals)).flat().map(f => (f._id));
@@ -645,7 +675,8 @@ const ModalProcessLive = (props) => {
             fulfilled: false,
             fulfilledData: '',
             processId,
-            userId: targetUserInfo.id
+            userId: targetUserInfo.id, 
+            stageId,
           };
           simplePost(collections.processApprovals, approvalObj);
         }
@@ -668,18 +699,24 @@ const ModalProcessLive = (props) => {
   const finishProcess = (process, updateProcessStatus) => {
     const { cartRows, processData } = process;
     const { selectedProcessType } = processData;
-    const validAssets = extractValidAssets(cartRows, processData);
-    const validAssetsID = validAssets.map(({id}) => (id)); 
-    const invalidAssets = cartRows.filter(({id}) => !validAssetsID.includes(id)) || [];
-    if(invalidAssets.length <= 0 && validAssets.length > 0){
-      updateProcessStatus('approved');
+    var validAssets = [];
+    var validAssetsID = [];
+    var invalidAssets = [];
+    if(selectedProcessType !== 'short'){
+      validAssets = extractValidAssets(cartRows, processData);
+      validAssetsID = validAssets.map(({id}) => (id)); 
+      invalidAssets = cartRows.filter(({id}) => !validAssetsID.includes(id)) || [];
+      if(invalidAssets.length <= 0 && validAssets.length > 0){
+        updateProcessStatus('approved');
+      }
+      else if(invalidAssets.length > 0 && validAssets.length <= 0){
+        updateProcessStatus('rejected');
+      }
+      else if(invalidAssets.length > 0 && validAssets.length > 0){
+        updateProcessStatus('partiallyApproved');
+      }
     }
-    else if(invalidAssets.length > 0 && validAssets.length <= 0){
-      updateProcessStatus('rejected');
-    }
-    else if(invalidAssets.length > 0 && validAssets.length > 0){
-      updateProcessStatus('partiallyApproved');
-    }
+    
     const { dateFormatted, timeFormatted } = getCurrentDateTime();
 
     const finishActions = {
@@ -742,17 +779,17 @@ const ModalProcessLive = (props) => {
           message: `${validAssets.length} Assets Transferred!`
         }));
       },
-      short: () => {
-        validAssets.forEach( async ({ id, locationId: location, originalLocation, history = [] }) => {
+      short: async () => {
+        cartRows.forEach( async ({ id, locationId: location, originalLocation, history = [] }) => {
           const locationPath = await getLocationPath(location);
-          updateDB('assets/', { location, status: 'active', history: [...history, {processId: processInfo._id, processName: processInfo.processData.name, processType: processInfo.processData.selectedProcessType, label: `Moved from: ${originalLocation} to: ${locationPath}`, date: `${dateFormatted} ${timeFormatted}`}] } , id)
+          updateDB('assets/', { location, status: 'active', history: [...history, {processId: processData.id, processName: processData.name, processType: processData.selectedProcessType, label: `Moved from: ${originalLocation} to: ${locationPath}`, date: `${dateFormatted} ${timeFormatted}`}] } , id)
             .then(() => {})
             .catch(error => console.log(error));
         });
         dispatch(showCustomAlert({
           type: 'info',
           open: true,
-          message: `${validAssets.length} Assets Short Transferred!`
+          message: `${cartRows.length} Assets Short Transferred!`
         }));
       },
       maintenance: () => {
@@ -796,6 +833,63 @@ const ModalProcessLive = (props) => {
     return requestedAssetsIds.map((reqId) => cartRows.find(({ id }) => reqId === id));
   };
 
+  const stageGoBack = (currentStage) => {
+    const { goBackTo } = currentStage;
+    var temporalProcessData = {...processInfo.processData};
+    var temporalStages = {...processInfo.processData.stages};
+    const stagesToReset = [];
+
+    Object.keys(temporalStages).map((stageKey, ix) => {
+      if(processInfo.processData.currentStage - 1 >= ix){
+        stagesToReset.push(temporalStages[stageKey].stageId);
+        if(temporalStages[stageKey].stageId === goBackTo){
+          temporalProcessData.currentStage = ix + 1;
+        };
+        if(Object.keys(temporalStages[stageKey].customFieldsTab).length){
+          const thisStageCustomFields = allStages.find(({id}) => id === temporalStages[stageKey].stageId);
+          temporalStages[stageKey].customFieldsTab = thisStageCustomFields.customFieldsTab;
+        };
+        temporalStages[stageKey].stageFulfilled = false;
+        temporalStages[stageKey].stageInitialized = temporalStages[stageKey].stageId === goBackTo ? true : false;
+        temporalStages[stageKey].approvals.map((object) => {
+          object.fulfillDate = "";
+          object.fulfilled = false
+          delete object.cartRows
+        })
+      };
+    });
+     
+    const condition = [{'processId': processInfo._id }, { "stageId": { "$in": stagesToReset }}];
+    getDBComplex({ collection: 'processApprovals/', condition })
+      .then(response => response.json())
+      .then(data => {
+        const approvalsModified = data.response.map(({_id, stageId}) => {
+          if(stageId === goBackTo){
+            return updateDB('processApprovals/', { fulfilled: false }, _id)
+            .then(() => {})
+            .catch(error => console.log(error));
+          }
+          else {
+            return deleteDB('processApprovals/', _id)
+              .then((response) => console.log('Deleted', response))
+              .catch((error) => console.log("Error", error));
+          }
+        })
+        
+        Promise.all(approvalsModified).then(() => {
+          reloadTable();
+        })
+      })
+      .catch(error => console.log('error>', error));
+
+    temporalProcessData.stages = temporalStages;
+
+    updateDB('processLive/', { processData: temporalProcessData }, id[0])
+      .then(data => data.json())
+      .then(response => handleCloseModal())
+      .catch(error => showErrorAlert());
+  };
+
   const initializeStage = (process) => {
     const { processData, requestUser, _id: processId } = process;
     const nextStage = processData.currentStage + 1;
@@ -833,7 +927,10 @@ const ModalProcessLive = (props) => {
   };
 
   const handleCloseModal = () => {
+    setStageTabSelected(0);
+    setAssetFinderTab(0);
     setCartRows([]);
+    setProcessInfo({});
     setCustomFieldsTab({});
     // setProfilePermissions([]);
     setValues({ 
@@ -852,6 +949,158 @@ const ModalProcessLive = (props) => {
   const [processLayouts, setProcessLayouts] = useState([]);
   const [customFieldsTab, setCustomFieldsTab] = useState([]);
   const [customTabs, setCustomTabs] = useState([]);
+  const [userLocations, setUserLocations] = useState([]);
+
+  const [tableControl, setTableControl] = useState({
+    assets: {
+      collection: 'assets',
+      total: 0,
+      page: 0,
+      rowsPerPage: 5,
+      orderBy: 'name',
+      order: 1,
+      search: '',
+      searchBy: '',
+      locationsFilter: [],
+    },
+  });
+
+  const [control, setControl] = useState({
+    idAsset: null,
+    openAssetsModal: false,
+    openTreeView: false,
+    treeViewFiltering: [],
+    assetRows: [],
+    assetRowsSelected: [],
+  });
+
+  const locationsRecursive = (data, currentLocation, res) => {
+    const children = data.response.filter((e) => e.parent === currentLocation._id);
+
+    if (!children.length) {
+      return;
+    }
+
+    children.forEach((e) => {
+      if (!res.includes(e._id)) {
+        res.push(e._id);
+      }
+    });
+    children.forEach((e) => locationsRecursive(data, e, res));
+  };
+
+  const loadUserLocations = () => {
+    getOneDB('user/', user?.id)
+      .then((response) => response.json())
+      .then((data) => {
+        const locationsTable = data.response.locationsTable;
+        getDB('locationsReal')
+          .then((response) => response.json())
+          .then((data) => {
+            let res = [];
+            locationsTable.forEach((location) => {
+              const currentLoc = data.response.find((e) => e._id === location.parent);
+
+              if (!userLocations.includes(currentLoc._id)) {
+                res.push(currentLoc._id);
+              }
+
+              const children = data.response.filter((e) => e.parent === currentLoc._id);
+
+              if (children.length) {
+                children.forEach((e) => res.push(e._id));
+                children.forEach((e) => locationsRecursive(data, e, res));
+              }
+            });
+            const resFiltered = uniq(res);
+              setUserLocations(resFiltered);
+          })
+          .catch((error) => dispatch(showErrorAlert()));
+      })
+      .catch((error) => dispatch(showErrorAlert()));
+  };
+
+  const createAssetListRow = (id, name, brand, model, category, EPC, serial, originalLocation, history, fileExt) => {
+    return { id, name, brand, model, category, EPC, serial, originalLocation, history, fileExt};
+  };
+
+  const assetListHeadRows = [
+    { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
+    { id: 'brand', numeric: true, disablePadding: false, label: 'Brand' },
+    { id: 'model', numeric: true, disablePadding: false, label: 'Model' },
+    { id: 'assigned', numeric: false, disablePadding: false, label: 'Assigned'},
+    { id: 'EPC', numeric: true, disablePadding: false, label: 'EPC' },
+    { id: 'serial', numeric: true, disablePadding: false, label: 'Serial Number' },
+    { id: 'originalLocation', numeric: true, disablePadding: false, label: 'Original Location' },
+  ];
+
+  const loadAssetsData = (collectionNames = ['assets']) => {
+    
+    collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
+    collectionNames.forEach(collectionName => {
+      let queryLike = '';
+      if (collectionName === 'assets') {
+        if (tableControl.assets.locationsFilter.length) {
+          queryLike = tableControl.assets.locationsFilter.map(locationID => ({ key: 'location', value: locationID }))
+        }
+        else {
+          queryLike = tableControl.assets.searchBy ? (
+            [{ key: tableControl.assets.searchBy, value: tableControl.assets.search }]
+          ) : (
+            ['name', 'brand', 'model'].map(key => ({ key, value: tableControl.assets.search }))
+          )
+        }
+      }
+
+      getCountDB({
+        collection: collectionName,
+        queryLike: tableControl[collectionName].search || tableControl['assets'].locationsFilter.length ? queryLike : null,
+        condition: collectionName === 'assets' ? [{ "location": { "$in": userLocations }}] : null
+      })
+        .then(response => response.json())
+        .then(data => {
+          setTableControl(prev => ({
+            ...prev,
+            [collectionName]: {
+              ...prev[collectionName],
+              total: data.response.count
+            }
+          }));
+        });
+      
+      getDBComplex({
+        collection: collectionName,
+        limit: tableControl[collectionName].rowsPerPage,
+        skip: tableControl[collectionName].rowsPerPage * tableControl[collectionName].page,
+        sort: [{ key: tableControl[collectionName].orderBy, value: tableControl[collectionName].order }],
+        queryLike: tableControl[collectionName].search || tableControl['assets'].locationsFilter.length ? queryLike : null,
+        condition: collectionName === 'assets' ? [{ "location": { "$in": userLocations }}, {"status" : "active"}] : null
+      })
+        .then(response => response.json())
+        .then(async data => {
+          if (collectionName === 'assets') {
+            const rows = await Promise.all(data.response.map( async row => {
+              const locationPath = await getLocationPath(row.location);
+              return createAssetListRow(row._id, row.name, row.brand, row.model, row.assigned, row.EPC, row.serial, locationPath, row.history, row.fileExt);
+            }));
+            setControl(prev => ({ ...prev, assetRows: rows, assetRowsSelected: [] }));
+          }
+        })
+        .catch(error => dispatch(showErrorAlert()));
+    });
+  };
+
+  useEffect(() => {
+    loadUserLocations()
+  }, []);
+
+  useEffect(() => {
+    loadAssetsData('assets');
+  }, [userLocations]);
+
+  useEffect(() => {
+    loadAssetsData('assets');
+  }, [tableControl.assets.page, tableControl.assets.rowsPerPage, tableControl.assets.order, tableControl.assets.orderBy, tableControl.assets.search, tableControl.assets.locationsFilter]);
 
   useEffect(() => {
     getDB('processes')
@@ -882,7 +1131,7 @@ const ModalProcessLive = (props) => {
       .then(response => response.json())
       .then(data => {
         const { types, customFieldsTab, notifications, approvals } = data.response;
-        const obj = pick(data.response, ['name', 'functions', 'selectedFunction', 'selectedType', 'isAssetEdition', 'isUserFilter', 'isCustomLockedStage', 'isSelfApprove', 'isSelfApproveContinue', 'isControlDueDate']);
+        const obj = pick(data.response, ['name', 'functions', 'select edFunction', 'selectedType', 'isAssetEdition', 'isUserFilter', 'isCustomLockedStage', 'isSelfApprove', 'isSelfApproveContinue', 'isControlDueDate']);
         setValues(obj);
         setTypes(types)
         setCustomFieldsTab(customFieldsTab);
@@ -898,13 +1147,13 @@ const ModalProcessLive = (props) => {
         const stagesKeys = Object.keys(data.response.processData.stages).filter(e => Number(e.split('_')[1]) <= data.response.processData.currentStage);
         var customtabs = [];
         var allCustomFields = [];
-        stagesKeys.map(e => {
-          const { stageName, customFieldsTab }= data.response.processData.stages[e];
+        stagesKeys.map((e, ix) => {
+          const { stageName, customFieldsTab } = data.response.processData.stages[e];
           const tabs = Object.keys(data.response.processData.stages[e].customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
           tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
           
           allCustomFields.push(customFieldsTab);
-          customtabs.push({stage: stageName, tabs});
+          customtabs.push({stage: stageName, tabs, index: ix});
         });
         setCustomTabs(customtabs);
         setCustomFieldsTab(allCustomFields);
@@ -930,7 +1179,15 @@ const ModalProcessLive = (props) => {
         setAllLocations(filtered);
       })
     .catch(error => console.log(error));
-    
+
+    getDB('processStages')
+      .then(response => response.json())
+      .then(data => {
+        const filtered = data.response.map(({_id : id, customFieldsTab}) => ({ id, customFieldsTab}));
+        setAllStages(filtered);
+      })
+    .catch(error => console.log(error));
+
   }, []);
 
   const [image, setImage] = useState(null);
@@ -947,7 +1204,9 @@ const ModalProcessLive = (props) => {
   //     setApprovals(values);
   // }
   const onSelectionChange = (selection) => {
-    
+    if(!selection){
+      return;
+    }
     setAssetsSelected(selection.rows || []);
   };
   const onAddAssetToCart = () => {
@@ -998,22 +1257,126 @@ const ModalProcessLive = (props) => {
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
                 <FormControl className={classes.textField} disabled={values.selectedProcess ? true : false }>
-                  <InputLabel htmlFor="age-simple">Select Process</InputLabel>
-                  <Select
-                    onChange={handleSelectProcessChange}
-                    value={values.selectedProcess}
-                  >
-                    {(processes || []).map(({ id, name }, ix) => (
-                      <MenuItem key={`opt-name-${ix}`} value={id}>{name}</MenuItem>
-                    ))}
-                  </Select>
+                  <div style={{width: '45%', marginRight: '5%'}}>
+                    <InputLabel htmlFor="age-simple">Select Process</InputLabel>
+                    <Select
+                      onChange={handleSelectProcessChange}
+                      value={values.selectedProcess}
+                      className={classes.menu}
+                    >
+                      {(processes || []).map(({ id, name }, ix) => (
+                        <MenuItem key={`opt-name-${ix}`} value={id}>{name}</MenuItem>
+                      ))}
+                    </Select>
+                  </div>
+                  {
+                    values.selectedProcess && processes.find(({id}) => id === values.selectedProcess)?.processStages[0]?.isControlDueDate && (
+                      <TextField
+                        label={'Due Date'}
+                        style={{
+                          width: '45%',
+                        }}
+                        type="date"
+                        inputProps={{
+                          min: new Date().toISOString().split('T')[0]
+                        }}
+                        value={dueDate}
+                        onChange={(event) => setDueDate(event.target.value)}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
+                        stlye={classes.dueDate}
+                      />
+                    )
+                  }
                 </FormControl>
                 <button type="button" onClick={onAddAssetToCart} className='btn btn-primary btn-elevate kt-login__btn-primary'>
                   <i className="la la-plus" /> Add Assets
                 </button>
               </div>
               {isAssetReference !== null &&
-                <AssetFinderPreview isAssetReference={isAssetReference} onSelectionChange={onSelectionChange}/>
+                <div style={{width: '100%'}}>
+                  <Paper className={classes4.subTab} style={{width: '100%'}}>
+                    <Tabs
+                    value={assetFinderTab}
+                    onChange={handleChangeAssetFinder}
+                    indicatorColor="primary"
+                    textColor="primary"
+                    variant="fullWidth"
+                  >
+                    <Tab label={'Find by Name'} />
+                    {
+                      !isAssetReference && <Tab label={'Find by Location'} />
+                    }
+                  </Tabs>
+                  </Paper>
+                  <SwipeableViews
+                  axis={theme4.direction === "rtl" ? "x-reverse" : "x"}
+                  index={assetFinderTab}
+                  onChangeIndex={handleChangeAssetFinder}
+                  >
+                    <Typography component="div" dir={theme4.direction} style={{ padding: 8 * 3 }}>
+                      <AssetFinderPreview isAssetReference={isAssetReference} onSelectionChange={onSelectionChange}/>
+                    </Typography>
+                    <Typography component="div" dir={theme4.direction} style={{ padding: 8 * 3 }}>
+                      <TableComponent2
+                        controlValues={tableControl.assets}
+                        disableActions
+                        justTreeView
+                        userLocations={userLocations}
+                        headRows={assetListHeadRows}
+                        locationControl={(locations) => {
+                          setTableControl(prev => ({
+                            ...prev,
+                            assets: {
+                              ...prev.assets,
+                              locationsFilter: locations
+                            }
+                          }))
+                        }}
+                        onAdd={() => {}}
+                        onDelete={() => {}}
+                        onEdit={() => {}}
+                        onSelect={(object) => onSelectionChange({rows: object})}
+                        paginationControl={({ rowsPerPage, page }) =>
+                          setTableControl(prev => ({
+                            ...prev,
+                            assets: {
+                              ...prev.assets,
+                              rowsPerPage: rowsPerPage,
+                              page: page,
+                            }
+                          }))
+                        }
+                        rows={control.assetRows}
+                        returnObjectOnSelect
+                        selectedObjects = {assetsSelected.rows || []}
+                        searchControl={({ value, field }) => {
+                          setTableControl(prev => ({
+                            ...prev,
+                            assets: {
+                              ...prev.assets,
+                              search: value,
+                              searchBy: field,
+                            }
+                          }))
+                        }}
+                        sortByControl={({ orderBy, order }) => {
+                          setTableControl(prev => ({
+                            ...prev,
+                            assets: {
+                              ...prev.assets,
+                              orderBy: orderBy,
+                              order: order,
+                            }
+                          }))
+                        }}
+                        title={'Assets Filter By Location'}
+                        treeView
+                      />
+                    </Typography>
+                  </SwipeableViews>
+                </div>
               }
             </div>
           </TabContainer4>
@@ -1040,6 +1403,7 @@ const ModalProcessLive = (props) => {
         >
           <TabContainer4 dir={theme4.direction}>
             <LiveProcessTab
+              goBackLogic = {stageGoBack}
               onSelectionChange={onSelectionChange}
               onSetRows={setCartRows}
               processInfo={processInfo}
@@ -1102,6 +1466,7 @@ const ModalProcessLive = (props) => {
                                 // customFieldIndex={props.customFieldIndex}
                                 onClick={() => alert(customField.content)}
                                 data={tab.content[colIndex]}
+                                disabled={customTabs[stageTabSelected].index < processInfo.processData.currentStage - 1}
                               />
                             ))}
                           </div>
@@ -1155,47 +1520,6 @@ const ModalProcessLive = (props) => {
     </div>
   )
 };
-
-const test = [{
-  brand: "Huawei",
-  id: "id0",
-  model: "x3",
-  name: "Router"
-}]
-
-const getColumns = (isAssetReference = true) => {
-  const assetReference = [
-    { id: "name", numeric: false, disablePadding: false, label: "Name" },
-    { id: "brand", numeric: false, disablePadding: false, label: "Brand" },
-    { id: "model", numeric: false, disablePadding: false, label: "Model" },
-  ];
-
-  if (isAssetReference) {
-    return assetReference;
-  } else {
-    return [
-      ...assetReference,
-      { id: "assigned", numeric: false, disablePadding: false, label: "Assigned" },
-      { id: "id", numeric: false, disablePadding: false, label: "EPC" },
-      { id: "sn", numeric: false, disablePadding: false, label: "Serial Number" }
-    ]
-  }
-};
-
-const createAssetCartRow = (id, name, brand, model, assigned, epc, sn) => {
-  return { id, name, brand, model, assigned, epc, sn };
-};
-
-const createAssetReferenceCartRow = (id, name, brand, model) => {
-  return { id, name, brand, model };
-};
-
-const processesHeadRows = [
-  { id: "name", numeric: false, disablePadding: false, label: "Name" },
-  { id: "numberOfStages", numeric: false, disablePadding: false, label: "Number of Stages" },
-  { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
-  { id: "creation_date", numeric: false, disablePadding: false, label: "Creation Date" }
-];
 
 const mapStateToProps = ({ auth: { user } }) => ({ user });
 

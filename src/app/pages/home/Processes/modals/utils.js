@@ -3,10 +3,10 @@ export const transformProcess = (processes, processId) => {
   const { id, name, selectedProcessType, processStages } = process;
 
   const stages = processStages.reduce((acu, cur, ix) => {
-    const { id: stageId, name: stageName, notifications: nots, approvals: apps, customFieldsTab } = cur;
+    const { id: stageId, name: stageName, notifications: nots, approvals: apps, customFieldsTab, goBackEnabled, goBackTo, isAssetEdition, isCustomLockedStage, isSelfApprove, isSelfApproveContinue, isControlDueDate } = cur;
     const notifications = nots.map((not) => ({ ...not, sent: false, sentDate: '' }));
     const approvals = apps.map((app) => ({ ...app, fulfilled: false, fulfillDate: '' }));
-    const stage = { stageId, stageName, notifications, approvals, customFieldsTab,  stageFulfilled: false, stageInitialized: false };
+    const stage = { stageId, stageName, notifications, approvals, customFieldsTab,  stageFulfilled: false, stageInitialized: false, goBackEnabled: goBackEnabled || false, goBackTo: goBackTo || '', isAssetEdition, isCustomLockedStage, isSelfApprove, isSelfApproveContinue, isControlDueDate };
 
     return { ...acu, [`stage_${ix + 1}`]: stage };
   }, {});

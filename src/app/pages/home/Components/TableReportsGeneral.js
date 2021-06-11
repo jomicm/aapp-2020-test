@@ -648,7 +648,7 @@ const TableReportsGeneral = props => {
                                   {columnPicker.filter((column) => column.visible).map((header, ix) =>
                                     <TableCell
                                       align={'left'}
-                                      component='th'
+                                      component={header.renderCell ? () => header.renderCell(row[header.id]) : 'th'}
                                       key={`cell-row${index}-${ix}`}
                                       padding={'default'}
                                       scope='row'
