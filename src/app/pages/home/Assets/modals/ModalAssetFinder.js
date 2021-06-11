@@ -60,7 +60,7 @@ const DialogActions5 = withStyles(theme => ({
 }))(DialogActions);
 
 export default function ModalAssetFinder({
-  showModal, setShowModal, onAssetFinderSubmit, id, userLocations
+ showModal, setShowModal, onAssetFinderSubmit, id, userLocations
 }) {
 
   /* States */

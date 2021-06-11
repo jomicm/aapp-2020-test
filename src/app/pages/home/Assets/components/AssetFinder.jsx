@@ -24,7 +24,8 @@ const AssetFinder = ({ setTableRowsInner = () => { }, userLocations }) => {
       .then(data => {
         const rows = data.response.map(row => {
           const { name, brand, model, EPC, _id: id, serial } = row;
-          return { id, name, brand, model, EPC, serial };
+          const parent = !!row.parent;
+          return { id, name, brand, model, parent, EPC, serial };
         });
         setAssetRows(rows);
       })
@@ -63,6 +64,7 @@ const getColumns = (isAssetReference = false) => {
   } else {
     return [
       ...assetReference,
+      { field: 'parent', headerName: 'Parent', width: 130 },
       { field: 'EPC', headerName: 'EPC', width: 200 },
       { field: 'serial', headerName: 'Serial Number', width: 200 }
     ];

@@ -659,13 +659,6 @@ const TableReportsGeneral = props => {
                                 </TableRow>
                               );
                             })}
-                          {
-                            rowsPerPage - rows.length > 0 && (
-                              <TableRow style={{ height: 49 * (rowsPerPage - rows.length), width: '100%' }}>
-                                <TableCell colSpan={100} />
-                              </TableRow>
-                            )
-                          }
                         </TableBody>
                       </>
                     )

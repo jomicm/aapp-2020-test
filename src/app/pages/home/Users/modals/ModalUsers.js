@@ -34,7 +34,6 @@ import LocationAssignment from '../components/LocationAssignment';
 import Permission from '../components/Permission';
 import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
 import { usePolicies } from '../../Components/Policies/hooks';
-
 const { apiHost, localHost } = hosts;
 
 const styles5 = theme => ({
@@ -185,7 +184,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
         })
         .catch(error => dispatch(showErrorAlert()));
     }
-    
+  
     handleCloseModal();
 
     if (id) {;
@@ -251,6 +250,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       isValidForm: false
     });
     setInitialProfilePermissions({});
+    window.history.replaceState({}, null, `${localHost}/usera`);
   };
 
   const [userProfilesFiltered, setUserProfilesFiltered] = useState([]);

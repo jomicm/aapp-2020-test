@@ -43,6 +43,7 @@ import './ModalAssetList.scss';
 import OtherModalTabs from '../components/OtherModalTabs';
 import { pick } from 'lodash';
 import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
+import ModalYesNo from '../../Components/ModalYesNo';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -141,6 +142,9 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   const [mapMarker, setMapMarker] = useState();
   const [assetsBeforeSaving, setAssetsBeforeSaving] = useState([]);
   const [assetsToDelete, setAssetsToDelete] = useState([]);
+  const [showAssignedConfirmation, setShowAssignedConfirmation] = useState(false);
+  const [assetsAssigned, setAssetsAssigned] = useState([]);
+  const [confirmationText, setConfirmationText] = useState('');
 
   // Example 4 - Tabs
   const classes4 = useStyles4();
@@ -156,6 +160,10 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   const [openHistory, setOpenHistory] = useState(false);
   const [customFieldsPathResponse, setCustomFieldsPathResponse] = useState();
   const [referenceImage, setReferenceImage] = useState('');
+
+  const createAssetRow = (id, name, brand, model, parent, EPC, serial) => {
+    return { id, name, brand, model, parent, EPC, serial };
+  };
 
   function handleChange5(event, newValue) {
     setValue5(newValue);
@@ -188,42 +196,47 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   };
 
   const handleOnAssetFinderSubmit = (filteredRows) => {
-    const errors = [];
+    let assetsAlreadyAssigned = [];
     filteredRows.rows.map((rowTR) => {
       if (!assetsBeforeSaving.find((row) => row.id === rowTR.id)) {
         getOneDB('assets/', rowTR.id)
           .then(response => response.json())
           .then(data => {
-            const res = data.response;
-            if (!res.parent) {
+            const { response } = data;
+            const { _id, name, brand, model, parent, serial, EPC } = response;
+            if (!parent) {
               setAssetsBeforeSaving(prev => [
                 ...prev,
-                {
-                  id: res._id,
-                  name: res.name,
-                  brand: res.brand,
-                  model: res.model,
-                  serial: res.serial,
-                  EPC: res.EPC,
-                }
+                createAssetRow(_id, name, brand, model, null, serial, EPC)
               ]);
             } else {
-              errors.push(res);
+              const obj = createAssetRow(_id, name, brand, model, parent, serial, EPC);
+              assetsAlreadyAssigned.push(obj);
             }
           })
           .catch(error => { })
-      }
-    });
-    setTimeout(() => {
-      if (errors.length) {
-        const assetsWithError = errors.map((asset) => Object.values(pick(asset, ['name', 'brand', 'model', 'serial', 'EPC'])).join(', '));
+          .finally(() => {
+            if (assetsAlreadyAssigned.length) {
+              setAssetsAssigned(assetsAlreadyAssigned);
+              setShowAssignedConfirmation(true);
+              const text = assetsAlreadyAssigned.map(({ name }) => (
+                <span> {name} <br /> </span>
+              ));
+              setConfirmationText((
+                <>
+                  {text}
+                </>
+              ))
+            }
+          });
+      } else {
         dispatch(showCustomAlert({
-          type: 'warning',
+          message: 'Asset already assigned to this asset',
           open: true,
-          message: `The following assets ${assetsWithError} already have a parent assigned`
+          type: 'warning'
         }));
       }
-    }, 500);
+    });
   };
 
   const handleOnDeleteAssetAssigned = (id) => {
@@ -231,7 +244,9 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       if (row.id !== id) {
         return row;
       }
-      setAssetsToDelete(prev => [...prev, row]);
+      if (!row.parentId) {
+        setAssetsToDelete(prev => [...prev, row]);
+      }
     });
     setAssetsBeforeSaving(restRows);
   };
@@ -474,13 +489,33 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
 
     handleChildrenOnSaving();
     const fileExt = getFileExtension(image);
+
+    const reassignedAssets = assetsBeforeSaving.filter(({ parent }) => parent) || [];
+    console.log(reassignedAssets);
+
+    if (reassignedAssets.length) {
+      reassignedAssets.forEach(({ id, parent }) => {
+        getOneDB('assets/', parent)
+          .then((response) => response.json())
+          .then((data) => {
+            const { response: { children } } = data;
+            const newChildren = children.filter(({ id: assetId }) => id !== assetId);
+            updateDB('assets/', { children: newChildren }, parent)
+              .catch((error) => console.log(error));
+          })
+          .catch((error) => console.log(error));
+      })
+    }
+
+    const parseAssetsAssigned = assetsBeforeSaving.map(({ id, name, brand, model, EPC, serial }) => ({ id, name, brand, model, EPC, serial }));
+
     const body = {
       ...values,
       customFieldsTab,
       fileExt,
       layoutCoords: layoutMarker ? layoutMarker : null,
       mapCoords: mapMarker ? mapMarker : null,
-      children: assetsBeforeSaving,
+      children: parseAssetsAssigned,
     };
 
     if (!id) {
@@ -554,7 +589,10 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     setAssetLocation([]);
     setAssetsBeforeSaving([]);
     setAssetsToDelete([]);
+    setAssetsAssigned([]);
     setReferenceImage('');
+    setShowAssignedConfirmation(false);
+    setConfirmationText('');
   };
 
   useEffect(() => {
@@ -680,11 +718,11 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
             imageURL: getImageURL(id, 'assets', fileExt),
           });
         }
-        if(customFieldsTab){
+        if (customFieldsTab) {
           const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
-        tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
-        setCustomFieldsTab(customFieldsTab);
-        setTabs(tabs);
+          tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
+          setCustomFieldsTab(customFieldsTab);
+          setTabs(tabs);
         }
       })
       .catch(error => {
@@ -708,36 +746,52 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
 
   return (
     <div style={{ width: '1000px' }}>
+      <ModalYesNo
+        message={confirmationText}
+        onCancel={() => {
+          setShowAssignedConfirmation(false);
+          setAssetsAssigned([]);
+        }}
+        onOK={() => {
+          const parseReassignedRows = assetsAssigned.map(({ id, name, brand, model, parent, EPC, serial }) => ({ ...createAssetRow(id, name, brand, model, parent, EPC, serial) }));
+          console.log(parseReassignedRows);
+          setAssetsBeforeSaving(prev => [...prev, ...parseReassignedRows]);
+          setShowAssignedConfirmation(false);
+          setAssetsAssigned([]);
+        }}
+        showModal={showAssignedConfirmation}
+        title="Assets already have a parent assigned. Do you want to reassign them to this asset?"
+      />
       <Dialog onClose={() => setOpenHistory(false)} aria-labelledby="simple-dialog-title" open={openHistory}>
         <DialogTitle id="simple-dialog-title">History</DialogTitle>
         {
           !values || !values.history && (
-            <div style={{padding: '10px', margin: '10px'}}>
+            <div style={{ padding: '10px', margin: '10px' }}>
               <Typography>This Asset has no History</Typography>
             </div>
           )
         }
         {
           <Timeline >
-          {
-            values?.history?.map(({processName,processType, date, label}) => (
-              <TimelineItem>
-                <TimelineOppositeContent>
-                  <Typography>{processName}</Typography>
-                  <Typography color="textSecondary">{processType}</Typography>
-                  <Typography color="textSecondary">{date}</Typography>
-                </TimelineOppositeContent>
-                <TimelineSeparator>
-                  <TimelineDot />
-                  <TimelineConnector />
-                </TimelineSeparator>
-                <TimelineContent>
-                  <Typography>{label}</Typography>
-                </TimelineContent>
-              </TimelineItem>
-            ))
-          }
-        </Timeline>
+            {
+              values?.history?.map(({ processName, processType, date, label }) => (
+                <TimelineItem>
+                  <TimelineOppositeContent>
+                    <Typography>{processName}</Typography>
+                    <Typography color="textSecondary">{processType}</Typography>
+                    <Typography color="textSecondary">{date}</Typography>
+                  </TimelineOppositeContent>
+                  <TimelineSeparator>
+                    <TimelineDot />
+                    <TimelineConnector />
+                  </TimelineSeparator>
+                  <TimelineContent>
+                    <Typography>{label}</Typography>
+                  </TimelineContent>
+                </TimelineItem>
+              ))
+            }
+          </Timeline>
         }
       </Dialog>
       <Dialog
