@@ -38,7 +38,7 @@ import { usePolicies } from '../Components/Policies/hooks';
 import './Assets.scss';
 
 //DB API methods
-import { deleteDB, getDBComplex, getCountDB, getDB, getOneDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB, getDB, getOneDB, updateDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 
 const useStyles = makeStyles((theme) => ({
@@ -251,7 +251,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
           ['description', 'depreciation'].map(key => ({ key, value: tableControl.categories.search }))
         )
       }
-      
+
       const kpi = kpiSelected || {};
       const list = kpi.value ? [{ "location": { "$in": userLocations } }, { 'status': kpi.value }] : [{ "location": { "$in": userLocations } }];
       const condition = collectionName === 'assets' ? list : null;
@@ -407,11 +407,46 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
           .then((data => {
             id.forEach(_id => {
               deleteDB(`${collection.name}/`, _id)
-                .then(_ => {
+                .then(response => response.json())
+                .then((data) => {
                   dispatch(showDeletedAlert());
                   const currentCollection = collection.name === 'assets' ? 'list' : collection.name;
                   executePolicies('OnDelete', 'assets', currentCollection, data.response);
                   loadAssetsData(collection.name);
+
+                  const { response: { value: { children, parent, assigned } } } = data;
+
+                  children.forEach(({ id: childId }) => {
+                    updateDB('assets/', { parent: null }, childId)
+                      .catch((error) => console.log(error));
+                  });
+
+                  if (parent) {
+                    getOneDB('assets/', parent)
+                      .then((response) => response.json())
+                      .then((data) => {
+                        const { response: { children } } = data;
+                        const newChildren = children.filter(({ id: childId }) => childId !== _id);
+                        updateDB('assets/', { children: newChildren }, parent)
+                          .catch((error) => console.log(error));
+                      })
+                      .catch((error) => console.log(error));
+                  }
+
+                  if (assigned) {
+                    if (assigned.length) {
+                      getOneDB('employees/', assigned)
+                        .then((response) => response.json())
+                        .then((data) => {
+                          const { response: { value: { assetsAssigned } } } = data;
+                          const list = assetsAssigned.filter(({ id: assignmentId }) => assignmentId !== _id);
+                          updateDB('employees/', { assetsAssigned: list }, assigned)
+                            .catch((error) => console.log(error));
+                        })
+                        .catch((error) => console.log(error));
+                    }
+                  }
+
                 })
                 .catch((_) => showErrorAlert());
             });

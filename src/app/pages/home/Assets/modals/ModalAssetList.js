@@ -178,7 +178,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     }
   };
 
-  const handleChildrenOnSaving = () => {
+  const handleChildrenOnSaving = (parentId) => {
     assetsToDelete.map(asset => {
       updateDB('assets/', { parent: null }, asset.id)
         .then((response) => { })
@@ -187,7 +187,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
         });
     });
     assetsBeforeSaving.map(asset => {
-      updateDB('assets/', { parent: id[0] }, asset.id)
+      updateDB('assets/', { parent: parentId }, asset.id)
         .then(response => { })
         .catch(error => {
           dispatch(showErrorAlert())
@@ -241,7 +241,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
 
   const handleOnDeleteAssetAssigned = (id) => {
     const restRows = assetsBeforeSaving.filter(row => {
-      if (row.id !== id) {
+      if (!id.includes(row.id)) {
         return row;
       }
       if (!row.parentId) {
@@ -487,20 +487,26 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       return;
     }
 
-    handleChildrenOnSaving();
     const fileExt = getFileExtension(image);
 
-    const reassignedAssets = assetsBeforeSaving.filter(({ parent }) => parent) || [];
-    console.log(reassignedAssets);
+    let reassignedAssets = [];
+    assetsBeforeSaving.forEach(({ parent, id: assetId }) => {
+      const index = reassignedAssets.findIndex((element) => element.parentId === parent);
+      if (index !== - 1) {
+        reassignedAssets[index].assets = [...reassignedAssets[index].assets, assetId];
+      } else if (parent) {
+        reassignedAssets.push({ parentId: parent, assets: [assetId] });
+      }
+    });
 
     if (reassignedAssets.length) {
-      reassignedAssets.forEach(({ id, parent }) => {
-        getOneDB('assets/', parent)
+      reassignedAssets.forEach(({ assets, parentId }) => {
+        getOneDB('assets/', parentId)
           .then((response) => response.json())
           .then((data) => {
             const { response: { children } } = data;
-            const newChildren = children.filter(({ id: assetId }) => id !== assetId);
-            updateDB('assets/', { children: newChildren }, parent)
+            const newChildren = children.filter(({ id: assetId }) => !assets.includes(assetId));
+            updateDB('assets/', { children: newChildren }, parentId)
               .catch((error) => console.log(error));
           })
           .catch((error) => console.log(error));
@@ -523,9 +529,9 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       postDB('assets', body)
         .then(data => data.json())
         .then(response => {
-          console.log(`Post`);
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
+          handleChildrenOnSaving(_id);
           saveAndReload('assets', _id);
           executePolicies('OnAdd', 'assets', 'list', policies);
         })
@@ -534,10 +540,35 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
         });
     } else {
       updateDB('assets/', body, id[0])
-        .then(response => {
+        .then(response => response.json())
+        .then((data) => {
           dispatch(showUpdatedAlert());
+          handleChildrenOnSaving(id[0]);
           saveAndReload('assets', id[0]);
           executePolicies('OnEdit', 'assets', 'list', policies);
+
+          const { response: { value: { assigned } } } = data;
+
+          if (assigned) {
+            if (assigned.length) {
+              getOneDB('employees', assigned)
+                .then((response) => response.json())
+                .then((data) => {
+                  const { response: { assetsAssigned } } = data;
+                  let newAssetsAssigned = [];
+                  assetsAssigned.forEach(({ id: assetId, name, brand, model, assigned, EPC, serial }) => {
+                    if (assetId === id[0]) {
+                      newAssetsAssigned.push({ id: assetId, name: body.name, brand, model, assigned, EPC, serial: body.serial });
+                    } else {
+                      newAssetsAssigned.push({ assetId, name, brand, model, assigned, EPC, serial });
+                    }
+                  });
+                  updateDB('employees/', { assetsAssigned: newAssetsAssigned }, assigned)
+                    .catch((error) => console.log(error));
+                })
+                .catch((error) => console.log(error));
+            }
+          }
         })
         .catch(error => {
           dispatch(showErrorAlert())
@@ -754,7 +785,6 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
         }}
         onOK={() => {
           const parseReassignedRows = assetsAssigned.map(({ id, name, brand, model, parent, EPC, serial }) => ({ ...createAssetRow(id, name, brand, model, parent, EPC, serial) }));
-          console.log(parseReassignedRows);
           setAssetsBeforeSaving(prev => [...prev, ...parseReassignedRows]);
           setShowAssignedConfirmation(false);
           setAssetsAssigned([]);

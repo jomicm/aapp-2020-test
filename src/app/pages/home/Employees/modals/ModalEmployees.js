@@ -175,12 +175,12 @@ const ModalEmployees = ({
 
   const handleAssignmentsOnSaving = (id) => {
     assetsToDelete.map(asset => {
-      updateDB('assets/', { assigned: null }, asset.id)
+      updateDB('assets/', { assigned: null, assignedTo: "" }, asset.id)
         .then((response) => { })
         .catch(error => dispatch(showErrorAlert()));
     });
     assetsBeforeSaving.map(asset => {
-      updateDB('assets/', { assigned: id }, asset.id)
+      updateDB('assets/', { assigned: id, assignedTo: `${values.name} ${values.lastName} <${values.email}>` }, asset.id)
         .then(response => { })
         .catch(error => dispatch(showErrorAlert()));
     });
@@ -352,13 +352,19 @@ const ModalEmployees = ({
               ))
             }
           });
+      } else {
+        dispatch(showCustomAlert({
+          message: 'Asset already assigned to this employee',
+          open: true,
+          type: 'warning'
+        }));
       }
     });
   };
 
   const handleOnDeleteAssetAssigned = (id) => {
     const restRows = assetsBeforeSaving.filter(row => {
-      if (row.id !== id) {
+      if (!id.includes(row.id)) {
         return row;
       }
       if (!row.employeeId) {
@@ -377,16 +383,24 @@ const ModalEmployees = ({
 
     const fileExt = getFileExtension(image);
 
-    const reassignedAssets = assetsBeforeSaving.filter(({ employeeId }) => employeeId) || [];
-    console.log(reassignedAssets);
+    let reassignedAssets = [];
+
+    assetsBeforeSaving.forEach(({ employeeId, id: assetId }) => {
+      const index = reassignedAssets.findIndex((element) => element.employeeId === employeeId);
+      if (index !== - 1) {
+        reassignedAssets[index].assets = [...reassignedAssets[index].assets, assetId];
+      } else if (employeeId) {
+        reassignedAssets.push({ employeeId, assets: [assetId] });
+      }
+    });
 
     if (reassignedAssets.length) {
-      reassignedAssets.forEach(({ id, employeeId }) => {
+      reassignedAssets.forEach(({ assets, employeeId }) => {
         getOneDB('employees/', employeeId)
           .then((response) => response.json())
           .then((data) => {
             const { response: { assetsAssigned } } = data;
-            const newAssetsAssigned = assetsAssigned.filter(({ id: assetId }) => id !== assetId);
+            const newAssetsAssigned = assetsAssigned.filter(({ id: assetId }) =>!assets.includes(assetId));
             updateDB('employees/', { assetsAssigned: newAssetsAssigned }, employeeId)
               .catch((error) => console.log(error));
           })

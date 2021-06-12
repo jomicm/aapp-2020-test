@@ -325,7 +325,12 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
                   loadEmployeesData(collection.name);
 
                   if (collection.name === 'employees') {
-                    const { response: { value: { layoutSelected } } } = data;
+                    const { response: { value: { layoutSelected, assetsAssigned } } } = data;
+
+                    assetsAssigned.forEach(({ id: assetId }) => {
+                      updateDB('assets/', { assigned: null, assignedTo: "" }, assetId)
+                        .catch((error) => console.log(error));
+                    });
 
                     if (layoutSelected) {
                       getOneDB('settingsLayoutsEmployees/', layoutSelected.value)
