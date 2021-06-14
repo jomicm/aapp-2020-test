@@ -29,11 +29,11 @@ const Processes = (props) => {
   const { showDeletedAlert, showErrorAlert  } = actions;
   const [tab, setTab] = useState(0);
 
-  const createProcessStageRow = (id, name, fn, type, custom, notification, creator, creation_date, updateDate) => {
-    return { id, name, function: fn, type, custom, notification, creator, creation_date, updateDate };
+  const createProcessStageRow = (id, name, fn, type, custom, notification, creator, creationDate, updateDate) => {
+    return { id, name, function: fn, type, custom, notification, creator, creationDate, updateDate };
   };
-  const createProcessRow = (id, name, numberOfStages, creator, creation_date, updateDate) => {
-    return { id, name, numberOfStages, creator, creation_date, updateDate};
+  const createProcessRow = (id, name, numberOfStages, creator, creationDate, updateDate) => {
+    return { id, name, numberOfStages, creator, creationDate, updateDate};
   };
 
   const processStagesHeadRows = [
@@ -43,7 +43,7 @@ const Processes = (props) => {
     { id: 'custom', numeric: false, disablePadding: false, label: 'Custom' },
     { id: 'notification', numeric: false, disablePadding: false, label: 'Notification' },
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator' },
-    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date' },
+    { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date' },
     { id: "updateDate", numeric: false, disablePadding: false, label: "Update Date", searchByDisabled: true}
   ];
 
@@ -55,14 +55,14 @@ const Processes = (props) => {
     { id: 'approvals', numeric: false, disablePadding: false, label: 'Approvals' },
     { id: 'status', numeric: false, disablePadding: false, label: 'Status' },
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
-    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
+    { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
   ];
 
   const processesHeadRows = [
     { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
     { id: 'numberOfStages', numeric: false, disablePadding: false, label: 'Number of Stages' },
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
-    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true },
+    { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true },
     { id: "updateDate", numeric: false, disablePadding: false, label: "Update Date", searchByDisabled: true}
   ];
 
