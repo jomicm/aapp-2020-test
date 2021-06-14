@@ -540,7 +540,7 @@ const ModalProcessLive = (props) => {
     const { currentStage, totalStages } = processData;
     if (currentStage === 0) {
       const { selectedProcessType } = processData;
-      return selectedProcessType === 'short' ? finishProcess(process) : initializeStage(process);
+      return selectedProcessType === 'short' || processData.stages['stage_1'].isSelfApprove ? finishProcess(process) : initializeStage(process);
     }
     const currentStageData = getCurrentStageData(currentStage, processData);
     const isStageFulfilled = getIsStageFulfilled(currentStageData);
@@ -553,6 +553,11 @@ const ModalProcessLive = (props) => {
       initializeStage(process);
     } else {
       finishProcess(process, (status) => processData.processStatus = status);
+    }
+    const currentStageDataUpdated = getCurrentStageData(process.processData.currentStage, process.processData)
+    if(currentStageDataUpdated.isSelfApproveContinue || currentStageDataUpdated.approvals.length === 0){
+      applyApproval();
+      groomProcess(process);
     }
   };
 
@@ -699,23 +704,31 @@ const ModalProcessLive = (props) => {
   const finishProcess = (process, updateProcessStatus) => {
     const { cartRows, processData } = process;
     const { selectedProcessType } = processData;
-    const validAssets = extractValidAssets(cartRows, processData);
-    const validAssetsID = validAssets.map(({id}) => (id)); 
-    const invalidAssets = cartRows.filter(({id}) => !validAssetsID.includes(id)) || [];
-    if(invalidAssets.length <= 0 && validAssets.length > 0){
-      updateProcessStatus('approved');
+    const selfApprove = processData.stages['stage_1'].isSelfApprove || selectedProcessType === 'short';
+    var validAssets = [];
+    var validAssetsID = [];
+    var invalidAssets = [];
+    if(!selfApprove){
+      validAssets = extractValidAssets(cartRows, processData);
+      validAssetsID = validAssets.map(({id}) => (id)); 
+      invalidAssets = cartRows.filter(({id}) => !validAssetsID.includes(id)) || [];
+      if(invalidAssets.length <= 0 && validAssets.length > 0){
+        updateProcessStatus('approved');
+      }
+      else if(invalidAssets.length > 0 && validAssets.length <= 0){
+        updateProcessStatus('rejected');
+      }
+      else if(invalidAssets.length > 0 && validAssets.length > 0){
+        updateProcessStatus('partiallyApproved');
+      }
     }
-    else if(invalidAssets.length > 0 && validAssets.length <= 0){
-      updateProcessStatus('rejected');
-    }
-    else if(invalidAssets.length > 0 && validAssets.length > 0){
-      updateProcessStatus('partiallyApproved');
-    }
+    
+    const assetsToProcess = selfApprove ? cartRows : validAssets;
     const { dateFormatted, timeFormatted } = getCurrentDateTime();
 
     const finishActions = {
       creation: () => {
-        validAssets.forEach( async ({ name, brand, model, locationId: location, id: referenceId, history = [] }) => {
+        assetsToProcess.forEach( async ({ name, brand, model, locationId: location, id: referenceId, history = [], customFieldsTab}) => {
           const locationPath = await getLocationPath(location);
           const assetObj = {
             name,
@@ -724,13 +737,14 @@ const ModalProcessLive = (props) => {
             location,
             referenceId,
             status: 'active',
-            history: [...history, {processId: processInfo._id, processName: processInfo.processData.name, processType: processInfo.processData.selectedProcessType, label: `Asset Created at: ${locationPath}`, date: `${dateFormatted} ${timeFormatted}`}]
+            history: [...history, {processId: process._id, processName: processData.name, processType: processData.selectedProcessType, label: `Asset Created at: ${locationPath}`, date: `${dateFormatted} ${timeFormatted}`}],
+            customFieldsTab
           };
           simplePost('assets', assetObj);
           dispatch(showCustomAlert({
             type: 'info',
             open: true,
-            message: `${validAssets.length} Assets Created!`
+            message: `${assetsToProcess.length} Assets Created!`
           }));
         });
       },
@@ -742,15 +756,15 @@ const ModalProcessLive = (props) => {
               .catch(error => console.log(error));
           });
         }
-        validAssets.forEach(({ id, history = [] }) => {
-          updateDB('assets/', { status: 'decommissioned', history: [...history, {processId: processInfo._id, processName: processInfo.processData.name, processType: processInfo.processData.selectedProcessType, label: 'Decommissioned', date: `${dateFormatted} ${timeFormatted}`}]} , id)
+        assetsToProcess.forEach(({ id, history = [] }) => {
+          updateDB('assets/', { status: 'decommissioned', history: [...history, {processId: process._id, processName: processData.name, processType: processData.selectedProcessType, label: 'Decommissioned', date: `${dateFormatted} ${timeFormatted}`}]} , id)
             .then(() => {})
             .catch(error => console.log(error));
         });
         dispatch(showCustomAlert({
           type: 'info',
           open: true,
-          message: `${validAssets.length} Assets Decommissioned!`
+          message: `${assetsToProcess.length} Assets Decommissioned!`
         }));
       },
       movement: async () => {
@@ -761,48 +775,48 @@ const ModalProcessLive = (props) => {
               .catch(error => console.log(error));
           });
         }
-        validAssets.forEach( async ({ id, locationId: location, originalLocation, history = [] }) => {
+        assetsToProcess.forEach( async ({ id, locationId: location, originalLocation, history = [] }) => {
           const locationPath = await getLocationPath(location);
-          updateDB('assets/', { location, status: 'active', history: [...history, {processId: processInfo._id, processName: processInfo.processData.name, processType: processInfo.processData.selectedProcessType, label: `Moved from: ${originalLocation} to: ${locationPath}`, date: `${dateFormatted} ${timeFormatted}`}] } , id)
+          updateDB('assets/', { location, status: 'active', history: [...history, {processId: process._id, processName: processData.name, processType: processData.selectedProcessType, label: `Moved from: ${originalLocation} to: ${locationPath}`, date: `${dateFormatted} ${timeFormatted}`}] } , id)
             .then(() => {})
             .catch(error => console.log(error));
         });
         dispatch(showCustomAlert({
           type: 'info',
           open: true,
-          message: `${validAssets.length} Assets Transferred!`
+          message: `${assetsToProcess.length} Assets Transferred!`
         }));
       },
-      short: () => {
-        validAssets.forEach( async ({ id, locationId: location, originalLocation, history = [] }) => {
+      short: async () => {
+        assetsToProcess.forEach( async ({ id, locationId: location, originalLocation, history = [] }) => {
           const locationPath = await getLocationPath(location);
-          updateDB('assets/', { location, status: 'active', history: [...history, {processId: processInfo._id, processName: processInfo.processData.name, processType: processInfo.processData.selectedProcessType, label: `Moved from: ${originalLocation} to: ${locationPath}`, date: `${dateFormatted} ${timeFormatted}`}] } , id)
+          updateDB('assets/', { location, status: 'active', history: [...history, {processId: process._id, processName: processData.name, processType: processData.selectedProcessType, label: `Moved from: ${originalLocation} to: ${locationPath}`, date: `${dateFormatted} ${timeFormatted}`}] } , id)
             .then(() => {})
             .catch(error => console.log(error));
         });
         dispatch(showCustomAlert({
           type: 'info',
           open: true,
-          message: `${validAssets.length} Assets Short Transferred!`
+          message: `${assetsToProcess.length} Assets Short Transferred!`
         }));
       },
       maintenance: () => {
         if(invalidAssets.length){
           invalidAssets.forEach(({ id, history }) => {
-            updateDB('assets/', { status: 'active', history: [...history, {processId: processInfo._id, processName: processInfo.processData.name, processType: processInfo.processData.selectedProcessType, label: 'Maintenance was cancelled', date: `${dateFormatted} ${timeFormatted}`}]} , id)
+            updateDB('assets/', { status: 'active', history: [...history, {processId: process._id, processName: processData.name, processType: processData.selectedProcessType, label: 'Maintenance was cancelled', date: `${dateFormatted} ${timeFormatted}`}]} , id)
               .then(() => {})
               .catch(error => console.log(error));
           });
         }
-        validAssets.forEach(({ id, history }) => {
-          updateDB('assets/', { status: 'active', history: [...history, {processId: processInfo._id, processName: processInfo.processData.name, processType: processInfo.processData.selectedProcessType, label: 'Finshed Maintenance', date: `${dateFormatted} ${timeFormatted}`}]} , id)
+        assetsToProcess.forEach(({ id, history }) => {
+          updateDB('assets/', { status: 'active', history: [...history, {processId: process._id, processName: processData.name, processType: processData.selectedProcessType, label: 'Finshed Maintenance', date: `${dateFormatted} ${timeFormatted}`}]} , id)
             .then(() => {})
             .catch(error => console.log(error));
         });
         dispatch(showCustomAlert({
           type: 'info',
           open: true,
-          message: `${validAssets.length} Assets Finished Maintenance!`
+          message: `${assetsToProcess.length} Assets Finished Maintenance!`
         }));
       },
       default: () => {}
@@ -922,7 +936,9 @@ const ModalProcessLive = (props) => {
 
   const handleCloseModal = () => {
     setStageTabSelected(0);
+    setAssetFinderTab(0);
     setCartRows([]);
+    setProcessInfo({});
     setCustomFieldsTab({});
     // setProfilePermissions([]);
     setValues({ 
@@ -1086,6 +1102,10 @@ const ModalProcessLive = (props) => {
     loadUserLocations()
   }, []);
 
+  // useEffect(() => {
+  //   console.log('cartRows', cartRows); 
+  // }, [cartRows]);
+  
   useEffect(() => {
     loadAssetsData('assets');
   }, [userLocations]);
@@ -1208,6 +1228,15 @@ const ModalProcessLive = (props) => {
     setAssetsSelected([]);
   };
 
+  const handleChangeAssetValues = (values, id) => {
+    // console.log('values:', values, id);
+    const temporalCartRows = cartRows;
+    const indexToChange = temporalCartRows.findIndex(({_id}) => _id === id);
+    temporalCartRows[indexToChange] = values;
+
+    setCartRows(temporalCartRows);
+  };
+
   const renderTabs = () => {
     const tabs = (children) => (
       <Tabs
@@ -1220,7 +1249,6 @@ const ModalProcessLive = (props) => {
         {children}
       </Tabs>
     );
-
     const generateTabs = (tabs) => tabs.map((tab) => <Tab label={tab} />)
 
     if (!id) {
@@ -1236,8 +1264,7 @@ const ModalProcessLive = (props) => {
       const { selectedProcessType } = processes.find(({ id }) => id === event.target.value);
       setSelectedProcessType(selectedProcessType);
       setIsAssetReference(selectedProcessType === 'creation' ? true : false);
-    };
-
+    };    
     if (!id) {
       return (
         <SwipeableViews
@@ -1269,6 +1296,9 @@ const ModalProcessLive = (props) => {
                           width: '45%',
                         }}
                         type="date"
+                        inputProps={{
+                          min: new Date().toISOString().split('T')[0]
+                        }}
                         value={dueDate}
                         onChange={(event) => setDueDate(event.target.value)}
                         InputLabelProps={{
@@ -1378,6 +1408,7 @@ const ModalProcessLive = (props) => {
                 rows={cartRows}
                 onSetRows={setCartRows}
                 processType={selectedProcessType}
+                setAssetEditionValues={(values, id) => handleChangeAssetValues(values, id)}
               />
             }
           </TabContainer4>

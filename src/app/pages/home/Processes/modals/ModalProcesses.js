@@ -183,7 +183,6 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
   const classes = useStyles();
   const [values, setValues] = useState({
     name: "",
-    //
     layoutMessageName: '',
     selectedUserNotification: '',
     selectedUserApprovals: '',
@@ -310,8 +309,26 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
   };
 
   const handleSave = () => {
-    const body = { ...values, processStages, usersProcess, validMessages };
-
+    const processedStages = processStages.map((stage) => {
+      const processApprovals = [];
+      stage.approvals.map((approval) => {
+        if(!approval.isUserGroup){
+          processApprovals.push(approval)
+          return;
+        }
+        approval.members.map(({value, name, lastName, label}) => (
+          processApprovals.push({
+            _id: value,
+            name,
+            lastName,
+            email: label
+          })
+        ));
+      });
+      stage.approvals = processApprovals;
+      return stage;
+    });
+    const body = { ...values, processStages: processedStages, usersProcess, validMessages };
     if (!id) {
       body.idUserProfile = idUserProfile;
       postDB('processes', body)
@@ -334,8 +351,11 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     setStages([]);
     setValues({ 
       name: '',
+      layoutMessageName: '',
       selectedUserNotification: '',
-      selectedUserApprovals: ''
+      selectedUserApprovals: '',
+      notificationsForUsers: {},
+      selectedProcessType: ''
     }); 
     setCustomFieldsTab({});
     setProfilePermissions([]);
@@ -532,6 +552,11 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     setUsersProcess(prev => ({...prev, selectedUserNotification: '', selectedUserApproval: '' }))
   };
 
+  const handleStagesMovement = (stages) => {
+    const goBackReseted = stages.map((stage) => ({...stage, goBackEnabled: false, goBackTo: ''}));
+    setProcessStages(goBackReseted);
+   }
+
   const notificationsList = selectedStage && validMessages.notifications[selectedStage] ?
     (validMessages.notifications[selectedStage][validMessages.selectedUserNotifications] || []) : [];
   const approvalsList = selectedStage && validMessages.approvals[selectedStage] ?
@@ -631,7 +656,7 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                       <ProcessFlow
                         onClick={handleStageProcessClick}
                         processStages={processStages}
-                        setProcessStages={setProcessStages}
+                        setProcessStages={(stages) => handleStagesMovement(stages)}
                         handleRemoveProcessStage={handleRemoveProcessStage}
                       />
                     </div>

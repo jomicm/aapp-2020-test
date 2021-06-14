@@ -64,7 +64,7 @@ const LiveProcessTab = ({
     setSelection(rows);
   };
   const showButtons = () => {
-   if(!Object.keys(currentStage).length > 0){
+   if(!currentStage || !Object.keys(currentStage).length > 0){
      return false;
    };
 
@@ -94,7 +94,7 @@ const LiveProcessTab = ({
     var stageName;
     var stageNumber;
     Object.keys(processInfo.processData.stages).map((stage, ix) => {
-      if(processInfo.processData.stages[stage].stageId === currentStage.goBackTo){
+      if(processInfo.processData.stages[stage].stageId === currentStage?.goBackTo){
         stageName = processInfo.processData.stages[stage].stageName;
         stageNumber = ix + 1;
       }
@@ -203,6 +203,7 @@ const LiveProcessTab = ({
               rows={localCartRows}
               onSetRows={setCartRows}
               processType={processType}
+              processInfo={processInfo}
             />
           </div>
         </TabContainer>
