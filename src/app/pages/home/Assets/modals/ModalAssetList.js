@@ -37,7 +37,7 @@ import { actions } from '../../../../store/ducks/general.duck';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import ImageUpload from '../../Components/ImageUpload';
-import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import { getFileExtension, saveImage, getImageURL, getLocationPath } from '../../utils';
 import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetList.scss';
 import OtherModalTabs from '../components/OtherModalTabs';
@@ -131,7 +131,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadTable, id, policies, userLocations }) => {
+const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId, reloadTable, id, policies, userLocations }) => {
   const dispatch = useDispatch();
   const { showCustomAlert, showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
 
@@ -274,6 +274,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     total_price: 0,
     EPC: '',
     location: '',
+    locationPath: '',
     creator: '',
     creationDate: '',
     labeling_user: '',
@@ -311,13 +312,12 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       }
     },
     category: {
-      style: {
-        marginTop: '15px'
-      },
       componentProps: {
         onChange: handleChange('category'),
-        value: values.category,
-        isDisabled: true
+        value: values.category?.label,
+        inputProps: {
+          readOnly: true,
+        }
       }
     },
     status: {
@@ -333,6 +333,16 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       componentProps: {
         onChange: handleChange('serial'),
         value: values.serial,
+      }
+    },
+    parent: {
+      componentProps: {
+        onChange: handleChange('parent'),
+        value: values.parent,
+        inputProps: {
+          readOnly: true,
+          shrink: true
+        }
       }
     },
     responsible: {
@@ -419,6 +429,17 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       componentProps: {
         onChange: handleChange('location'),
         value: values.location,
+        hidden: true,
+        inputProps: {
+          readOnly: true,
+        }
+      }
+    },
+    locationPath: {
+      componentProps: {
+        onChange: handleChange('locationPath'),
+        values: values.locationPath,
+        multine: true,
         inputProps: {
           readOnly: true,
         }
@@ -571,6 +592,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
           }
         })
         .catch(error => {
+          console.log(error);
           dispatch(showErrorAlert())
         });
     }
@@ -601,6 +623,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       total_price: 0,
       EPC: '',
       location: '',
+      locationPath: '',
       creator: '',
       creation_date: '',
       labeling_user: '',
@@ -663,9 +686,12 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     if (!id || !Array.isArray(id)) return;
     getOneDB('assets/', id[0])
       .then(response => response.json())
-      .then(data => {
-        const { name, brand, model, category, referenceId, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creationUserFullName, creationDate, labeling_user, labeling_date, customFieldsTab, fileExt, assigned, layoutCoords, mapCoords, children, history } = data.response;
+      .then(async (data) => {
+        const { name, brand, model, category, referenceId, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creationUserFullName, creationDate, labeling_user, labeling_date, customFieldsTab, fileExt, assigned, layoutCoords, mapCoords, children, history, parent } = data.response;
         const date = String(new Date(creationDate)).split('GMT')[0];
+        const locationPath = await getLocationPath(location);
+        const assignedParent = assets.find(({ id }) => id === parent);
+        const assignedParentText = assignedParent ? `${assignedParent.name || 'No Name'}, ${assignedParent.brand || 'No Brand'}, ${ assignedParent.model ||'No Model'}, ${ assignedParent.serial ||'No Serial Number'}, ${ assignedParent.EPC ? `(${assignedParent.EPC})` : 'No EPC'}` : 'No Parent Assigned';
         executePolicies('OnLoad', 'assets', 'list', policies);
         setAssetLocation(location);
         setLayoutMarker(layoutCoords) //* null if not specified
@@ -693,6 +719,8 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
             .then(data => {
               const nameRes = data.response.name;
               const lastName = data.response.lasName;
+              const email = data.response.email;
+              const assignedTo = `${nameRes ? nameRes : ''} ${lastName ? lastName : ''} ${email ? `<${email}>` : '<No Email>'}`;
               setValues({
                 ...values,
                 name,
@@ -704,19 +732,21 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                 responsible,
                 notes,
                 quantity,
+                parent: assignedParentText,
                 purchase_date,
                 purchase_price,
                 price,
                 total_price: purchase_price + price,
                 EPC,
                 location,
+                locationPath,
                 creator: creationUserFullName,
                 creationDate: date,
                 labeling_user,
                 labeling_date,
                 history,
                 imageURL: getImageURL(id, 'assets', fileExt),
-                assignedTo: `${nameRes ? nameRes : ''} ${lastName ? lastName : ''}`,
+                assignedTo
               });
             })
             .catch(error => {
@@ -735,18 +765,21 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
             responsible,
             notes,
             quantity,
+            parent: assignedParentText,
             purchase_date,
             purchase_price,
             price,
             total_price,
             EPC,
             location,
+            locationPath,
             creator: creationUserFullName,
             creationDate: date,
             labeling_user,
             labeling_date,
             history,
             imageURL: getImageURL(id, 'assets', fileExt),
+            assignedTo: 'No Employee Assigned'
           });
         }
         if (customFieldsTab) {

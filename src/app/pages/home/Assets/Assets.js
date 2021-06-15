@@ -610,6 +610,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                         className={classes.select}
                         classNamePrefix="select"
                         isClearable={true}
+                        menuPosition="absolute"
                         name="KPI"
                         onChange={setKpiSelected}
                         value={kpiSelected}
@@ -617,6 +618,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                       />
                     </div>
                     <ModalAssetList
+                      assets={control.assetRows}
                       id={control.idAsset}
                       key={control.idAsset}
                       policies={policies}

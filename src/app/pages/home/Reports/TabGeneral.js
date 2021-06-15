@@ -261,11 +261,11 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
     //GET Folios 
     getDBComplex({
       collection: 'processLive',
-      fields: [{ key: 'creationUserFullName', value: 1 }, { key: 'creationUserId', value: 1 }, { key: 'creationDate', value: 1 }, { key: '_id', value: 1 }, { key: 'folio', value: 1 }]
+      fields: [{ key: 'creationUserFullName', value: 1 }, { key: 'creationUserId', value: 1 }, { key: 'requestUser', value: 1 }, { key: 'creationDate', value: 1 }, { key: '_id', value: 1 }, { key: 'folio', value: 1 }]
     })
       .then(response => response.json())
       .then(data => {
-        const users = uniqBy(data.response.map(({ creationUserId, creationUserFullName }) => ({ id: creationUserId, label: creationUserFullName })), 'id');
+        const users = uniqBy(data.response.map(({ creationUserId, creationUserFullName, requestUser: { email } }) => ({ id: creationUserId, label: `${creationUserFullName} <${email}>` })), 'id');
         const folios = uniqBy(data.response.map(({ _id, folio }) => ({ id: _id, label: folio })), 'id');
         setSpecificFiltersOptions(prev => ({
           ...prev,
@@ -314,18 +314,24 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
 
     getDBComplex({
       collection: 'processApprovals',
-      fields: [{ key: 'userId', value: 1 }, { key: 'email', value: 1 }]
+      fields: [{ key: 'userId', value: 1 }, { key: 'creationUserFullName', value: 1 }, { key: 'email', value: 1 }]
     })
       .then(response => response.json())
       .then(data => {
-        const processApprovals = uniqBy(data.response.map(({ userId, email }) => ({ id: userId, label: email })), 'id').filter((e) => e.id && e.label);
-        setSpecificFiltersOptions(prev => ({
-          ...prev,
-          processLive: {
-            ...prev.processLive,
-            approvalUser: processApprovals || ["There are Approval Users yet"],
-          }
-        }));
+        getDB('user')
+          .then((response) => response.json())
+          .then((userData) => {
+            const processApprovals = uniqBy(data.response.map(({ userId, creationUserFullName, email }) => ({ id: userId, label: `${userData.response.find(({ _id }) => _id === userId)?.name} ${userData.response.find(({ _id }) => _id === userId)?.lastName} <${email}>` })), 'id').filter((e) => e.id && e.label);
+            setSpecificFiltersOptions(prev => ({
+              ...prev,
+              processLive: {
+                ...prev.processLive,
+                approvalUser: processApprovals || ["There are Approval Users yet"],
+              }
+            }));
+          })
+          .catch((error) => console.log(error));
+
       })
       .catch(error => console.log('error>', error));
   };
@@ -477,7 +483,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
 
     getDBComplex(({
       collection: collectionName,
-      condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations }}] : null
+      condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : null
     }))
       .then((response) => response.json())
       .then(({ response }) => {
@@ -503,7 +509,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         } else {
           csv = jsonToCsvParser.parse(rows);
         }
-        
+
         var a = document.createElement('a');
         a.href = 'data:attachment/csv,' + encodeURI(csv);
         a.target = '_Blank';
@@ -594,7 +600,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       getCountDB({
         collection: collectionName,
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations }}] : null
+        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : null
       })
         .then(response => response.json())
         .then(data => {
@@ -610,32 +616,34 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         skip: tableControl.rowsPerPage * tableControl.page,
         sort: collectionName === 'processLive' && !tableControl.order ? [{ key: 'folio', value: 1 }] : [{ key: tableControl.orderBy, value: tableControl.order }],
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations }}] : null
+        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : null
       })
         .then(response => response.json())
         .then(data => {
           const { response } = data;
           const baseHeaders = getGeneralFieldsHeaders(collection.id);
-          if(collectionName === 'processLive'){
-            const headerIndexToChange = baseHeaders.findIndex(({id}) => id === 'dueDate');
-            baseHeaders[headerIndexToChange] = {...baseHeaders[headerIndexToChange], renderCell: (value) => {
-              const biggerThan = allAlerts.filter((element) => (value*-1) >= Number(element.days)).map(({days}) => days);
-              const alertToApply =  Math.max(...biggerThan);
-              const alert = allAlerts.find(({days}) => days === alertToApply.toString());
-              return (
-                <div style={{ display:'table-cell', verticalAlign: 'middle', textAlign:'center', padding: '16px', borderBottom: '1px solid rgba(224, 224, 224, 1)'}}>
-                  {
-                    typeof value === "number" && alert && 
-                    <Chip
-                      icon={ value ? <Notification/> : null }
-                      label={value ? `${value*-1} days` : 'No DueDate'}
-                      style={{ backgroundColor: alert?.color || '#B1B1B1', height: '28px'}}
-                      color='secondary'
-                    />
-                  }
-                </div>
-              ) 
-            }} 
+          if (collectionName === 'processLive') {
+            const headerIndexToChange = baseHeaders.findIndex(({ id }) => id === 'dueDate');
+            baseHeaders[headerIndexToChange] = {
+              ...baseHeaders[headerIndexToChange], renderCell: (value) => {
+                const biggerThan = allAlerts.filter((element) => (value * -1) >= Number(element.days)).map(({ days }) => days);
+                const alertToApply = Math.max(...biggerThan);
+                const alert = allAlerts.find(({ days }) => days === alertToApply.toString());
+                return (
+                  <div style={{ display: 'table-cell', verticalAlign: 'middle', textAlign: 'center', padding: '16px', borderBottom: '1px solid rgba(224, 224, 224, 1)' }}>
+                    {
+                      typeof value === "number" && alert &&
+                      <Chip
+                        icon={value ? <Notification /> : null}
+                        label={value ? `${value * -1} days` : 'No DueDate'}
+                        style={{ backgroundColor: alert?.color || '#B1B1B1', height: '28px' }}
+                        color='secondary'
+                      />
+                    }
+                  </div>
+                )
+              }
+            }
           }
           let headers = []
           baseHeaders.concat(filtersSelected.customFields.selected).forEach(({ label }) => headers.push(label));
@@ -832,7 +840,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
           </div>
         </div>
       )}
-      { Object.keys(specificFilters).includes(values.selectedReport) && (
+      {Object.keys(specificFilters).includes(values.selectedReport) && (
         <>
           <div
             name="SpecificFilter"
