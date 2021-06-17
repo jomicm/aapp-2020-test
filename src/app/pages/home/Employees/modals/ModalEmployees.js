@@ -199,6 +199,7 @@ const ModalEmployees = ({
 
   const onChangeEmployeeProfile = (e) => {
     if (!e) {
+      setValues(prev => ({ ...prev, employeeProfile: e }));
       setCustomFieldsTab({});
       setProfilePermissions({});
       setTabs([]);
@@ -219,6 +220,7 @@ const ModalEmployees = ({
         setProfilePermissions(profilePermissions);
         setTabs(tabs);
         setIdUserProfile(e.value);
+        setValues(prev => ({ ...prev, employeeProfile: e }));
       })
       .catch(error => dispatch(showErrorAlert()));
   };
@@ -267,6 +269,7 @@ const ModalEmployees = ({
             setResponsabilityLayout(prev => ({ ...prev, added: {}, removed: prev.initial }));
           }
 
+          setValues(prev => ({ ...prev, responsibilityLayout: layout }));
           setLayoutSelected(layout);
         },
         options: layoutOptions,

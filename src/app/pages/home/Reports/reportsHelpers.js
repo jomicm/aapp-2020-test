@@ -144,7 +144,7 @@ const convertRowsToDataTable = rows => {
 };
 
 export const convertRowsToDataTableObjects = rows => {
-  if (!rows || !Array.isArray(rows) || !rows.length) return { header: [], tableRows: [] };
+  if (!rows || !Array.isArray(rows) || !rows.length) return { header: [], headerObject: [], tableRows: [] };
   const header = Object.keys(rows[0]);
   // eslint-disable-next-line no-labels
   const headerObject = header.map((e) => ({ id: e, label: e, }));

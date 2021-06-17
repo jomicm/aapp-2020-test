@@ -130,7 +130,12 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
 
   const handleChange = name => event => {
     const value = name === 'selectedProfile' ? event : event.target.value;
-    setValues(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'selectedProfile') {
+      setValues(prev => ({ ...prev, [name]: value, category: value }));
+    } else {
+      setValues(prev => ({ ...prev, [name]: value }));
+    }
     // Load Custom Fields based on Select Control [Category Selected]
     if (name === 'selectedProfile') {
       handleLoadCustomFields(value.value);

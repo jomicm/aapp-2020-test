@@ -248,6 +248,13 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
               selected: customSelected || [],
             }
           }));
+
+          if (customSelected) {
+            loadReportsData(selectedReport, customSelected);
+          } else {
+            loadReportsData(selectedReport);
+          }
+
           setLoading(false);
         })
         .catch(error => {
@@ -393,9 +400,8 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
             processLive: processFilters
           }));
         }
-        loadCustomFields(selectedReport, customFields)
+        loadCustomFields(selectedReport, customFields);
         setCollectionName(selectedReport);
-        loadReportsData(selectedReport);
       }
     })
   }
@@ -580,8 +586,9 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
     return result.length > 0 ? result : null;
   };
 
-  const loadReportsData = async (collectionNames) => {
+  const loadReportsData = async (collectionNames, customSelected) => {
     if (!collectionNames) return;
+    console.log('Hola zorras asquerosas');
     const collection = modules.find(({ id }) => id === collectionNames);
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(async collectionName => {
@@ -646,7 +653,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
             }
           }
           let headers = []
-          baseHeaders.concat(filtersSelected.customFields.selected).forEach(({ label }) => headers.push(label));
+          baseHeaders.concat(customSelected || filtersSelected.customFields.selected).forEach(({ label }) => headers.push(label));
           var dataTable;
           if (collectionName === 'processLive') {
             const processRows = response.map(({ processData, creationUserFullName, creationDate, _id, folio, dueDate }) => {
@@ -667,7 +674,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
               base: baseFieldsHeaders
             }
           }));
-          setDataTable({ ...dataTable, headerObject: baseHeaders.concat(filtersSelected.customFields.selected), title: collection.name });
+          setDataTable({ ...dataTable, headerObject: baseHeaders.concat(customSelected || filtersSelected.customFields.selected) || [], title: collection.name });
         })
         .catch(error => console.log('error>', error));
     });
