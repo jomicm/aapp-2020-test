@@ -203,6 +203,7 @@ const LiveProcessTab = ({
               rows={localCartRows}
               onSetRows={setCartRows}
               processType={processType}
+              processInfo={processInfo}
             />
           </div>
         </TabContainer>

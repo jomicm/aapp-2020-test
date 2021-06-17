@@ -73,7 +73,6 @@ const DialogTitle5 = withStyles(styles5)(props => {
   );
 });
 
-// Example 5 - Modal
 const styles5 = theme => ({
   root: {
     margin: 0,
@@ -87,7 +86,6 @@ const styles5 = theme => ({
   }
 });
 
-// Example 4 - Tabs
 const TabContainer4 = ({ children, dir }) => {
   return (
     <Typography component='div' dir={dir} style={{ padding: 8 * 3 }}>
@@ -96,7 +94,6 @@ const TabContainer4 = ({ children, dir }) => {
   );
 }
 
-// Example 1 - TextField
 const useStyles = makeStyles(theme => ({
   container: {
     display: 'flex',
@@ -262,7 +259,6 @@ const ModalLocationList = ({
     setModalMapZoom(null);
   }
 
-  // Function to update customFields
   const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
     const colValue = ['left', 'right'];
     const customFieldsTabTmp = { ...values.customFieldsTab };
@@ -316,7 +312,7 @@ const ModalLocationList = ({
     }
     getOneDB('locationsReal/', parent)
       .then((response) => response.json())
-      .then( async (data) => {
+      .then(async(data) => {
         const {
           _id,
           customFieldsTab,

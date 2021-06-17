@@ -28,7 +28,8 @@ const getBaseInfo = () => {
     post: {
       creationUserId,
       creationUserFullName,
-      creationDate: currentDate
+      creationDate: currentDate,
+      updateDate: currentDate
     },
     update: {
       updateDate: currentDate

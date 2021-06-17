@@ -21,6 +21,7 @@ import { getDBComplex } from '../../../../crud/api';
 import { getImageURL, getLocationPath } from '../../utils';
 import LocationsTreeView from '../LocationsTreeView/LocationsTreeView';
 import Table from './Table';
+import AssetEdition from './AssetEditon';
 import AssetPreviewBox from './AssetPreviewBox';
 import { ThumbDown } from '@material-ui/icons';
 
@@ -32,7 +33,10 @@ const AssetFinder = ({
   rows = [],
   onSetRows = () => {},
   isPreviewTable = false,
-  processType = 'default'
+  processType = 'default',
+  processInfo,
+  assetEditionValues,
+  setAssetEditionValues
 }) => {
   const collection = isAssetReference ? 'references' : 'assets';
   const classes = useStyles();
@@ -42,8 +46,13 @@ const AssetFinder = ({
   const [selectedAsset, setSelectedAsset] = useState(defaultAsset);
 
   useEffect(() => {
-    console.log(isSelectionTable, isPreviewTable)
-  }, [isSelectionTable, isPreviewTable])
+    // console.log('SelectionTable:', isSelectionTable, 'PreviewTable:', isPreviewTable)
+  }, [isSelectionTable, isPreviewTable, processInfo])
+
+  const handleChangeValues = (values) => {
+    // console.log('values2:', {...selectedAsset,  ...values})
+    setAssetEditionValues({...selectedAsset, ...values}, selectedAsset.id)
+  }
   
   const handleOnSearchClick = () => {
     if(!searchText.length){
@@ -57,17 +66,33 @@ const AssetFinder = ({
       .then(response => response.json())
       .then( async data => {
         const rows = await Promise.all(data.response.map( async row => {
-          const { name, brand, model, _id: id, sn = 'sn', fileExt, } = row;
+          const { name, brand, model, _id: id, sn = 'sn', fileExt,customFieldsTab } = row;
           const assigned = !!row.assigned;
           if( isAssetReference ){
             const {selectedProfile} = row;
-            return { name, brand, model, id, sn, assigned, fileExt, selectedProfile };
+            return { 
+              name, 
+              brand,
+              model,
+              id,
+              sn,
+              assigned,
+              fileExt,
+              selectedProfile,
+              customFieldsTab,
+              serial: '',
+              notes: '',
+              quantity: 0,
+              purchase_date: '',
+              purchase_price: 0,
+              price: 0,
+              location: '',
+          };
           }
           const locationPath = await getLocationPath(row.location);
           const history = row.history || [];
           return { name, brand, model, id, sn, assigned, fileExt, originalLocation: locationPath, history,};
         }));
-        console.log('RowsA', rows);
         setAssetRows(rows);
       })
       .catch(error => console.log(error));
@@ -77,9 +102,10 @@ const AssetFinder = ({
     onSelectionChange(selection);
     if (selection.rows.length) {
       setSelectedRows(selection.rows);
+      // console.log('selection:', selection.rows.slice(-1)[0])
       const { brand, model, name, id, fileExt } = selection.rows.slice(-1)[0];
       const picUrl = fileExt ? getImageURL(id, collection, fileExt) : defaultAsset.picUrl;
-      setSelectedAsset({ brand, model, name, picUrl });
+      setSelectedAsset(selection.rows.slice(-1)[0]);
     } else {
       setSelectedRows([]);
       setSelectedAsset(defaultAsset);
@@ -138,6 +164,17 @@ const AssetFinder = ({
                   <AssetPreviewBox selectedAsset={selectedAsset} />
                 </AccordionDetails>
               </Accordion>
+              {/* {
+                processType === 'creation' && 
+                <Accordion>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />} >
+                    <Typography>Asset Edition</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <AssetEdition assetEditionValues={assetEditionValues} assetEditionValues={selectedAsset} setAssetEditionValues={(values) => handleChangeValues(values)} />
+                  </AccordionDetails>
+                </Accordion>
+              } */}
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />} >
                   <Typography>Set Location</Typography>
@@ -165,9 +202,25 @@ const AssetFinder = ({
               )
             }
           <Card style={{ width: '350px', marginLeft: '15px' }}>
-            <CardContent style={{ display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
-              <AssetPreviewBox selectedAsset={selectedAsset} />
-            </CardContent>
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />} >
+                  <Typography>Preview</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <AssetPreviewBox selectedAsset={selectedAsset} />
+                </AccordionDetails>
+              </Accordion>
+              {
+                processType === 'creation' && processInfo?.processData?.stages[`stage_${processInfo.currentStage}`]?.isAssetEdition &&
+                <Accordion>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />} >
+                    <Typography>Asset Edition</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <AssetEdition assetEditionValues={assetEditionValues} assetEditionValues={selectedAsset} setAssetEditionValues={(values) => setAssetEditionValues(values)}/>
+                  </AccordionDetails>
+                </Accordion>
+              }
           </Card>
         </div>
       );

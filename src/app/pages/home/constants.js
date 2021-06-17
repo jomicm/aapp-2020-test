@@ -204,6 +204,15 @@ export const allBaseFields = {
     labelingUser: { validationId: 'labelingUser', component: 'textField', compLabel: 'Labeling User' },
     labelingDate: { validationId: 'labelingDate', component: 'textField', compLabel: 'Labeling Date' },
   },
+  assetEdition: {
+    purchaseDate: { validationId: 'purchaseDate', component: 'textField', compLabel: 'Purchase Date' },
+    purchasePrice: { validationId: 'purchasePrice', component: 'textField', compLabel: 'Purchase Price' },
+    price: { validationId: 'price', component: 'textField', compLabel: 'Price' },
+    serialNumber: { validationId: 'serialNumber', component: 'textField', compLabel: 'Serial Number' },
+    notes: { validationId: 'notes', component: 'textField', compLabel: 'Notes' },
+    quantity: { validationId: 'quantity', component: 'textField', compLabel: 'Quantity' },
+    location: { validationId: 'location', component: 'textField', compLabel: 'Location' },
+  },
 };
 
 export const languages = [
