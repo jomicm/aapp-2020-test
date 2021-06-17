@@ -29,7 +29,6 @@ function Users({ globalSearch, setGeneralSearch }) {
   const dispatch = useDispatch();
   const { showDeletedAlert, showErrorAlert } = actions;
   const [tab, setTab] = useState(0);
-
   const { policies, setPolicies } = usePolicies();
 
   const policiesBaseFields = {
