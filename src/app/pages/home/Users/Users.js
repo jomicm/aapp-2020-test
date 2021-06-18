@@ -238,7 +238,6 @@ function Users({ globalSearch, setGeneralSearch }) {
                         .then((data) => {
                           const { name, members } = data.response;
                           const membersUpdated = members.filter(({ value: userId }) => userId !== _id) || [];
-                          console.log(`Members Updated Of ${name}: `, membersUpdated);
                           updateDB('settingsGroups/', { members: membersUpdated, numberOfMembers: membersUpdated.length }, groupId)
                             .catch((error) => console.log(error));
                         })

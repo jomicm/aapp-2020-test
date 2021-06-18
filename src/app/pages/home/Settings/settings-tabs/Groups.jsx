@@ -44,7 +44,6 @@ const Groups = ({ permissions }) => {
             console.log(users);
             users.forEach(({ _id: userId, groups }) => {
               const newUserGroups = groups.filter(({ id: groupId }) => !id.includes(groupId)) || [];
-              console.log(newUserGroups);
               updateDB('user/', { groups: newUserGroups }, userId)
                 .catch((error) => console.log(error));
             });
