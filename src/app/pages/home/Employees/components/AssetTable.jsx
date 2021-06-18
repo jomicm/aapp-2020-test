@@ -20,7 +20,7 @@ const collections = {
   }
 };
 
-const AssetTable = ({ assetRows = [], onAssetFinderSubmit, onDeleteAssetAssigned }) => {
+const AssetTable = ({ assetRows = [], onAssetFinderSubmit, onDeleteAssetAssigned, userLocations }) => {
   const [control, setControl] = useState({
     idAsset: null,
     openAssetModal: false
@@ -45,6 +45,7 @@ const AssetTable = ({ assetRows = [], onAssetFinderSubmit, onDeleteAssetAssigned
         onAssetFinderSubmit={onAssetFinderSubmit}
         setShowModal={(onOff) => setControl({ ...control, openAssetModal: onOff })}
         showModal={control.openAssetModal}
+        userLocations={userLocations}
       />
       <TableComponent
         headRows={assetsHeadRows}

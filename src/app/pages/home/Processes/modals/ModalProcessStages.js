@@ -138,7 +138,6 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
     selectedType: '',
     //
     isAssetEdition: false,
-    isUserFilter: false,
     isCustomLockedStage: false,
     isSelfApprove: false,
     isSelfApproveContinue: false,
@@ -232,18 +231,44 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
   };
 
   const [users, setUsers] = useState([]);
+  const [temporalApprovals, setTemporalApprovals] = useState([]);
+
+  useEffect(() => {
+    if((values.isSelfApprove || values.isSelfApproveContinue) && approvals.length){
+      setTemporalApprovals(approvals);
+      setApprovals([])
+    }
+    if(!values.isSelfApprove && !values.isSelfApproveContinue){
+      setApprovals(temporalApprovals);
+    }
+
+  }, [values.isSelfApprove, values.isSelfApproveContinue])
 
   useEffect(() => {
     getDB('user')
     .then(response => response.json())
-    .then(data => {
+    .then(userData => {
       // const users = data.response.map(({ _id, email }) => ({ _id, email }));
-      const users = data.response.map((user) => pick(user, ['_id', 'email', 'name', 'lastName']));
-      const bossUser = { _id: 'boss', email: 'auto', name: 'Direct', lastName: 'Boss' };
-      const locationUser = { _id: 'locationManager', email: 'auto', name: 'Location', lastName: 'Manager' };
-      const witnessUser = { _id: 'locationWitness', email: 'auto', name: 'Location', lastName: 'Witness' };
-      const asssetSpecialistUser = { _id: 'assetSpecialist', email: 'auto', name: 'Asset', lastName: 'Specialist' };
-      setUsers([bossUser, locationUser, witnessUser, asssetSpecialistUser, ...users]);
+      getDB('settingsGroups')
+      .then(response => response.json())
+      .then(data => {
+        // const users = data.response.map(({ _id, email }) => ({ _id, email }));
+        const groupUsers = data.response.map(({_id, name, members, numberOfMembers}) => ({
+          _id,
+          name,
+          email: `members: ${numberOfMembers}`,
+          lastName: '',
+          isUserGroup: true,
+          members,
+        }));
+        const users = userData.response.map((user) => pick(user, ['_id', 'email', 'name', 'lastName']));
+        const bossUser = { _id: 'boss', email: 'auto', name: 'Direct', lastName: 'Boss' };
+        const locationUser = { _id: 'locationManager', email: 'auto', name: 'Location', lastName: 'Manager' };
+        const witnessUser = { _id: 'locationWitness', email: 'auto', name: 'Location', lastName: 'Witness' };
+        const asssetSpecialistUser = { _id: 'assetSpecialist', email: 'auto', name: 'Asset', lastName: 'Specialist' };
+        setUsers([bossUser, locationUser, witnessUser, asssetSpecialistUser ,...groupUsers, ...users]);
+      })
+      .catch(error => console.log(error))
     })
     .catch(error => console.log(error));
 
@@ -365,6 +390,7 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
                       <Autocomplete
                         style={{ marginTop: '15px' }}
                         className={classes.textField}
+                        disabled={values.isSelfApprove || values.isSelfApproveContinue}
                         multiple
                         id="tags-standard"
                         options={users}
@@ -387,12 +413,6 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
                         value="start"
                         control={<Switch color="primary" checked={values.isAssetEdition} onChange={handleChangeCheck('isAssetEdition')}/>}
                         label="Asset Edition"
-                        labelPlacement="start"
-                      />
-                      <FormControlLabel
-                        value="start"
-                        control={<Switch color="primary" checked={values.isUserFilter} onChange={handleChangeCheck('isUserFilter')}/>}
-                        label="User Filter"
                         labelPlacement="start"
                       />
                       <FormControlLabel

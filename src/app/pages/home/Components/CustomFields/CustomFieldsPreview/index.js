@@ -45,7 +45,6 @@ import './index.scss';
 
 // Custom Fields Preview
 const SingleLine = (props) => {
-  console.log('Mount');
   const { customFieldsPathResponse } = props;
   let onLoadField = '';
   Object.entries(customFieldsPathResponse || {}).forEach((field) => {
@@ -84,6 +83,7 @@ const SingleLine = (props) => {
         margin="normal"
         value={values.initialValue}
         onChange={handleOnChange}
+        disabled= {props.disabled || false}
       />
       { isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
@@ -112,10 +112,8 @@ const MultiLine = (props) => {
   };
   useEffect(() => {
     if (!isEmpty(props.values) && !onLoadField.length) {
-      console.log('Pass');
       setValues(props.values);
     } else {
-      console.log('Pass 2');
       setValues(defaultValues);
     }
   }, [props.values]);
@@ -137,6 +135,7 @@ const MultiLine = (props) => {
         margin="normal"
         value={values.initialValue}
         onChange={handleOnChange}
+        disabled= {props.disabled || false}
       />
       { isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
@@ -182,6 +181,7 @@ const Date = (props) => {
         InputLabelProps={{
           shrink: true,
         }}
+        disabled= {props.disabled || false}
       />
       { isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
@@ -227,6 +227,7 @@ const DateTime = (props) => {
         InputLabelProps={{
           shrink: true,
         }}
+        disabled= {props.disabled || false}
       />
       { isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
@@ -273,6 +274,7 @@ const DropDown = (props) => {
             name: 'age',
             id: 'age-simple',
           }}
+          disabled= {props.disabled || false}
         >
           <MenuItem value="">
             <em>None</em>
@@ -327,7 +329,7 @@ const RadioButtons = (props) => {
           onChange={handleOnChange}
         >
         {values.options.map((opt, ix) => (
-          <FormControlLabel value={`rad${ix + 1}`} control={<Radio />} label={opt} />
+          <FormControlLabel value={`rad${ix + 1}`} control={<Radio disabled= {props.disabled || false} />} label={opt} />
         ))}
         </RadioGroup>
       </FormControl>
@@ -375,7 +377,7 @@ const Checkboxes = (props) => {
           {values.options.map((opt, ix) => (
             <FormControlLabel
               key={`check-${ix}`}
-              control={<Checkbox checked={values[`check${ix}`] || false} onChange={() => handleCheck(ix)} value={ix} />}
+              control={<Checkbox checked={values[`check${ix}`] || false} onChange={() => handleCheck(ix)} value={ix} disabled= {props.disabled || false} />}
               label={opt}
             />
           ))}
@@ -433,6 +435,7 @@ const FileUpload = (props) => {
             color="secondary"
             style={{width: '10px'}}
             onClick={() => setValues({...values, fileName: '', file: '', })}
+            disabled= {props.disabled || false}
           >
             <DeleteIcon />
           </Button>
@@ -442,7 +445,7 @@ const FileUpload = (props) => {
             variant="contained"
             style={{marginTop: '10px'}}
             disableElevation
-            disabled={!values.fileName}
+            disabled={!values.fileName || props.disabled ? true : false}
             href={values.fileId && values.fileExt ? getImageURL(values.fileId, 'customFields', values.fileExt) : null}
           >
             {values.fileName || 'First choose a File '}
@@ -499,6 +502,7 @@ const Currency = (props) => {
           }}
           value={values.initialValue}
           onChange={handleOnChange}
+          disabled= {props.disabled || false}
         />
         <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
           {values.initialValue >= 0 ? null : "Currency can't be negative"}
@@ -556,6 +560,7 @@ const Percentage = (props) => {
           }}
           value={values.initialValue}
           onChange={handleOnChange}
+          disabled= {props.disabled || false}
         />
         <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
             {values.initialValue >= 0 && values.initialValue <= 100 ? null : 'Please select a valid percentage between 0% and 100%'}
@@ -603,6 +608,7 @@ const Email = (props) => {
         margin="normal"
         value={values.initialValue}
         onChange={handleOnChange}
+        disabled= {props.disabled || false}
         InputProps={{
           startAdornment:
             <InputAdornment position="start">
@@ -657,6 +663,7 @@ const Decimal = (props) => {
           style={{
             width: '100%'
           }}
+          disabled= {props.disabled || false}
           inputProps={{
             step: '0.01',
             placeholder: '0.00'
@@ -702,6 +709,7 @@ const URL = (props) => {
       <div className={'error-wrapper'}>
       <TextField
         className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__single-line`}
+        disabled= {props.disabled || false}
         label={values.fieldName}
         type="text"
         margin="normal"
@@ -777,7 +785,7 @@ const Image = (props) => {
 
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
-        <ImageUpload setImage={setImage} image={imageURL} disabled={isPreview}>
+        <ImageUpload setImage={setImage} image={imageURL} disabled={isPreview || props.disabled ? true : false}>
           {values.fieldName}
         </ImageUpload>
       { isPreview &&
@@ -824,7 +832,7 @@ const DecisionBox = (props) => {
           {values.options.map((opt, ix) => (
             <FormControlLabel
               key={`check-${ix}`}
-              control={<Switch checked={values[`check${ix}`] || false} onChange={() => handleCheck(ix)} value={ix} />}
+              control={<Switch checked={values[`check${ix}`] || false} onChange={() => handleCheck(ix)} value={ix} disabled= {props.disabled || false}/>}
               label={opt}
             />
           ))}
@@ -888,6 +896,7 @@ const RichText = (props) => {
           onEditorStateChange={(ed) => setEditor(ed)}
           toolbarClassName='toolbarClassName'
           wrapperClassName='editor-wrapper'
+          readOnly={props.disabled || false} 
         />
       </div>
       { isPreview &&
@@ -963,6 +972,7 @@ const Formula = (props) => {
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
       <TextField
         className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__single-line`}
+        disabled= {props.disabled || false}
         label={values.fieldName}
         type="text"
         margin="normal"
@@ -1055,6 +1065,7 @@ const DateFormula = (props) => {
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
       <TextField
         className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__single-line`}
+        disabled= {props.disabled || false}
         label={values.fieldName}
         type="text"
         margin="normal"

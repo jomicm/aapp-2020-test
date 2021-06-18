@@ -94,7 +94,7 @@ export default function MessagesContainer({ user, trash, tab, setTab }) {
   /* Functions */
 
   const loadMessages = () => {
-    let queryLike = ['subject', 'html'].map(key => ({ key, value: control.search }));
+    let queryLike = ['subject', 'html', 'from.email', 'from.name', 'from.lastName'].map(key => ({ key, value: control.search }));
 
     getTotalMessages({
       collection: 'messages',

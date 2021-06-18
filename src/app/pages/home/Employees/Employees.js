@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from "react-redux";
+import { uniq } from 'lodash';
 import { utcToZonedTime } from 'date-fns-tz';
 import { Tabs } from '@material-ui/core';
 import { useDispatch } from 'react-redux';
@@ -10,7 +11,7 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
-import { deleteDB, getDBComplex, getCountDB, getDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB, getDB, getOneDB } from '../../../crud/api';
 import * as general from "../../../store/ducks/general.duck";
 import { executePolicies } from '../Components/Policies/utils';
 import TableComponent2 from '../Components/TableComponent2';
@@ -22,7 +23,7 @@ import ModalEmployees from './modals/ModalEmployees';
 import ModalEmployeeProfiles from './modals/ModalEmployeeProfiles';
 import { allBaseFields } from '../constants';
 
-const Employees = ({ globalSearch, setGeneralSearch }) => {
+const Employees = ({ globalSearch, setGeneralSearch, user }) => {
   const dispatch = useDispatch();
   const { showCustomAlert, showDeletedAlert, showErrorAlert } = actions;
   const [employeeLayoutSelected, setEmployeeLayoutSelected] = useState({});
@@ -32,6 +33,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
     setSelectReferenceConfirmation
   ] = useState(false);
   const [tab, setTab] = useState(0);
+  const [userLocations, setUserLocations] = useState([]);
 
   const policiesBaseFields = {
     list: { id: { validationId: 'employeeId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.employees },
@@ -40,14 +42,15 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
 
   const { policies, setPolicies } = usePolicies();
 
-  const createUserProfilesRow = (id, name, creator, creation_date) => {
-    return { id, name, creator, creation_date };
+  const createUserProfilesRow = (id, name, creator, creationDate, updateDate) => {
+    return { id, name, creator, creationDate, updateDate };
   };
 
   const employeeProfilesHeadRows = [
     { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
-    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
+    { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true },
+    { id: 'updateDate', numeric: false, disablePadding: false, label: 'Update Date', searchByDisabled: true }
   ];
 
   const createEmployeeRow = (
@@ -58,7 +61,8 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
     designation,
     manager,
     creator,
-    creation_date
+    creationDate,
+    updateDate
   ) => {
     return {
       id,
@@ -68,7 +72,8 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
       designation,
       manager,
       creator,
-      creation_date
+      creationDate,
+      updateDate
     };
   };
 
@@ -77,7 +82,8 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
     { id: 'lastName', numeric: true, disablePadding: false, label: 'Last Name' },
     { id: 'email', numeric: true, disablePadding: false, label: 'Email' },
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
-    { id: 'creation_date', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
+    { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true },
+    { id: 'updateDate', numeric: false, disablePadding: false, label: 'Update Date', searchByDisabled: true }
   ];
 
   const [tableControl, setTableControl] = useState({
@@ -103,6 +109,52 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
       locationsFilter: [],
     },
   });
+
+  const locationsRecursive = (data, currentLocation, res) => {
+    const children = data.response.filter((e) => e.parent === currentLocation._id);
+
+    if (!children.length) {
+      return;
+    }
+
+    children.forEach((e) => {
+      if (!res.includes(e._id)) {
+        res.push(e._id);
+      }
+    });
+    children.forEach((e) => locationsRecursive(data, e, res));
+  };
+
+  const loadUserLocations = () => {
+    getOneDB('user/', user.id)
+      .then((response) => response.json())
+      .then((data) => {
+        const locationsTable = data.response.locationsTable;
+        getDB('locationsReal')
+          .then((response) => response.json())
+          .then((data) => {
+            let res = [];
+            locationsTable.forEach((location) => {
+              const currentLoc = data.response.find((e) => e._id === location.parent);
+
+              if (!userLocations.includes(currentLoc._id)) {
+                res.push(currentLoc._id);
+              }
+
+              const children = data.response.filter((e) => e.parent === currentLoc._id);
+
+              if (children.length) {
+                children.forEach((e) => res.push(e._id));
+                children.forEach((e) => locationsRecursive(data, e, res));
+              }
+            });
+            const resFiltered = uniq(res);
+            setUserLocations(resFiltered);
+          })
+          .catch((error) => dispatch(showErrorAlert()));
+      })
+      .catch((error) => dispatch(showErrorAlert()));
+  };
 
   const loadEmployeesData = (collectionNames = ['employees', 'employeeProfiles']) => {
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
@@ -148,21 +200,24 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
         .then(data => {
           if (collectionName === 'employeeProfiles') {
             const rows = data.response.map((row) => {
-              const { _id, name, creationUserFullName, creationDate } = row;
-              const date = utcToZonedTime(creationDate).toLocaleString();
+              const { _id, name, creationUserFullName, creationDate, updateDate } = row;
+              const date = String(new Date(creationDate)).split('GMT')[0];
+              const uptDate = String(new Date(updateDate)).split('GMT')[0];
               return createUserProfilesRow(
                 _id,
                 name,
                 creationUserFullName,
-                date
+                date,
+                uptDate
               );
             });
             setControl(prev => ({ ...prev, employeeProfilesRows: rows, employeeProfilesRowsSelected: [] }));
           }
           if (collectionName === 'employees') {
             const rows = data.response.map((row) => {
-              const { _id, name, lastName, email, designation, manager, creationUserFullName, creationDate } = row;
-              const date = utcToZonedTime(creationDate).toLocaleString();
+              const { _id, name, lastName, email, designation, manager, creationUserFullName, creationDate, updateDate } = row;
+              const date = String(new Date(creationDate)).split('GMT')[0];
+              const uptDate = String(new Date(updateDate)).split('GMT')[0];
               return createEmployeeRow(
                 _id,
                 name,
@@ -171,7 +226,8 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
                 designation,
                 manager,
                 creationUserFullName,
-                date
+                date,
+                uptDate
               );
             });
             setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));
@@ -180,6 +236,8 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
         .catch(error => console.log('error>', error));
     });
   };
+
+  useEffect(() => loadUserLocations(), []);
 
   useEffect(() => {
     loadEmployeesData('employees');
@@ -323,6 +381,7 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
                         })
                       }
                       showModal={control.openEmployeesModal}
+                      userLocations={userLocations}
                     />
                     <div className='kt-separator kt-separator--dashed' />
                     <div className='kt-section__content'>
@@ -453,7 +512,8 @@ const Employees = ({ globalSearch, setGeneralSearch }) => {
   );
 }
 
-const mapStateToProps = ({ general: { globalSearch } }) => ({
-  globalSearch
+const mapStateToProps = ({ general: { globalSearch }, auth: { user } }) => ({
+  globalSearch,
+  user
 });
 export default connect(mapStateToProps, general.actions)(Employees);

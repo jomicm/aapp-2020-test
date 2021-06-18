@@ -17,11 +17,12 @@
 		}
 	}
 	span{
-		margin-top: 5px;
+		margin-top: 15px;
 		color: gray;
 		font-size: 160%;
 		display: flex;
 		justify-content: center;
+		text-align: center;
 		width: 100%;
 		.kt-aside--minimize & {
 			display: none;

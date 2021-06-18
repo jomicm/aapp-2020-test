@@ -119,7 +119,8 @@ const ModalEmployees = ({
   policies,
   reloadTable,
   showModal,
-  setShowModal
+  setShowModal,
+  userLocations
 }) => {
   const dispatch = useDispatch();
   const { showCustomAlert, showFillFieldsAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
@@ -536,6 +537,7 @@ const ModalEmployees = ({
                       assetRows={assetsBeforeSaving}
                       onAssetFinderSubmit={handleOnAssetFinderSubmit}
                       onDeleteAssetAssigned={handleOnDeleteAssetAssigned}
+                      userLocations={userLocations}
                     />
                   </div>
                 </TabContainer4>

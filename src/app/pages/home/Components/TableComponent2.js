@@ -8,6 +8,7 @@ import {
 } from '@material-ui/core/styles';
 import {
   Checkbox,
+  Chip,
   Grid,
   IconButton,
   List,
@@ -155,6 +156,8 @@ const TableComponentTile = props => {
     headRows,
     locationControl,
     noEdit = false,
+    noAdd = false,
+    noDelete = false,
     onAdd,
     onSelect,
     paginationControl,
@@ -168,11 +171,16 @@ const TableComponentTile = props => {
     disableSearchBy = false,
     user,
     userLocations = [],
+    disableActions = false,
+    justTreeView = false,
+    returnObjectOnSelect = false,
+    selectedObjects
   } = props;
   const classes = useStyles();
 
   //Selected Rows
   const [selected, setSelected] = useState([]);
+  const [selectedObject, setSelectedObject] = useState(selectedObjects);
   const [selectedId, setSelectedId] = useState([]);
   const isSelected = name => {
     return selected.indexOf(name) !== -1;
@@ -205,6 +213,12 @@ const TableComponentTile = props => {
     if (!paginationControl) return;
     paginationControl({ rowsPerPage, page });
   }, [rowsPerPage, page]);
+
+  useEffect(() => {
+    if(returnObjectOnSelect || selectedObject){
+      onSelect(selectedObject);
+    }
+  }, [selectedObject]);
 
   useEffect(() => {
     sortByControl({ orderBy: orderBy, order: order === 'asc' ? 1 : -1 });
@@ -313,7 +327,7 @@ const TableComponentTile = props => {
 
   const EnhancedTableToolbar = props => {
     const classes = useToolbarStyles();
-    const { selected, onAdd, noEdit } = props;
+    const { selected, onAdd, noEdit, noAdd, noDelete } = props;
     const numSelected = selected.length;
 
     const onDelete = () => {
@@ -321,7 +335,7 @@ const TableComponentTile = props => {
     }
 
     useEffect(() => {
-      if (!props.onSelect) {
+      if (!props.onSelect || returnObjectOnSelect) {
         return;
       };
       const selectedIdToSend = numSelected ? selectedId : null;
@@ -329,6 +343,11 @@ const TableComponentTile = props => {
     }, [numSelected]);
 
     const HeaderTools = () => {
+      if(disableActions){
+        return (
+          <div></div>
+        );
+      }
       if (numSelected > 0) {
         return (
           <div style={{ display: 'flex' }}>
@@ -347,7 +366,7 @@ const TableComponentTile = props => {
               </Tooltip>
             }
             {
-              permissions.includes('delete') &&
+              permissions.includes('delete') && !noDelete &&
               <Tooltip title='Delete'>
                 <IconButton aria-label='Delete' onClick={onDelete}>
                   <DeleteIcon />
@@ -416,7 +435,7 @@ const TableComponentTile = props => {
             </IconButton>
           </Tooltip>
           {
-            typeof onAdd == 'function' && permissions.includes('add') && (
+            typeof onAdd == 'function' && permissions.includes('add') && !noAdd && (
               <Tooltip title='Add'>
                 <IconButton aria-label='Add' onClick={onAdd}>
                   <AddIcon />
@@ -468,19 +487,29 @@ const TableComponentTile = props => {
     setSelected([]);
   }
 
-  const handleClick = (event, name, id) => {
+  const handleClick = (event, row) => {
+    const { id } = row;
     const selectedIndex = selected.indexOf(id);
-    let newSelected = [], newSelectedId = [];
-
+    let newSelected = [], newSelectedId = [], newSelectedObject = [];
+    
     if (selectedIndex === -1) {
       newSelected = newSelected.concat(selected, id);
       newSelectedId = newSelectedId.concat(selectedId, id);
+      if(returnObjectOnSelect){
+        newSelectedObject = newSelectedObject.concat(selectedObject, row);
+      }
     } else if (selectedIndex === 0) {
       newSelected = newSelected.concat(selected.slice(1));
       newSelectedId = newSelectedId.concat(selectedId.slice(1));
+      if(returnObjectOnSelect){
+        newSelectedObject = newSelectedObject.concat(selectedObject.slice(1));
+      }
     } else if (selectedIndex === selected.length - 1) {
       newSelected = newSelected.concat(selected.slice(0, -1));
       newSelectedId = newSelectedId.concat(selectedId.slice(0, -1));
+      if(returnObjectOnSelect){
+        newSelectedObject = newSelectedObject.concat(selectedObject.slice(0, -1));
+      }
     } else if (selectedIndex > 0) {
       newSelected = newSelected.concat(
         selected.slice(0, selectedIndex),
@@ -490,7 +519,18 @@ const TableComponentTile = props => {
         selectedId.slice(0, selectedIndex),
         selectedId.slice(selectedIndex + 1)
       );
+      if(returnObjectOnSelect){
+        newSelectedObject = newSelectedObject.concat(
+          selectedObject.slice(0, selectedIndex),
+          selectedObject.slice(selectedIndex + 1)
+        );
+      }
     }
+
+    if(returnObjectOnSelect){
+      setSelectedObject(newSelectedObject);      
+    }
+
     setSelected(newSelected);
     setSelectedId(newSelectedId);
   }
@@ -502,6 +542,12 @@ const TableComponentTile = props => {
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(+event.target.value);
+  }
+
+  const handleKeyDown = (event, id) => {
+    if (event.key === 'Enter') {
+      handleInputChange(event, id)
+    }
   }
 
   const EnhancedTableHead = (props) => {
@@ -548,6 +594,7 @@ const TableComponentTile = props => {
                     autoFocus={row.id === controlValues.searchBy}
                     className={classes.inputSearchBy}
                     onChange={(event) => handleInputChange(event, row.id)}
+                    // onKeyDown={(event) => handleKeyDown(event, row.id)}
                     placeholder={`Search by...`}
                     value={row.id === controlValues.searchBy ? controlValues.search : null}
                   />
@@ -669,17 +716,30 @@ const TableComponentTile = props => {
           onSelect={onSelect}
           selected={selected}
           title={props.title}
+          noAdd={noAdd}
+          noDelete={noDelete}
         />
         <div className={classes.tableWrapper}>
           <Grid container>
             {
               viewControl.tree && (
-                <Grid style={{ paddingLeft: '16px' }} item sm={12} md={2} lg={2}>
-                  <TreeView data={locationsTree} onClick={selectLocation} />
+                <Grid conainer style={{ paddingLeft: '16px' }} item sm={12} md={2} lg={2}>
+                  <div style={{overflow: 'auto'}}>
+                    <TreeView data={locationsTree} onClick={selectLocation} />
+                  </div>
                 </Grid>
               )
             }
-            <Grid item sm={12} md={12} lg={viewControl.tree ? 10 : 12} >
+            {
+              justTreeView && (
+                <Grid conainer style={{ paddingLeft: '16px' }} item sm={12} md={2} lg={3}>
+                  <div style={{overflow: 'auto'}}>
+                    <TreeView data={locationsTree} onClick={selectLocation} />
+                  </div>
+                </Grid>
+              )
+            }
+            <Grid item sm={12} md={12} lg={viewControl.tree ? 10 : justTreeView ? 9 : 12} >
               <Table
                 aria-labelledby='tableTitle'
                 className={classes.table}
@@ -742,7 +802,7 @@ const TableComponentTile = props => {
                                       aria-checked={isItemSelected}
                                       hover
                                       key={`key-row-${row.id}`}
-                                      onClick={event => handleClick(event, row.name, row.id)}
+                                      onClick={event => handleClick(event, row)}
                                       role='checkbox'
                                       selected={isItemSelected}
                                       tabIndex={-1}
@@ -754,17 +814,19 @@ const TableComponentTile = props => {
                                         />
                                       </TableCell>
 
-                                      {columnPicker.filter((column) => column.visible).map((header, ix) =>
-                                        <TableCell
-                                          align={'left'}
-                                          component='th'
-                                          key={`cell-row${index}-${ix}`}
-                                          padding={'default'}
-                                          scope='row'
-                                        >
-                                          {row[header.id]}
-                                        </TableCell>
-                                      )}
+                                      {columnPicker.filter((column) => column.visible).map((header, ix) => {
+                                        return(
+                                          <TableCell
+                                            align={header.renderCell ? 'center' : 'left'}
+                                            component={header.renderCell ? () => header.renderCell(row[header.id]) : 'th'}
+                                            key={`cell-row${index}-${ix}`}
+                                            padding={'default'}
+                                            scope='row'
+                                          >
+                                            {row[header.id]}
+                                          </TableCell>
+                                        )
+                                      })}
                                     </TableRow>
                                   );
                                 })}

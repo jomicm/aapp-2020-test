@@ -30,6 +30,7 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
   }) => {
     if (!messageDisabled) {
       const messageObj = {
+        formatDate: rawDate,
         from: messageFrom,
         html,
         read: false,

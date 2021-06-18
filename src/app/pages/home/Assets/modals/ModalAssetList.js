@@ -42,7 +42,7 @@ import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetList.scss';
 import OtherModalTabs from '../components/OtherModalTabs';
 import { pick } from 'lodash';
-import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
+import { executeOnLoadPolicy, executePolicies } from '../../Components/Policies/utils';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -130,7 +130,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadTable, id, policies }) => {
+const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadTable, id, policies, userLocations }) => {
   const dispatch = useDispatch();
   const { showCustomAlert, showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
 
@@ -251,7 +251,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     serial: '',
     responsible: '',
     notes: '',
-    quantity: '',
+    quantity: 0,
     purchase_date: '',
     purchase_price: 0,
     price: 0,
@@ -259,7 +259,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     EPC: '',
     location: '',
     creator: '',
-    creation_date: '',
+    creationDate: '',
     labeling_user: '',
     labeling_date: ''
   });
@@ -301,9 +301,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       componentProps: {
         onChange: handleChange('category'),
         value: values.category,
-        inputProps: {
-          readOnly: true,
-        }
+        isDisabled: true
       }
     },
     status: {
@@ -421,8 +419,8 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     },
     creationDate: {
       componentProps: {
-        onChange: handleChange('creation_date'),
-        value: values.creation_date,
+        onChange: handleChange('creationDate'),
+        value: values.creationDate,
         inputProps: {
           readOnly: true,
         }
@@ -529,11 +527,11 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       serial: '',
       responsible: '',
       notes: '',
-      quantity: '',
+      quantity: 0,
       purchase_date: '',
-      purchase_price: '',
-      price: '',
-      total_price: '',
+      purchase_price: 0,
+      price: 0,
+      total_price: 0,
       EPC: '',
       location: '',
       creator: '',
@@ -594,7 +592,8 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     getOneDB('assets/', id[0])
       .then(response => response.json())
       .then(data => {
-        const { name, brand, model, category, referenceId, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creator, creation_date, labeling_user, labeling_date, customFieldsTab, fileExt, assigned, layoutCoords, mapCoords, children, history } = data.response;
+        const { name, brand, model, category, referenceId, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creationUserFullName, creationDate, labeling_user, labeling_date, customFieldsTab, fileExt, assigned, layoutCoords, mapCoords, children, history } = data.response;
+        const date = String(new Date(creationDate)).split('GMT')[0];
         executePolicies('OnLoad', 'assets', 'list', policies);
         setAssetLocation(location);
         setLayoutMarker(layoutCoords) //* null if not specified
@@ -604,9 +603,10 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
         getOneDB('references/', referenceId)
           .then((response) => response.json())
           .then(async (data) => {
-            const { selectedProfile: { value } } = data.response;
+            const { selectedProfile: { value, label } } = data.response;
             const onLoadResponse = await executeOnLoadPolicy(value, 'assets', 'list', policies);
             setCustomFieldsPathResponse(onLoadResponse);
+            setValues(prev => ({ ...prev, category: { value, label } }));
           })
           .catch((error) => showCustomAlert(({
             type: 'error',
@@ -637,8 +637,8 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                 total_price: purchase_price + price,
                 EPC,
                 location,
-                creator,
-                creation_date,
+                creator: creationUserFullName,
+                creationDate: date,
                 labeling_user,
                 labeling_date,
                 history,
@@ -668,8 +668,8 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
             total_price,
             EPC,
             location,
-            creator,
-            creation_date,
+            creator: creationUserFullName,
+            creationDate: date,
             labeling_user,
             labeling_date,
             history,
@@ -822,6 +822,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                     assetRows={assetsBeforeSaving}
                     onAssetFinderSubmit={handleOnAssetFinderSubmit}
                     onDeleteAssetAssigned={handleOnDeleteAssetAssigned}
+                    userLocations={userLocations}
                   />
                 </TabContainer4>
                 {tabs.map(tab => (

@@ -80,6 +80,7 @@ const UserNotifications = ({
       collection: 'notifications',
       limit: control.rowsPerPage,
       skip: control.rowsPerPage * control.page,
+      sort: [{ "key": "creationDate", "value": -1 }]
     })
       .then(response => response.json())
       .then((data) => setData(data.response))

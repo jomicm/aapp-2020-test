@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { uniq } from 'lodash';
-import { uniqBy } from "lodash";
+import { uniq, uniqBy } from 'lodash';
+import { differenceInDays } from 'date-fns';
 import {
   Button,
+  Chip,
   Divider,
   FormControl,
   InputLabel,
@@ -11,6 +12,7 @@ import {
   TextField,
   Typography
 } from "@material-ui/core";
+import Notification from '@material-ui/icons/NotificationImportant';
 import { makeStyles } from '@material-ui/core';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import { connect, useDispatch } from 'react-redux';
@@ -339,6 +341,12 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       setFiltersSelected(defaultFilterSelected);
       setId('');
       if (value === 'processLive') {
+        getDB('settingsProcesses')
+          .then(response => response.json())
+          .then(data => {
+            setAllAlerts(data.response[0].alerts || []);
+          })
+          .catch(error => console.log(error));
         loadProcessData();
       }
       else {
@@ -402,6 +410,18 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
     setId(null);
   }
 
+  const orderByCorrection = {
+    processLive: {
+      name: 'processData.name',
+      type: 'processData.selectedProcessType',
+      status: 'processData.processStatus',
+      creator: 'creationUserFullName',
+      date: 'creationDate',
+      alert: 'dueDate',
+      stages: 'processData.totalStages'
+    }
+  };
+
   const handleSave = (reportName) => {
     const { selectedReport, startDate, endDate } = values;
     if (!selectedReport) {
@@ -429,6 +449,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
     loadReportsData(collectionName)
   }
 
+  const [allAlerts, setAllAlerts] = useState([]);
   const [tableControl, setTableControl] = useState({
     collection: '',
     total: 0,
@@ -475,8 +496,8 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         });
 
         if (collectionName === 'processLive') {
-          const processRows = response.map(({ processData, creationUserFullName, totalStages, creationDate, _id, folio }) => {
-            return ({ folio, name: processData.name, stages: totalStages, type: processData.selectedProcessType, creator: creationUserFullName, date: utcToZonedTime(creationDate).toLocaleString() });
+          const processRows = response.map(({ processData, creationUserFullName, creationDate, _id, folio }) => {
+            return ({ folio, name: processData.name, stages: processData.totalStages, type: processData.selectedProcessType, creator: creationUserFullName, date: utcToZonedTime(creationDate).toLocaleString() });
           });
           csv = jsonToCsvParser.parse(processRows);
         } else {
@@ -587,7 +608,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         collection: collectionName,
         limit: tableControl.rowsPerPage,
         skip: tableControl.rowsPerPage * tableControl.page,
-        sort: collectionName === 'processLive' ? [{ key: 'folio', value: 1 }] : [{ key: tableControl.orderBy, value: tableControl.order }],
+        sort: collectionName === 'processLive' && !tableControl.order ? [{ key: 'folio', value: 1 }] : [{ key: tableControl.orderBy, value: tableControl.order }],
         queryLike: tableControl.search ? queryLike : null,
         condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations }}] : null
       })
@@ -595,12 +616,34 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         .then(data => {
           const { response } = data;
           const baseHeaders = getGeneralFieldsHeaders(collection.id);
+          if(collectionName === 'processLive'){
+            const headerIndexToChange = baseHeaders.findIndex(({id}) => id === 'dueDate');
+            baseHeaders[headerIndexToChange] = {...baseHeaders[headerIndexToChange], renderCell: (value) => {
+              const biggerThan = allAlerts.filter((element) => (value*-1) >= Number(element.days)).map(({days}) => days);
+              const alertToApply =  Math.max(...biggerThan);
+              const alert = allAlerts.find(({days}) => days === alertToApply.toString());
+              return (
+                <div style={{ display:'table-cell', verticalAlign: 'middle', textAlign:'center', padding: '16px', borderBottom: '1px solid rgba(224, 224, 224, 1)'}}>
+                  {
+                    typeof value === "number" && alert && 
+                    <Chip
+                      icon={ value ? <Notification/> : null }
+                      label={value ? `${value*-1} days` : 'No DueDate'}
+                      style={{ backgroundColor: alert?.color || '#B1B1B1', height: '28px'}}
+                      color='secondary'
+                    />
+                  }
+                </div>
+              ) 
+            }} 
+          }
           let headers = []
           baseHeaders.concat(filtersSelected.customFields.selected).forEach(({ label }) => headers.push(label));
           var dataTable;
           if (collectionName === 'processLive') {
-            const processRows = response.map(({ processData, creationUserFullName, totalStages, creationDate, _id, folio }) => {
-              return ({ folio, name: processData.name, stages: totalStages, type: processData.selectedProcessType, creator: creationUserFullName, date: utcToZonedTime(creationDate).toLocaleString() });
+            const processRows = response.map(({ processData, creationUserFullName, creationDate, _id, folio, dueDate }) => {
+              const pastDue = differenceInDays(new Date(dueDate), new Date());
+              return ({ folio, name: processData.name, stages: processData.totalStages, type: processData.selectedProcessType, dueDate: pastDue, creator: creationUserFullName, creationDate: utcToZonedTime(creationDate).toLocaleString() });
             });
             dataTable = { rows: processRows, headerObject: baseHeaders };
           }
@@ -877,7 +920,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
           sortByControl={({ orderBy, order }) => {
             setTableControl(prev => ({
               ...prev,
-              orderBy: orderBy,
+              orderBy: orderByCorrection[collectionName] && orderByCorrection[collectionName][orderBy] ? orderByCorrection[collectionName][orderBy] : orderBy,
               order: order,
             }))
           }}

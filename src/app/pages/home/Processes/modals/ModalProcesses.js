@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from "react-redux";
 import {
   AppBar,
   Box,
@@ -49,6 +50,7 @@ import Widgets from '@material-ui/icons/Widgets';
 import AccountTree from '@material-ui/icons/AccountTree';
 import SearchIcon from '@material-ui/icons/Search';
 
+import { actions } from '../../../../store/ducks/general.duck';
 import TableComponent from '../../Components/TableComponent';
 // import './ModalAssetCategories.scss';
 import ImageUpload from '../../Components/ImageUpload';
@@ -163,6 +165,8 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
   function handleChangeIndex4(index) {
     setValue4(index);
   }
+  const dispatch = useDispatch();
+  const { showCustomAlert } = actions;
 
   // Example 1 - TextField
   const mockMessages = {
@@ -179,8 +183,6 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
   const classes = useStyles();
   const [values, setValues] = useState({
     name: "",
-    //
-    goBackEnabled: false,
     layoutMessageName: '',
     selectedUserNotification: '',
     selectedUserApprovals: '',
@@ -217,6 +219,35 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     }
     const filteredStages = stagesOrig.filter(st => st.name.toLowerCase().includes(searchStageVal.toLowerCase()));
     setStages(filteredStages);
+  };
+
+  const handleChangeGoBack = name => event => {
+    if(!Object.keys(selectedStageObject).length){
+      dispatch(showCustomAlert({
+        type: 'warning',
+        open: true,
+        message: 'First, please select a stage'
+      }));
+      return;
+    }
+    
+    const processStagesToUpdate = processStages;
+    const stageIndex = processStages.findIndex(({id}) => id === selectedStage);
+    if(name === 'goBackEnabled'){
+      processStagesToUpdate[stageIndex][name] = event.target.checked;
+      setSelectedStageObject(prev => ({
+        ...prev,
+        [name]: event.target.checked,
+      }));
+    }
+    else {
+      processStagesToUpdate[stageIndex][name] = event.target.value;
+      setSelectedStageObject(prev => ({
+        ...prev,
+        [name]: event.target.value,
+      }));
+    }
+    setProcessStages(processStagesToUpdate);
   };
 
   const getStagesNotUsed = () => {
@@ -278,13 +309,30 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
   };
 
   const handleSave = () => {
-    const body = { ...values, processStages, usersProcess, validMessages };
-
+    const processedStages = processStages.map((stage) => {
+      const processApprovals = [];
+      stage.approvals.map((approval) => {
+        if(!approval.isUserGroup){
+          processApprovals.push(approval)
+          return;
+        }
+        approval.members.map(({value, name, lastName, label}) => (
+          processApprovals.push({
+            _id: value,
+            name,
+            lastName,
+            email: label
+          })
+        ));
+      });
+      stage.approvals = processApprovals;
+      return stage;
+    });
+    const body = { ...values, processStages: processedStages, usersProcess, validMessages };
     if (!id) {
       body.idUserProfile = idUserProfile;
       postDB('processes', body)
         .then(response => {
-          console.log('response:', response)
           reloadTable();
         })
         .catch(error => console.log(error));
@@ -303,9 +351,11 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     setStages([]);
     setValues({ 
       name: '',
-      goBackEnabled: false,
+      layoutMessageName: '',
       selectedUserNotification: '',
-      selectedUserApprovals: ''
+      selectedUserApprovals: '',
+      notificationsForUsers: {},
+      selectedProcessType: ''
     }); 
     setCustomFieldsTab({});
     setProfilePermissions([]);
@@ -329,6 +379,7 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     setNotifications([]);
     setApprovals([]);
     setSelectedStage('');
+    setSelectedStageObject({});
   };
 
   const [employeeProfilesFiltered, setEmployeeProfilesFiltered] = useState([]);
@@ -337,6 +388,8 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
   const [approvals, setApprovals] = useState([]);
   const [stageLayouts, setStageLayouts] = useState([]);
   const [selectedStageLayout, setSelectedStageLayout] = useState([]);
+  const [selectedStage, setSelectedStage] = useState('');
+  const [selectedStageObject, setSelectedStageObject] = useState('');
 
   useEffect(() => {
     if(!id || !Array.isArray(id)) {
@@ -346,13 +399,14 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     getOneDB('processes/', id[0])
     .then(response => response.json())
     .then(data => { 
-      const { processStages, usersProcess, validMessages } = data.response;
+      const { processStages, usersProcess, validMessages, selectedProcessType } = data.response;
       const values = omit(data.response, '_id');
       // setValues({ name, goBackEnabled });
       setValues(values);
       setProcessStages(processStages);
       setUsersProcess(usersProcess);
       setValidMessages(validMessages);
+      setValues(prev => ({ ...prev, selectedProcessType }));
     })
     .catch(error => console.log(error));
   }, [id]);
@@ -362,8 +416,9 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     getDB('processStages')
     .then(response => response.json())
     .then(data => {
-      const stages = data.response.map(({ _id, name, notifications, approvals, customFieldsTab }) => ({ id: _id, name, notifications, approvals, customFieldsTab })).filter(st => !selectedStages.includes(st.id));
-      setStages(stages);
+      const stages = data.response.map(({ _id, name, notifications, approvals, customFieldsTab, isAssetEdition, isCustomLockedStage, isSelfApprove, isSelfApproveContinue, isControlDueDate }) => ({ id: _id, name, notifications, approvals, customFieldsTab, goBackEnabled: false, goBackTo: '', isAssetEdition, isCustomLockedStage, isSelfApprove, isSelfApproveContinue, isControlDueDate }));
+      const filteredStages = stages.filter(st => !selectedStages.includes(st.id));
+      setStages(filteredStages);
       setOriginalStages(stages);
     })
     .catch(error => console.log(error));
@@ -395,13 +450,11 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
       setProfilePermissions({});
       setTabs([]);
       return;
-    }
-    console.log('onChangeEmployeeProfile>>>', e);
+    } 
     setProfileSelected(e);
     getOneDB('employeeProfiles/', e.value)
     .then(response => response.json())
     .then(data => { 
-      console.log(data.response);
       const { customFieldsTab, profilePermissions } = data.response;
       const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
       tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
@@ -468,7 +521,12 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     setValidMessages(prev => ({ ...prev, [type]: tmpValidMessages }));
   };
 
-  const [selectedStage, setSelectedStage] = useState('');
+  const getStagesGoBack = () => {
+    const lastStageIndex = processStages.findIndex(({id}) => id === selectedStage);
+    const stages = processStages.filter((_ , ix) => ix < lastStageIndex);
+    return stages;
+  };
+  
   const handleStageProcessClick = (id) => {
     const currentStageLayout = stageLayouts.filter(layout => layout.selectedStage === id);
     const selectedStage = originalStages.find(stage => stage.id === id);
@@ -477,6 +535,7 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     setApprovals(approvals);
     setSelectedStageLayout(currentStageLayout);
     setSelectedStage(id);
+    setSelectedStageObject(processStages.find(({id: stageid}) => id === stageid));
     
     const tmpValidMessages = validMessages;
     if (!validMessages.notifications[id]) {
@@ -492,6 +551,11 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
 
     setUsersProcess(prev => ({...prev, selectedUserNotification: '', selectedUserApproval: '' }))
   };
+
+  const handleStagesMovement = (stages) => {
+    const goBackReseted = stages.map((stage) => ({...stage, goBackEnabled: false, goBackTo: ''}));
+    setProcessStages(goBackReseted);
+   }
 
   const notificationsList = selectedStage && validMessages.notifications[selectedStage] ?
     (validMessages.notifications[selectedStage][validMessages.selectedUserNotifications] || []) : [];
@@ -592,7 +656,7 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                       <ProcessFlow
                         onClick={handleStageProcessClick}
                         processStages={processStages}
-                        setProcessStages={setProcessStages}
+                        setProcessStages={(stages) => handleStagesMovement(stages)}
                         handleRemoveProcessStage={handleRemoveProcessStage}
                       />
                     </div>
@@ -604,22 +668,22 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                           </Typography>
                           <FormControlLabel
                             value="end"
-                            control={<Switch color="primary" checked={values.goBackEnabled} onChange={handleChangeCheck('goBackEnabled')} />}
+                            control={<Switch color="primary" checked={selectedStageObject?.goBackEnabled || false} onChange={handleChangeGoBack('goBackEnabled')} />}
                             label="Go Back"
                             labelPlacement="end"
                           />
-                          <FormControl disabled={!values.goBackEnabled} >
+                          <FormControl disabled={selectedStageObject.goBackEnabled ? false : true} >
                             <InputLabel>To Stage:</InputLabel>
                             <Select
-                              // value={age}
-                              onChange={handleChange}
+                              value={selectedStageObject?.goBackTo || 'none'}
+                              onChange={handleChangeGoBack('goBackTo')}
                             >
                               <MenuItem value='none'>
                                 <em>None</em>
                               </MenuItem>
-                              <MenuItem value={10}>Stage 1</MenuItem>
-                              <MenuItem value={20}>Stage 2</MenuItem>
-                              <MenuItem value={30}>Stage 3</MenuItem>
+                              {getStagesGoBack().map(({ id, name }) => (
+                                <MenuItem value={id} name={name}>{name}</MenuItem>
+                              ))}
                             </Select>
                           </FormControl>
                           <div style={{ marginTop: '20px' }}>
@@ -649,9 +713,17 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                                       value={usersProcess.selectedUserNotification}
                                       onChange={handleChangeUserNotifApp('selectedUserNotification')}
                                     >
-                                      <MenuItem value=''>
-                                        <em>None</em>
-                                      </MenuItem>
+                                      {
+                                        !selectedStage ? (
+                                          <MenuItem value=''>
+                                            <em>Please Select a Stage First</em>
+                                          </MenuItem>
+                                        ) : (
+                                          <MenuItem value=''>
+                                            <em>None</em>
+                                          </MenuItem>
+                                        )
+                                      }
                                       {notifications.map(({ _id, email, name, lastName }) => (
                                         <MenuItem value={_id} name={email}>{`${name} ${lastName} (${email})`}</MenuItem>
                                       ))}
@@ -694,9 +766,17 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                                       value={usersProcess.selectedUserApproval}
                                       onChange={handleChangeUserNotifApp('selectedUserApproval')}
                                     >
-                                      <MenuItem value="">
-                                        <em>None</em>
-                                      </MenuItem>
+                                      {
+                                        !selectedStage ? (
+                                          <MenuItem value=''>
+                                            <em>Please Select a Stage First</em>
+                                          </MenuItem>
+                                        ) : (
+                                          <MenuItem value=''>
+                                            <em>None</em>
+                                          </MenuItem>
+                                        )
+                                      }
                                       {approvals.map(({ _id, email, name, lastName }) => (
                                         <MenuItem value={_id} name={email}>{`${name} ${lastName} (${email})`}</MenuItem>
                                       ))}

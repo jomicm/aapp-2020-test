@@ -17,7 +17,7 @@ const collections = {
   }
 };
 
-export default function AssetTable({ assetRows = [], onAssetFinderSubmit, onDeleteAssetAssigned }) {
+export default function AssetTable({ assetRows = [], onAssetFinderSubmit, onDeleteAssetAssigned, userLocations }) {
 
   /* States */
 
@@ -47,6 +47,7 @@ export default function AssetTable({ assetRows = [], onAssetFinderSubmit, onDele
         onAssetFinderSubmit={onAssetFinderSubmit}
         setShowModal={(onOff) => setControl({ ...control, openAssetModal: onOff })}
         showModal={control.openAssetModal}
+        userLocations={userLocations}
       />
       <TableComponent
         headRows={assetsHeadRows}
