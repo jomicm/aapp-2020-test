@@ -4,16 +4,16 @@ import { useDispatch } from 'react-redux';
 import {
   Button,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
-  TextField,
-  Typography,
+  DialogContent,
+  DialogTitle,
+  FormGroup,
+  FormLabel,
   IconButton,
   makeStyles,
-  FormLabel,
-  FormGroup,
-  withStyles,
+  TextField,
+  Typography,
+  withStyles
 } from "@material-ui/core";
 import CloseIcon from "@material-ui/icons/Close";
 import { actions } from '../../../../../store/ducks/general.duck';
@@ -90,8 +90,8 @@ export default function ModalGroups({ showModal, setShowModal, reloadTable, id, 
   const [users, setUsers] = useState([]);
   const [removedUsers, setRemovedUsers] = useState([]);
   const [values, setValues] = useState({
-    name: '',
-    members: []
+    members: [],
+    name: ''
   });
 
   const displayWarningError = (message) => {

@@ -2,10 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { utcToZonedTime } from 'date-fns-tz';
 import { actions } from '../../../../store/ducks/general.duck';
-import { getDB, deleteDB, getOneDB, updateDB } from '../../../../crud/api';
+import { getDB, deleteDB, updateDB } from '../../../../crud/api';
 import TableComponent from '../../Components/TableComponent';
 import ModalGroups from './modals/ModalGroups';
-import { id } from 'date-fns/locale';
 
 const Groups = ({ permissions }) => {
   const dispatch = useDispatch();
@@ -83,27 +82,25 @@ const Groups = ({ permissions }) => {
   }, []);
 
   return (
-    <>
-      <div className="kt-section__content">
-        <ModalGroups
-          employeeProfileRows={[]}
-          id={control.idGroup}
-          groups={control.rows}
-          reloadTable={() => loadInitData()}
-          setShowModal={(onOff) => setControl({ ...control, showModal: onOff })}
-          showModal={control.showModal}
-        />
-        <TableComponent
-          headRows={headRows}
-          onAdd={tableActions().onAdd}
-          onDelete={tableActions().onDelete}
-          onEdit={tableActions().onEdit}
-          onSelect={tableActions().onSelect}
-          rows={control.rows}
-          title="Groups"
-        />
-      </div>
-    </>
+    <div className="kt-section__content">
+      <ModalGroups
+        employeeProfileRows={[]}
+        id={control.idGroup}
+        groups={control.rows}
+        reloadTable={() => loadInitData()}
+        setShowModal={(onOff) => setControl({ ...control, showModal: onOff })}
+        showModal={control.showModal}
+      />
+      <TableComponent
+        headRows={headRows}
+        onAdd={tableActions().onAdd}
+        onDelete={tableActions().onDelete}
+        onEdit={tableActions().onEdit}
+        onSelect={tableActions().onSelect}
+        rows={control.rows}
+        title="Groups"
+      />
+    </div>
   )
 }
 
