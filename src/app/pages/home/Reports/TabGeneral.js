@@ -99,7 +99,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
+const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }) => {
   const dispatch = useDispatch();
   const { setGeneralLoading, showErrorAlert, showSavedAlert, showSelectValuesAlert, showCustomAlert } = actions;
   const classes = useStyles();
@@ -107,7 +107,6 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
   const [loading, setLoading] = useState(false);
   const [collectionName, setCollectionName] = useState(null);
   const [dataTable, setDataTable] = useState(dataTableDefault);
-  const [userLocations, setUserLocations] = useState([]);
   const [values, setValues] = useState({
     selectedReport: '',
     startDate: '',
@@ -157,52 +156,6 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
 
   const permissions = user.profilePermissions.reports || [];
 
-  const locationsRecursive = (data, currentLocation, res) => {
-    const children = data.response.filter((e) => e.parent === currentLocation._id);
-
-    if (!children.length) {
-      return;
-    }
-
-    children.forEach((e) => {
-      if (!res.includes(e._id)) {
-        res.push(e._id);
-      }
-    });
-    children.forEach((e) => locationsRecursive(data, e, res));
-  };
-
-  const loadUserLocations = () => {
-    getOneDB('user/', user.id)
-      .then((response) => response.json())
-      .then((data) => {
-        const locationsTable = data.response.locationsTable;
-        getDB('locationsReal')
-          .then((response) => response.json())
-          .then((data) => {
-            let res = [];
-            locationsTable.forEach((location) => {
-              const currentLoc = data.response.find((e) => e._id === location.parent);
-
-              if (!userLocations.includes(currentLoc._id)) {
-                res.push(currentLoc._id);
-              }
-
-              const children = data.response.filter((e) => e.parent === currentLoc._id);
-
-              if (children.length) {
-                children.forEach((e) => res.push(e._id));
-                children.forEach((e) => locationsRecursive(data, e, res));
-              }
-            });
-            const resFiltered = uniq(res);
-            setUserLocations(resFiltered);
-          })
-          .catch((error) => console.log(error));
-      })
-      .catch((error) => console.log(error));
-  };
-
   const loadCustomFields = (selectedReport, customSelected) => {
     if (!customSelected) {
       setFiltersSelected(prev => ({
@@ -251,8 +204,6 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
 
           if (customSelected) {
             loadReportsData(selectedReport, customSelected);
-          } else {
-            loadReportsData(selectedReport);
           }
 
           setLoading(false);
@@ -345,6 +296,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
 
   const handleChange = (name) => (event) => {
     const { value } = event.target;
+    // console.log(new Date(value).toISOString());
     if (value) {
       setValues({ ...values, [name]: value });
     } else {
@@ -381,6 +333,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
 
   const handleClickGenerateReport = (e) => {
     const { value } = e.target;
+    setTableControl(prev => ({ ...prev, page: 0 }));
     handleGenerateReport(value);
     setId(value);
   }
@@ -400,7 +353,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
             processLive: processFilters
           }));
         }
-        loadCustomFields(selectedReport, customFields);
+        loadCustomFields(selectedReport, customFields || []);
         setCollectionName(selectedReport);
       }
     })
@@ -416,7 +369,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       order: 1,
       search: '',
       searchBy: '',
-    })
+    });
     setCollectionName(values.selectedReport);
     loadReportsData(values.selectedReport);
     setId(null);
@@ -508,8 +461,10 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         });
 
         if (collectionName === 'processLive') {
-          const processRows = response.map(({ processData, creationUserFullName, creationDate, _id, folio }) => {
-            return ({ folio, name: processData.name, stages: processData.totalStages, type: processData.selectedProcessType, creator: creationUserFullName, date: utcToZonedTime(creationDate).toLocaleString() });
+          const processRows = response.map(({ processData, creationUserFullName, creationDate, updateDate, _id, folio }) => {
+            const date = String(new Date(creationDate)).split('GMT')[0];
+            const uptDate = String(new Date(updateDate)).split('GMT')[0];
+            return ({ folio, name: processData.name, stages: processData.totalStages, type: processData.selectedProcessType, creator: creationUserFullName, date, updateDate: uptDate });
           });
           csv = jsonToCsvParser.parse(processRows);
         } else {
@@ -588,7 +543,6 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
 
   const loadReportsData = async (collectionNames, customSelected) => {
     if (!collectionNames) return;
-    console.log('Hola zorras asquerosas');
     const collection = modules.find(({ id }) => id === collectionNames);
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(async collectionName => {
@@ -628,6 +582,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
         .then(response => response.json())
         .then(data => {
           const { response } = data;
+          console.log(response);
           const baseHeaders = getGeneralFieldsHeaders(collection.id);
           if (collectionName === 'processLive') {
             const headerIndexToChange = baseHeaders.findIndex(({ id }) => id === 'dueDate');
@@ -658,7 +613,8 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
           if (collectionName === 'processLive') {
             const processRows = response.map(({ processData, creationUserFullName, creationDate, _id, folio, dueDate }) => {
               const pastDue = differenceInDays(new Date(dueDate), new Date());
-              return ({ folio, name: processData.name, stages: processData.totalStages, type: processData.selectedProcessType, dueDate: pastDue, creator: creationUserFullName, creationDate: utcToZonedTime(creationDate).toLocaleString() });
+              const date = String(new Date(creationDate)).split('GMT')[0];
+              return ({ folio, name: processData.name, stages: processData.totalStages, type: processData.selectedProcessType, dueDate: pastDue, creator: creationUserFullName, creationDate: date });
             });
             dataTable = { rows: processRows, headerObject: baseHeaders };
           }
@@ -698,10 +654,6 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
       }
     }));
   }
-
-  useEffect(() => {
-    loadUserLocations();
-  }, [])
 
   useEffect(() => {
     if (!values.selectedReport) {
@@ -951,4 +903,5 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user }) => {
 const mapStateToProps = ({ auth: { user } }) => ({
   user
 });
+
 export default connect(mapStateToProps)(TabGeneral);

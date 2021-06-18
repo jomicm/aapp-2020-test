@@ -15,7 +15,7 @@ const _generalFields = {
   locations: ['_id', 'name', 'level'],
   categories: ['_id', 'name', 'depreciation'],
   references: ['_id', 'name', 'brand', 'model', 'price'],
-  assets: ['_id', 'name', 'brand', 'model', 'category', 'status', 'serial', 'responsible', 'notes', 'quantity', 'purchase_date', 'purchase_price', 'price', 'total_price', 'EPC', 'location', 'creator', 'creation_date', 'labeling_user', 'labeling_date'],
+  assets: ['_id', 'name', 'brand', 'model', 'category', 'status', 'serial', 'responsible', 'notes', 'quantity', 'purchase_date', 'purchase_price', 'price', 'total_price', 'EPC', 'location', 'creator', 'labeling_user', 'labeling_date', 'creationDate', 'updateDate',],
   depreciation: [],
   processLive: ['folio', 'name', 'stages', 'type', 'dueDate', 'creator', 'creationDate']
 };
@@ -73,7 +73,7 @@ export const extractGeneralField = (collectionName, row) => {
     let objectValue;
 
     if (collectionName === 'assets' && field === 'category') {
-      objectValue = row[field] ? row[field].label : ''
+      objectValue = row['category'] ? row['category'].label || '' : '';
     }
 
     if (collectionName === 'user' && (field === 'boss' || field === 'groups')) {
@@ -85,7 +85,8 @@ export const extractGeneralField = (collectionName, row) => {
         objectValue = (row[field] || []).map(({ name }) => name).join(', ') || '';
       }
     }
-    filteredGeneralFields = { ...filteredGeneralFields, [currentField]: objectValue ? objectValue : row[currentField] || '' }
+    const label = typeof row[currentField] === 'object' ? '' : row[currentField] || '';
+    filteredGeneralFields = { ...filteredGeneralFields, [currentField]: objectValue ? objectValue : label };
   });
   return filteredGeneralFields;
 };

@@ -233,7 +233,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
           queryLike = tableControl.assets.searchBy ? (
             [{ key: tableControl.assets.searchBy, value: tableControl.assets.search }]
           ) : (
-            ['brand', 'creationUserFullName', 'EPC', 'model', 'name', 'notes', 'status', 'serial'].map(key => ({ key, value: tableControl.assets.search }))
+            ['brand', 'creationUserFullName', 'EPC', 'model', 'name', 'notes', 'price', 'status', 'serial'].map(key => ({ key, value: tableControl.assets.search }))
           )
         }
       }
