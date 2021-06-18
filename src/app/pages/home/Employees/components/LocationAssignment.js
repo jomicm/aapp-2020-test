@@ -22,7 +22,6 @@ const locationsTreeData = {
 };
 
 const LocationAssignment = ({ locationsTable, setLocationsTable }) => {
-  console.log('locationsTable:', locationsTable)
   const [locationsTree, setLocationsTree] = useState({});
   // const [locationsTable, setLocationsTable] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState({});
@@ -40,7 +39,6 @@ const LocationAssignment = ({ locationsTable, setLocationsTable }) => {
   };
 
   const handleSelectLocation = (parent, level, realParent, name) => {
-    console.log('level, parent, realParent', level, parent, realParent)
     setSelectedLocation({ name, level, parent, realParent });
   };
 
