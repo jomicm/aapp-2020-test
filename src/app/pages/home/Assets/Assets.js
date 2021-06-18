@@ -91,9 +91,9 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
   const { policies, setPolicies } = usePolicies();
 
   const policiesBaseFields = {
-    list: { ...allBaseFields.assets1, ...allBaseFields.assets2 },
-    references: allBaseFields.references,
-    categories: allBaseFields.categories
+    list: { id: { validationId: 'assetId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.assets1, ...allBaseFields.assets2 },
+    references: { id: { validationId: 'referenceId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.references },
+    categories: { id: { validationId: 'categoryId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.categories }
   };
 
   const createAssetCategoryRow = (id, name, depreciation, creator, creationDate, updateDate, fileExt) => {

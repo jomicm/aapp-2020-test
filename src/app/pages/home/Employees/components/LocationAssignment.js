@@ -39,7 +39,6 @@ const LocationAssignment = ({ locationsTable, setLocationsTable }) => {
   };
 
   const handleSelectLocation = (parent, level, realParent, name) => {
-    console.log('level, parent, realParent', level, parent, realParent)
     setSelectedLocation({ name, level, parent, realParent });
   };
 

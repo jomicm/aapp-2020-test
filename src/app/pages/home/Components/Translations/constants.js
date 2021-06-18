@@ -63,7 +63,11 @@ export const tabsConfig = {
     {
       title:'Processes',
       translate:'TABS.TITLES.PROCESSES'
-    },  
+    },
+    {
+      title:'Groups',
+      translate:'TABS.TITLES.GROUPS'
+    },
   ],
   modules: [
     {
@@ -72,27 +76,27 @@ export const tabsConfig = {
     },
     {
       name: 'processes',
-      titles: ['Live','List','Stages']
+      titles: ['Live', 'List', 'Stages']
     },
     {
       name: 'users',
-      titles: ['List','References','Policies']
+      titles: ['List', 'References', 'Policies']
     },
     {
       name: 'employees',
-      titles: ['List','References','Policies']
+      titles: ['List', 'References', 'Policies']
     },
     {
       name: 'locations',
-      titles: ['List','Profiles','Policies']
+      titles: ['List', 'Profiles', 'Policies', 'Settings']
     },
     {
       name: 'reports',
-      titles: ['General','Saved']
+      titles: ['General', 'Saved']
     },
     {
       name: 'settings',
-      titles: ['General','Design','Layouts & Presets','Fields','Custom','Users','Processes' ]
+      titles: ['General', 'Design', 'Layouts & Presets', 'Fields', 'Custom', 'Users', 'Processes', 'Groups']
     }
   ]
 }

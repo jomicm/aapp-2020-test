@@ -300,7 +300,7 @@ const TableComponent = props => {
     return (
       <TableHead>
         <TableRow>
-          <TableCell padding='checkbox'>
+          <TableCell align='left' padding='checkbox'>
             <Checkbox
               checked={numSelected === rowCount}
               indeterminate={numSelected > 0 && numSelected < rowCount}
@@ -310,7 +310,7 @@ const TableComponent = props => {
           </TableCell>
           {headRows.map(row => (
             <TableCell
-              align={row.numeric ? 'right' : 'left'}
+              align='left'
               key={row.id}
               padding={row.disablePadding ? 'none' : 'default'}
               sortDirection={orderBy === row.id ? order : false}
@@ -401,7 +401,7 @@ const TableComponent = props => {
                       selected={isItemSelected}
                       tabIndex={-1}
                     >
-                      <TableCell padding='checkbox'>
+                      <TableCell align='left' padding='checkbox'>
                         <Checkbox
                           checked={isItemSelected}
                           inputProps={{ 'aria-labelledby': labelId }}
@@ -410,10 +410,10 @@ const TableComponent = props => {
 
                       {headRows.map((header, ix) =>
                         <TableCell
-                          align={!ix ? 'inherit' : 'right'}
+                          align='left'
                           component='th'
                           key={`cell-row${index}-${ix}`}
-                          padding={!ix ? 'none' : 'default'}
+                          padding='default'
                           scope='row'
                           >
                           {row[header.id]}

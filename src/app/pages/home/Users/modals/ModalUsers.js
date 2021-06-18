@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import SwipeableViews from 'react-swipeable-views';
-import { forEach, isEmpty } from 'lodash';
+import { forEach, isEmpty, uniq } from 'lodash';
 import {
   Button,
   Dialog,
@@ -24,7 +24,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import { useDispatch } from 'react-redux';
 import { actions } from '../../../../store/ducks/general.duck';
 import * as auth from '../../../../store/ducks/auth.duck';
-import { postDBEncryptPassword, getOneDB, getDB, updateDB } from '../../../../crud/api';
+import { postDBEncryptPassword, getOneDB, getDB, updateDB, postDB } from '../../../../crud/api';
 import ImageUpload from '../../Components/ImageUpload';
 import { hosts, getFileExtension, saveImage, getImageURL } from '../../utils';
 import { modules } from '../../constants';
@@ -152,8 +152,21 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       return;
     }
 
+    const userGroups = selectedGroups.map(({ value: id, label: name, numberOfMembers }) => {
+      if (removedGroups.findIndex(({ value }) => value === id) !== -1) {
+        return;
+      }
+
+      if (addedGroups.findIndex(({ value }) => value === id) !== -1) {
+        return { id, name, numberOfMembers: numberOfMembers + 1 };
+      }
+
+      return { id, name, numberOfMembers };
+    }) || [];
+
     const fileExt = getFileExtension(image);
-    const body = { ...values, customFieldsTab, profilePermissions, locationsTable, fileExt, selectedUserProfile: profileSelected ? profileSelected[0] : null };
+    const body = { ...values, customFieldsTab, profilePermissions, locationsTable, fileExt, groups: userGroups, selectedUserProfile: profileSelected ? profileSelected[0] : null };
+
     if (!isEmpty(values.selectedBoss)) {
       const { name, lastName } = allUsers.find(({ value }) => value === values.selectedBoss.value);
       values.selectedBoss = { ...values.selectedBoss, name, lastName };
@@ -171,16 +184,61 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
           saveAndReload('user', _id);
           updateLocationsAssignments(locationsTable, { userId: _id, email, name, lastName });
           executePolicies('OnAdd', 'user', 'list', policies);
+          getDB('settingsGroups')
+            .then((response) => response.json())
+            .then((data) => {
+              addedGroups.forEach(({ value }) => {
+                const groupFounded = data.response.find(({ _id: groupId }) => groupId === value);
+                const { _id: groupId, numberOfMembers } = groupFounded;
+                const newMember = { value: _id, label: email, name, lastName };
+                const members = [...groupFounded.members, newMember];
+                updateDB('settingsGroups/', { members, numberOfMembers: numberOfMembers + 1 }, groupId)
+                  .catch((error) => console.log(error));
+              });
+            })
+            .catch((error) => dispatch(showErrorAlert()));
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('user/', body, id[0])
-        .then(response => {
+        .then((response) => response.json())
+        .then((data) => {
           dispatch(showUpdatedAlert());
           saveAndReload('user', id[0]);
           updateCurrentUserPic(id[0], fileExt);
           updateLocationsAssignments(locationsTable, { userId: id[0], name: body.name, email: body.email, lastName: body.lastName });
           executePolicies('OnEdit', 'user', 'list', policies);
+          getDB('settingsGroups')
+            .then((response) => response.json())
+            .then((data) => {
+              const groupsToUpdate = selectedGroups.filter((group) => addedGroups.findIndex(({ value }) => value === group.value) === -1 && removedGroups.findIndex(({ value }) => value === group.value) === -1 );
+              const { email, name, lastName } = body;
+              addedGroups.forEach(({ value }) => {
+                const groupFounded = data.response.find(({ _id: groupId }) => groupId === value);
+                const { _id: groupId, numberOfMembers } = groupFounded;
+                const newMember = { value: id[0], label: email, name, lastName };
+                const members = [...groupFounded.members, newMember];
+                updateDB('settingsGroups/', { members, numberOfMembers: numberOfMembers + 1 }, groupId)
+                  .catch((error) => console.log(error));
+              });
+              removedGroups.forEach(({ value }) => {
+                const groupFounded = data.response.find(({ _id: groupId }) => groupId === value);
+                const { _id: groupId, numberOfMembers } = groupFounded;
+                const members = groupFounded.members.filter(({ value: userId }) => userId !== id[0]);
+                updateDB('settingsGroups/', { members, numberOfMembers: numberOfMembers - 1 }, groupId)
+                  .catch((error) => console.log(error));
+              });
+              groupsToUpdate.forEach(({ value }) => {
+                const groupFounded = data.response.find(({ _id: groupId }) => groupId === value);
+                const { _id: groupId } = groupFounded;
+                const newMember = { value: id[0], label: email, name, lastName };
+                const filteredMembers = groupFounded.members.filter(({ value: userId }) => userId !== id[0]);
+                const members = [...filteredMembers, newMember];
+                updateDB('settingsGroups/', { members }, groupId)
+                  .catch((error) => console.log(error));
+              });
+            })
+            .catch((error) => dispatch(showErrorAlert()));
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -249,12 +307,21 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       enabled: false,
       isValidForm: false
     });
+    setSelectedGroups([]);
+    setRemovedGroups([]);
+    setAddedGroups([]);
+    setUserInitialGroups([]);
     setInitialProfilePermissions({});
-    window.history.replaceState({}, null, `${localHost}/usera`);
+    window.history.replaceState({}, null, `${localHost}/users`);
   };
 
   const [userProfilesFiltered, setUserProfilesFiltered] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
+  const [allGroups, setAllGroups] = useState([]);
+  const [userInitialGroups, setUserInitialGroups] = useState([]);
+  const [selectedGroups, setSelectedGroups] = useState([]);
+  const [removedGroups, setRemovedGroups] = useState([]);
+  const [addedGroups, setAddedGroups] = useState([]);
 
   useEffect(() => {
     if (!id || !Array.isArray(id)) {
@@ -272,7 +339,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
 
     getOneDB('user/', id[0])
       .then(response => response.json())
-      .then( async (data) => {
+      .then(async (data) => {
         const { name, lastName, email, customFieldsTab, profilePermissions, idUserProfile, locationsTable, fileExt, selectedBoss } = data.response;
         const onLoadResponse = await executeOnLoadPolicy(idUserProfile, 'user', 'list', policies);
         setCustomFieldsPathResponse(onLoadResponse);
@@ -305,8 +372,23 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       .then(data => {
         const users = data.response.map(({ _id: value, email: label, name, lastName }) => ({ value, label, name, lastName }));
         setAllUsers(users);
+
+        if (Array.isArray(id)) {
+          const { groups } = data.response.find(({ _id }) => _id === id[0]);
+          const userGroups = groups.map(({ id: value, name: label, numberOfMembers }) => ({ value, label, numberOfMembers }));
+          setSelectedGroups(userGroups);
+          setUserInitialGroups(userGroups);
+        }
       })
-      .catch(error => dispatch(showErrorAlert()));
+      .catch(error => console.log(error));
+    getDB('settingsGroups')
+      .then((response) => response.json())
+      .then((data) => {
+        const { response } = data;
+        const groups = response.map(({ _id: value, name: label, numberOfMembers }) => ({ value, label, numberOfMembers }));
+        setAllGroups(groups);
+      })
+      .catch((error) => console.log(error))
   };
 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
@@ -396,19 +478,39 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
         hidden: (!id || !Array.isArray(id)) ? false : true
       }
     },
-    userGroups: {
-      componentProps: {
-        isClearable: true,
-        label: 'Groups',
-        options: colourOptions
-      }
-    },
     boss: {
       componentProps: {
         isClearable: true,
         onChange: (selectedBoss) => setValues(prev => ({ ...prev, selectedBoss })),
         value: values.selectedBoss,
         options: allUsers
+      }
+    },
+    userGroups: {
+      componentProps: {
+        isClearable: true,
+        isMulti: true,
+        label: 'Groups',
+        onChange: (groups) => {
+          // Track the removed group
+          const groupsUpdated = groups || [];
+          if (selectedGroups.length > groupsUpdated.length) {
+            const groupRemoved = selectedGroups.find((group) => !groupsUpdated.includes(group));
+            if (userInitialGroups.findIndex(({ value }) => groupRemoved.value === value) !== -1) {
+              setRemovedGroups(prev => uniq([...prev, groupRemoved]));
+            }
+          } else {
+            const groupAssigned = groupsUpdated.find((group) => !selectedGroups.includes(group));
+            setRemovedGroups(prev => prev.filter(({ value }) => value !== groupAssigned.value));
+
+            if (userInitialGroups.findIndex(({ value }) => groupAssigned.value === value) === -1) {
+              setAddedGroups(prev => uniq([...prev, groupAssigned]));
+            }
+          }
+          setSelectedGroups(groupsUpdated);
+        },
+        options: allGroups,
+        value: selectedGroups
       }
     }
   };

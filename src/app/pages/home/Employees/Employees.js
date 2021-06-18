@@ -36,8 +36,8 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
   const [userLocations, setUserLocations] = useState([]);
 
   const policiesBaseFields = {
-    list: allBaseFields.employees,
-    references: allBaseFields.employeeReferences
+    list: { id: { validationId: 'employeeId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.employees },
+    references: { id: { validationId: 'employeeReferenceId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.employeeReferences }
   };
 
   const { policies, setPolicies } = usePolicies();

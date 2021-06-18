@@ -8,10 +8,10 @@ export const TabsTitles = (module) => {
   const [titles, setTitles] = useState([]);
 
   useEffect(() => {
-    const tabs = tabsConfig.modules.filter((tab) => tab.name === module); 
+    const tabs = tabsConfig.modules.find((tab) => tab.name === module); 
     
-    if (tabs.length > 0) {
-      const titles = tabs[0].titles.map((tab) => tabsConfig.titles.filter((tabTitle) => tabTitle.title === tab)[0]);
+    if (tabs) {
+      const titles = tabs.titles.map((tab) => tabsConfig.titles.filter((tabTitle) => tabTitle.title === tab)[0]);
       setTitles(titles);
     }
   }, [module]);
