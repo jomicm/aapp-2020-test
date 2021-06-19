@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@material-ui/core";
 import DeleteIcon from '@material-ui/icons/Delete';
+import { urltoFile } from '../../../crud/api';
 import './ImageUpload.scss';
 
 const ImageUpload = ({ children, setImage = () => { }, image = null, disabled = false, showButton = true, showDeleteButton = true }) => {
@@ -11,6 +12,7 @@ const ImageUpload = ({ children, setImage = () => { }, image = null, disabled = 
   });
   const updateValues = e => {
     const file = e.target.files[0];
+    console.log(file);
     setImage(file);
     setValues({
       ...values,
@@ -18,13 +20,19 @@ const ImageUpload = ({ children, setImage = () => { }, image = null, disabled = 
     });
   };
 
+  const getFile = async () => {
+    const filename = image.split('/')[5];
+    urltoFile(image, filename, `image/${filename.split('.')[1]}`).then(res => console.log(res));
+    setImage({
+      name: image,
+      type: `image/${image.split('.')[image.split('.').length - 1]}`
+    });
+  };
+
   useEffect(() => {
 
     if (image && image?.length) {
-      setImage({
-        name: image,
-        type: `image/${image.split('.')[image.split('.').length - 1]}`
-      });
+      getFile();
     }
 
     setValues({

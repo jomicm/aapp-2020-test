@@ -295,7 +295,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
             const rows = data.response.map(row => {
               const creationDate = String(new Date(row.creationDate)).split('GMT')[0];
               const updateDate = String(new Date(row.updateDate)).split('GMT')[0];
-              return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.category, row.price, row.creationUserFullName, creationDate, updateDate, row.fileExt);
+              return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.selectedProfile?.label || '', row.price, row.creationUserFullName, creationDate, updateDate, row.fileExt);
             });
             setControl(prev => ({ ...prev, referenceRows: rows, referenceRowsSelected: [] }));
           }

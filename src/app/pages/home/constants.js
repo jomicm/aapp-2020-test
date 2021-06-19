@@ -142,7 +142,7 @@ export const allBaseFields = {
     depreciation: { validationId: 'depreciation', component: 'textField', compLabel: 'Depreciation' },
   },
   references: {
-    category: { validationId: 'category', component: 'dropSelect', compLabel: 'Category' },
+    category: { validationId: 'selectedProfile', component: 'dropSelect', compLabel: 'Category' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     brand: { validationId: 'brand', component: 'textField', compLabel: 'Brand' },
     model: { validationId: 'model', component: 'textField', compLabel: 'Model' },

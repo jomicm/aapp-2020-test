@@ -90,6 +90,22 @@ const postFILE = (foldername, filename, image) => {
   return fetch(getAPIFilePath(foldername), requestOptions)
 };
 
+const urltoFile = (url, filename, type) => {
+  const requestOptions = {
+    method: 'GET',
+    headers: getHeaders(true)
+  };
+
+  console.log(url);
+
+  return (
+    fetch(url, requestOptions)
+      .then((response) => response.blob())
+      .then((blob) => new File([blob], filename, { type }))
+      .catch((error) => console.log(error))
+  );
+}
+
 const getDBComplex = ({
   collection,
   queryExact,
@@ -303,5 +319,6 @@ module.exports = {
   postFILE,
   updateDB,
   getDBComplex,
-  getCountDB
+  getCountDB,
+  urltoFile
 };
