@@ -531,6 +531,7 @@ const ModalProcessLive = (props) => {
     currentUserApproval.cartRows = cartRows;
     currentUserApproval.fulfilled = true;
     currentUserApproval.fulfillDate = `${dateFormatted} ${timeFormatted}`;
+    currentStageData.cartRows = cartRows;
 
     return processData;
   };
@@ -549,6 +550,7 @@ const ModalProcessLive = (props) => {
     }
     const isLastStage = currentStage === totalStages;
     currentStageData.stageFulfilled = true;
+    currentStageData.cartRows = cartRows;
     if (!isLastStage) {
       initializeStage(process);
     } else {
@@ -702,7 +704,7 @@ const ModalProcessLive = (props) => {
   };
 
   const finishProcess = (process, updateProcessStatus) => {
-    const { cartRows, processData } = process;
+    const { processData } = process;
     const { selectedProcessType } = processData;
     const selfApprove = processData.stages['stage_1'].isSelfApprove || selectedProcessType === 'short';
     var validAssets = [];
@@ -728,7 +730,7 @@ const ModalProcessLive = (props) => {
 
     const finishActions = {
       creation: () => {
-        assetsToProcess.forEach( async ({ name, brand, model, locationId: location, id: referenceId, history = [], customFieldsTab}) => {
+        assetsToProcess.forEach( async ({ name, brand, model, locationId: location, id: referenceId, history = [], customFieldsTab, serial, notes, quantity, purchase_date, purchase_price, price}) => {
           const locationPath = await getLocationPath(location);
           const assetObj = {
             name,
@@ -738,7 +740,13 @@ const ModalProcessLive = (props) => {
             referenceId,
             status: 'active',
             history: [...history, {processId: process._id, processName: processData.name, processType: processData.selectedProcessType, label: `Asset Created at: ${locationPath}`, date: `${dateFormatted} ${timeFormatted}`}],
-            customFieldsTab
+            customFieldsTab,
+            serial, 
+            notes, 
+            quantity, 
+            purchase_date, 
+            purchase_price, 
+            price            
           };
           simplePost('assets', assetObj);
           dispatch(showCustomAlert({
@@ -839,6 +847,10 @@ const ModalProcessLive = (props) => {
     });
 
     return requestedAssetsIds.map((reqId) => cartRows.find(({ id }) => reqId === id));
+  };
+
+    const handleChangeAssetValues = (newCartRows) => {
+      setCartRows(newCartRows);
   };
 
   const stageGoBack = (currentStage) => {
@@ -1167,6 +1179,13 @@ const ModalProcessLive = (props) => {
           allCustomFields.push(customFieldsTab);
           customtabs.push({stage: stageName, tabs, index: ix});
         });
+        const currentStageIndex = data.response.processData.currentStage;
+        if(currentStageIndex -1 <= 0){
+          setCartRows(data.response.cartRows)
+        }
+        else if(currentStageIndex - 1 > 0){
+          setCartRows(getCurrentStageData(currentStageIndex -1 , data.response.processData).cartRows);
+        }
         setCustomTabs(customtabs);
         setCustomFieldsTab(allCustomFields);
       })
@@ -1206,6 +1225,7 @@ const ModalProcessLive = (props) => {
   // const [notifications, setNotifications] = useState([]);
   // const [approvals, setApprovals] = useState([]);
   const [assetsSelected, setAssetsSelected] = useState([]);
+  const [assetSelectedInfo, setAssetSelectedInfo] = useState(null);
   const [cartRows, setCartRows] = useState([]);
   const [isAssetReference, setIsAssetReference] = useState(null);
   const [selectedProcessType, setSelectedProcessType] = useState('');
@@ -1228,14 +1248,6 @@ const ModalProcessLive = (props) => {
     setAssetsSelected([]);
   };
 
-  const handleChangeAssetValues = (values, id) => {
-    // console.log('values:', values, id);
-    const temporalCartRows = cartRows;
-    const indexToChange = temporalCartRows.findIndex(({_id}) => _id === id);
-    temporalCartRows[indexToChange] = values;
-
-    setCartRows(temporalCartRows);
-  };
 
   const renderTabs = () => {
     const tabs = (children) => (
@@ -1408,7 +1420,8 @@ const ModalProcessLive = (props) => {
                 rows={cartRows}
                 onSetRows={setCartRows}
                 processType={selectedProcessType}
-                setAssetEditionValues={(values, id) => handleChangeAssetValues(values, id)}
+                updateAssetValues={(newCartRows) => handleChangeAssetValues(newCartRows)}
+                selectedAssetInfo={assetSelectedInfo}
               />
             }
           </TabContainer4>
@@ -1430,6 +1443,7 @@ const ModalProcessLive = (props) => {
               processType={processInfo.processData ? processInfo.processData.selectedProcessType : selectedProcessType}
               rows={cartRows}
               user={user}
+              setProcessCartInfo={handleChangeAssetValues}
             />
           </TabContainer4>
           <TabContainerCustom dir={theme4.direction}>

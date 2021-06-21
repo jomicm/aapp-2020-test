@@ -207,11 +207,11 @@ const LiveProcesses = ({ user }) => {
           .then(response => response.json())
           .then(data => {
             const rows = data.response.map(row => {
-              const { _id: id, processData: { name, selectedProcessType, processStatus }, creationUserFullName, creationDate, dueDate, updateDate} = row;
+              const { _id: id, processData: { name, selectedProcessType, processStatus }, creationUserFullName, creationDate, dueDate, updateDate, folio} = row;
               const localDate = String(new Date(creationDate)).split('GMT')[0];
               const update_date = String(new Date(updateDate)).split('GMT')[0];
               const pastDue = differenceInDays(new Date(dueDate), new Date());
-              return createLiveProcessesHeadRows(id, id.slice(-6), name, selectedProcessType, 'Approvals', processStatus, pastDue, creationUserFullName, localDate, update_date);
+              return createLiveProcessesHeadRows(id, folio, name, selectedProcessType, 'Approvals', processStatus, pastDue, creationUserFullName, localDate, update_date);
             });
             setControl(prev => ({ ...prev, processLiveRows: rows, ProcessLiveRowsSelected: [] }));
           })
@@ -265,11 +265,11 @@ const LiveProcesses = ({ user }) => {
                 .then(response => response.json())
                 .then(data => {
                     const rows = data.response.map(row => {
-                    const { _id: id, processData: { name, selectedProcessType, processStatus },  creationUserFullName, creationDate, updateDate, dueDate} = row;
+                    const { _id: id, processData: { name, selectedProcessType, processStatus },  creationUserFullName, creationDate, updateDate, dueDate, folio} = row;
                     const localDate = String(new Date(creationDate)).split('GMT')[0];
                     const update_date = String(new Date(updateDate)).split('GMT')[0];
                     const pastDue = differenceInDays(new Date(dueDate), new Date());
-                    return createLiveProcessesHeadRows(id, id.slice(-6), name, selectedProcessType, 'Approvals', processStatus, pastDue, creationUserFullName, localDate, update_date);
+                    return createLiveProcessesHeadRows(id, folio, name, selectedProcessType, 'Approvals', processStatus, pastDue, creationUserFullName, localDate, update_date);
                   });
                   setControl(prev => ({ ...prev, [controlArray]: rows, ProcessLiveApprovalsRowsSelected: [] }));
                 })

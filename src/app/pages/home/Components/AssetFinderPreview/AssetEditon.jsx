@@ -18,17 +18,12 @@ const AssetEditon = ({
     purchase_date: '',
     purchase_price: 0,
     price: 0,
-    location: '',
   });
 
   useEffect(() => {
-    setValues(pick(assetEditionValues, ['serial', 'notes', 'quantity', 'purchase_date', 'purchase_price', 'price', 'location'])) 
+    setValues(pick(assetEditionValues, ['id','serial', 'notes', 'quantity', 'purchase_date', 'purchase_price', 'price'])) 
   }, [assetEditionValues])
-
-  useEffect(() => {
-    setAssetEditionValues(values);
-  }, [values])
-
+  
   const [formValidation, setFormValidation] = useState({
     enabled: false,
     isValidForm: {}
@@ -37,9 +32,11 @@ const AssetEditon = ({
   const handleChange = name => event => {
     if (name === 'price' || name === 'purchase_price') {
       setValues({ ...values, [name]: Number(event.target.value) });
+      setAssetEditionValues({ ...values, [name]: Number(event.target.value) });
     }
     else {
       setValues({ ...values, [name]: event.target.value });
+      setAssetEditionValues({ ...values, [name]: event.target.value });
     }
   };
 
@@ -73,6 +70,9 @@ const AssetEditon = ({
         type: "date",
         InputLabelProps: {
           shrink: true
+        },
+        inputProps: {
+          min: new Date().toISOString().split('T')[0]
         }
       }
     },
@@ -82,8 +82,12 @@ const AssetEditon = ({
         onChange: handleChange('purchase_price'),
         value: values.purchase_price,
         type: "number",
+        min: 0,
         InputProps: {
           startAdornment: <InputAdornment position="start">$</InputAdornment>,
+        },
+        inputProps: {
+          min: 0,
         }
       }
     },
@@ -95,15 +99,9 @@ const AssetEditon = ({
         type: "number",
         InputProps: {
           startAdornment: <InputAdornment position="start">$</InputAdornment>,
-        }
-      }
-    },
-    location: {
-      componentProps: {
-        onChange: handleChange('location'),
-        value: values.location,
+        },
         inputProps: {
-          readOnly: true,
+          min: 0,
         }
       }
     },
