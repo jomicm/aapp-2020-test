@@ -431,11 +431,6 @@ const TableComponent = props => {
                     </TableRow>
                   );
                 })}
-              {emptyRows > 0 && (
-                <TableRow style={{ height: 49 * emptyRows }}>
-                  <TableCell colSpan={6} />
-                </TableRow>
-              )}
             </TableBody>
           </Table>
         </div>
@@ -445,6 +440,14 @@ const TableComponent = props => {
           }}
           component='div'
           count={rows.length}
+          labelDisplayedRows={({ from, to, count }) => {
+
+            if (count === 0) return 'No Pages';
+
+            const currentPage = page + 1;
+            const totalPages = Math.floor(count / rowsPerPage) + 1;
+            return `Page ${currentPage}/${totalPages}`;
+          }}
           nextIconButtonProps={{
             'aria-label': 'Next Page'
           }}

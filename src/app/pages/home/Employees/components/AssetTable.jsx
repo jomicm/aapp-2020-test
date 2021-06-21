@@ -33,7 +33,7 @@ const AssetTable = ({ assetRows = [], onAssetFinderSubmit, onDeleteAssetAssigned
         setControl({ ...control, [collection.id]: null, [collection.modal]: true });
       },
       onDelete(id) {
-        onDeleteAssetAssigned(...id);
+        onDeleteAssetAssigned([...id]);
       }
     };
   };

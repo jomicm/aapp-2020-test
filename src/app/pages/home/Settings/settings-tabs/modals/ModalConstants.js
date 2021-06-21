@@ -82,7 +82,7 @@ const ModalConstants = ({ showModal, setShowModal, reloadTable, id, employeeProf
       postDB('settingsConstants', body)
         .then(data => data.json())
         .then(response => {
-          dispatch(showSavedAlert);
+          dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('settingsConstants', _id);
         })

@@ -130,7 +130,12 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
 
   const handleChange = name => event => {
     const value = name === 'selectedProfile' ? event : event.target.value;
-    setValues(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'selectedProfile') {
+      setValues(prev => ({ ...prev, [name]: value, category: value }));
+    } else {
+      setValues(prev => ({ ...prev, [name]: value }));
+    }
     // Load Custom Fields based on Select Control [Category Selected]
     if (name === 'selectedProfile') {
       handleLoadCustomFields(value.value);
@@ -164,6 +169,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
     }
 
     const fileExt = getFileExtension(image);
+    
     const body = { ...values, price: values.price.toString(), customFieldsTab, fileExt };
     body.depreciation = Number(body.depreciation)
     if (!id) {
@@ -183,7 +189,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
           saveAndReload('references', id[0]);
           executePolicies('OnEdit', 'assets', 'references', policies);
         })
-        .catch(error => dispatch(showErrorAlert()));
+        .catch(error => console.log(error));
     }
     handleCloseModal();
   };
@@ -258,6 +264,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
       enabled: false,
       isValidForm: false
     });
+    setImage(null);
   };
 
   useEffect(() => {

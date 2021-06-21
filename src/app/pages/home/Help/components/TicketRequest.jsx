@@ -100,6 +100,7 @@ const TicketRequest = ({ values, setValues }) => {
           onChange={handleOnChange}
           rows={6}
           style={{ width: "80%" }}
+          value={message}
         />
       </div>
       <div className="__container-tr-right">

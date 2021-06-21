@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { connect } from 'react-redux';
 import { utcToZonedTime } from 'date-fns-tz';
+import { PortletBody } from "../../../../partials/content/Portlet";
 import {
-  Portlet,
-  PortletBody,
-  PortletHeader,
-  PortletHeaderToolbar,
-} from "../../../../partials/content/Portlet";
-import {
-  getDB,
-  postDB,
-  getOneDB,
-  updateDB,
   deleteDB,
+  getDBComplex,
 } from "../../../../crud/api";
 import TableComponent from "../../Components/TableComponent";
 import ModalMyTickets from "./modals/ModalMyTickets";
@@ -68,7 +61,7 @@ const createTicketsRow = (
   return { id, subject, selectedType, peaceOfMind, creator, creationDate };
 };
 
-const MyTickets = () => {
+const MyTickets = ({ user }) => {
   const [control, setControl] = useState({
     idTickets: null,
     openTicketsModal: false,
@@ -113,9 +106,13 @@ const MyTickets = () => {
       ? [collectionNames]
       : collectionNames;
     collectionNames.forEach((collectionName) => {
-      getDB(collectionName)
+      getDBComplex({
+        collection: collectionName,
+        condition: [{ "creationUserId": user.id }]
+      })
         .then((response) => response.json())
         .then((data) => {
+          console.log(data.response);
           if (collectionName === "tickets") {
             const rows = data.response.map((row) => {
               const { _id, message, peaceOfMind, selectedType, subject, creationUserFullName, creationDate } = row;
@@ -173,4 +170,8 @@ const MyTickets = () => {
   );
 };
 
-export default MyTickets;
+const mapStateToProps = ({ auth: { user } }) => ({
+  user
+});
+
+export default connect(mapStateToProps)(MyTickets);

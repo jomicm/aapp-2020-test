@@ -11,7 +11,7 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
-import { deleteDB, getDBComplex, getCountDB, getDB, getOneDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB, getDB, getOneDB, updateDB } from '../../../crud/api';
 import * as general from "../../../store/ducks/general.duck";
 import { executePolicies } from '../Components/Policies/utils';
 import TableComponent2 from '../Components/TableComponent2';
@@ -42,8 +42,8 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
 
   const { policies, setPolicies } = usePolicies();
 
-  const createUserProfilesRow = (id, name, creator, creationDate, updateDate) => {
-    return { id, name, creator, creationDate, updateDate };
+  const createUserProfilesRow = (id, name, creator, creationDate, updateDate, fileExt) => {
+    return { id, name, creator, creationDate, updateDate, fileExt };
   };
 
   const employeeProfilesHeadRows = [
@@ -62,7 +62,8 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
     manager,
     creator,
     creationDate,
-    updateDate
+    updateDate,
+    fileExt
   ) => {
     return {
       id,
@@ -73,7 +74,8 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
       manager,
       creator,
       creationDate,
-      updateDate
+      updateDate,
+      fileExt
     };
   };
 
@@ -200,7 +202,7 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
         .then(data => {
           if (collectionName === 'employeeProfiles') {
             const rows = data.response.map((row) => {
-              const { _id, name, creationUserFullName, creationDate, updateDate } = row;
+              const { _id, name, creationUserFullName, creationDate, updateDate, fileExt } = row;
               const date = String(new Date(creationDate)).split('GMT')[0];
               const uptDate = String(new Date(updateDate)).split('GMT')[0];
               return createUserProfilesRow(
@@ -208,14 +210,15 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
                 name,
                 creationUserFullName,
                 date,
-                uptDate
+                uptDate,
+                fileExt
               );
             });
             setControl(prev => ({ ...prev, employeeProfilesRows: rows, employeeProfilesRowsSelected: [] }));
           }
           if (collectionName === 'employees') {
             const rows = data.response.map((row) => {
-              const { _id, name, lastName, email, designation, manager, creationUserFullName, creationDate, updateDate } = row;
+              const { _id, name, lastName, email, designation, manager, creationUserFullName, creationDate, updateDate, fileExt } = row;
               const date = String(new Date(creationDate)).split('GMT')[0];
               const uptDate = String(new Date(updateDate)).split('GMT')[0];
               return createEmployeeRow(
@@ -227,7 +230,8 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
                 manager,
                 creationUserFullName,
                 date,
-                uptDate
+                uptDate,
+                fileExt
               );
             });
             setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));
@@ -313,17 +317,39 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
           .then((data) => {
             id.forEach((_id) => {
               deleteDB(`${collection.name}/`, _id)
-                .then((_) => {
+                .then((response) => response.json())
+                .then((data) => {
                   dispatch(showDeletedAlert());
                   const currentCollection = collection.name === 'employees' ? 'list' : 'references';
                   executePolicies('OnDelete', 'employees', currentCollection, data.response);
                   loadEmployeesData(collection.name);
+
+                  if (collection.name === 'employees') {
+                    const { response: { value: { layoutSelected, assetsAssigned } } } = data;
+
+                    assetsAssigned.forEach(({ id: assetId }) => {
+                      updateDB('assets/', { assigned: null, assignedTo: "" }, assetId)
+                        .catch((error) => console.log(error));
+                    });
+
+                    if (layoutSelected) {
+                      getOneDB('settingsLayoutsEmployees/', layoutSelected.value)
+                        .then((response) => response.json())
+                        .then((data) => {
+                          const { used } = data.response;
+                          const value = (typeof used === 'number' ? used : 1) - 1;
+                          updateDB('settingsLayoutsEmployees/', { used: value }, layoutSelected.value)
+                            .catch((error) => console.log(error));
+                        })
+                        .catch((error) => console.log(error));
+                    }
+                  }
                 })
                 .catch((_) => dispatch(showErrorAlert()));
             });
           })
           .catch((_) => dispatch(showErrorAlert()));
-        
+
         loadEmployeesData(collection.name);
       },
       onSelect(id) {

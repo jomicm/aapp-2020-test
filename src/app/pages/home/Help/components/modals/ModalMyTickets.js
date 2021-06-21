@@ -104,7 +104,7 @@ const ModalMyTickets = ({
   const reset = () => {
     setValues({
       message: "",
-      peaceOfMind: 0,
+      peaceOfMind: 100,
       selectedType: 0,
       subject: "",
     });
@@ -119,6 +119,7 @@ const ModalMyTickets = ({
     getOneDB("tickets/", id[0])
       .then((response) => response.json())
       .then((data) => {
+        console.log(data.response);
         const values = data.response;
         setValues(values);
       })
@@ -127,7 +128,7 @@ const ModalMyTickets = ({
 
   const [values, setValues] = useState({
     message: "",
-    peaceOfMind: 0,
+    peaceOfMind: 100,
     selectedType: 0,
     subject: "Hola",
   });

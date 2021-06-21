@@ -62,7 +62,7 @@ const getHeaders = (isFile = false) => {
 
 const postDB = (collection, body) => fetch(getAPIPath(collection), { method: 'POST', headers: getHeaders(), body: JSON.stringify(Object.assign(body, getBaseInfo().post)) });
 
-const postDBEncryptPassword = (collection, body) => fetch(getAPIPath(collection, '', true), { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) });
+const postDBEncryptPassword = (collection, body) => fetch(getAPIPath(collection, '', true), { method: 'POST', headers: getHeaders(), body: JSON.stringify(Object.assign(body, getBaseInfo().post)) });
 
 const getDB = (collection) => fetch(getAPIPath(collection), { method: 'GET', headers: getHeaders() });
 
@@ -89,6 +89,22 @@ const postFILE = (foldername, filename, image) => {
   };
   return fetch(getAPIFilePath(foldername), requestOptions)
 };
+
+const urltoFile = (url, filename, type) => {
+  const requestOptions = {
+    method: 'GET',
+    headers: getHeaders(true)
+  };
+
+  console.log(url);
+
+  return (
+    fetch(url, requestOptions)
+      .then((response) => response.blob())
+      .then((blob) => new File([blob], filename, { type }))
+      .catch((error) => console.log(error))
+  );
+}
 
 const getDBComplex = ({
   collection,
@@ -303,5 +319,6 @@ module.exports = {
   postFILE,
   updateDB,
   getDBComplex,
-  getCountDB
+  getCountDB,
+  urltoFile
 };

@@ -46,7 +46,7 @@ export const defaultValues = {
       depreciation: { id: 'depreciation', name: 'Depreciation', caption: '', mandatory: false, regex: '' }
     },
     references: {
-      category: { id: 'category', name: 'Category', caption: '', mandatory: false, regex: '' },
+      category: { id: 'selectedProfile', name: 'Category', caption: '', mandatory: false, regex: '' },
       name: { id: 'name', name: 'Name', caption: '', mandatory: false, regex: '' },
       brand: { id: 'brand', name: 'Brand', caption: '', mandatory: false, regex: '' },
       model: { id: 'model', name: 'Model', caption: '', mandatory: false, regex: '' },
@@ -57,7 +57,7 @@ export const defaultValues = {
       name: { id: 'name', name: 'Name', caption: '', mandatory: false, regex: '' },
       brand: { id: 'brand', name: 'Brand', caption: '', mandatory: false, regex: '' },
       model: { id: 'model', name: 'Model', caption: '', mandatory: false, regex: '' },
-      category: { id: 'category', name: 'Category', caption: '', mandatory: false, regex: '' },
+      category: { id: 'selectedProfile', name: 'Category', caption: '', mandatory: false, regex: '' },
       status: { id: 'status', name: 'Status', caption: '', mandatory: false, regex: '' },
       serialNumber: { id: 'serialNumber', name: 'Serial Number', caption: '', mandatory: false, regex: '' },
       responsible: { id: 'responsible', name: 'Responsible', caption: '', mandatory: false, regex: '' },

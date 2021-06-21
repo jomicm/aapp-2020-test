@@ -34,7 +34,6 @@ import LocationAssignment from '../components/LocationAssignment';
 import Permission from '../components/Permission';
 import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
 import { usePolicies } from '../../Components/Policies/hooks';
-
 const { apiHost, localHost } = hosts;
 
 const styles5 = theme => ({
@@ -115,6 +114,7 @@ const useStyles = makeStyles(theme => ({
 const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows, user, updateUserPic, policies }) => {
   const dispatch = useDispatch();
   const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
+  const { fulfillUser } = auth.actions;
   const classes4 = useStyles4();
   const theme4 = useTheme();
   const [value4, setValue4] = useState(0);
@@ -165,12 +165,14 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     }) || [];
 
     const fileExt = getFileExtension(image);
-    const body = { ...values, customFieldsTab, profilePermissions, locationsTable, fileExt, groups: userGroups };
+    const body = { ...values, customFieldsTab, profilePermissions, locationsTable, fileExt, groups: userGroups, selectedUserProfile: profileSelected ? profileSelected[0] : null };
 
     if (!isEmpty(values.selectedBoss)) {
       const { name, lastName } = allUsers.find(({ value }) => value === values.selectedBoss.value);
       values.selectedBoss = { ...values.selectedBoss, name, lastName };
     }
+
+    console.log(body.profilePermissions);
 
     if (!id) {
       body.idUserProfile = idUserProfile;
@@ -240,7 +242,20 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
         })
         .catch(error => dispatch(showErrorAlert()));
     }
+  
     handleCloseModal();
+
+    if (id) {;
+      if (initialProfilePermissions !== body.profilePermissions && id[0] === user.id) {
+        console.log({ ...user, name: body.name, lastName: body.lastName, email: body.email, fullName: `${body.name} ${body.lastName}`, profilePermissions: body.profilePermissions });
+        dispatch(fulfillUser({ ...user, name: body.name, lastName: body.lastName, email: body.email, fullName: `${body.name} ${body.lastName}`, profilePermissions: body.profilePermissions }));
+        updateCurrentUserPic(id[0], fileExt);
+        setTimeout(() => window.location.reload(), 1000);
+      } else if (id[0] === user.id) {
+        dispatch(fulfillUser({ ...user, name: body.name, lastName: body.lastName, fullname: `${body.name} ${body.lastName}`, email: body.email }));
+        updateCurrentUserPic(id[0], fileExt);
+      }
+    }
   };
 
   const [image, setImage] = useState(null);
@@ -296,6 +311,8 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     setRemovedGroups([]);
     setAddedGroups([]);
     setUserInitialGroups([]);
+    setInitialProfilePermissions({});
+    window.history.replaceState({}, null, `${localHost}/users`);
   };
 
   const [userProfilesFiltered, setUserProfilesFiltered] = useState([]);
@@ -328,6 +345,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
         setCustomFieldsPathResponse(onLoadResponse);
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
+        setInitialProfilePermissions(profilePermissions);
         setProfileSelected(userProfilesFiltered.filter(profile => profile.value === idUserProfile));
         setLocationsTable(locationsTable || []);
         setValues({
@@ -375,6 +393,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
 
   const [customFieldsTab, setCustomFieldsTab] = useState({});
   const [profilePermissions, setProfilePermissions] = useState({});
+  const [initialProfilePermissions, setInitialProfilePermissions] = useState({});
   const [tabs, setTabs] = useState([]);
   const [locationsTable, setLocationsTable] = useState([]);
 
@@ -455,7 +474,8 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     },
     password: {
       componentProps: {
-        onChange: handleChange('password')
+        onChange: handleChange('password'),
+        hidden: (!id || !Array.isArray(id)) ? false : true
       }
     },
     boss: {

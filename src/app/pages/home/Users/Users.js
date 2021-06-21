@@ -1,6 +1,7 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
 import { utcToZonedTime } from 'date-fns-tz';
+import { uniq } from 'lodash';
 import { connect, useDispatch } from "react-redux";
 import { Tabs } from '@material-ui/core';
 import { actions } from '../../../store/ducks/general.duck';
@@ -25,10 +26,12 @@ import ModalYesNo from '../Components/ModalYesNo';
 import Policies from '../Components/Policies/Policies';
 import { allBaseFields } from '../constants';
 
-function Users({ globalSearch, setGeneralSearch }) {
+function Users({ globalSearch, setGeneralSearch, user }) {
   const dispatch = useDispatch();
   const { showDeletedAlert, showErrorAlert } = actions;
   const [tab, setTab] = useState(0);
+  const [userLocations, setUserLocations] = useState([]);
+
   const { policies, setPolicies } = usePolicies();
 
   const policiesBaseFields = {
@@ -36,8 +39,8 @@ function Users({ globalSearch, setGeneralSearch }) {
     references: { id: { validationId: 'userReferenceId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.userReferences }
   };
 
-  const createUserProfilesRow = (id, name, creator, creationDate, updateDate) => {
-    return { id, name, creator, creationDate, updateDate };
+  const createUserProfilesRow = (id, name, creator, creationDate, updateDate, fileExt) => {
+    return { id, name, creator, creationDate, updateDate, fileExt };
   };
 
   const userProfilesHeadRows = [
@@ -47,8 +50,8 @@ function Users({ globalSearch, setGeneralSearch }) {
     { id: 'updateDate', numeric: false, disablePadding: false, label: 'Update Date', searchByDisabled: true }
   ];
 
-  const createUserRow = (id, name, lastName, email, designation, manager, creator, creationDate, updateDate) => {
-    return { id, name, lastName, email, designation, manager, creator, creationDate, updateDate };
+  const createUserRow = (id, name, lastName, email, designation, manager, creator, creationDate, updateDate, fileExt) => {
+    return { id, name, lastName, email, designation, manager, creator, creationDate, updateDate, fileExt };
   };
 
   const usersHeadRows = [
@@ -86,6 +89,52 @@ function Users({ globalSearch, setGeneralSearch }) {
     },
   });
 
+  const locationsRecursive = (data, currentLocation, res) => {
+    const children = data.response.filter((e) => e.parent === currentLocation._id);
+
+    if (!children.length) {
+      return;
+    }
+
+    children.forEach((e) => {
+      if (!res.includes(e._id)) {
+        res.push(e._id);
+      }
+    });
+    children.forEach((e) => locationsRecursive(data, e, res));
+  };
+
+  const loadUserLocations = () => {
+    getOneDB('user/', user.id)
+      .then((response) => response.json())
+      .then((data) => {
+        const locationsTable = data.response.locationsTable;
+        getDB('locationsReal')
+          .then((response) => response.json())
+          .then((data) => {
+            let res = [];
+            locationsTable.forEach((location) => {
+              const currentLoc = data.response.find((e) => e._id === location.parent);
+
+              if (!userLocations.includes(currentLoc._id)) {
+                res.push(currentLoc._id);
+              }
+
+              const children = data.response.filter((e) => e.parent === currentLoc._id);
+
+              if (children.length) {
+                children.forEach((e) => res.push(e._id));
+                children.forEach((e) => locationsRecursive(data, e, res));
+              }
+            });
+            const resFiltered = uniq(res);
+            setUserLocations(resFiltered);
+          })
+          .catch((error) => dispatch(showErrorAlert()));
+      })
+      .catch((error) => dispatch(showErrorAlert()));
+  };
+
   const loadUsersData = (collectionNames = ['user', 'userProfiles']) => {
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
@@ -98,15 +147,25 @@ function Users({ globalSearch, setGeneralSearch }) {
         )
       }
       if (collectionName === 'user') {
-        queryLike = tableControl.user.searchBy ? (
-          [{ key: tableControl.user.searchBy, value: tableControl.user.search }]
-        ) : (
-          ['name', 'lastName', 'email'].map(key => ({ key, value: tableControl.user.search }))
-        )
+        if (tableControl.user.locationsFilter.length) {
+          queryLike = tableControl.user.locationsFilter.map(locationID => ({ key: 'locationsTable.parent', value: locationID }))
+          console.log(queryLike);
+        } else {
+          queryLike = tableControl.user.searchBy ? (
+            [{ key: tableControl.user.searchBy, value: tableControl.user.search }]
+          ) : (
+            ['name', 'lastName', 'email'].map(key => ({ key, value: tableControl.user.search }))
+          )
+        }
       }
+
+      const list = [{ "locationsTable.parent": { "$in": userLocations } }];
+      const condition = collectionName === 'user' ? list : null;
+
       getCountDB({
         collection: collectionName,
-        queryLike: tableControl[collectionName].search ? queryLike : null
+        condition,
+        queryLike: tableControl[collectionName].search || tableControl['user'].locationsFilter.length ? queryLike : null
       })
         .then(response => response.json())
         .then(data => {
@@ -119,12 +178,14 @@ function Users({ globalSearch, setGeneralSearch }) {
           }))
         });
 
+    
       getDBComplex({
         collection: collectionName,
+        condition,
         limit: tableControl[collectionName].rowsPerPage,
         skip: tableControl[collectionName].rowsPerPage * tableControl[collectionName].page,
         sort: [{ key: tableControl[collectionName].orderBy, value: tableControl[collectionName].order }],
-        queryLike: tableControl[collectionName].search /* || tableControl['user'].locationsFilter.length */ ? queryLike : null
+        queryLike: tableControl[collectionName].search || tableControl['user'].locationsFilter.length ? queryLike : null
       })
         .then(response => response.json())
         .then(data => {
@@ -132,17 +193,16 @@ function Users({ globalSearch, setGeneralSearch }) {
             const rows = data.response.map(row => {
               const date = String(new Date(row.creationDate)).split('GMT')[0];
               const updateDate = String(new Date(row.updateDate)).split('GMT')[0];
-              return createUserProfilesRow(row._id, row.name, row.creationUserFullName, date, updateDate);
+              return createUserProfilesRow(row._id, row.name, row.creationUserFullName, date, updateDate, row.fileExt);
             });
             setControl(prev => ({ ...prev, userProfilesRows: rows, userProfilesRowsSelected: [] }));
           }
           if (collectionName === 'user') {
             const rows = data.response.map(row => {
               const { selectedBoss } = row;
-              console.log(selectedBoss);
               const date = String(new Date(row.creationDate)).split('GMT')[0];
               const updateDate = String(new Date(row.updateDate)).split('GMT')[0];
-              return createUserRow(row._id, row.name, row.lastName, row.email, row.designation, selectedBoss ? `${selectedBoss.name} ${selectedBoss.lastName}` : '', row.creationUserFullName, date, updateDate);
+              return createUserRow(row._id, row.name, row.lastName, row.email, row.selectedUserProfile ? row.selectedUserProfile.label || '' : '', selectedBoss ? `${selectedBoss.name} ${selectedBoss.lastName}` : '', row.creationUserFullName, date, updateDate, row.fileExt);
             });
             setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));
           }
@@ -151,10 +211,11 @@ function Users({ globalSearch, setGeneralSearch }) {
     });
   };
 
+  useEffect(() => loadUserLocations(), []);
 
   useEffect(() => {
     loadUsersData('user');
-  }, [tableControl.user.page, tableControl.user.rowsPerPage, tableControl.user.order, tableControl.user.orderBy, tableControl.user.search, tableControl.user.locationsFilter]);
+  }, [tableControl.user.page, tableControl.user.rowsPerPage, tableControl.user.order, tableControl.user.orderBy, tableControl.user.search, tableControl.user.locationsFilter, userLocations]);
 
   useEffect(() => {
     loadUsersData('userProfiles');
@@ -177,6 +238,19 @@ function Users({ globalSearch, setGeneralSearch }) {
       }, 800);
     }
   }, [globalSearch.tabIndex, globalSearch.searchValue]);
+
+  useEffect(() => {
+    const urls = window.location.search.split('=');
+    const idUser = urls[1];
+
+    if (idUser) {
+      setControl(prev => ({
+        ...prev,
+        idUser: [idUser],
+        openUsersModal: true,
+      }));
+    }
+  }, [window.location.search]);
 
   const [control, setControl] = useState({
     idUserProfile: null,
@@ -306,6 +380,16 @@ function Users({ globalSearch, setGeneralSearch }) {
                       <TableComponent2
                         controlValues={tableControl.user}
                         headRows={usersHeadRows}
+                        locationControl={(locations) => {
+                          console.log(locations);
+                          setTableControl(prev => ({
+                            ...prev,
+                            user: {
+                              ...prev.user,
+                              locationsFilter: locations
+                            }
+                          }))
+                        }}
                         onAdd={tableActions('users').onAdd}
                         onDelete={tableActions('users').onDelete}
                         onEdit={tableActions('users').onEdit}
@@ -343,6 +427,8 @@ function Users({ globalSearch, setGeneralSearch }) {
                         }}
                         title={'Users List'}
                         tileView
+                        treeView
+                        userLocations={userLocations}
                       />
                     </div>
                   </div>
@@ -423,7 +509,8 @@ function Users({ globalSearch, setGeneralSearch }) {
   );
 }
 
-const mapStateToProps = ({ general: { globalSearch } }) => ({
-  globalSearch
+const mapStateToProps = ({ general: { globalSearch }, auth: { user } }) => ({
+  globalSearch,
+  user
 });
 export default connect(mapStateToProps, general.actions)(Users);

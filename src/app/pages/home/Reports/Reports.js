@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { shallowEqual, useSelector } from "react-redux";
+import { connect, shallowEqual, useSelector } from "react-redux";
+import { uniq } from 'lodash';
 import { utcToZonedTime } from 'date-fns-tz';
 import { Tabs } from "@material-ui/core";
 import {
@@ -8,14 +9,14 @@ import {
   PortletHeader,
   PortletHeaderToolbar
 } from "../../../partials/content/Portlet";
-import { deleteDB, getDBComplex, getCountDB, getDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB, getDB, getOneDB } from '../../../crud/api';
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import TableComponent2 from '../Components/TableComponent2';
 import ModalYesNo from '../Components/ModalYesNo';
 import TabGeneral from './TabGeneral';
 import ModalReportsSaved from './modals/ModalReportsSaved'
 
-const Reports = () => {
+const Reports = ({ user }) => {
   const [control, setControl] = useState({
     idReports: null,
     openReportsModal: false,
@@ -27,6 +28,7 @@ const Reports = () => {
   const [reportToGenerate, setReportToGenerate] = useState([]);
   const [selectReferenceConfirmation, setSelectReferenceConfirmation] = useState(false);
   const [tab, setTab] = useState(0);
+  const [userLocations, setUserLocations] = useState([]);
   const { layoutConfig } = useSelector(
     ({ builder }) => ({ layoutConfig: builder.layoutConfig }),
     shallowEqual
@@ -63,6 +65,52 @@ const Reports = () => {
       searchBy: '',
     },
   });
+
+  const locationsRecursive = (data, currentLocation, res) => {
+    const children = data.response.filter((e) => e.parent === currentLocation._id);
+
+    if (!children.length) {
+      return;
+    }
+
+    children.forEach((e) => {
+      if (!res.includes(e._id)) {
+        res.push(e._id);
+      }
+    });
+    children.forEach((e) => locationsRecursive(data, e, res));
+  };
+
+  const loadUserLocations = () => {
+    getOneDB('user/', user.id)
+      .then((response) => response.json())
+      .then((data) => {
+        const locationsTable = data.response.locationsTable;
+        getDB('locationsReal')
+          .then((response) => response.json())
+          .then((data) => {
+            let res = [];
+            locationsTable.forEach((location) => {
+              const currentLoc = data.response.find((e) => e._id === location.parent);
+
+              if (!userLocations.includes(currentLoc._id)) {
+                res.push(currentLoc._id);
+              }
+
+              const children = data.response.filter((e) => e.parent === currentLoc._id);
+
+              if (children.length) {
+                children.forEach((e) => res.push(e._id));
+                children.forEach((e) => locationsRecursive(data, e, res));
+              }
+            });
+            const resFiltered = uniq(res);
+            setUserLocations(resFiltered);
+          })
+          .catch((error) => console.log(error));
+      })
+      .catch((error) => console.log(error));
+  };
 
   const loadReportsData = (collectionNames = ['reports']) => {
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
@@ -183,6 +231,7 @@ const Reports = () => {
 
   useEffect(() => {
     loadReportsData();
+    loadUserLocations();
   }, []);
 
   useEffect(() => {
@@ -232,6 +281,7 @@ const Reports = () => {
                     savedReports={data}
                     setId={setReportToGenerate}
                     reloadData={loadReportsData}
+                    userLocations={userLocations}
                   />
                 </div>
               </div>
@@ -299,4 +349,8 @@ const Reports = () => {
   );
 }
 
-export default Reports;
+const mapStateToProps = ({ auth: { user } }) => ({
+  user
+});
+
+export default connect(mapStateToProps)(Reports);

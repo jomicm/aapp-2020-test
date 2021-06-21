@@ -59,7 +59,7 @@ import {
   EmailSettings,
   DecimalSettings,
   URLSettings,
-  ImageSettings, 
+  ImageSettings,
   DecisionBoxSettings,
   RichTextSettings,
   FormulaSettings,
@@ -76,6 +76,9 @@ const useStylesAccordion = makeStyles(theme => ({
     fontSize: theme.typography.pxToRem(15),
     fontWeight: theme.typography.fontWeightRegular,
   },
+  deleteButton: {
+    margin: '15px'
+  }
 }));
 
 // Example 4 - Tabs
@@ -167,35 +170,82 @@ function CustomFields(props) {
     handleChangeValue('tabLayout', String(tabs[newValue].columns));
   };
 
+  const handleDeleteCFTab = () => {
+    const newTabs = tabs.filter(({ name }) => tabName !== name);
+    const index = tabs.findIndex(({ name }) => tabName === name);
+
+    if (index < tabs.length - 1) {
+      setTabIndex(index);
+      setTabName(newTabs[index].name); 
+      setCustomFieldsColumns(Array(newTabs[index].columns).fill(1));
+      handleChangeValue('tabLayout', String(newTabs[index].columns));
+      let data = customFieldsTab;
+      console.log(index, customFieldsTab.length);
+      const length =  Object.keys(customFieldsTab || []).length;
+
+      for (var i = index; i < length; i++) {
+        const oldKey = `tab-${i}`
+
+        if (i + 1 === length) {
+          break;
+        }
+
+        const nextKey = `tab-${i + 1}`;
+        const value = data[nextKey];
+
+        data[oldKey] = value
+        delete data[nextKey];
+        data = { ...data, [oldKey]: value };
+      };
+      setCustomFieldsTab(data);
+    } else if (!newTabs.length) {
+      setTabIndex(0);
+      setTabName('');
+      setCustomFieldsColumns([1]);
+      handleChangeValue('tabLayout', '1');
+      setCustomFieldsTab({});
+    } else {
+      setTabIndex(index - 1);
+      setTabName(newTabs[index - 1].name);
+      setCustomFieldsColumns(Array(newTabs[index - 1].columns).fill(1));
+      handleChangeValue('tabLayout', String(newTabs[index - 1].columns));
+      let data = customFieldsTab;
+      delete data[`tab-${index}`];
+      setCustomFieldsTab(data);
+    }
+
+    setTabs(newTabs);
+  };
+
   const [tabIndex, setTabIndex] = useState(0);
 
   const customControls = [
     [
-      { id: 'singleLine', name: 'Single Line', icon: <TextFormatIcon style={{fill: 'grey'}}/> },
-      { id: 'multiLine', name: 'Multi Line', icon: <SubjectIcon style={{fill: 'grey'}}/> },
-      { id: 'date', name: 'Date', icon: <TodayIcon style={{fill: 'grey'}}/> },
-      { id: 'dateTime', name: 'Date Time', icon: <ScheduleIcon style={{fill: 'grey'}}/> },
+      { id: 'singleLine', name: 'Single Line', icon: <TextFormatIcon style={{ fill: 'grey' }} /> },
+      { id: 'multiLine', name: 'Multi Line', icon: <SubjectIcon style={{ fill: 'grey' }} /> },
+      { id: 'date', name: 'Date', icon: <TodayIcon style={{ fill: 'grey' }} /> },
+      { id: 'dateTime', name: 'Date Time', icon: <ScheduleIcon style={{ fill: 'grey' }} /> },
     ],
     [
-      { id: 'dropDown', name: 'Drop Down', icon: <ArrowDropDownIcon style={{fill: 'grey'}}/> },
-      { id: 'radioButtons', name: 'Radio', icon: <RadioButtonCheckedIcon style={{fill: 'grey'}}/>},
-      { id: 'checkboxes', name: 'Check Box', icon: <CheckBoxOutlinedIcon style={{fill: 'grey'}}/> },
-      { id: 'fileUpload', name: 'File Upload', icon: <AttachFileOutlinedIcon style={{fill: 'grey'}}/> },
+      { id: 'dropDown', name: 'Drop Down', icon: <ArrowDropDownIcon style={{ fill: 'grey' }} /> },
+      { id: 'radioButtons', name: 'Radio', icon: <RadioButtonCheckedIcon style={{ fill: 'grey' }} /> },
+      { id: 'checkboxes', name: 'Check Box', icon: <CheckBoxOutlinedIcon style={{ fill: 'grey' }} /> },
+      { id: 'fileUpload', name: 'File Upload', icon: <AttachFileOutlinedIcon style={{ fill: 'grey' }} /> },
     ],
     [
-      { id: 'currency', name: 'Currency', icon: <AttachMoneyOutlinedIcon style={{fill: 'grey'}}/>},
-      { id: 'percentage', name: 'Percentage', icon: <Typography style={{color: 'grey', fontSize: 18, fontWeight: 'bolder'}}>%</Typography> },
-      { id: 'email', name: 'Email', icon: <EmailOutlinedIcon style={{fill: 'grey'}}/> },
-      { id: 'decimal', name: 'Decimal', icon: <Typography style={{color: 'grey', fontSize: 12, fontWeight: 'bolder'}}>0.00</Typography> },      
+      { id: 'currency', name: 'Currency', icon: <AttachMoneyOutlinedIcon style={{ fill: 'grey' }} /> },
+      { id: 'percentage', name: 'Percentage', icon: <Typography style={{ color: 'grey', fontSize: 18, fontWeight: 'bolder' }}>%</Typography> },
+      { id: 'email', name: 'Email', icon: <EmailOutlinedIcon style={{ fill: 'grey' }} /> },
+      { id: 'decimal', name: 'Decimal', icon: <Typography style={{ color: 'grey', fontSize: 12, fontWeight: 'bolder' }}>0.00</Typography> },
     ],
     [
-      { id: 'richText', name: 'HTML', icon: <TextFieldsIcon style={{fill: 'grey'}}/> },
-      { id: 'imageUpload', name: 'Image Upload', icon: <ImageIcon style={{fill: 'grey'}}/> },
-      { id: 'decisionBox', name: 'Decision Box', icon: <EditAttributesIcon style={{fill: 'grey'}}/> },
-      { id: 'url', name: 'URL', icon: <LinkIcon style={{fill: 'grey'}}/> },
+      { id: 'richText', name: 'HTML', icon: <TextFieldsIcon style={{ fill: 'grey' }} /> },
+      { id: 'imageUpload', name: 'Image Upload', icon: <ImageIcon style={{ fill: 'grey' }} /> },
+      { id: 'decisionBox', name: 'Decision Box', icon: <EditAttributesIcon style={{ fill: 'grey' }} /> },
+      { id: 'url', name: 'URL', icon: <LinkIcon style={{ fill: 'grey' }} /> },
     ],
     [
-      { id: 'formula', name: 'Num Formula', icon: <Typography style={{color: 'grey', fontSize: 16, fontWeight: 'bolder'}}>f(x)</Typography> },
+      { id: 'formula', name: 'Num Formula', icon: <Typography style={{ color: 'grey', fontSize: 16, fontWeight: 'bolder' }}>f(x)</Typography> },
       //Date Formula will be implemented in another ticket
       // { id: 'dateGormula', name: 'Date Formula', icon: <Typography style={{color: 'grey', fontSize: 16, fontWeight: 'bolder'}}>f(t)</Typography> },
     ],
@@ -221,10 +271,10 @@ function CustomFields(props) {
     if (!customFieldsTabTmp[`tab-${tabIndex}`]) {
       customFieldsTabTmp[`tab-${tabIndex}`] = { left: [], right: [], info: tabs[tabIndex] };
     }
-    if ( ['Radio', 'Drop Down', 'Check Box', 'Decision Box'].includes(fieldName) ){
-      customFieldsTabTmp[`tab-${tabIndex}`].left.push({ id: uuidv4().split('-').pop(), content: customFieldName, values: {fieldName, options: ['option 1', 'option 2', 'option 3']}});
+    if (['Radio', 'Drop Down', 'Check Box', 'Decision Box'].includes(fieldName)) {
+      customFieldsTabTmp[`tab-${tabIndex}`].left.push({ id: uuidv4().split('-').pop(), content: customFieldName, values: { fieldName, options: ['option 1', 'option 2', 'option 3'] } });
     } else {
-      customFieldsTabTmp[`tab-${tabIndex}`].left.push({ id: uuidv4().split('-').pop(), content: customFieldName, values: {fieldName, initialValue: ''}});
+      customFieldsTabTmp[`tab-${tabIndex}`].left.push({ id: uuidv4().split('-').pop(), content: customFieldName, values: { fieldName, initialValue: '' } });
     }
     setCustomFieldsTab(customFieldsTabTmp);
   };
@@ -328,18 +378,18 @@ function CustomFields(props) {
           <ExpansionPanelDetails>
             <div className='custom-controls-wrapper'>
               {customControls.map((column) => (
-                  <div className='custom-controls-column'>
-                    {column.map((customField, ix) => (
-                      <center>
-                        <div key={`custom-control-${ix}`} className='custom-controls-wrapper__element' onClick={() => handleAddCustomFieldToTab(customField.id, customField.name)}>
-                          <div className='custom-controls-icon'>
-                            {customField.icon || null }
-                          </div>
-                          <span>{customField.name}</span>
+                <div className='custom-controls-column'>
+                  {column.map((customField, ix) => (
+                    <center>
+                      <div key={`custom-control-${ix}`} className='custom-controls-wrapper__element' onClick={() => handleAddCustomFieldToTab(customField.id, customField.name)}>
+                        <div className='custom-controls-icon'>
+                          {customField.icon || null}
                         </div>
-                      </center>
-                    ))}
-                  </div>              
+                        <span>{customField.name}</span>
+                      </div>
+                    </center>
+                  ))}
+                </div>
               ))}
             </div>
           </ExpansionPanelDetails>
@@ -356,16 +406,23 @@ function CustomFields(props) {
           <ExpansionPanelDetails>
             <div className="tab-properties-wrapper">
               <div className='tab-properties-wrapper__tab-name'>
-                <TextField
-                  id="standard-name"
-                  label="Tab Name"
-                  value={tabName}
-                  onChange={(e) => tabs.length > 0 ? handleChangeSelectedTabName(e) : null}
-                  margin="normal"
-                />
-                <span field-validator_error style={{ display: 'flex', justifyContent: 'start', width: '90%', color: 'red', fontSize: 10 }}>
-                  {tabs.length > 0 ? null : 'First add a tab'}
-                </span>
+                <div>
+                  <TextField
+                    id="standard-name"
+                    label="Tab Name"
+                    value={tabName}
+                    onChange={(e) => tabs.length > 0 ? handleChangeSelectedTabName(e) : null}
+                    margin="normal"
+                  />
+                  <span field-validator_error style={{ display: 'flex', justifyContent: 'start', width: '90%', color: 'red', fontSize: 10 }}>
+                    {tabs.length > 0 ? null : 'First add a tab'}
+                  </span>
+                </div>
+                {(tabs.length > 0 && typeof tabName === 'string') && (
+                  <Button classes={{ root: classes.deleteButton }} onClick={handleDeleteCFTab} color="secondary" variant="contained">
+                    Delete Tab
+                  </Button>
+                )}
               </div>
               <FormControl
                 component="fieldset"

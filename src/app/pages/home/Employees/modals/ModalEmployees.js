@@ -23,12 +23,13 @@ import { CustomFieldsPreview } from '../../constants';
 import ImageUpload from '../../Components/ImageUpload'
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
 import {
+  getDB,
   getOneDB,
-  updateDB,
   postDB,
-  getDB
+  updateDB
 } from '../../../../crud/api';
 import AssetTable from '../components/AssetTable';
+import ModalYesNo from '../../Components/ModalYesNo'
 import ModalAssignmentReport from './ModalAssignmentReport';
 
 const styles5 = (theme) => ({
@@ -129,6 +130,9 @@ const ModalEmployees = ({
 
   const [assetsBeforeSaving, setAssetsBeforeSaving] = useState([]);
   const [assetsToDelete, setAssetsToDelete] = useState([]);
+  const [showAssignedConfirmation, setShowAssignedConfirmation] = useState(false);
+  const [assetsAssigned, setAssetsAssigned] = useState([]);
+  const [confirmationText, setConfirmationText] = useState('');
 
   /* General */
 
@@ -157,6 +161,11 @@ const ModalEmployees = ({
     name: '',
     selectedUserProfile: null
   });
+  const [responsibilityLayout, setResponsabilityLayout] = useState({
+    added: {},
+    initial: {},
+    removed: {}
+  });
 
   const [formValidation, setFormValidation] = useState({
     enabled: false,
@@ -166,12 +175,12 @@ const ModalEmployees = ({
 
   const handleAssignmentsOnSaving = (id) => {
     assetsToDelete.map(asset => {
-      updateDB('assets/', { assigned: null }, asset.id)
+      updateDB('assets/', { assigned: null, assignedTo: "" }, asset.id)
         .then((response) => { })
         .catch(error => dispatch(showErrorAlert()));
     });
     assetsBeforeSaving.map(asset => {
-      updateDB('assets/', { assigned: id }, asset.id)
+      updateDB('assets/', { assigned: id, assignedTo: `${values.name} ${values.lastName} <${values.email}>` }, asset.id)
         .then(response => { })
         .catch(error => dispatch(showErrorAlert()));
     });
@@ -190,6 +199,7 @@ const ModalEmployees = ({
 
   const onChangeEmployeeProfile = (e) => {
     if (!e) {
+      setValues(prev => ({ ...prev, employeeProfile: e }));
       setCustomFieldsTab({});
       setProfilePermissions({});
       setTabs([]);
@@ -210,6 +220,7 @@ const ModalEmployees = ({
         setProfilePermissions(profilePermissions);
         setTabs(tabs);
         setIdUserProfile(e.value);
+        setValues(prev => ({ ...prev, employeeProfile: e }));
       })
       .catch(error => dispatch(showErrorAlert()));
   };
@@ -245,7 +256,22 @@ const ModalEmployees = ({
       },
       componentProps: {
         isClearable: true,
-        onChange: (e) => setLayoutSelected(e),
+        onChange: (layout) => {
+          if (layout) {
+            if (responsibilityLayout.initial?.value !== layout?.value && id) {
+              setResponsabilityLayout(prev => ({ ...prev, added: layout, removed: prev.initial || {} }));
+            } else if (!id) {
+              setResponsabilityLayout(prev => ({ ...prev, added: layout }));
+            } else {
+              setResponsabilityLayout(prev => ({ ...prev, added: {}, removed: {} }));
+            }
+          } else {
+            setResponsabilityLayout(prev => ({ ...prev, added: {}, removed: prev.initial }));
+          }
+
+          setValues(prev => ({ ...prev, responsibilityLayout: layout }));
+          setLayoutSelected(layout);
+        },
         options: layoutOptions,
         value: layoutSelected,
       }
@@ -272,48 +298,81 @@ const ModalEmployees = ({
     setLayoutSelected(null);
     setAssetsBeforeSaving([]);
     setAssetsToDelete([]);
+    setAssetsAssigned([]);
     setFormValidation({
       enabled: false,
       isValidForm: false
     });
+    setResponsabilityLayout({
+      added: {},
+      initial: {},
+      removed: {}
+    });
+    setShowAssignedConfirmation(false);
+    setConfirmationText('');
+  };
+
+  const createAssetRow = (id, name, brand, model, assigned, EPC, serial) => {
+    return { id, name, brand, model, assigned, EPC, serial };
   };
 
   const handleOnAssetFinderSubmit = (filteredRows) => {
+    let assetsAlreadyAssigned = [];
     filteredRows.rows.map((rowTR) => {
       if (!assetsBeforeSaving.find((row) => row.id === rowTR.id)) {
         getOneDB('assets/', rowTR.id)
           .then(response => response.json())
           .then(data => {
-            const res = data.response;
-            if (!data.response.parent) {
+            const { response } = data;
+            if (!response.assigned) {
               setAssetsBeforeSaving(prev => [
                 ...prev,
-                {
-                  id: res._id,
-                  name: res.name,
-                  brand: res.brand,
-                  model: res.model,
-                  assigned: false,
-                  EPC: res.EPC,
-                  serial: res.serial,
-                }
+                createAssetRow(response._id, response.name, response.brand, response.model, false, response.EPC, response.serial)
               ]);
               return;
             }
 
-            dispatch(showErrorAlert());
+            const obj = createAssetRow(response._id, response.name, response.brand, response.model, false, response.EPC, response.serial);
+
+            assetsAlreadyAssigned.push({
+              ...obj,
+              employeeId: response.assigned,
+              employeeName: response.assignedTo
+            });
           })
-          .catch(error => { })
+          .catch(error => console.log(error))
+          .finally(() => {
+            if (assetsAlreadyAssigned.length) {
+              setAssetsAssigned(assetsAlreadyAssigned);
+              setShowAssignedConfirmation(true);
+              const text = assetsAlreadyAssigned.map(({ name, employeeName }) => (
+                <span> {name} - {employeeName || 'No Employee Name Founded'} <br /> </span>
+              ));
+              setConfirmationText((
+                <>
+                  {text}
+                </>
+              ))
+            }
+          });
+      } else {
+        dispatch(showCustomAlert({
+          message: 'Asset already assigned to this employee',
+          open: true,
+          type: 'warning'
+        }));
       }
     });
   };
 
   const handleOnDeleteAssetAssigned = (id) => {
     const restRows = assetsBeforeSaving.filter(row => {
-      if (row.id !== id) {
+      if (!id.includes(row.id)) {
         return row;
       }
-      setAssetsToDelete(prev => [...prev, row]);
+      if (!row.employeeId) {
+        setAssetsToDelete(prev => [...prev, row]);
+      }
     });
     setAssetsBeforeSaving(restRows);
   };
@@ -326,6 +385,34 @@ const ModalEmployees = ({
     }
 
     const fileExt = getFileExtension(image);
+
+    let reassignedAssets = [];
+
+    assetsBeforeSaving.forEach(({ employeeId, id: assetId }) => {
+      const index = reassignedAssets.findIndex((element) => element.employeeId === employeeId);
+      if (index !== - 1) {
+        reassignedAssets[index].assets = [...reassignedAssets[index].assets, assetId];
+      } else if (employeeId) {
+        reassignedAssets.push({ employeeId, assets: [assetId] });
+      }
+    });
+
+    if (reassignedAssets.length) {
+      reassignedAssets.forEach(({ assets, employeeId }) => {
+        getOneDB('employees/', employeeId)
+          .then((response) => response.json())
+          .then((data) => {
+            const { response: { assetsAssigned } } = data;
+            const newAssetsAssigned = assetsAssigned.filter(({ id: assetId }) =>!assets.includes(assetId));
+            updateDB('employees/', { assetsAssigned: newAssetsAssigned }, employeeId)
+              .catch((error) => console.log(error));
+          })
+          .catch((error) => console.log(error));
+      })
+    }
+
+    const parseAssetsAssigned = assetsBeforeSaving.map(({ id, name, brand, model, assigned, EPC, serial }) => createAssetRow(id, name, brand, model, assigned, EPC, serial));
+
     const body = {
       ...values,
       customFieldsTab,
@@ -333,7 +420,7 @@ const ModalEmployees = ({
       locationsTable,
       layoutSelected,
       fileExt,
-      assetsAssigned: assetsBeforeSaving
+      assetsAssigned: parseAssetsAssigned
     };
 
     if (!id) {
@@ -346,6 +433,18 @@ const ModalEmployees = ({
           saveAndReload('employees', _id);
           executePolicies('OnAdd', 'employees', 'list', policies);
           handleAssignmentsOnSaving(_id);
+          
+          if (Object.entries(responsibilityLayout.added || {}).length) {
+            getOneDB('settingsLayoutsEmployees/', responsibilityLayout.added.value)
+            .then((response) => response.json())
+            .then((data) => {
+              const { used } = data.response;
+              const value = (typeof used === 'number' ? used : 0) + 1;
+              updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.added.value)
+                .catch((error) => console.log(error));
+            })
+            .catch((error) => console.log(error));
+          }
         })
         .catch((error) => dispatch(showErrorAlert()));
     } else {
@@ -355,6 +454,30 @@ const ModalEmployees = ({
           saveAndReload('employees', id[0]);
           handleAssignmentsOnSaving(id[0]);
           executePolicies('OnEdit', 'employees', 'list', policies);
+
+          if (Object.entries(responsibilityLayout.added || {}).length) {
+            getOneDB('settingsLayoutsEmployees/', responsibilityLayout.added.value)
+            .then((response) => response.json())
+            .then((data) => {
+              const { used } = data.response;
+              const value = (typeof used === 'number' ? used : 0) + 1;
+              updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.added.value)
+                .catch((error) => console.log(error));
+            })
+            .catch((error) => console.log(error));
+          }
+
+          if (Object.entries(responsibilityLayout.removed || {}).length) {
+            getOneDB('settingsLayoutsEmployees/', responsibilityLayout.removed.value)
+            .then((response) => response.json())
+            .then((data) => {
+              const { used } = data.response;
+              const value = (typeof used === 'number' ? used : 1) - 1;
+              updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.removed.value)
+                .catch((error) => console.log(error));
+            })
+            .catch((error) => console.log(error));
+          }
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -402,7 +525,7 @@ const ModalEmployees = ({
 
     getOneDB('employees/', id[0])
       .then((response) => response.json())
-      .then( async (data) => {
+      .then(async (data) => {
         console.log(data.response);
         const {
           name,
@@ -420,6 +543,7 @@ const ModalEmployees = ({
         setCustomFieldsPathResponse(onLoadResponse);
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
+        setResponsabilityLayout(prev => ({ ...prev, initial: typeof layoutSelected === 'object' ? layoutSelected : {} }));
         setLayoutSelected(layoutSelected);
         setProfileSelected(
           employeeProfilesFiltered.filter(
@@ -465,6 +589,22 @@ const ModalEmployees = ({
 
   return (
     <div style={{ width: '1000px' }}>
+      <ModalYesNo
+        message={confirmationText}
+        onCancel={() => {
+          setShowAssignedConfirmation(false);
+          setAssetsAssigned([]);
+        }}
+        onOK={() => {
+          const parseReassignedRows = assetsAssigned.map(({ id, name, brand, model, assigned, EPC, serial, employeeId }) => ({ ...createAssetRow(id, name, brand, model, assigned, EPC, serial), employeeId }));
+          console.log(parseReassignedRows);
+          setAssetsBeforeSaving(prev => [...prev, ...parseReassignedRows]);
+          setShowAssignedConfirmation(false);
+          setAssetsAssigned([]);
+        }}
+        showModal={showAssignedConfirmation}
+        title="Assets already assigned. Do you want to reassign them to you?"
+      />
       <ModalAssignmentReport
         assetRows={assetsBeforeSaving}
         htmlPreview={htmlPreview}

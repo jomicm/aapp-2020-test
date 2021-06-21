@@ -32,7 +32,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 // import './ModalAssetCategories.scss';
 import ImageUpload from '../../../Components/ImageUpload';
-import { postDBEncryptPassword, getOneDB, updateDB, postDB } from '../../../../../crud/api';
+import { postDBEncryptPassword, getOneDB, updateDB, postDB, getDB } from '../../../../../crud/api';
 import ModalYesNo from '../../../Components/ModalYesNo';
 import Permission from '../../components/Permission';
 import { getFileExtension, saveImage, getImageURL } from '../../../utils';
@@ -162,6 +162,24 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
       updateDB('settingsLayoutsEmployees/', body, id[0])
         .then(response => {
           saveAndReload('settingsLayoutsEmployees', id[0]);
+
+          getDB('employees')
+            .then((response) => response.json())
+            .then((data) => {
+              const employees = data.response.map(({ _id, layoutSelected }) => {
+                if (layoutSelected && typeof layoutSelected === 'object') {
+                  if (layoutSelected.value === id[0]) {
+                    return _id;
+                  }
+                }
+              }) || [];
+              const employeeLayout = { value: id[0], label: body.name };
+              employees.forEach(({ employeeId }) => {
+                updateDB('employees/', { layoutSelected: employeeLayout }, employeeId)
+                  .catch((error) => console.log(error));
+              });
+            })
+            .catch((error) => console.log(error));
         })
         .catch(error => console.log(error));
     }
