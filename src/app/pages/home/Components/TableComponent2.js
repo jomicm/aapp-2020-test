@@ -320,6 +320,12 @@ const TableComponentTile = props => {
 
   const handleInputChange = (event, field) => {
     if (event) {
+      
+    }
+  }
+
+  const handleOnKeyPress = (event, field) => {
+    if (event.key === 'Enter') {
       setLoading(true);
       searchControl({ value: event.target.value, field: field });
     }
@@ -387,9 +393,8 @@ const TableComponentTile = props => {
               className={classes.inputInput}
               key='SearchField'
               onChange={event => handleInputChange(event, null)}
+              onKeyPress={event => handleOnKeyPress(event, null)}
               placeholder='Search...'
-              value={controlValues.searchBy ? null : controlValues.search}
-              onSubmit={event => handleInputChange(event, null)}
             />
             {
               (controlValues.search.length > 0 && !controlValues.searchBy) && (
@@ -544,12 +549,6 @@ const TableComponentTile = props => {
     setRowsPerPage(+event.target.value);
   }
 
-  const handleKeyDown = (event, id) => {
-    if (event.key === 'Enter') {
-      handleInputChange(event, id)
-    }
-  }
-
   const EnhancedTableHead = (props) => {
     const {
       onSelectAllClick,
@@ -594,9 +593,8 @@ const TableComponentTile = props => {
                     autoFocus={row.id === controlValues.searchBy}
                     className={classes.inputSearchBy}
                     onChange={(event) => handleInputChange(event, row.id)}
-                    // onKeyDown={(event) => handleKeyDown(event, row.id)}
+                    onKeyPress={(event) => handleOnKeyPress(event, row.id)}
                     placeholder={`Search by...`}
-                    value={row.id === controlValues.searchBy ? controlValues.search : null}
                   />
                 )
               }

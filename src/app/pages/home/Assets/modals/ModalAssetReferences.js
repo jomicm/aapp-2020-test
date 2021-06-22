@@ -196,6 +196,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
 
   const [image, setImage] = useState(null);
   const saveAndReload = (folderName, id) => {
+    console.log(image);
     saveImage(image, folderName, id);
     reloadTable();
   };

@@ -233,6 +233,12 @@ const TableReportsGeneral = props => {
 
   const handleInputChange = (event, field) => {
     if (event) {
+      
+    }
+  }
+
+  const handleOnKeyPress = (event, field) => {
+    if (event.key === 'Enter') {
       setLoading(true);
       searchControl({ value: event.target.value, field: field });
     }
@@ -292,8 +298,8 @@ const TableReportsGeneral = props => {
               className={classes.inputInput}
               key='SearchField'
               onChange={event => handleInputChange(event, null)}
+              onKeyPress={event => handleOnKeyPress(event, null)}
               placeholder='Search...'
-              value={controlValues.searchBy ? null : controlValues.search}
             />
           </div>
           <Tooltip title='Download CSV'>
@@ -449,8 +455,9 @@ const TableReportsGeneral = props => {
                     autoFocus={row.id === controlValues.searchBy}
                     className={classes.inputSearchBy}
                     onChange={(event) => handleInputChange(event, row.id)}
+                    onKeyPress={(event) => handleOnKeyPress(event, row.id)}
                     placeholder={`Search by...`}
-                    value={row.id === controlValues.searchBy ? controlValues.search : null}
+                    // value={row.id === controlValues.searchBy ? controlValues.search : null}
                     disabled={row.searchByDisabled ? true : false}
                   />
                 )

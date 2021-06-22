@@ -87,7 +87,7 @@ const postFILE = (foldername, filename, image) => {
     body: formData,
     redirect: 'follow'
   };
-  return fetch(getAPIFilePath(foldername), requestOptions)
+  return fetch(getAPIFilePath(foldername), requestOptions);
 };
 
 const urltoFile = (url, filename, type) => {
@@ -95,8 +95,6 @@ const urltoFile = (url, filename, type) => {
     method: 'GET',
     headers: getHeaders(true)
   };
-
-  console.log(url);
 
   return (
     fetch(url, requestOptions)

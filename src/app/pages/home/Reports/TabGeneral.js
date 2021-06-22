@@ -561,7 +561,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
       getCountDB({
         collection: collectionName,
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : null
+        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }, { "creationDate": { "$gte": [{ "$dateFromString": { "dateString": new Date(values.startDate).toISOString() } }, { "$dateFromString": { "dateString": "$creationDate" } }] } }] : null
       })
         .then(response => response.json())
         .then(data => {
@@ -577,7 +577,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
         skip: tableControl.rowsPerPage * tableControl.page,
         sort: collectionName === 'processLive' && !tableControl.order ? [{ key: 'folio', value: 1 }] : [{ key: tableControl.orderBy, value: tableControl.order }],
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : null
+        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }, { "creationDate": { "$gte": [{ "$dateFromString": { "dateString": new Date(values.startDate).toISOString() } }, { "$dateFromString": { "dateString": "$creationDate" } }] } }] : null
       })
         .then(response => response.json())
         .then(data => {

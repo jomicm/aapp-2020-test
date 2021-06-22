@@ -283,7 +283,6 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
         .then(response => response.json())
         .then(data => {
           if (collectionName === 'assets') {
-            console.log(data.response);
             const rows = data.response.map(row => {
               const creationDate = String(new Date(row.creationDate)).split('GMT')[0];
               const updateDate = String(new Date(row.updateDate)).split('GMT')[0];
