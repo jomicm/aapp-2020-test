@@ -43,7 +43,8 @@ const modules = [
   { index: 5, id: 'assets', name: 'Assets', custom: 'categories' },
   { index: 6, id: 'depreciation', name: 'Depreciation', custom: '' },
   { index: 7, id: 'processLive', name: 'Processes', custom: '' },
-  { index: 8, id: 'inventories', name: 'Inventories', custom: '' }
+  { index: 8, id: 'inventories', name: 'Inventories', custom: '' },
+  { index: 8, id: 'logbook', name: 'Logbook', custom: '' }
 ];
 
 const specificFilters = {
@@ -86,6 +87,24 @@ const specificFilters = {
       id: "idSession",
       label: "ID Session"
     },
+  ],
+  logbook: [
+    {
+      id: 'requestUser',
+      label: 'Request User'
+    },
+    {
+      id: 'method',
+      label: 'Method'
+    },
+    {
+      id: 'collection',
+      label: 'Collection'
+    },
+    {
+      id: 'payload',
+      label: 'Payload'
+    }
   ]
 };
 
@@ -127,6 +146,12 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     inventories: {
       inventoryUser: [{ label: "Joe Doe" }, { label: "John Smith" }],
       idSession: [{ label: "3345" }, { label: "123" }, { label: "25899" }],
+    },
+    logbook: {
+      requestUser: [],
+      method: [{ label: 'GET' }, { label: 'POST' }, { label: 'PUT' }, { label: 'UPDATE' }, { label: 'DELETE' }],
+      collection: [],
+      payload: []
     }
   });
   const defaultFilterSelected = {
@@ -149,12 +174,34 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     inventories: {
       inventoryUser: [],
       idSession: [],
+    },
+    logbook: {
+      requestUser: [],
+      method: [],
+      collection: [],
+      payload: []
     }
   };
 
   const [filtersSelected, setFiltersSelected] = useState(defaultFilterSelected);
 
   const permissions = user.profilePermissions.reports || [];
+
+  const loadAllUsers = () => {
+    getDB('user')
+      .then((response) => response.json())
+      .then((data) => {
+        const users = data.response.map(({ _id: id, name, lastName, email }) => ({ id, label: `${name} ${lastName} <${email.length ? email : 'No email'}>` }));
+        setSpecificFiltersOptions(prev => ({
+          ...prev,
+          logbook: {
+            ...prev.logbook,
+            requestUser: users
+          }
+        }));
+      })
+      .catch((error) => console.log(error));
+  };
 
   const loadCustomFields = (selectedReport, customSelected) => {
     if (!customSelected) {
@@ -223,7 +270,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     })
       .then(response => response.json())
       .then(data => {
-        const users = uniqBy(data.response.map(({ creationUserId, creationUserFullName, requestUser: { email } }) => ({ id: creationUserId, label: `${creationUserFullName} <${email}>` })), 'id');
+        const users = uniqBy(data.response.map(({ creationUserId, creationUserFullName, requestUser: { email } }) => ({ id: creationUserId, label: `${creationUserFullName} <${email.length ? email : 'No email'}>` })), 'id');
         const folios = uniqBy(data.response.map(({ _id, folio }) => ({ id: _id, label: folio })), 'id');
         setSpecificFiltersOptions(prev => ({
           ...prev,
@@ -279,7 +326,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
         getDB('user')
           .then((response) => response.json())
           .then((userData) => {
-            const processApprovals = uniqBy(data.response.map(({ userId, creationUserFullName, email }) => ({ id: userId, label: `${userData.response.find(({ _id }) => _id === userId)?.name} ${userData.response.find(({ _id }) => _id === userId)?.lastName} <${email}>` })), 'id').filter((e) => e.id && e.label);
+            const processApprovals = uniqBy(data.response.map(({ userId, creationUserFullName, email }) => ({ id: userId, label: `${userData.response.find(({ _id }) => _id === userId)?.name} ${userData.response.find(({ _id }) => _id === userId)?.lastName} <${email.length ? email : 'No email'}>` })), 'id').filter((e) => e.id && e.label);
             setSpecificFiltersOptions(prev => ({
               ...prev,
               processLive: {
@@ -324,6 +371,10 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
   const handleChangeReportName = () => {
     setControl(true);
   }
+
+  useEffect(() => {
+    loadAllUsers();
+  }, [])
 
   useEffect(() => {
     if (id) {
@@ -561,7 +612,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
       getCountDB({
         collection: collectionName,
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }, { "creationDate": { "$gte": [{ "$dateFromString": { "dateString": new Date(values.startDate).toISOString() } }, { "$dateFromString": { "dateString": "$creationDate" } }] } }] : null
+        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : null
       })
         .then(response => response.json())
         .then(data => {
@@ -577,12 +628,11 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
         skip: tableControl.rowsPerPage * tableControl.page,
         sort: collectionName === 'processLive' && !tableControl.order ? [{ key: 'folio', value: 1 }] : [{ key: tableControl.orderBy, value: tableControl.order }],
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }, { "creationDate": { "$gte": [{ "$dateFromString": { "dateString": new Date(values.startDate).toISOString() } }, { "$dateFromString": { "dateString": "$creationDate" } }] } }] : null
+        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : null
       })
         .then(response => response.json())
         .then(data => {
           const { response } = data;
-          console.log(response);
           const baseHeaders = getGeneralFieldsHeaders(collection.id);
           if (collectionName === 'processLive') {
             const headerIndexToChange = baseHeaders.findIndex(({ id }) => id === 'dueDate');

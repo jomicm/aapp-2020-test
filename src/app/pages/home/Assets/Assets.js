@@ -70,15 +70,18 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   select: {
-    width: '200px',
-    [theme.breakpoints.down('md')]: {
+    width: '350px',
+    [theme.breakpoints.down('sm')]: {
       width: '70%'
     }
   },
   selectContainer: {
     marginTop: '30px',
-    textAlign: '-webkit-center',
-    width: '100%'
+    textAlign: '-webkit-left',
+    width: '100%',
+    [theme.breakpoints.down('sm')]: {
+      textAlign: '-webkit-center',
+    }
   },
 }));
 
@@ -87,7 +90,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
   const dispatch = useDispatch();
   const [tab, setTab] = useState(0);
   const [userLocations, setUserLocations] = useState([]);
-  const [kpiSelected, setKpiSelected] = useState({});
+  const [kpiSelected, setKpiSelected] = useState([]);
   const { policies, setPolicies } = usePolicies();
 
   const policiesBaseFields = {
@@ -252,8 +255,9 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
         )
       }
 
-      const kpi = kpiSelected || {};
-      const list = kpi.value ? [{ "location": { "$in": userLocations } }, { 'status': kpi.value }] : [{ "location": { "$in": userLocations } }];
+      const userLocationsQuery = { "location": { "$in": userLocations } };
+      const kpi = kpiSelected || [];
+      const list = kpi.length ? [userLocationsQuery, { 'status': { "$in": kpi.map(({ value }) => value) } }] : [userLocationsQuery];
       const condition = collectionName === 'assets' ? list : null;
 
       getCountDB({
@@ -609,6 +613,8 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                         className={classes.select}
                         classNamePrefix="select"
                         isClearable={true}
+                        isMulti
+                        maxMenuHeight={90}
                         menuPosition="absolute"
                         name="KPI"
                         onChange={setKpiSelected}
