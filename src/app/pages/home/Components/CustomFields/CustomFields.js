@@ -293,6 +293,7 @@ function CustomFields(props) {
 
   // Save the custom field props from the settings CF to the preview CF
   const handleSetCustomFieldProps = (idSelectedCustomField, selectedCustomField, values, setValues) => {
+    console.log(values);
     setSelectedCustomFieldSettings({ idSelectedCustomField, selectedCustomField, values, setValues, selfValues: findValuesByCustomFieldId(idSelectedCustomField) });
   };
 
