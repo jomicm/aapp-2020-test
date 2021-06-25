@@ -377,111 +377,131 @@ const ModalEmployees = ({
     setAssetsBeforeSaving(restRows);
   };
 
+  const verifyCustomFields = () => {
+    console.log(customFieldsTab);
+    let flag = true;
+    if (!Object.keys(customFieldsTab).length) return true;
+    const RightAndLeft = ['right', 'left'];
+    Object.keys(customFieldsTab).map((tabName) => {
+      RightAndLeft.map((side) => {
+        customFieldsTab[tabName][side].map(({ values: { mandatory, initialValue } }) => {
+          if (!mandatory) return;
+          if (!initialValue) {
+            
+          }
+        });
+      })
+    })
+    return flag;
+  };
+
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
-    if (!isEmpty(formValidation.isValidForm)) {
-      dispatch(showFillFieldsAlert());
-      return;
-    }
+    // if (!isEmpty(formValidation.isValidForm)) {
+    //   dispatch(showFillFieldsAlert());
+    //   return;
+    // }
 
-    const fileExt = getFileExtension(image);
+    verifyCustomFields();
 
-    let reassignedAssets = [];
+    // const fileExt = getFileExtension(image);
 
-    assetsBeforeSaving.forEach(({ employeeId, id: assetId }) => {
-      const index = reassignedAssets.findIndex((element) => element.employeeId === employeeId);
-      if (index !== - 1) {
-        reassignedAssets[index].assets = [...reassignedAssets[index].assets, assetId];
-      } else if (employeeId) {
-        reassignedAssets.push({ employeeId, assets: [assetId] });
-      }
-    });
+    // let reassignedAssets = [];
 
-    if (reassignedAssets.length) {
-      reassignedAssets.forEach(({ assets, employeeId }) => {
-        getOneDB('employees/', employeeId)
-          .then((response) => response.json())
-          .then((data) => {
-            const { response: { assetsAssigned } } = data;
-            const newAssetsAssigned = assetsAssigned.filter(({ id: assetId }) =>!assets.includes(assetId));
-            updateDB('employees/', { assetsAssigned: newAssetsAssigned }, employeeId)
-              .catch((error) => console.log(error));
-          })
-          .catch((error) => console.log(error));
-      })
-    }
+    // assetsBeforeSaving.forEach(({ employeeId, id: assetId }) => {
+    //   const index = reassignedAssets.findIndex((element) => element.employeeId === employeeId);
+    //   if (index !== - 1) {
+    //     reassignedAssets[index].assets = [...reassignedAssets[index].assets, assetId];
+    //   } else if (employeeId) {
+    //     reassignedAssets.push({ employeeId, assets: [assetId] });
+    //   }
+    // });
 
-    const parseAssetsAssigned = assetsBeforeSaving.map(({ id, name, brand, model, assigned, EPC, serial }) => createAssetRow(id, name, brand, model, assigned, EPC, serial));
+    // if (reassignedAssets.length) {
+    //   reassignedAssets.forEach(({ assets, employeeId }) => {
+    //     getOneDB('employees/', employeeId)
+    //       .then((response) => response.json())
+    //       .then((data) => {
+    //         const { response: { assetsAssigned } } = data;
+    //         const newAssetsAssigned = assetsAssigned.filter(({ id: assetId }) =>!assets.includes(assetId));
+    //         updateDB('employees/', { assetsAssigned: newAssetsAssigned }, employeeId)
+    //           .catch((error) => console.log(error));
+    //       })
+    //       .catch((error) => console.log(error));
+    //   })
+    // }
 
-    const body = {
-      ...values,
-      customFieldsTab,
-      profilePermissions,
-      locationsTable,
-      layoutSelected,
-      fileExt,
-      assetsAssigned: parseAssetsAssigned
-    };
+    // const parseAssetsAssigned = assetsBeforeSaving.map(({ id, name, brand, model, assigned, EPC, serial }) => createAssetRow(id, name, brand, model, assigned, EPC, serial));
 
-    if (!id) {
-      body.idUserProfile = idUserProfile;
-      postDB('employees', body)
-        .then((data) => data.json())
-        .then((response) => {
-          dispatch(showSavedAlert());
-          const { _id } = response.response[0];
-          saveAndReload('employees', _id);
-          executePolicies('OnAdd', 'employees', 'list', policies);
-          handleAssignmentsOnSaving(_id);
+    // const body = {
+    //   ...values,
+    //   customFieldsTab,
+    //   profilePermissions,
+    //   locationsTable,
+    //   layoutSelected,
+    //   fileExt,
+    //   assetsAssigned: parseAssetsAssigned
+    // };
+
+    // if (!id) {
+    //   body.idUserProfile = idUserProfile;
+    //   postDB('employees', body)
+    //     .then((data) => data.json())
+    //     .then((response) => {
+    //       dispatch(showSavedAlert());
+    //       const { _id } = response.response[0];
+    //       saveAndReload('employees', _id);
+    //       executePolicies('OnAdd', 'employees', 'list', policies);
+    //       handleAssignmentsOnSaving(_id);
           
-          if (Object.entries(responsibilityLayout.added || {}).length) {
-            getOneDB('settingsLayoutsEmployees/', responsibilityLayout.added.value)
-            .then((response) => response.json())
-            .then((data) => {
-              const { used } = data.response;
-              const value = (typeof used === 'number' ? used : 0) + 1;
-              updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.added.value)
-                .catch((error) => console.log(error));
-            })
-            .catch((error) => console.log(error));
-          }
-        })
-        .catch((error) => dispatch(showErrorAlert()));
-    } else {
-      updateDB('employees/', body, id[0])
-        .then((response) => {
-          dispatch(showUpdatedAlert());
-          saveAndReload('employees', id[0]);
-          handleAssignmentsOnSaving(id[0]);
-          executePolicies('OnEdit', 'employees', 'list', policies);
+    //       if (Object.entries(responsibilityLayout.added || {}).length) {
+    //         getOneDB('settingsLayoutsEmployees/', responsibilityLayout.added.value)
+    //         .then((response) => response.json())
+    //         .then((data) => {
+    //           const { used } = data.response;
+    //           const value = (typeof used === 'number' ? used : 0) + 1;
+    //           updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.added.value)
+    //             .catch((error) => console.log(error));
+    //         })
+    //         .catch((error) => console.log(error));
+    //       }
+    //     })
+    //     .catch((error) => dispatch(showErrorAlert()));
+    // } else {
+    //   updateDB('employees/', body, id[0])
+    //     .then((response) => {
+    //       dispatch(showUpdatedAlert());
+    //       saveAndReload('employees', id[0]);
+    //       handleAssignmentsOnSaving(id[0]);
+    //       executePolicies('OnEdit', 'employees', 'list', policies);
 
-          if (Object.entries(responsibilityLayout.added || {}).length) {
-            getOneDB('settingsLayoutsEmployees/', responsibilityLayout.added.value)
-            .then((response) => response.json())
-            .then((data) => {
-              const { used } = data.response;
-              const value = (typeof used === 'number' ? used : 0) + 1;
-              updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.added.value)
-                .catch((error) => console.log(error));
-            })
-            .catch((error) => console.log(error));
-          }
+    //       if (Object.entries(responsibilityLayout.added || {}).length) {
+    //         getOneDB('settingsLayoutsEmployees/', responsibilityLayout.added.value)
+    //         .then((response) => response.json())
+    //         .then((data) => {
+    //           const { used } = data.response;
+    //           const value = (typeof used === 'number' ? used : 0) + 1;
+    //           updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.added.value)
+    //             .catch((error) => console.log(error));
+    //         })
+    //         .catch((error) => console.log(error));
+    //       }
 
-          if (Object.entries(responsibilityLayout.removed || {}).length) {
-            getOneDB('settingsLayoutsEmployees/', responsibilityLayout.removed.value)
-            .then((response) => response.json())
-            .then((data) => {
-              const { used } = data.response;
-              const value = (typeof used === 'number' ? used : 1) - 1;
-              updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.removed.value)
-                .catch((error) => console.log(error));
-            })
-            .catch((error) => console.log(error));
-          }
-        })
-        .catch(error => dispatch(showErrorAlert()));
-    }
-    handleCloseModal();
+    //       if (Object.entries(responsibilityLayout.removed || {}).length) {
+    //         getOneDB('settingsLayoutsEmployees/', responsibilityLayout.removed.value)
+    //         .then((response) => response.json())
+    //         .then((data) => {
+    //           const { used } = data.response;
+    //           const value = (typeof used === 'number' ? used : 1) - 1;
+    //           updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.removed.value)
+    //             .catch((error) => console.log(error));
+    //         })
+    //         .catch((error) => console.log(error));
+    //       }
+    //     })
+    //     .catch(error => dispatch(showErrorAlert()));
+    // }
+    // handleCloseModal();
   };
 
   const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {

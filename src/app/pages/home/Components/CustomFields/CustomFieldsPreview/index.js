@@ -402,28 +402,33 @@ const RadioButtons = (props) => {
 const Checkboxes = (props) => {
   const defaultValues = {
     fieldName: 'Checkboxes',
-    selectedItem: '',
+    selectedOptions: [],
     options: ['Checkbox 1', 'Checkbox 2', 'Checkbox 3']
   };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
     props.onSelect(props.id, 'checkboxes', values, setValues);
   };
-  const handleCheck = (index) => {
+  const handleCheck = (option) => {
     if (isPreview) return;
-    setValues({
-      ...values,
-      [`check${index}`]: !values[`check${index}`]
-    });
-    props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, [`check${index}`]: !values[`check${index}`] });
+    let newSelectedOptions = [];
+    if (values.selectedOptions.includes(option)) {
+      newSelectedOptions = values.selectedOptions.filter((opt) => opt !== option);
+    } else {
+      newSelectedOptions = [...values.selectedOptions, option];
+    }
+    setValues(prev => ({ ...prev,  selectedOptions: newSelectedOptions }));
+    props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, selectedOptions: newSelectedOptions });
   };
+
   useEffect(() => {
     if (!isEmpty(props.values)) {
-      setValues(props.values);
+      setValues({ ...props.values, selectedOptions: props.values.selectedOptions || [] });
     } else {
       setValues(defaultValues);
     }
   }, [props.values]);
+
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   return (
@@ -435,20 +440,20 @@ const Checkboxes = (props) => {
             {values.options.map((opt, ix) => (
               <FormControlLabel
                 key={`check-${ix}`}
-                control={<Checkbox checked={values[`check${ix}`] || false} onChange={() => handleCheck(ix)} value={ix} disabled={props.disabled || false} />}
+                control={<Checkbox checked={values.selectedOptions.findIndex((option) => option === opt) !== -1} onChange={() => handleCheck(opt)} value={opt} disabled={props.disabled || false} />}
                 label={opt}
               />
             ))}
           </FormGroup>
         </FormControl>
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {values.selectedOptions.length ? null : 'Please select an option'}
+            </span>
+          )
+        }
       </div>
-      {
-        values.mandatory && !isPreview && (
-          <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
-            {values.selectedItem ? null : 'Please select an option'}
-          </span>
-        )
-      }
       {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
@@ -705,7 +710,7 @@ const Email = (props) => {
         {
           values.mandatory && !isPreview && (
             <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
-              {values.initialValue.length ? null : 'Please fill the field'}
+              {values.initialValue ? null : 'Please fill the field'}
             </span>
           )
         }
@@ -896,14 +901,14 @@ const Image = (props) => {
         <ImageUpload setImage={setImage} image={imageURL} disabled={isPreview || props.disabled ? true : false}>
           {values.fieldName}
         </ImageUpload>
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {imageURL ? null : 'Please assign an image'}
+            </span>
+          )
+        }
       </div>
-      {
-        values.mandatory && !isPreview && (
-          <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
-            {values.initialValue ? null : 'Please assign an image'}
-          </span>
-        )
-      }
       {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
@@ -917,27 +922,49 @@ const DecisionBox = (props) => {
   const defaultValues = {
     fieldName: 'Decision Box',
     selectedItem: '',
-    options: ['Switch 1', 'Switch 2', 'Switch 3']
+    options: ['Switch 1', 'Switch 2', 'Switch 3'],
+    selectedOptions: []
   };
   const [values, setValues] = useState(defaultValues);
+  const [isOneSelected, setIsOneSelected] = useState(false);
   const handleCustomFieldClick = () => {
     props.onSelect(props.id, 'decisionBox', values, setValues);
   };
-  const handleCheck = (index) => {
+  const handleCheck = (option) => {
     if (isPreview) return;
-    setValues({
-      ...values,
-      [`check${index}`]: !values[`check${index}`]
-    });
-    props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, [`check${index}`]: !values[`check${index}`] });
+    let newSelectedOptions = [];
+    if (values.selectedOptions.includes(option)) {
+      newSelectedOptions = values.selectedOptions.filter((opt) => opt !== option);
+    } else {
+      newSelectedOptions = [...values.selectedOptions, option];
+    }
+    setValues(prev => ({ ...prev,  selectedOptions: newSelectedOptions }));
+    props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, selectedOptions: newSelectedOptions });
   };
+
   useEffect(() => {
     if (!isEmpty(props.values)) {
-      setValues(props.values);
+      setValues({ ...props.values, selectedOptions: props.values.selectedOptions || [] });
     } else {
       setValues(defaultValues);
     }
   }, [props.values]);
+
+  useEffect(() => {
+    let count = 0;
+    values.options.forEach((opt, index) => {
+      if (!values[`check${index}`]) {
+        count++;
+      }
+    });
+
+    if (count !== values.options.length) {
+      setIsOneSelected(true);
+    } else {
+      setIsOneSelected(false);
+    }
+  }, [values])
+
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   return (
@@ -949,7 +976,7 @@ const DecisionBox = (props) => {
             {values.options.map((opt, ix) => (
               <FormControlLabel
                 key={`check-${ix}`}
-                control={<Switch checked={values[`check${ix}`] || false} onChange={() => handleCheck(ix)} value={ix} disabled={props.disabled || false} />}
+                control={<Switch checked={values.selectedOptions.findIndex((option) => option === opt) !== -1} onChange={() => handleCheck(opt)} value={opt} disabled={props.disabled || false} />}
                 label={opt}
               />
             ))}
@@ -958,7 +985,7 @@ const DecisionBox = (props) => {
         {
           values.mandatory && !isPreview && (
             <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
-              {values.selectedItem ? null : 'Please select an option'}
+              {values.selectedOptions.length ? null : 'Please select an option'}
             </span>
           )
         }
@@ -1011,6 +1038,8 @@ const RichText = (props) => {
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
 
+  console.log(values.initialValue.length);
+
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
       <div className={'error-wrapper'}>
@@ -1019,7 +1048,7 @@ const RichText = (props) => {
           <Editor
             editorClassName='editorClassName'
             editorState={editor}
-            onEditorStateChange={(ed) => setEditor(ed)}
+            onEditorStateChange={setEditor}
             toolbarClassName='toolbarClassName'
             wrapperClassName='editor-wrapper'
             readOnly={props.disabled || false}
@@ -1028,7 +1057,7 @@ const RichText = (props) => {
         {
           values.mandatory && !isPreview && (
             <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
-              {values.initialValue ? null : 'Please fill the field'}
+              {values.initialValue.length > 8 ? null : 'Please fill the field'}
             </span>
           )
         }
@@ -1768,6 +1797,7 @@ const CheckboxesSettings = (props) => {
     newOption: '',
     options: ['Checkbox 1', 'Checkbox 2', 'Checkbox 3'],
     mandatory: false,
+    selectedOptions: []
   };
   const [values, setValues] = useState(defaultValues);
   const handleOnChange = name => e => {
@@ -2334,6 +2364,7 @@ const DecisionBoxSettings = (props) => {
     fieldName: 'Decision Box',
     newOption: '',
     options: ['Switch 1', 'Switch 2', 'Switch 3'],
+    selectedOptions: [],
     mandatory: false,
   };
   const [values, setValues] = useState(defaultValues);

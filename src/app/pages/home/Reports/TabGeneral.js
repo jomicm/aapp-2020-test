@@ -98,12 +98,8 @@ const specificFilters = {
       label: 'Method'
     },
     {
-      id: 'collection',
-      label: 'Collection'
-    },
-    {
-      id: 'payload',
-      label: 'Payload'
+      id: 'module',
+      label: 'Module'
     }
   ]
 };
@@ -133,6 +129,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     enabled: false,
     reportName: ''
   });
+  const modulePermissions = ['assets', 'processes', 'users', 'employees', 'locations', 'reports'];
   const [specificFiltersOptions, setSpecificFiltersOptions] = useState({
     processLive: {
       folios: [],
@@ -148,10 +145,16 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
       idSession: [{ label: "3345" }, { label: "123" }, { label: "25899" }],
     },
     logbook: {
-      requestUser: [],
-      method: [{ label: 'GET' }, { label: 'POST' }, { label: 'PUT' }, { label: 'UPDATE' }, { label: 'DELETE' }],
-      collection: [],
-      payload: []
+      method: [{ id: 'GET', label: 'GET' }, { id: 'POST', label: 'POST' }, { id: 'PUT', label: 'PUT' }, { id: 'UPDATE', label: 'UPDATE' }, { id: 'DELETE', label: 'DELETE' }],
+      module: modulePermissions.map((permission) => {
+        if (Object.keys(user.profilePermissions).includes(permission)) {
+          if (permission === 'users') {
+            return { id: 'user', label: 'Users' };
+          }
+          return { id: permission, label: permission.replace(/\w\S*/g, (w) => (w.replace(/^\w/, (c) => c.toUpperCase()))) };
+        }
+      }) || [],
+      requestUser: []
     }
   });
   const defaultFilterSelected = {
@@ -176,10 +179,9 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
       idSession: [],
     },
     logbook: {
-      requestUser: [],
       method: [],
-      collection: [],
-      payload: []
+      module: [],
+      requestUser: []
     }
   };
 
@@ -188,9 +190,13 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
   const permissions = user.profilePermissions.reports || [];
 
   const loadAllUsers = () => {
-    getDB('user')
+    getDBComplex({
+      collection: 'user',
+      condition: [{ "locationsTable.parent": { "$in": userLocations } }]
+    })
       .then((response) => response.json())
       .then((data) => {
+        console.log(userLocations);
         const users = data.response.map(({ _id: id, name, lastName, email }) => ({ id, label: `${name} ${lastName} <${email.length ? email : 'No email'}>` }));
         setSpecificFiltersOptions(prev => ({
           ...prev,
@@ -352,6 +358,11 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     if (name === 'selectedReport') {
       setFiltersSelected(defaultFilterSelected);
       setId('');
+
+      if (value === 'logbook') {
+        loadAllUsers();
+      }
+
       if (value === 'processLive') {
         getDB('settingsProcesses')
           .then(response => response.json())
@@ -371,10 +382,6 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
   const handleChangeReportName = () => {
     setControl(true);
   }
-
-  useEffect(() => {
-    loadAllUsers();
-  }, [])
 
   useEffect(() => {
     if (id) {
@@ -493,7 +500,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
 
     getDBComplex(({
       collection: collectionName,
-      condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : null
+      condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : collectionName === 'user' ? [{ "locationsTable.parent": { "$in": userLocations } }] : null
     }))
       .then((response) => response.json())
       .then(({ response }) => {
@@ -612,7 +619,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
       getCountDB({
         collection: collectionName,
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : null
+        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : collectionName === 'user' ? [{ "locationsTable.parent": { "$in": userLocations } }] : null
       })
         .then(response => response.json())
         .then(data => {
@@ -628,7 +635,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
         skip: tableControl.rowsPerPage * tableControl.page,
         sort: collectionName === 'processLive' && !tableControl.order ? [{ key: 'folio', value: 1 }] : [{ key: tableControl.orderBy, value: tableControl.order }],
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : null
+        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : collectionName === 'user' ? [{ "locationsTable.parent": { "$in": userLocations } }] : null
       })
         .then(response => response.json())
         .then(data => {
