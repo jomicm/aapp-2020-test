@@ -10,14 +10,13 @@ import {
   Typography
 } from '@material-ui/core';
 import { connect, useDispatch } from "react-redux";
+import Select from 'react-select';
 import {
   Portlet,
   PortletBody,
   PortletHeader,
   PortletHeaderToolbar
 } from '../../../partials/content/Portlet';
-
-import { utcToZonedTime } from 'date-fns-tz';
 import LanguageIcon from '@material-ui/icons/Language';
 import CheckIcon from '@material-ui/icons/Check';
 import BuildIcon from '@material-ui/icons/Build';
@@ -39,7 +38,7 @@ import { usePolicies } from '../Components/Policies/hooks';
 import './Assets.scss';
 
 //DB API methods
-import { deleteDB, getDBComplex, getCountDB, getDB, getOneDB } from '../../../crud/api';
+import { deleteDB, getDBComplex, getCountDB, getDB, getOneDB, updateDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 
 const useStyles = makeStyles((theme) => ({
@@ -70,6 +69,17 @@ const useStyles = makeStyles((theme) => ({
       width: '30%'
     },
   },
+  select: {
+    width: '200px',
+    [theme.breakpoints.down('md')]: {
+      width: '70%'
+    }
+  },
+  selectContainer: {
+    marginTop: '30px',
+    textAlign: '-webkit-center',
+    width: '100%'
+  },
 }));
 
 function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showErrorAlert }) {
@@ -77,12 +87,13 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
   const dispatch = useDispatch();
   const [tab, setTab] = useState(0);
   const [userLocations, setUserLocations] = useState([]);
+  const [kpiSelected, setKpiSelected] = useState({});
   const { policies, setPolicies } = usePolicies();
 
   const policiesBaseFields = {
-    list: { ...allBaseFields.assets1, ...allBaseFields.assets2 },
-    references: allBaseFields.references,
-    categories: allBaseFields.categories
+    list: { id: { validationId: 'assetId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.assets1, ...allBaseFields.assets2 },
+    references: { id: { validationId: 'referenceId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.references },
+    categories: { id: { validationId: 'categoryId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.categories }
   };
 
   const createAssetCategoryRow = (id, name, depreciation, creator, creationDate, updateDate, fileExt) => {
@@ -222,7 +233,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
           queryLike = tableControl.assets.searchBy ? (
             [{ key: tableControl.assets.searchBy, value: tableControl.assets.search }]
           ) : (
-            ['brand', 'creationDate', 'creationUserFullName', 'EPC', 'model', 'name', 'notes', 'price', 'status', 'serial'].map(key => ({ key, value: numericFields.includes(key) ? Number(tableControl.assets.search) : tableControl.assets.search  }))
+            ['brand', 'creationUserFullName', 'EPC', 'model', 'name', 'notes', 'price', 'status', 'serial'].map(key => ({ key, value: tableControl.assets.search }))
           )
         }
       }
@@ -241,10 +252,14 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
         )
       }
 
+      const kpi = kpiSelected || {};
+      const list = kpi.value ? [{ "location": { "$in": userLocations } }, { 'status': kpi.value }] : [{ "location": { "$in": userLocations } }];
+      const condition = collectionName === 'assets' ? list : null;
+
       getCountDB({
         collection: collectionName,
         queryLike: tableControl[collectionName].search || tableControl['assets'].locationsFilter.length ? queryLike : null,
-        condition: collectionName === 'assets' ? [{ "location": { "$in": userLocations }}] : null
+        condition
       })
         .then(response => response.json())
         .then(data => {
@@ -263,7 +278,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
         skip: tableControl[collectionName].rowsPerPage * tableControl[collectionName].page,
         sort: [{ key: tableControl[collectionName].orderBy, value: tableControl[collectionName].order }],
         queryLike: tableControl[collectionName].search || tableControl['assets'].locationsFilter.length ? queryLike : null,
-        condition: collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : null
+        condition
       })
         .then(response => response.json())
         .then(data => {
@@ -280,7 +295,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
             const rows = data.response.map(row => {
               const creationDate = String(new Date(row.creationDate)).split('GMT')[0];
               const updateDate = String(new Date(row.updateDate)).split('GMT')[0];
-              return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.category, row.price, row.creationUserFullName, creationDate, updateDate, row.fileExt);
+              return createAssetReferenceRow(row._id, row.name, row.brand, row.model, row.selectedProfile?.label || '', row.price, row.creationUserFullName, creationDate, updateDate, row.fileExt);
             });
             setControl(prev => ({ ...prev, referenceRows: rows, referenceRowsSelected: [] }));
           }
@@ -392,11 +407,46 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
           .then((data => {
             id.forEach(_id => {
               deleteDB(`${collection.name}/`, _id)
-                .then(_ => {
+                .then(response => response.json())
+                .then((data) => {
                   dispatch(showDeletedAlert());
                   const currentCollection = collection.name === 'assets' ? 'list' : collection.name;
                   executePolicies('OnDelete', 'assets', currentCollection, data.response);
                   loadAssetsData(collection.name);
+
+                  const { response: { value: { children, parent, assigned } } } = data;
+
+                  children.forEach(({ id: childId }) => {
+                    updateDB('assets/', { parent: null }, childId)
+                      .catch((error) => console.log(error));
+                  });
+
+                  if (parent) {
+                    getOneDB('assets/', parent)
+                      .then((response) => response.json())
+                      .then((data) => {
+                        const { response: { children } } = data;
+                        const newChildren = children.filter(({ id: childId }) => childId !== _id);
+                        updateDB('assets/', { children: newChildren }, parent)
+                          .catch((error) => console.log(error));
+                      })
+                      .catch((error) => console.log(error));
+                  }
+
+                  if (assigned) {
+                    if (assigned.length) {
+                      getOneDB('employees/', assigned)
+                        .then((response) => response.json())
+                        .then((data) => {
+                          const { response: { value: { assetsAssigned } } } = data;
+                          const list = assetsAssigned.filter(({ id: assignmentId }) => assignmentId !== _id);
+                          updateDB('employees/', { assetsAssigned: list }, assigned)
+                            .catch((error) => console.log(error));
+                        })
+                        .catch((error) => console.log(error));
+                    }
+                  }
+
                 })
                 .catch((_) => showErrorAlert());
             });
@@ -415,7 +465,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
 
   useEffect(() => {
     loadAssetsData('assets');
-  }, [tableControl.assets.page, tableControl.assets.rowsPerPage, tableControl.assets.order, tableControl.assets.orderBy, tableControl.assets.search, tableControl.assets.locationsFilter, userLocations]);
+  }, [tableControl.assets.page, tableControl.assets.rowsPerPage, tableControl.assets.order, tableControl.assets.orderBy, tableControl.assets.search, tableControl.assets.locationsFilter, userLocations, kpiSelected]);
 
   useEffect(() => {
     loadAssetsData('references');
@@ -426,11 +476,18 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
   }, [tableControl.categories.page, tableControl.categories.rowsPerPage, tableControl.categories.order, tableControl.categories.orderBy, tableControl.categories.search]);
 
   const kpis = [
-    { kpi: 'total', condition: [{"location": { "$in": userLocations }}] },
-    { kpi: 'available', condition: [{'status': 'active'}, {"location": { "$in": userLocations }}] },
-    { kpi: 'onProcess', condition: [{'status': 'inProcess'}, {"location": { "$in": userLocations }}] },
-    { kpi: 'maintenance', condition: [{'status': 'maintenance'}, {"location": { "$in": userLocations }}] },
-    { kpi: 'decommissioned', condition: [{'status': 'decommissioned'}, {"location": { "$in": userLocations }}] }
+    { kpi: 'total', condition: [{ "location": { "$in": userLocations } }] },
+    { kpi: 'available', condition: [{ 'status': 'active' }, { "location": { "$in": userLocations } }] },
+    { kpi: 'onProcess', condition: [{ 'status': 'inProcess' }, { "location": { "$in": userLocations } }] },
+    { kpi: 'maintenance', condition: [{ 'status': 'maintenance' }, { "location": { "$in": userLocations } }] },
+    { kpi: 'decommissioned', condition: [{ 'status': 'decommissioned' }, { "location": { "$in": userLocations } }] }
+  ];
+
+  const kpisToSelect = [
+    { value: 'active', label: 'Available' },
+    { value: 'inProcess', label: 'On Process' },
+    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'decommissioned', label: 'Decommissioned' },
   ];
 
   const tabIntToText = ['assets', 'references', 'categories'];
@@ -454,7 +511,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
     Promise.all(info)
       .then(responses => Promise.all(responses.map(response => response.json())))
       .then(data => {
-        const formatData = data.map(({response}) => response.count)
+        const formatData = data.map(({ response }) => response.count)
         setAssetsKPI(prev => ({
           ...prev,
           total: {
@@ -548,7 +605,20 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                         }
                       </Grid>
                     </span>
+                    <div className={classes.selectContainer}>
+                      <Select
+                        className={classes.select}
+                        classNamePrefix="select"
+                        isClearable={true}
+                        menuPosition="absolute"
+                        name="KPI"
+                        onChange={setKpiSelected}
+                        value={kpiSelected}
+                        options={kpisToSelect}
+                      />
+                    </div>
                     <ModalAssetList
+                      assets={control.assetRows}
                       id={control.idAsset}
                       key={control.idAsset}
                       policies={policies}

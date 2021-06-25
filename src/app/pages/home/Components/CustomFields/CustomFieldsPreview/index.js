@@ -112,10 +112,8 @@ const MultiLine = (props) => {
   };
   useEffect(() => {
     if (!isEmpty(props.values) && !onLoadField.length) {
-      console.log('Pass');
       setValues(props.values);
     } else {
-      console.log('Pass 2');
       setValues(defaultValues);
     }
   }, [props.values]);

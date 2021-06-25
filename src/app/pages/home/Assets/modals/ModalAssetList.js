@@ -37,12 +37,13 @@ import { actions } from '../../../../store/ducks/general.duck';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import ImageUpload from '../../Components/ImageUpload';
-import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import { getFileExtension, saveImage, getImageURL, getLocationPath } from '../../utils';
 import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetList.scss';
 import OtherModalTabs from '../components/OtherModalTabs';
 import { pick } from 'lodash';
 import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
+import ModalYesNo from '../../Components/ModalYesNo';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -130,7 +131,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadTable, id, policies, userLocations }) => {
+const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId, reloadTable, id, policies, userLocations }) => {
   const dispatch = useDispatch();
   const { showCustomAlert, showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
 
@@ -141,6 +142,9 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   const [mapMarker, setMapMarker] = useState();
   const [assetsBeforeSaving, setAssetsBeforeSaving] = useState([]);
   const [assetsToDelete, setAssetsToDelete] = useState([]);
+  const [showAssignedConfirmation, setShowAssignedConfirmation] = useState(false);
+  const [assetsAssigned, setAssetsAssigned] = useState([]);
+  const [confirmationText, setConfirmationText] = useState('');
 
   // Example 4 - Tabs
   const classes4 = useStyles4();
@@ -155,6 +159,11 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   const [value5, setValue5] = useState(0);
   const [openHistory, setOpenHistory] = useState(false);
   const [customFieldsPathResponse, setCustomFieldsPathResponse] = useState();
+  const [referenceImage, setReferenceImage] = useState('');
+
+  const createAssetRow = (id, name, brand, model, parent, EPC, serial) => {
+    return { id, name, brand, model, parent, EPC, serial };
+  };
 
   function handleChange5(event, newValue) {
     setValue5(newValue);
@@ -169,7 +178,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     }
   };
 
-  const handleChildrenOnSaving = () => {
+  const handleChildrenOnSaving = (parentId) => {
     assetsToDelete.map(asset => {
       updateDB('assets/', { parent: null }, asset.id)
         .then((response) => { })
@@ -178,7 +187,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
         });
     });
     assetsBeforeSaving.map(asset => {
-      updateDB('assets/', { parent: id[0] }, asset.id)
+      updateDB('assets/', { parent: parentId }, asset.id)
         .then(response => { })
         .catch(error => {
           dispatch(showErrorAlert())
@@ -187,50 +196,57 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
   };
 
   const handleOnAssetFinderSubmit = (filteredRows) => {
-    const errors = [];
+    let assetsAlreadyAssigned = [];
     filteredRows.rows.map((rowTR) => {
       if (!assetsBeforeSaving.find((row) => row.id === rowTR.id)) {
         getOneDB('assets/', rowTR.id)
           .then(response => response.json())
           .then(data => {
-            const res = data.response;
-            if (!res.parent) {
+            const { response } = data;
+            const { _id, name, brand, model, parent, serial, EPC } = response;
+            if (!parent) {
               setAssetsBeforeSaving(prev => [
                 ...prev,
-                {
-                  id: res._id,
-                  name: res.name,
-                  brand: res.brand,
-                  model: res.model,
-                  serial: res.serial,
-                  EPC: res.EPC,
-                }
+                createAssetRow(_id, name, brand, model, null, serial, EPC)
               ]);
             } else {
-              errors.push(res);
+              const obj = createAssetRow(_id, name, brand, model, parent, serial, EPC);
+              assetsAlreadyAssigned.push(obj);
             }
           })
           .catch(error => { })
-      }
-    });
-    setTimeout(() => {
-      if (errors.length) {
-        const assetsWithError = errors.map((asset) => Object.values(pick(asset, ['name', 'brand', 'model', 'serial', 'EPC'])).join(', '));
+          .finally(() => {
+            if (assetsAlreadyAssigned.length) {
+              setAssetsAssigned(assetsAlreadyAssigned);
+              setShowAssignedConfirmation(true);
+              const text = assetsAlreadyAssigned.map(({ name }) => (
+                <span> {name} <br /> </span>
+              ));
+              setConfirmationText((
+                <>
+                  {text}
+                </>
+              ))
+            }
+          });
+      } else {
         dispatch(showCustomAlert({
-          type: 'warning',
+          message: 'Asset already assigned to this asset',
           open: true,
-          message: `The following assets ${assetsWithError} already have a parent assigned`
+          type: 'warning'
         }));
       }
-    }, 500);
+    });
   };
 
   const handleOnDeleteAssetAssigned = (id) => {
     const restRows = assetsBeforeSaving.filter(row => {
-      if (row.id !== id) {
+      if (!id.includes(row.id)) {
         return row;
       }
-      setAssetsToDelete(prev => [...prev, row]);
+      if (!row.parentId) {
+        setAssetsToDelete(prev => [...prev, row]);
+      }
     });
     setAssetsBeforeSaving(restRows);
   };
@@ -258,6 +274,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     total_price: 0,
     EPC: '',
     location: '',
+    locationPath: '',
     creator: '',
     creationDate: '',
     labeling_user: '',
@@ -295,13 +312,12 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       }
     },
     category: {
-      style: {
-        marginTop: '15px'
-      },
       componentProps: {
         onChange: handleChange('category'),
-        value: values.category,
-        isDisabled: true
+        value: values.category?.label,
+        inputProps: {
+          readOnly: true,
+        }
       }
     },
     status: {
@@ -317,6 +333,16 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       componentProps: {
         onChange: handleChange('serial'),
         value: values.serial,
+      }
+    },
+    parent: {
+      componentProps: {
+        onChange: handleChange('parent'),
+        value: values.parent,
+        inputProps: {
+          readOnly: true,
+          shrink: true
+        }
       }
     },
     responsible: {
@@ -403,6 +429,17 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       componentProps: {
         onChange: handleChange('location'),
         value: values.location,
+        hidden: true,
+        inputProps: {
+          readOnly: true,
+        }
+      }
+    },
+    locationPath: {
+      componentProps: {
+        onChange: handleChange('locationPath'),
+        values: values.locationPath,
+        multine: true,
         inputProps: {
           readOnly: true,
         }
@@ -471,15 +508,41 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       return;
     }
 
-    handleChildrenOnSaving();
     const fileExt = getFileExtension(image);
+
+    let reassignedAssets = [];
+    assetsBeforeSaving.forEach(({ parent, id: assetId }) => {
+      const index = reassignedAssets.findIndex((element) => element.parentId === parent);
+      if (index !== - 1) {
+        reassignedAssets[index].assets = [...reassignedAssets[index].assets, assetId];
+      } else if (parent) {
+        reassignedAssets.push({ parentId: parent, assets: [assetId] });
+      }
+    });
+
+    if (reassignedAssets.length) {
+      reassignedAssets.forEach(({ assets, parentId }) => {
+        getOneDB('assets/', parentId)
+          .then((response) => response.json())
+          .then((data) => {
+            const { response: { children } } = data;
+            const newChildren = children.filter(({ id: assetId }) => !assets.includes(assetId));
+            updateDB('assets/', { children: newChildren }, parentId)
+              .catch((error) => console.log(error));
+          })
+          .catch((error) => console.log(error));
+      })
+    }
+
+    const parseAssetsAssigned = assetsBeforeSaving.map(({ id, name, brand, model, EPC, serial }) => ({ id, name, brand, model, EPC, serial }));
+
     const body = {
       ...values,
       customFieldsTab,
       fileExt,
       layoutCoords: layoutMarker ? layoutMarker : null,
       mapCoords: mapMarker ? mapMarker : null,
-      children: assetsBeforeSaving,
+      children: parseAssetsAssigned,
     };
 
     if (!id) {
@@ -487,9 +550,9 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       postDB('assets', body)
         .then(data => data.json())
         .then(response => {
-          console.log(`Post`);
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
+          handleChildrenOnSaving(_id);
           saveAndReload('assets', _id);
           executePolicies('OnAdd', 'assets', 'list', policies);
         })
@@ -498,12 +561,38 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
         });
     } else {
       updateDB('assets/', body, id[0])
-        .then(response => {
+        .then(response => response.json())
+        .then((data) => {
           dispatch(showUpdatedAlert());
+          handleChildrenOnSaving(id[0]);
           saveAndReload('assets', id[0]);
           executePolicies('OnEdit', 'assets', 'list', policies);
+
+          const { response: { value: { assigned } } } = data;
+
+          if (assigned) {
+            if (assigned.length) {
+              getOneDB('employees', assigned)
+                .then((response) => response.json())
+                .then((data) => {
+                  const { response: { assetsAssigned } } = data;
+                  let newAssetsAssigned = [];
+                  assetsAssigned.forEach(({ id: assetId, name, brand, model, assigned, EPC, serial }) => {
+                    if (assetId === id[0]) {
+                      newAssetsAssigned.push({ id: assetId, name: body.name, brand, model, assigned, EPC, serial: body.serial });
+                    } else {
+                      newAssetsAssigned.push({ assetId, name, brand, model, assigned, EPC, serial });
+                    }
+                  });
+                  updateDB('employees/', { assetsAssigned: newAssetsAssigned }, assigned)
+                    .catch((error) => console.log(error));
+                })
+                .catch((error) => console.log(error));
+            }
+          }
         })
         .catch(error => {
+          console.log(error);
           dispatch(showErrorAlert())
         });
     }
@@ -534,6 +623,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       total_price: 0,
       EPC: '',
       location: '',
+      locationPath: '',
       creator: '',
       creation_date: '',
       labeling_user: '',
@@ -553,6 +643,10 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     setAssetLocation([]);
     setAssetsBeforeSaving([]);
     setAssetsToDelete([]);
+    setAssetsAssigned([]);
+    setReferenceImage('');
+    setShowAssignedConfirmation(false);
+    setConfirmationText('');
   };
 
   useEffect(() => {
@@ -571,7 +665,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
       getOneDB('references/', referencesSelectedId)
         .then(response => response.json())
         .then(data => {
-          const { name, brand, model, customFieldsTab } = data.response;
+          const { name, brand, model, customFieldsTab, fileExt } = data.response;
           setValues({
             ...values,
             name,
@@ -582,6 +676,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
           tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
           setCustomFieldsTab(customFieldsTab);
           setTabs(tabs);
+          setReferenceImage(getImageURL(referencesSelectedId, 'references', fileExt));
         })
         .catch(error => {
           dispatch(showErrorAlert())
@@ -591,9 +686,12 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
     if (!id || !Array.isArray(id)) return;
     getOneDB('assets/', id[0])
       .then(response => response.json())
-      .then(data => {
-        const { name, brand, model, category, referenceId, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creationUserFullName, creationDate, labeling_user, labeling_date, customFieldsTab, fileExt, assigned, layoutCoords, mapCoords, children, history } = data.response;
+      .then(async (data) => {
+        const { name, brand, model, category, referenceId, status, serial, responsible, notes, quantity, purchase_date, purchase_price, price, total_price, EPC, location, creationUserFullName, creationDate, labeling_user, labeling_date, customFieldsTab, fileExt, assigned, layoutCoords, mapCoords, children, history, parent } = data.response;
         const date = String(new Date(creationDate)).split('GMT')[0];
+        const locationPath = await getLocationPath(location);
+        const assignedParent = assets.find(({ id }) => id === parent);
+        const assignedParentText = assignedParent ? `${assignedParent.name || 'No Name'}, ${assignedParent.brand || 'No Brand'}, ${ assignedParent.model ||'No Model'}, ${ assignedParent.serial ||'No Serial Number'}, ${ assignedParent.EPC ? `(${assignedParent.EPC})` : 'No EPC'}` : 'No Parent Assigned';
         executePolicies('OnLoad', 'assets', 'list', policies);
         setAssetLocation(location);
         setLayoutMarker(layoutCoords) //* null if not specified
@@ -607,6 +705,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
             const onLoadResponse = await executeOnLoadPolicy(value, 'assets', 'list', policies);
             setCustomFieldsPathResponse(onLoadResponse);
             setValues(prev => ({ ...prev, category: { value, label } }));
+            setReferenceImage(getImageURL(referenceId, 'references', data.response.fileExt));
           })
           .catch((error) => showCustomAlert(({
             type: 'error',
@@ -620,6 +719,8 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
             .then(data => {
               const nameRes = data.response.name;
               const lastName = data.response.lasName;
+              const email = data.response.email;
+              const assignedTo = `${nameRes ? nameRes : ''} ${lastName ? lastName : ''} ${email ? `<${email}>` : '<No Email>'}`;
               setValues({
                 ...values,
                 name,
@@ -631,19 +732,21 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                 responsible,
                 notes,
                 quantity,
+                parent: assignedParentText,
                 purchase_date,
                 purchase_price,
                 price,
                 total_price: purchase_price + price,
                 EPC,
                 location,
+                locationPath,
                 creator: creationUserFullName,
                 creationDate: date,
                 labeling_user,
                 labeling_date,
                 history,
                 imageURL: getImageURL(id, 'assets', fileExt),
-                assignedTo: `${nameRes ? nameRes : ''} ${lastName ? lastName : ''}`,
+                assignedTo
               });
             })
             .catch(error => {
@@ -662,25 +765,28 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
             responsible,
             notes,
             quantity,
+            parent: assignedParentText,
             purchase_date,
             purchase_price,
             price,
             total_price,
             EPC,
             location,
+            locationPath,
             creator: creationUserFullName,
             creationDate: date,
             labeling_user,
             labeling_date,
             history,
             imageURL: getImageURL(id, 'assets', fileExt),
+            assignedTo: 'No Employee Assigned'
           });
         }
-        if(customFieldsTab){
+        if (customFieldsTab) {
           const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
-        tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
-        setCustomFieldsTab(customFieldsTab);
-        setTabs(tabs);
+          tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
+          setCustomFieldsTab(customFieldsTab);
+          setTabs(tabs);
         }
       })
       .catch(error => {
@@ -704,36 +810,51 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
 
   return (
     <div style={{ width: '1000px' }}>
+      <ModalYesNo
+        message={confirmationText}
+        onCancel={() => {
+          setShowAssignedConfirmation(false);
+          setAssetsAssigned([]);
+        }}
+        onOK={() => {
+          const parseReassignedRows = assetsAssigned.map(({ id, name, brand, model, parent, EPC, serial }) => ({ ...createAssetRow(id, name, brand, model, parent, EPC, serial) }));
+          setAssetsBeforeSaving(prev => [...prev, ...parseReassignedRows]);
+          setShowAssignedConfirmation(false);
+          setAssetsAssigned([]);
+        }}
+        showModal={showAssignedConfirmation}
+        title="Assets already have a parent assigned. Do you want to reassign them to this asset?"
+      />
       <Dialog onClose={() => setOpenHistory(false)} aria-labelledby="simple-dialog-title" open={openHistory}>
         <DialogTitle id="simple-dialog-title">History</DialogTitle>
         {
           !values || !values.history && (
-            <div style={{padding: '10px', margin: '10px'}}>
+            <div style={{ padding: '10px', margin: '10px' }}>
               <Typography>This Asset has no History</Typography>
             </div>
           )
         }
         {
           <Timeline >
-          {
-            values?.history?.map(({processName,processType, date, label}) => (
-              <TimelineItem>
-                <TimelineOppositeContent>
-                  <Typography>{processName}</Typography>
-                  <Typography color="textSecondary">{processType}</Typography>
-                  <Typography color="textSecondary">{date}</Typography>
-                </TimelineOppositeContent>
-                <TimelineSeparator>
-                  <TimelineDot />
-                  <TimelineConnector />
-                </TimelineSeparator>
-                <TimelineContent>
-                  <Typography>{label}</Typography>
-                </TimelineContent>
-              </TimelineItem>
-            ))
-          }
-        </Timeline>
+            {
+              values?.history?.map(({ processName, processType, date, label }) => (
+                <TimelineItem>
+                  <TimelineOppositeContent>
+                    <Typography>{processName}</Typography>
+                    <Typography color="textSecondary">{processType}</Typography>
+                    <Typography color="textSecondary">{date}</Typography>
+                  </TimelineOppositeContent>
+                  <TimelineSeparator>
+                    <TimelineDot />
+                    <TimelineConnector />
+                  </TimelineSeparator>
+                  <TimelineContent>
+                    <Typography>{label}</Typography>
+                  </TimelineContent>
+                </TimelineItem>
+              ))
+            }
+          </Timeline>
         }
       </Dialog>
       <Dialog
@@ -783,6 +904,7 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                         startIcon={<TimelineIcon />}
                         style={{
                           marginTop: '20px',
+                          marginBottom: '40px',
                           width: '60%',
                           alignSelf: 'center',
                         }}
@@ -790,6 +912,9 @@ const ModalAssetList = ({ showModal, setShowModal, referencesSelectedId, reloadT
                       >
                         History
                       </Button>
+                      <ImageUpload disabled image={referenceImage} showDeleteButton={false} showButton={false}>
+                        Reference Photo
+                      </ImageUpload>
                     </div>
                     <div className="profile-tab-wrapper__content-left">
                       <BaseFields

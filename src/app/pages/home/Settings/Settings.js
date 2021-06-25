@@ -21,6 +21,7 @@ import ModalYesNo from '../Components/ModalYesNo';
 // Settings Tabs
 import {
   General,
+  Groups,
   Design,
   LayoutsPresets,
   Fields,
@@ -185,6 +186,20 @@ function Settings({ user }) {
                       <div className="kt-section">
                         <div className="kt-section__content">
                           <Processes permissions={permissions} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </PortletBody>
+              )}
+               {/* Settings - Groups Tab */}
+               {tab === 7 && (
+                <PortletBody>
+                  <div className="kt-section kt-margin-t-0">
+                    <div className="kt-section__body">
+                      <div className="kt-section">
+                        <div className="kt-section__content">
+                          <Groups permissions={permissions} />
                         </div>
                       </div>
                     </div>

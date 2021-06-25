@@ -40,13 +40,14 @@ const AssetFinder = ({
   processInfo,
   updateAssetValues = () => {},
   showAssetEdition = () => {},
+  isLinkedToProcess = false,
 }) => {
-  const collection = isAssetReference ? 'references' : 'assets';
   const classes = useStyles();
-  const [searchText, setSearchText] = useState('');
-  const [assetRows, setAssetRows] = useState(rows);
+  const collection = isAssetReference ? 'references' : 'assets';
   const [selectedRows, setSelectedRows] = useState([]); 
   const [selectedAsset, setSelectedAsset] = useState(defaultAsset);
+  const [searchText, setSearchText] = useState('');
+  const [assetRows, setAssetRows] = useState(rows);
 
   useEffect(() => {
     if(rows === assetRows || !rows.length || !rows) {
@@ -121,7 +122,6 @@ const AssetFinder = ({
     onSelectionChange(selection);
     if (selection.rows.length) {
       setSelectedRows(selection.rows);
-      // console.log('selection:', selection.rows.slice(-1)[0])
       const {id, fileExt } = selection.rows.slice(-1)[0];
       const picUrl = fileExt ? getImageURL(id, collection, fileExt) : defaultAsset.picUrl;
       setSelectedAsset({...selection.rows.slice(-1)[0], picUrl});
@@ -164,8 +164,10 @@ const AssetFinder = ({
           </button>
           <div style={{ display: 'flex' }}>
             {
-              processType === 'creation' ? (
+              processType === 'creation' && !isLinkedToProcess ? (
                 <Table columns={[...getColumns(isAssetReference), locationColumn]} rows={rows} setTableRowsInner={handleSelectionChange} />
+              ) : processType === 'creation' && isLinkedToProcess ? (
+                <Table columns={[...getColumns(isAssetReference), originalLocationColumn]} rows={rows} setTableRowsInner={handleSelectionChange} />
               ) : processType === 'decommission' || processType === 'maintenance' ? (
                 <Table columns={[...getColumns(isAssetReference), originalLocationColumn]} rows={rows} setTableRowsInner={handleSelectionChange} />
               ) : processType === 'movement' || processType === 'short' ? (
@@ -201,14 +203,17 @@ const AssetFinder = ({
                   </AccordionDetails>
                 </Accordion>
               }
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />} >
-                  <Typography>Set Location</Typography>
-                </AccordionSummary>
-                <AccordionDetails style={{ overflow: 'hidden', height: '275px' }}>
-                  <LocationsTreeView onTreeElementClick={handleTreeElement} />
-                </AccordionDetails>
-              </Accordion>
+              {
+                !isLinkedToProcess &&
+                <Accordion>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />} >
+                    <Typography>Set Location</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails style={{ overflow: 'hidden', height: '275px' }}>
+                    <LocationsTreeView onTreeElementClick={handleTreeElement} />
+                  </AccordionDetails>
+                </Accordion>
+              }
             </div>
           </div>
         </div>
@@ -310,7 +315,6 @@ const getColumns = (isAssetReference) => {
   } else {
     return [
       ...assetReference,
-      { field: 'assigned', headerName: 'Assigned', width: 90 },
       { field: 'id', headerName: 'EPC', width: 200 },
       { field: 'sn', headerName: 'Serial Number', width: 200 }
     ]

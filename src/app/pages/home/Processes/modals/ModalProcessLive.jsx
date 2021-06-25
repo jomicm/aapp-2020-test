@@ -69,6 +69,13 @@ const DialogTitle5 = withStyles(styles5)(({ children, classes, onClose }) => {
   );
 });
 
+const GreyTypography = withStyles({
+  root: {
+    color: "#828282"
+  }
+})(Typography);
+
+
 const DialogContent5 = withStyles(theme => ({
   root: {
     padding: theme.spacing(2)
@@ -116,8 +123,8 @@ const useStyles = makeStyles(theme => ({
   },
   textField: {
     marginLeft: theme.spacing(1),
-    marginRight: theme.spacing(1),
-    width: '400px',
+    marginRight: '40px',
+    width: '200px',
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between'
@@ -129,9 +136,9 @@ const useStyles = makeStyles(theme => ({
     width: '100%',
     marginRight: '200px'
   },
-  dueDate: {
-    width: '100%'
-  }
+  secondaryText: {
+    color: 'grey'
+  },
 }));
 
 const ModalProcessLive = (props) => {
@@ -150,6 +157,7 @@ const ModalProcessLive = (props) => {
   const [allLocations, setAllLocations] = useState([]);
   const [allStages, setAllStages] = useState([]);
   const [dueDate, setDueDate] = useState(undefined);
+  const [linkToProcess, setLinkToProcess] = useState(undefined);
 
   function handleChange4(event, newValue) {
     setValue4(newValue);
@@ -205,6 +213,9 @@ const ModalProcessLive = (props) => {
   };
 
   const checkValidLocations = (processType) => {
+    if(values.linkToProcess){
+      return true;
+    }
     if (['creation', 'movement', 'short'].includes(processType)) {
       if (!cartRows.length) {
         dispatch(showCustomAlert({
@@ -376,6 +387,9 @@ const ModalProcessLive = (props) => {
   };
 
   const handleSave = async () => {
+    if(loading){
+      return
+    };
     setLoading(true);
     const body = {
       ...values,
@@ -512,7 +526,7 @@ const ModalProcessLive = (props) => {
   };
 
   const checkApprovalComplete = () => {
-    const totalAssets = processInfo.cartRows.length || 0;
+    const totalAssets = processInfo.cartRows?.length || 0;
     const validatedAssets = cartRows.filter(({ status }) => status).length;
 
     return totalAssets === validatedAssets;
@@ -703,6 +717,31 @@ const ModalProcessLive = (props) => {
     filteredMessages.forEach(({ message, type }) => sendStageMessages(message, type));
   };
 
+  const inheritCustomFields = (processData, assetCustomFields) => {
+    const allCustomFieldsFromStages = [];
+    const RightAndLeft = ['right', 'left'];
+    Object.keys(processData.stages).map((stageName) => {
+      Object.keys(processData.stages[stageName].customFieldsTab).map((tabName) => {
+        RightAndLeft.map((side) => {
+          if(processData.stages[stageName].customFieldsTab[tabName][side].length)
+          processData.stages[stageName].customFieldsTab[tabName][side].map((customField) => allCustomFieldsFromStages.push(customField))
+        })
+      })
+    });
+    Object.keys(assetCustomFields).map((tabName) => {
+      RightAndLeft.map((side) => {
+        assetCustomFields[tabName][side].map((field, ix) => {
+            allCustomFieldsFromStages.map((stageField) => {
+              if(field.content === stageField.content && field.values.fieldName === stageField.values.fieldName){
+                assetCustomFields[tabName][side][ix].values.initialValue = stageField.values.initialValue;
+              }
+            })
+        });
+      })
+    });
+    return assetCustomFields;
+  }
+
   const finishProcess = (process, updateProcessStatus) => {
     const { processData } = process;
     const { selectedProcessType } = processData;
@@ -729,9 +768,10 @@ const ModalProcessLive = (props) => {
     const { dateFormatted, timeFormatted } = getCurrentDateTime();
 
     const finishActions = {
-      creation: () => {
-        assetsToProcess.forEach( async ({ name, brand, model, locationId: location, id: referenceId, history = [], customFieldsTab, serial, notes, quantity, purchase_date, purchase_price, price}) => {
+      creation: async () => {
+        Promise.all(assetsToProcess.map( async ({ name, brand, model, locationId: location, id: referenceId, history = [], customFieldsTab, serial, notes, quantity, purchase_date, purchase_price, price}) => {
           const locationPath = await getLocationPath(location);
+          const customFieldsTabInherited = inheritCustomFields(processData, customFieldsTab);
           const assetObj = {
             name,
             brand,
@@ -740,7 +780,7 @@ const ModalProcessLive = (props) => {
             referenceId,
             status: 'active',
             history: [...history, {processId: process._id, processName: processData.name, processType: processData.selectedProcessType, label: `Asset Created at: ${locationPath}`, date: `${dateFormatted} ${timeFormatted}`}],
-            customFieldsTab,
+            customFieldsTab: customFieldsTabInherited,
             serial, 
             notes, 
             quantity, 
@@ -748,13 +788,21 @@ const ModalProcessLive = (props) => {
             purchase_price, 
             price            
           };
-          simplePost('assets', assetObj);
-          dispatch(showCustomAlert({
-            type: 'info',
-            open: true,
-            message: `${assetsToProcess.length} Assets Created!`
-          }));
-        });
+          return postDB('assets', assetObj);
+        }))
+        .then(responses => Promise.all(responses.map(response => response.json())))
+        .then(data => {
+          const assetsCreated = data.map(({response}) => response[0]);
+          updateDB('processLive/', { cartRows: assetsCreated}, process._id)
+            .then(response => response.json())
+            .then(data => {})
+            .catch(error => console.log('errorUpdating:', error));
+        })
+        dispatch(showCustomAlert({
+          type: 'info',
+          open: true,
+          message: `${assetsToProcess.length} Assets Created!`
+        }));
       },
       decommission: () => {
         if(invalidAssets.length){
@@ -827,10 +875,40 @@ const ModalProcessLive = (props) => {
           message: `${assetsToProcess.length} Assets Finished Maintenance!`
         }));
       },
+      creationLinked: () => {
+        if(invalidAssets.length){
+          invalidAssets.forEach(({ id }) => {
+            updateDB('assets/', { status: 'active'} , id)
+              .then(() => {})
+              .catch(error => console.log(error));
+          });
+        }
+        Promise.all(assetsToProcess.map((asset) => {
+          const assetData = omit(asset, '_id');
+          const customFieldsTabInherited = inheritCustomFields(processData, asset.customFieldsTab);
+          return updateDB('assets/', {...assetData, customFieldsTab: customFieldsTabInherited, status: 'active', history: [...assetData.history, {processId: process._id, processName: processData.name, processType: processData.selectedProcessType, label: 'Values Were Updated', date: `${dateFormatted} ${timeFormatted}`}]} , asset._id)
+        }))
+        .then(responses => Promise.all(responses.map(response => response.json())))
+        .then(data => {
+          const assetsUpdated = assetsToProcess.map((asset) => {
+            const customFieldsTabInherited = inheritCustomFields(processData, asset.customFieldsTab);
+            return {...asset, customFieldsTab: customFieldsTabInherited, status: 'active', history: [...asset.history, {processId: process._id, processName: processData.name, processType: processData.selectedProcessType, label: 'Values Were Updated', date: `${dateFormatted} ${timeFormatted}`}]};
+          })
+          updateDB('processLive/', { cartRows: assetsUpdated}, process._id)
+            .then(response => response.json())
+            .then(data => {})
+            .catch(error => console.log('errorUpdating:', error));
+        });
+        dispatch(showCustomAlert({
+          type: 'info',
+          open: true,
+          message: `${assetsToProcess.length} Assets Modified!`
+        }));
+      },
       default: () => {}
     };
 
-    finishActions[selectedProcessType || 'default']();
+    finishActions[process.linkToProcess ? ('creationLinked') : (selectedProcessType || 'default')]();
   };
 
   const extractValidAssets = (cartRows, { stages }) => {
@@ -970,6 +1048,7 @@ const ModalProcessLive = (props) => {
   const [customFieldsTab, setCustomFieldsTab] = useState([]);
   const [customTabs, setCustomTabs] = useState([]);
   const [userLocations, setUserLocations] = useState([]);
+  const [allFolios, setAllFolios] = useState([]);
 
   const [tableControl, setTableControl] = useState({
     assets: {
@@ -1111,12 +1190,40 @@ const ModalProcessLive = (props) => {
   };
 
   useEffect(() => {
-    loadUserLocations()
+    loadUserLocations();
   }, []);
 
-  // useEffect(() => {
-  //   console.log('cartRows', cartRows); 
-  // }, [cartRows]);
+  useEffect(() => {
+    if(values.linkToProcess){
+      setIsAssetReference(false);
+      getOneDB('processLive/', values.linkToProcess)
+      .then(response => response.json())
+      .then(data => {
+        //Set CustomFields
+        const stagesKeys = Object.keys(data.response.processData.stages).filter(e => Number(e.split('_')[1]) <= data.response.processData.currentStage);
+        var customtabs = [];
+        var allCustomFields = [];
+        stagesKeys.map((e, ix) => {
+          const { stageName, customFieldsTab } = data.response.processData.stages[e];
+          const tabs = Object.keys(data.response.processData.stages[e].customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
+          tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
+          
+          allCustomFields.push(customFieldsTab);
+          customtabs.push({stage: stageName, tabs, index: ix});
+        });
+        setCustomTabs(customtabs);
+        setCustomFieldsTab(allCustomFields);
+        //Set CartRows
+        Promise.all(data.response.cartRows.map( async (asset) => {
+          const locationPath = await getLocationPath(asset.location);
+          return ({...asset, originalLocation: locationPath, locationName: locationPath, id: asset._id});
+        })).then(data => {
+          setCartRows(data);
+        })
+      })
+      .catch(error => console.log(error));
+    }
+  }, [values.linkToProcess]);
   
   useEffect(() => {
     loadAssetsData('assets');
@@ -1125,6 +1232,10 @@ const ModalProcessLive = (props) => {
   useEffect(() => {
     loadAssetsData('assets');
   }, [tableControl.assets.page, tableControl.assets.rowsPerPage, tableControl.assets.order, tableControl.assets.orderBy, tableControl.assets.search, tableControl.assets.locationsFilter]);
+
+  useEffect(() => {
+    getFolios();
+  }, [selectedProcessType])
 
   useEffect(() => {
     getDB('processes')
@@ -1181,7 +1292,13 @@ const ModalProcessLive = (props) => {
         });
         const currentStageIndex = data.response.processData.currentStage;
         if(currentStageIndex -1 <= 0){
-          setCartRows(data.response.cartRows)
+          if(data.response.linkToProcess){
+            const cartRowsProcessed = data.response.cartRows.map((element) => ({...element, id: element._id}))
+            setCartRows(cartRowsProcessed)
+          }
+          else(
+            setCartRows(data.response.cartRows)
+          )
         }
         else if(currentStageIndex - 1 > 0){
           setCartRows(getCurrentStageData(currentStageIndex -1 , data.response.processData).cartRows);
@@ -1225,7 +1342,6 @@ const ModalProcessLive = (props) => {
   // const [notifications, setNotifications] = useState([]);
   // const [approvals, setApprovals] = useState([]);
   const [assetsSelected, setAssetsSelected] = useState([]);
-  const [assetSelectedInfo, setAssetSelectedInfo] = useState(null);
   const [cartRows, setCartRows] = useState([]);
   const [isAssetReference, setIsAssetReference] = useState(null);
   const [selectedProcessType, setSelectedProcessType] = useState('');
@@ -1248,7 +1364,6 @@ const ModalProcessLive = (props) => {
     setAssetsSelected([]);
   };
 
-
   const renderTabs = () => {
     const tabs = (children) => (
       <Tabs
@@ -1270,13 +1385,31 @@ const ModalProcessLive = (props) => {
     }
   };
 
+  const getFolios = () => {
+    getDBComplex({
+      collection: 'processLive',
+      fields: [{key:'processData.name', value: 1}, {key:'_id', value: 1}, {key:'folio', value: 1}],
+      sort:[{key:'folio', value: 1}],
+      condition:[{ "processData.selectedProcessType": "creation"}]
+    })
+      .then(response => response.json())
+      .then(data => {
+        const filteredData = data.response.map(({processData, folio, _id: id}) => ({name: processData.name, folio, id}))
+        setAllFolios(filteredData);
+      })
+    .catch(error => console.log(error));
+  };
+
   const renderTabsContent = () => {
     const handleSelectProcessChange = (event) => {
       setValues((prev) => ({ ...prev, selectedProcess: event.target.value }));
       const { selectedProcessType } = processes.find(({ id }) => id === event.target.value);
       setSelectedProcessType(selectedProcessType);
       setIsAssetReference(selectedProcessType === 'creation' ? true : false);
-    };    
+    };
+    const handleSelectProcessToLink = (event) => {
+      setValues((prev) => ({ ...prev, linkToProcess: event.target.value }));
+    };
     if (!id) {
       return (
         <SwipeableViews
@@ -1287,45 +1420,85 @@ const ModalProcessLive = (props) => {
           <TabContainer4 dir={theme4.direction}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                <FormControl className={classes.textField} disabled={values.selectedProcess ? true : false }>
-                  <div style={{width: '45%', marginRight: '5%'}}>
-                    <InputLabel htmlFor="age-simple">Select Process</InputLabel>
-                    <Select
-                      onChange={handleSelectProcessChange}
-                      value={values.selectedProcess}
-                      className={classes.menu}
-                    >
-                      {(processes || []).map(({ id, name }, ix) => (
-                        <MenuItem key={`opt-name-${ix}`} value={id}>{name}</MenuItem>
-                      ))}
-                    </Select>
-                  </div>
+                <div style={{display: 'flex', alignItems: 'flex-end'}}>
+                  <FormControl className={classes.textField} disabled={values.selectedProcess ? true : false }>
+                    <div style={{width: '100%', marginRight: '5%'}}>
+                      <InputLabel htmlFor="age-simple">Select Process</InputLabel>
+                      <Select
+                        onChange={handleSelectProcessChange}
+                        value={values.selectedProcess}
+                        className={classes.menu}
+                      >
+                        {(processes || []).map(({ id, name, selectedProcessType }, ix) => (
+                          <MenuItem key={`opt-name-${ix}`} value={id}>
+                                <Typography>
+                                  {`${name} `}
+                                </Typography>
+                                <GreyTypography>
+                                  {`. Type: ${selectedProcessType}`}
+                                </GreyTypography>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </div>
+                  </FormControl>
                   {
-                    values.selectedProcess && processes.find(({id}) => id === values.selectedProcess)?.processStages[0]?.isControlDueDate && (
-                      <TextField
-                        label={'Due Date'}
-                        style={{
-                          width: '45%',
-                        }}
-                        type="date"
-                        inputProps={{
-                          min: new Date().toISOString().split('T')[0]
-                        }}
-                        value={dueDate}
-                        onChange={(event) => setDueDate(event.target.value)}
-                        InputLabelProps={{
-                          shrink: true,
-                        }}
-                        stlye={classes.dueDate}
-                      />
+                      values.selectedProcess && processes.find(({id}) => id === values.selectedProcess)?.processStages[0]?.isControlDueDate && (
+                          <TextField
+                            label={'Due Date'}
+                            style={{
+                              width: '200px',
+                              marginRight: '40px'
+                            }}
+                            type="date"
+                            inputProps={{
+                              min: new Date().toISOString().split('T')[0]
+                            }}
+                            value={dueDate}
+                            onChange={(event) => setDueDate(event.target.value)}
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                      )
+                    }
+                  {
+                    values.selectedProcess && processes.find(({id}) => id === values.selectedProcess)?.selectedProcessType === 'creation' && (
+                      <div style={{width: '200px', marginRight: '5%'}}>
+                        <InputLabel htmlFor="age-simple">Link to Process</InputLabel>
+                        <Select
+                          onChange={handleSelectProcessToLink}
+                          value={values.linkToProcess}
+                          className={classes.menu}
+                        >
+                          {allFolios.map(({ id, name, folio }, ix) => (
+                            <MenuItem key={`opt-name-${ix}`} value={id}>
+                              <Typography>
+                                {`Folio: ${folio}`}
+                              </Typography>
+                              <GreyTypography>
+                                {`. - ${name}`}
+                              </GreyTypography>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </div>
                     )
                   }
-                </FormControl>
-                <button type="button" onClick={onAddAssetToCart} className='btn btn-primary btn-elevate kt-login__btn-primary'>
+                </div>
+                <button type="button" onClick={onAddAssetToCart} disabled={values.linkToProcess} className='btn btn-primary btn-elevate kt-login__btn-primary'>
                   <i className="la la-plus" /> Add Assets
                 </button>
               </div>
-              {isAssetReference !== null &&
+              {
+                values.linkToProcess && 
+                <div style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '60px'}}>
+                  <Typography variant='h5'>
+                    When a process is linked to another, you can't add more assets
+                  </Typography>
+                </div>
+              }
+              {isAssetReference !== null && !values.linkToProcess &&
                 <div style={{width: '100%'}}>
                   <Paper className={classes4.subTab} style={{width: '100%'}}>
                     <Tabs
@@ -1421,7 +1594,7 @@ const ModalProcessLive = (props) => {
                 onSetRows={setCartRows}
                 processType={selectedProcessType}
                 updateAssetValues={(newCartRows) => handleChangeAssetValues(newCartRows)}
-                selectedAssetInfo={assetSelectedInfo}
+                isLinkedToProcess={!!values.linkToProcess}
               />
             }
           </TabContainer4>
@@ -1500,7 +1673,7 @@ const ModalProcessLive = (props) => {
                                 // customFieldIndex={props.customFieldIndex}
                                 onClick={() => alert(customField.content)}
                                 data={tab.content[colIndex]}
-                                disabled={customTabs[stageTabSelected].index < processInfo.processData.currentStage - 1}
+                                disabled={customTabs[stageTabSelected].index < processInfo.processData.currentStage - 1 || processInfo.processData.processStatus !== 'inProcess'}
                               />
                             ))}
                           </div>
@@ -1546,7 +1719,7 @@ const ModalProcessLive = (props) => {
           { loading && 
             <CircularProgressCustom size={20} />
           }
-          <Button onClick={() => handleSave().then(() => setLoading(false))} color="primary">
+          <Button onClick={() => handleSave().then(() => setLoading(false)).catch(() => setLoading(false))} color="primary">
             Save changes
           </Button>
         </DialogActions5>

@@ -13,24 +13,24 @@ const AssetFinder = ({ setTableRowsInner = () => { }, userLocations }) => {
   const classes = useStyles();
   const [assetRows, setAssetRows] = useState([]);
   const [searchText, setSearchText] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleOnSearchClick = () => {
-    if (searchText) {
-      const queryLike = ['name', 'brand', 'model'].map(key => ({ key, value: searchText }));
-      const condition = [{ "location": { "$in": userLocations }}];
-      getDBComplex({ collection: 'assets', queryLike, condition })
-        .then(response => response.json())
-        .then(data => {
-          const rows = data.response.map(row => {
-            const { name, brand, model, EPC, _id: id, serial } = row;
-            return { id, name, brand, model, EPC, serial };
-          });
-          setAssetRows(rows);
-        })
-        .catch(error => console.log(error));
-    } else {
-      setAssetRows([]);
-    }
+    setLoading(true);
+    const queryLike = ['name', 'brand', 'model', 'EPC', 'serial'].map(key => ({ key, value: searchText || '' }));
+    const condition = [{ "location": { "$in": userLocations } }];
+    getDBComplex({ collection: 'assets', queryLike, condition })
+      .then(response => response.json())
+      .then(data => {
+        const rows = data.response.map(row => {
+          const { name, brand, model, EPC, _id: id, serial } = row;
+          const parent = !!row.parent;
+          return { id, name, brand, model, parent, EPC, serial };
+        });
+        setAssetRows(rows);
+      })
+      .catch(error => console.log(error))
+      .finally(() => setLoading(false));
   };
 
   return (
@@ -47,7 +47,7 @@ const AssetFinder = ({ setTableRowsInner = () => { }, userLocations }) => {
           <SearchIcon />
         </IconButton>
       </Paper>
-      <Table columns={getColumns()} rows={assetRows} setTableRowsInner={setTableRowsInner} />
+      <Table columns={getColumns()} rows={assetRows} setTableRowsInner={setTableRowsInner} loading={loading} />
     </div>
   );
 };
@@ -64,6 +64,7 @@ const getColumns = (isAssetReference = false) => {
   } else {
     return [
       ...assetReference,
+      { field: 'parent', headerName: 'Parent', width: 130 },
       { field: 'EPC', headerName: 'EPC', width: 200 },
       { field: 'serial', headerName: 'Serial Number', width: 200 }
     ];

@@ -1,5 +1,7 @@
 import React, { useMemo } from "react";
 import { useSelector } from "react-redux";
+import { makeStyles } from '@material-ui/core';
+import clsx from  'clsx';
 import {
   Portlet,
   PortletBody,
@@ -18,7 +20,17 @@ import BestSellers from "../../widgets/BestSellers";
 import RecentActivities from "../../widgets/RecentActivities";
 import PortletHeaderDropdown from "../../partials/content/CustomDropdowns/PortletHeaderDropdown";
 
+const useStyles = makeStyles((theme) => ({
+  snapshots: {
+    marginTop: '0px',
+    [theme.breakpoints.down('sm')]: {
+      marginTop: '20px'
+    }
+  }  
+}));
+
 export default function Dashboard() {
+  const classes = useStyles();
   const { brandColor, dangerColor, successColor, primaryColor } = useSelector(
     state => ({
       brandColor: metronic.builder.selectors.getConfig(
@@ -72,7 +84,7 @@ export default function Dashboard() {
   return (
     <>
       <div className="row">
-        <div className="col-xl-6" style={{ marginTop: '20px' }}>
+        <div className={clsx('col-xl-6', classes.snapshots)}>
           <div className="row row-full-height">
             <div className="col-sm-12 col-md-12 col-lg-6">
               <Portlet className="kt-portlet--height-fluid-half kt-portlet--border-bottom-brand">

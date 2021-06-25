@@ -35,7 +35,7 @@ export default function AssetTable({ assetRows = [], onAssetFinderSubmit, onDele
         setControl({ ...control, [collection.id]: null, [collection.modal]: true });
       },
       onDelete(id) {
-        onDeleteAssetAssigned(...id);
+        onDeleteAssetAssigned([...id]);
       }
     };
   };

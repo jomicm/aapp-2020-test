@@ -50,10 +50,24 @@ class UserProfile extends React.Component {
             <div className='kt-user-card__avatar'>
               <img alt='Pic' key={Date.now()} className='kt-hidden' src={user.pic} />
               <span className='kt-badge kt-badge--lg kt-badge--rounded kt-badge--bold kt-font-success'>
-              {showAvatar && <img alt='Pic' key={Date.now()} src={user.pic} />}
+                {showAvatar && <img alt='Pic' key={Date.now()} src={user.pic} />}
               </span>
             </div>
-            <div className='kt-user-card__name'>{user.fullname}</div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div className='kt-user-card__name'>{user.fullname}</div>
+              <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                <div className='kt-user-card__name' style={{ fontSize: '10px' }}>{user.email}</div>
+                {user.profilePermissions.users?.includes('view') && (
+                  <Link
+                    className='kt-user-card__name'
+                    to={`users?id=${user.id}`}
+                    style={{ fontSize: '10px', textDecoration: 'underline' }}
+                  >
+                    Go to profile
+                  </Link>
+                )}
+              </div>
+            </div>
           </div>
           <div className='kt-notification'>
             <div className='kt-notification__sign-out'>

@@ -1,10 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   Portlet,
-  PortletBody,
-  PortletFooter,
-  PortletHeader,
-  PortletHeaderToolbar
+  PortletBody
 } from "../../../../app/partials/content/Portlet";
 import MyTickets from "./components/MyTickets";
 

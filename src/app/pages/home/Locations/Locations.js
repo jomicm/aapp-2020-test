@@ -92,7 +92,6 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   const [selectedLocationProfileRows, setSelectedLocationProfileRows] = useState([]);
   const [tab, setTab] = useState(0);
   const [value4, setValue4] = useState(0);
-
   const { policies, setPolicies } = usePolicies();
 
   const { layoutConfig } = useSelector(
@@ -101,8 +100,8 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
   );
 
   const policiesBaseFields = {
-    list: allBaseFields.locationsList,
-    profiles: allBaseFields.locations
+    list: { id: { validationId: 'locationId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.locationsList },
+    profiles: { id: { validationId: 'locationProfileId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.locations }
   };
 
   const dispatch = useDispatch();
@@ -730,20 +729,6 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
                 </PortletBody>
               )}
               {tab === 2 && <Policies setPolicies={setPolicies} module="locations" baseFields={policiesBaseFields} />}
-              {tab === 3 && (
-                <PortletBody>
-                  <div className='kt-section kt-margin-t-0'>
-                    <div className='kt-section__body'>
-                      <div className='kt-section'>
-                        <span className='kt-section__sub'>
-                          This section will integrate <code>Locations Settings</code>
-                        </span>
-                        <div className='kt-separator kt-separator--dashed' />
-                      </div>
-                    </div>
-                  </div>
-                </PortletBody>
-              )}
             </Portlet>
           </div>
         )}

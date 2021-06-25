@@ -743,6 +743,7 @@ const TableComponentTile = props => {
               <Table
                 aria-labelledby='tableTitle'
                 className={classes.table}
+                stickyHeader
               >
                 {
                   (viewControl.table || viewControl.tree) && (
@@ -830,13 +831,6 @@ const TableComponentTile = props => {
                                     </TableRow>
                                   );
                                 })}
-                              {
-                                rowsPerPage - rows.length > 0 && (
-                                  <TableRow style={{ height: 49 * (rowsPerPage - rows.length), width: '100%' }}>
-                                    <TableCell colSpan={100} />
-                                  </TableRow>
-                                )
-                              }
                             </TableBody>
                           </>
                         )
@@ -868,6 +862,14 @@ const TableComponentTile = props => {
           }}
           component='div'
           count={controlValues.total}
+          labelDisplayedRows={({ from, to, count }) => {
+
+            if (count === 0) return 'No Pages';
+
+            const currentPage = page + 1;
+            const totalPages = Math.floor(count / rowsPerPage) + 1;
+            return `Page ${currentPage}/${totalPages}`;
+          }}
           nextIconButtonProps={{
             'aria-label': 'Next Page'
           }}

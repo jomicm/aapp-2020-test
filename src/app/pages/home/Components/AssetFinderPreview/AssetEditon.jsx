@@ -4,12 +4,11 @@ import {
   InputAdornment,
 } from "@material-ui/core";
 import BaseFields from '../../Components/BaseFields/BaseFields';
-import { ContactSupportOutlined } from '@material-ui/icons';
 
 const AssetEditon = ({
   assetEditionValues,
   setAssetEditionValues
-}) =>  {
+}) => {
 
   const [values, setValues] = useState({
     serial: '',

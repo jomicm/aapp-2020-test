@@ -112,7 +112,6 @@ export const CustomFieldsPreview = (props) => {
 
 export const allBaseFields = {
   userList: {
-    id: { validationId: 'userId', component: 'textField', compLabel: 'ID' },
     userProfile: {
       component: 'dropSelect',
       compLabel: 'Profile Selected',
@@ -122,32 +121,28 @@ export const allBaseFields = {
     lastName: { validationId: 'lastName', component: 'textField', compLabel: 'Last Name' },
     email: { validationId: 'email', component: 'textField', compLabel: 'Email' },
     password: { validationId: 'password', component: 'textField', compLabel: 'Password' },
-    // Groups will be added in a future ticket
-    // userGroups: {
-    //   component: 'dropSelect',
-    //   compLabel: 'Groups',
-    //   style: { marginTop: '15px' },
-    //   validationId: 'selectedUserGroups'
-    // },
     boss: {
       component: 'dropSelect',
       compLabel: 'Boss',
       style: { marginTop: '15px' },
       validationId: 'selectedBoss'
-    }
+    },
+    userGroups: {
+      component: 'dropSelect',
+      compLabel: 'Groups',
+      style: { marginTop: '15px' },
+      validationId: 'selectedUserGroups'
+    },
   },
   userReferences: {
-    id: { validationId: 'userReferenceId', component: 'textField', compLabel: 'ID' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
   },
   categories: {
-    id: { validationId: 'categoryId', component: 'textField', compLabel: 'ID' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     depreciation: { validationId: 'depreciation', component: 'textField', compLabel: 'Depreciation' },
   },
   references: {
-    id: { validationId: 'referenceId', component: 'textField', compLabel: 'ID' },
-    category: { validationId: 'category', component: 'dropSelect', compLabel: 'Category' },
+    category: { validationId: 'selectedProfile', component: 'dropSelect', compLabel: 'Category' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     brand: { validationId: 'brand', component: 'textField', compLabel: 'Brand' },
     model: { validationId: 'model', component: 'textField', compLabel: 'Model' },
@@ -155,7 +150,6 @@ export const allBaseFields = {
     depreciation: { validationId: 'depreciation', component: 'textField', compLabel: 'Depreciation' },
   },
   employees: {
-    id: { validationId: 'employeeId', component: 'textField', compLabel: 'ID' },
     employeeProfile: { validationId: 'employeeProfile', component: 'dropSelect', compLabel: 'Employee Profile' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     lastName: { validationId: 'lastName', component: 'textField', compLabel: 'Last Name' },
@@ -163,29 +157,26 @@ export const allBaseFields = {
     responsibilityLayout: { validationId: 'responsibilityLayout', component: 'dropSelect', compLabel: 'Responsibility Layout' },
   },
   employeeReferences: {
-    id: { validationId: 'employeeReferenceId', component: 'textField', compLabel: 'ID' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
   },
   locations: {
-    id: { validationId: 'locationProfileId', component: 'textField', compLabel: 'ID' },
     selectedLevel: { validationId: 'selectedLevel', component: 'textField', compLabel: 'Level' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
   },
   locationsList: {
-    id: { validationId: 'locationId', component: 'textField', compLabel: 'ID' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     fileExt: { validationId: 'fileExt', compLabel: 'Layout' },
     imageInfo: { validationId: 'imageInfo', compLabel: 'Pin Layout' },
     mapInfo: { validationId: 'mapInfo', compLabel: 'Pin Map' },
   },
   assets1: {
-    id: { validationId: 'assetId', component: 'textField', compLabel: 'ID' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     brand: { validationId: 'brand', component: 'textField', compLabel: 'Brand' },
     model: { validationId: 'model', component: 'textField', compLabel: 'Model' },
-    category: { validationId: 'category', component: 'dropSelect', compLabel: 'Category' },
+    category: { validationId: 'category', component: 'textField', compLabel: 'Category' },
     status: { validationId: 'status', component: 'textField', compLabel: 'Status' },
     serialNumber: { validationId: 'serialNumber', component: 'textField', compLabel: 'Serial Number' },
+    parent: { validationId: 'parent', component: 'textField', compLabel: 'Parent' },
     responsible: { validationId: 'responsible', component: 'textField', compLabel: 'Responsible' },
     notes: { validationId: 'notes', component: 'textField', compLabel: 'Notes' },
     quantity: { validationId: 'quantity', component: 'textField', compLabel: 'Quantity' },
@@ -197,6 +188,7 @@ export const allBaseFields = {
     totalPrice: { validationId: 'totalPrice', component: 'textField', compLabel: 'Total Price' },
     EPC: { validationId: 'EPC', component: 'textField', compLabel: 'EPC' },
     location: { validationId: 'location', component: 'textField', compLabel: 'Location' },
+    locationPath: { validationId: 'locationPath', component: 'textField', compLabel: 'Location Path' },
     creator: { validationId: 'creator', component: 'textField', compLabel: 'Creator' },
     creationDate: { validationId: 'creationDate', component: 'textField', compLabel: 'Creation Date' },
     labelingUser: { validationId: 'labelingUser', component: 'textField', compLabel: 'Labeling User' },
@@ -209,7 +201,6 @@ export const allBaseFields = {
     serialNumber: { validationId: 'serialNumber', component: 'textField', compLabel: 'Serial Number' },
     notes: { validationId: 'notes', component: 'textField', compLabel: 'Notes' },
     quantity: { validationId: 'quantity', component: 'textField', compLabel: 'Quantity' },
-    location: { validationId: 'location', component: 'textField', compLabel: 'Location' },
   },
 };
 
