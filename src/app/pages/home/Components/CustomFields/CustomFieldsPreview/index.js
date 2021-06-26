@@ -506,7 +506,10 @@ const FileUpload = (props) => {
               variant="contained"
               color="secondary"
               style={{ width: '10px' }}
-              onClick={() => setValues({ ...values, fileName: '', file: '', })}
+              onClick={() => {
+                setValues(defaultValues);
+                props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...defaultValues });
+              }}
               disabled={props.disabled || false}
             >
               <DeleteIcon />
@@ -1038,8 +1041,6 @@ const RichText = (props) => {
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
 
-  console.log(values.initialValue.length);
-
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
       <div className={'error-wrapper'}>
@@ -1356,11 +1357,13 @@ const MultiLineSettings = (props) => {
   const defaultValues = {
     fieldName: 'Multi Line',
     mandatory: false,
+    repeated: false
   };
   const [values, setValues] = useState(defaultValues);
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
+    if (newValue === 'repeated') newValue = !values.repeated;
     setValues({
       ...values,
       [name]: newValue
@@ -1398,6 +1401,10 @@ const MultiLineSettings = (props) => {
           <FormControlLabel
             control={<Checkbox checked={values.mandatory} onChange={handleOnChange('mandatory')} value="mandatory" />}
             label="Mandatory"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={values.repeated} onChange={handleOnChange('repeated')} value="repeated" />}
+            label="No Repeated Values"
           />
         </FormGroup>
       </FormControl>
@@ -1968,12 +1975,14 @@ const CurrencySettings = (props) => {
     fieldName: 'Currency',
     initialValue: '',
     mandatory: false,
+    repeated: false
   };
   const [values, setValues] = useState(defaultValues);
 
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
+    if (newValue === 'repeated') newValue = !values.repeated;
     setValues({
       ...values,
       [name]: newValue
@@ -2026,6 +2035,10 @@ const CurrencySettings = (props) => {
           <FormControlLabel
             control={<Checkbox checked={values.mandatory} onChange={handleOnChange('mandatory')} value="mandatory" />}
             label="Mandatory"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={values.repeated} onChange={handleOnChange('repeated')} value="repeated" />}
+            label="No Repeated Values"
           />
         </FormGroup>
       </FormControl>
@@ -2038,12 +2051,14 @@ const PercentageSettings = (props) => {
     fieldName: 'Percentage',
     initialValue: '',
     mandatory: false,
+    repeated: false
   };
   const [values, setValues] = useState(defaultValues);
 
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
+    if (newValue === 'repeated') newValue = !values.repeated;
     setValues({
       ...values,
       [name]: newValue
@@ -2096,6 +2111,10 @@ const PercentageSettings = (props) => {
           <FormControlLabel
             control={<Checkbox checked={values.mandatory} onChange={handleOnChange('mandatory')} value="mandatory" />}
             label="Mandatory"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={values.repeated} onChange={handleOnChange('repeated')} value="repeated" />}
+            label="No Repeated Values"
           />
         </FormGroup>
       </FormControl>
@@ -2108,12 +2127,14 @@ const EmailSettings = (props) => {
     fieldName: 'Email',
     initialValue: '',
     mandatory: false,
+    repeated: false
   };
   const [values, setValues] = useState(defaultValues);
 
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
+    if (newValue === 'repeated') newValue = !values.repeated;
     setValues({
       ...values,
       [name]: newValue
@@ -2162,6 +2183,10 @@ const EmailSettings = (props) => {
             control={<Checkbox checked={values.mandatory} onChange={handleOnChange('mandatory')} value="mandatory" />}
             label="Mandatory"
           />
+          <FormControlLabel
+            control={<Checkbox checked={values.repeated} onChange={handleOnChange('repeated')} value="repeated" />}
+            label="No Repeated Values"
+          />
         </FormGroup>
       </FormControl>
     </div>
@@ -2173,12 +2198,14 @@ const DecimalSettings = (props) => {
     fieldName: 'Decimal',
     initialValue: '0.00',
     mandatory: false,
+    repeated: false
   };
   const [values, setValues] = useState(defaultValues);
 
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
+    if (newValue === 'repeated') newValue = !values.repeated;
     setValues({
       ...values,
       [name]: newValue
@@ -2232,6 +2259,10 @@ const DecimalSettings = (props) => {
             control={<Checkbox checked={values.mandatory} onChange={handleOnChange('mandatory')} value="mandatory" />}
             label="Mandatory"
           />
+          <FormControlLabel
+            control={<Checkbox checked={values.repeated} onChange={handleOnChange('repeated')} value="repeated" />}
+            label="No Repeated Values"
+          />
         </FormGroup>
       </FormControl>
     </div>
@@ -2243,12 +2274,14 @@ const URLSettings = (props) => {
     fieldName: 'URL',
     initialValue: '',
     mandatory: false,
+    repeated: false
   };
   const [values, setValues] = useState(defaultValues);
 
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
+    if (newValue === 'repeated') newValue = !values.repeated;
     setValues({
       ...values,
       [name]: newValue
@@ -2296,6 +2329,10 @@ const URLSettings = (props) => {
           <FormControlLabel
             control={<Checkbox checked={values.mandatory} onChange={handleOnChange('mandatory')} value="mandatory" />}
             label="Mandatory"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={values.repeated} onChange={handleOnChange('repeated')} value="repeated" />}
+            label="No Repeated Values"
           />
         </FormGroup>
       </FormControl>

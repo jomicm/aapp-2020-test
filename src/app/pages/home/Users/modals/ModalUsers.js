@@ -26,7 +26,7 @@ import { actions } from '../../../../store/ducks/general.duck';
 import * as auth from '../../../../store/ducks/auth.duck';
 import { postDBEncryptPassword, getOneDB, getDB, updateDB, postDB } from '../../../../crud/api';
 import ImageUpload from '../../Components/ImageUpload';
-import { hosts, getFileExtension, saveImage, getImageURL } from '../../utils';
+import { hosts, getFileExtension, saveImage, getImageURL, verifyCustomFields } from '../../utils';
 import { modules } from '../../constants';
 import { CustomFieldsPreview } from '../../constants';
 import BaseFields from '../../Components/BaseFields/BaseFields';
@@ -148,6 +148,11 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
+      dispatch(showFillFieldsAlert());
+      return;
+    }
+
+    if (!verifyCustomFields(customFieldsTab)) {
       dispatch(showFillFieldsAlert());
       return;
     }

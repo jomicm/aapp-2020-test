@@ -30,7 +30,7 @@ import {
 } from '../../../../partials/content/Portlet';
 import { getOneDB, postDB, updateDB } from '../../../../crud/api';
 import { CustomFieldsPreview } from '../../constants';
-import { getFileExtension, getImageURL, saveImage } from '../../utils';
+import { getFileExtension, getImageURL, saveImage, verifyCustomFields } from '../../utils';
 import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
 import { usePolicies } from '../../Components/Policies/hooks';
 import GoogleMaps from '../../Components/GoogleMaps';
@@ -156,7 +156,7 @@ const ModalLocationList = ({
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const [tabs, setTabs] = useState([]);
   const theme4 = useTheme();
-  const { showCustomAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
+  const { showCustomAlert, showErrorAlert, showSavedAlert, showUpdatedAlert, showFillFieldsAlert } = actions;
   const [value4, setValue4] = useState(0);
   const [values, setValues] = useState({
     categoryPic: '/media/misc/placeholder-image.jpg',
@@ -222,6 +222,12 @@ const ModalLocationList = ({
       );
       return;
     }
+
+    if (!verifyCustomFields(values.customFieldsTab)) {
+      dispatch(showFillFieldsAlert());
+      return;
+    }
+
     const fileExt = getFileExtension(image);
     const body = {
       ...values,

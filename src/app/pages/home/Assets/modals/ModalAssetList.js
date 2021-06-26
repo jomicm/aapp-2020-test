@@ -37,7 +37,7 @@ import { actions } from '../../../../store/ducks/general.duck';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import ImageUpload from '../../Components/ImageUpload';
-import { getFileExtension, saveImage, getImageURL, getLocationPath } from '../../utils';
+import { getFileExtension, saveImage, getImageURL, getLocationPath, verifyCustomFields } from '../../utils';
 import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetList.scss';
 import OtherModalTabs from '../components/OtherModalTabs';
@@ -508,6 +508,11 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
       return;
     }
 
+    if (!verifyCustomFields(customFieldsTab)) {
+      dispatch(showFillFieldsAlert());
+      return;
+    }
+
     const fileExt = getFileExtension(image);
 
     let reassignedAssets = [];
@@ -536,8 +541,9 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
 
     const parseAssetsAssigned = assetsBeforeSaving.map(({ id, name, brand, model, EPC, serial }) => ({ id, name, brand, model, EPC, serial }));
 
+    const { creationDate, ...otherValues } = values;
     const body = {
-      ...values,
+      ...otherValues,
       customFieldsTab,
       fileExt,
       layoutCoords: layoutMarker ? layoutMarker : null,

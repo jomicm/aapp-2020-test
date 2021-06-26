@@ -113,3 +113,63 @@ const recursiveLocationPath = (currentLocation, allLocations) => {
     return recursiveLocationPath(newLocation, allLocations).concat('/', name);
   }
 };
+
+export const verifyCustomFields = (customFieldsTab) => {
+  let flag = true;
+  if (!Object.keys(customFieldsTab).length) return true;
+  const RightAndLeft = ['right', 'left'];
+  const customInitialValue = ['singleLine', 'multiLine', 'date', 'dateTime', 'imageUpload', 'currency', 'percentage', 'email', 'decimal', 'richText', 'url', 'formula'];
+  const customSelectedItem = ['dropDown', 'radioButtons'];
+  const customSelectedOptions = ['checkboxes', 'decisionBox'];
+  const customOther = ['fileUpload'];
+  Object.keys(customFieldsTab).map((tabName) => {
+    RightAndLeft.map((side) => {
+      customFieldsTab[tabName][side].forEach(({ content, values: { mandatory, initialValue, fileExt, selectedItem, selectedOptions } }) => {
+        if (!flag || !mandatory) return;
+        if (customInitialValue.includes(content)) {
+          if (content === 'richText') {
+            flag = initialValue.length > 8;
+          } else if (!initialValue) {
+            flag = false;
+          }
+        } else if (customSelectedItem.includes(content)) {
+          if (!selectedItem) {
+            flag = false;
+          }
+        } else if (customSelectedOptions.includes(content)) {
+          if (!selectedOptions || !selectedOptions?.length) {
+            flag = false;
+          }
+        } else if (customOther.includes(content)) {
+          if (content === 'fileUpload') {
+            if (!fileExt) {
+              flag = false;
+            }
+          }
+        }
+      });
+    })
+  });
+
+  return flag;
+};
+
+export const verifyRepeatedValues = (customFieldsTab) => {
+  let data = [];
+  const customInitialValue = ['singleLine', 'multiLine', 'date', 'dateTime', 'currency', 'percentage', 'email', 'decimal', 'url'];
+  const RightAndLeft = ['right', 'left'];
+  if (!Object.keys(customFieldsTab).length) return true;
+
+  Object.keys(customFieldsTab).map((tabName) => {
+    RightAndLeft.map((side) => {
+      customFieldsTab[tabName][side].forEach((customField) => {
+        if (!customInitialValue.includes(customField.content)) return;
+        if (customField.values.repeated) {
+          data.push(customField);
+        }
+      });
+    })
+  });
+  
+  console.log(data);
+};

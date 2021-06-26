@@ -26,7 +26,7 @@ import { actions } from '../../../../store/ducks/general.duck';
 import './ModalAssetCategories.scss';
 import ImageUpload from '../../Components/ImageUpload';
 import { postDB, getOneDB, updateDB, getDB } from '../../../../crud/api';
-import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import { getFileExtension, saveImage, getImageURL, verifyCustomFields } from '../../utils';
 import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetReferences.scss';
 import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
@@ -164,6 +164,11 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
   const handleSave = () => {
     setFormValidation({ ...formValidation, enabled: true });
     if (!isEmpty(formValidation.isValidForm)) {
+      dispatch(showFillFieldsAlert());
+      return;
+    }
+
+    if (!verifyCustomFields(customFieldsTab)) {
       dispatch(showFillFieldsAlert());
       return;
     }
