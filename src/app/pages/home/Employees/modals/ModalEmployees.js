@@ -156,6 +156,7 @@ const ModalEmployees = ({
     categoryPic: '/media/misc/placeholder-image.jpg',
     categoryPicDefault: '/media/misc/placeholder-image.jpg',
     email: '',
+    employee_id: '',
     isDisableUserProfile: false,
     lastName: '',
     name: '',
@@ -250,6 +251,11 @@ const ModalEmployees = ({
         onChange: handleChange('email')
       }
     },
+    employee_id: {
+      componentProps: {
+        onChange: handleChange('employee_id')
+      }
+    },
     responsibilityLayout: {
       style: {
         marginTop: '15px'
@@ -287,6 +293,7 @@ const ModalEmployees = ({
       categoryPic: '/media/misc/placeholder-image.jpg',
       categoryPicDefault: '/media/misc/placeholder-image.jpg',
       email: '',
+      employee_id: '',
       isDisableUserProfile: false,
       lastName: '',
       name: '',
@@ -536,6 +543,7 @@ const ModalEmployees = ({
           name,
           lastName,
           email,
+          employee_id,
           customFieldsTab,
           profilePermissions,
           idUserProfile,
@@ -561,6 +569,7 @@ const ModalEmployees = ({
           name,
           lastName,
           email,
+          employee_id: employee_id || '',
           isDisableUserProfile: true,
           imageURL: getImageURL(id, 'employees', fileExt),
           profileSelected: employeeProfilesFiltered.filter((profile) => profile.value === idUserProfile)

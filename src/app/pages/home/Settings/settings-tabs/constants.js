@@ -32,6 +32,7 @@ export const defaultValues = {
       name: { id: 'name', name: 'Name', caption: '', mandatory: false, regex: '' },
       lastName: { id: 'lastName', name: 'Last Name', caption: '', mandatory: false, regex: '' },
       email: { id: 'email', name: 'Email', caption: '', mandatory: false, regex: '' },
+      employee_id: { id: 'employee_id', name: 'Employee Id', caption: '', mandatory: false, regex: '' },
       responsibilityLayout: { id: 'responsibilityLayout', name: 'Responsibility Layout', caption: '', mandatory: false, regex: '' }
     },
     employeeReferences: {

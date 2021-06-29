@@ -154,6 +154,7 @@ export const allBaseFields = {
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     lastName: { validationId: 'lastName', component: 'textField', compLabel: 'Last Name' },
     email: { validationId: 'email', component: 'textField', compLabel: 'Email' },
+    employee_id: { validationId: 'employee_id', component: 'textField', compLabel: 'Employee Id' },
     responsibilityLayout: { validationId: 'responsibilityLayout', component: 'dropSelect', compLabel: 'Responsibility Layout' },
   },
   employeeReferences: {
