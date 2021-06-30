@@ -22,13 +22,16 @@ import { postDB, getCountDB, getDBComplex, getOneDB, getDB } from '../../../crud
 import TableReportsGeneral from '../Components/TableReportsGeneral';
 import CircularProgressCustom from '../Components/CircularProgressCustom';
 import {
+  baseFieldsPerModule,
   convertRowsToDataTableObjects,
   extractCustomField,
   extractGeneralField,
   formatData,
   getGeneralFieldsHeaders,
-  normalizeRows
+  getUserPermittedModules,
+  normalizeRows,
 } from './reportsHelpers';
+import { allBaseFields } from '../constants';
 import ChangeReportName from './modals/ChangeReportName';
 
 const { Parser, transforms: { unwind } } = require('json2csv');
@@ -44,7 +47,8 @@ const modules = [
   { index: 6, id: 'depreciation', name: 'Depreciation', custom: '' },
   { index: 7, id: 'processLive', name: 'Processes', custom: '' },
   { index: 8, id: 'inventories', name: 'Inventories', custom: '' },
-  { index: 8, id: 'logbook', name: 'Logbook', custom: '' }
+  { index: 9, id: 'logbook', name: 'Logbook', custom: '' },
+  { index: 10, id: 'fieldValuesRepeated', name: 'Field Values Repeated', custom: '' }
 ];
 
 const specificFilters = {
@@ -101,6 +105,16 @@ const specificFilters = {
       id: 'module',
       label: 'Module'
     }
+  ],
+  fieldValuesRepeated: [
+    {
+      id: 'module',
+      label: 'Module'
+    },
+    {
+      id: 'baseFields',
+      label: 'Base Fields'
+    }
   ]
 };
 
@@ -129,7 +143,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     enabled: false,
     reportName: ''
   });
-  const modulePermissions = ['assets', 'processes', 'users', 'employees', 'locations', 'reports'];
+  const [permittedModules, setPermittedModules] = useState(getUserPermittedModules(user));
   const [specificFiltersOptions, setSpecificFiltersOptions] = useState({
     processLive: {
       folios: [],
@@ -146,15 +160,12 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     },
     logbook: {
       method: [{ id: 'GET', label: 'GET' }, { id: 'POST', label: 'POST' }, { id: 'PUT', label: 'PUT' }, { id: 'UPDATE', label: 'UPDATE' }, { id: 'DELETE', label: 'DELETE' }],
-      module: modulePermissions.map((permission) => {
-        if (Object.keys(user.profilePermissions).includes(permission)) {
-          if (permission === 'users') {
-            return { id: 'user', label: 'Users' };
-          }
-          return { id: permission, label: permission.replace(/\w\S*/g, (w) => (w.replace(/^\w/, (c) => c.toUpperCase()))) };
-        }
-      }) || [],
+      module: permittedModules || [],
       requestUser: []
+    },
+    fieldValuesRepeated: {
+      module: permittedModules || [],
+      baseFields: []
     }
   });
   const defaultFilterSelected = {
@@ -182,6 +193,10 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
       method: [],
       module: [],
       requestUser: []
+    },
+    fieldValuesRepeated: {
+      module: [],
+      baseFields: []
     }
   };
 
@@ -196,7 +211,6 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log(userLocations);
         const users = data.response.map(({ _id: id, name, lastName, email }) => ({ id, label: `${name} ${lastName} <${email.length ? email : 'No email'}>` }));
         setSpecificFiltersOptions(prev => ({
           ...prev,
@@ -349,7 +363,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
 
   const handleChange = (name) => (event) => {
     const { value } = event.target;
-    // console.log(new Date(value).toISOString());
+
     if (value) {
       setValues({ ...values, [name]: value });
     } else {
@@ -694,6 +708,37 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
   };
 
   const changeFiltersSelected = (module, filter) => (event, values) => {
+    const { id } = values || {};
+
+    if (filter === 'module' && module === 'fieldValuesRepeated' && id) {
+      const baseFieldId  = baseFieldsPerModule[id];
+      let baseFields = [];
+
+      if (Array.isArray(baseFieldId)) {
+        baseFieldId.forEach((key) => {
+          Object.entries(allBaseFields[key] || []).forEach((field) => baseFields.push({ id: field[1].validationId, label: field[1].compLabel }));
+        });
+      } else {
+        Object.entries(allBaseFields[baseFieldId] || []).forEach((field) => baseFields.push({ id: field[1].validationId, label: field[1].compLabel }));
+      }
+
+      setSpecificFiltersOptions(prev => ({
+        ...prev,
+        [module]: {
+          ...prev[module],
+          baseFields
+        }
+      }));
+    } else if (filter === 'module' && module === 'fieldValuesRepeated' && !id) {
+      setSpecificFiltersOptions(prev => ({
+        ...prev,
+        [module]: {
+          ...prev[module],
+          baseFields: []
+        }
+      }));
+    }
+
     setFiltersSelected(prev => ({
       ...prev,
       [module]: {
@@ -869,7 +914,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
                   className={classes.filters}
                   defaultValue={filtersSelected[values.selectedReport][e.id]}
                   getOptionLabel={(option) => option.label}
-                  multiple
+                  multiple={['fieldValuesRepeated', 'logbook'].includes(values.selectedReport) && e.id === 'module' ? false : true}
                   onChange={changeFiltersSelected(values.selectedReport, e.id)}
                   options={specificFiltersOptions[values.selectedReport][e.id]}
                   renderInput={(params) => (

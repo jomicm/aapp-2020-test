@@ -317,7 +317,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     setAddedGroups([]);
     setUserInitialGroups([]);
     setInitialProfilePermissions({});
-    window.history.replaceState({}, null, `${localHost}/users`);
+    window.history.replaceState({}, null, `${window.location.origin}/users`);
   };
 
   const [userProfilesFiltered, setUserProfilesFiltered] = useState([]);
@@ -417,6 +417,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     if (!e) {
       setCustomFieldsTab({});
       setProfilePermissions({});
+      setProfileSelected(0);
       setTabs([]);
       return;
     }
@@ -450,6 +451,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     isValidForm: {}
   });
 
+  useEffect(() => console.log(profileSelected), [profileSelected]);
 
   const baseFieldsLocalProps = {
     userProfile: {

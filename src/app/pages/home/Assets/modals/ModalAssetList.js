@@ -671,11 +671,12 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
       getOneDB('references/', referencesSelectedId)
         .then(response => response.json())
         .then(data => {
-          const { name, brand, model, customFieldsTab, fileExt } = data.response;
+          const { name, brand, model, customFieldsTab, fileExt, selectedProfile } = data.response;
           setValues({
             ...values,
             name,
             brand,
+            category: selectedProfile,
             model
           });
           const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));

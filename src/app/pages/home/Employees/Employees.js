@@ -315,13 +315,14 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
         getDB('policies')
           .then((response) => response.json())
           .then((data) => {
+            const { response } = data;
             id.forEach((_id) => {
               deleteDB(`${collection.name}/`, _id)
                 .then((response) => response.json())
                 .then((data) => {
                   dispatch(showDeletedAlert());
                   const currentCollection = collection.name === 'employees' ? 'list' : 'references';
-                  executePolicies('OnDelete', 'employees', currentCollection, data.response);
+                  executePolicies('OnDelete', 'employees', currentCollection, response);
                   loadEmployeesData(collection.name);
 
                   if (collection.name === 'employees') {
@@ -345,10 +346,10 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
                     }
                   }
                 })
-                .catch((_) => dispatch(showErrorAlert()));
+                .catch((error) => console.log(error));
             });
           })
-          .catch((_) => dispatch(showErrorAlert()));
+          .catch((error) => console.log(error));
 
         loadEmployeesData(collection.name);
       },
