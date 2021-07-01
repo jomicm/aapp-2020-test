@@ -211,7 +211,7 @@ const LiveProcesses = ({ user }) => {
         }
         if (processFilters.overdue) {
           if(processFilters.overdue.label === 'more'){
-            condition.push({'dueDate': { '$gte': `ISODate(${complementaryValues.overdue})`}});
+            condition.push({'dueDate': { '$lte': `${complementaryValues.overdue}`}});
           }
           else {
             condition.push({'dueDate': { '$gte': `${complementaryValues.overdue}`}});
@@ -285,7 +285,7 @@ const LiveProcesses = ({ user }) => {
               }
               if (processFilters.overdue) {
                 if(processFilters.overdue.label === 'more'){
-                  condition.push({'dueDate': { '$gte': `ISODate(${complementaryValues.overdue})`}});
+                  condition.push({'dueDate': { '$lte': `${complementaryValues.overdue}`}});
                 }
                 else {
                   condition.push({'dueDate': { '$gte': `${complementaryValues.overdue}`}});
