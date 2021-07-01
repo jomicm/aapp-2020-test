@@ -34,6 +34,7 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
   ] = useState(false);
   const [tab, setTab] = useState(0);
   const [userLocations, setUserLocations] = useState([]);
+  const [allEmployeeProfiles, setAllEmployeeProfiles] = useState([]);
 
   const policiesBaseFields = {
     list: { id: { validationId: 'employeeId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.employees },
@@ -158,6 +159,20 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
       .catch((error) => dispatch(showErrorAlert()));
   };
 
+  const loadEmployeeProfiles = () => {
+    getDB('employeeProfiles')
+      .then((response) => response.json())
+      .then((data) => {
+        const employeeProfiles = data.response.map((row) => {
+          const date = String(new Date(row.creationDate)).split('GMT')[0];
+          const updateDate = String(new Date(row.updateDate)).split('GMT')[0];
+          return createUserProfilesRow(row._id, row.name, row.creationUserFullName, date, updateDate, row.fileExt)
+        }) || [];
+        setAllEmployeeProfiles(employeeProfiles);
+      })
+      .catch((error) => console.log(error));
+  };
+
   const loadEmployeesData = (collectionNames = ['employees', 'employeeProfiles']) => {
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
@@ -241,7 +256,10 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
     });
   };
 
-  useEffect(() => loadUserLocations(), []);
+  useEffect(() => {
+    loadUserLocations();
+    loadEmployeeProfiles();
+  }, []);
 
   useEffect(() => {
     loadEmployeesData('employees');
@@ -324,6 +342,7 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
                   const currentCollection = collection.name === 'employees' ? 'list' : 'references';
                   executePolicies('OnDelete', 'employees', currentCollection, response);
                   loadEmployeesData(collection.name);
+                  loadEmployeeProfiles();
 
                   if (collection.name === 'employees') {
                     const { response: { value: { layoutSelected, assetsAssigned } } } = data;
@@ -397,9 +416,10 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
                       <code>Employees List</code>
                     </span>
                     <ModalEmployees
-                      employeeProfileRows={control.employeeProfilesRows}
+                      employeeProfileRows={allEmployeeProfiles}
                       id={control.idEmployee}
                       policies={policies}
+                      reloadProfiles={() => loadEmployeeProfiles()}
                       reloadTable={() => loadEmployeesData('employees')}
                       setShowModal={(onOff) =>
                         setControl({

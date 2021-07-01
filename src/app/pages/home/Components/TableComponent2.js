@@ -882,7 +882,7 @@ const TableComponentTile = props => {
             if (count === 0) return 'No Pages';
 
             const currentPage = page + 1;
-            const totalPages = Math.floor(count / rowsPerPage) + 1;
+            const totalPages = Math.trunc(count / rowsPerPage) + (count % rowsPerPage === 0 ? 0 : 1);
             return `Page ${currentPage}/${totalPages}`;
           }}
           nextIconButtonProps={{

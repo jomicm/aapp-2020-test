@@ -20,6 +20,7 @@ import {
   Tooltip,
   Typography,
 } from "@material-ui/core";
+import Autocomplete from '@material-ui/lab/Autocomplete';
 import {
   ContentState,
   convertToRaw,
@@ -38,10 +39,12 @@ import EmailOutlinedIcon from '@material-ui/icons/EmailOutlined';
 import LinkIcon from '@material-ui/icons/Link';
 import HelpIcon from '@material-ui/icons/Help';
 
-import { postFILE } from '../../../../../crud/api';
+import { postFILE, getDB } from '../../../../../crud/api';
 import ImageUpload from '../../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../../utils';
 import './index.scss';
+import { useSettingsConstants, useSettingsList } from './hooks';
+import { id } from 'date-fns/locale';
 
 // Custom Fields Preview
 const SingleLine = (props) => {
@@ -280,8 +283,9 @@ const DateTime = (props) => {
 const DropDown = (props) => {
   const defaultValues = {
     fieldName: 'Drop Down',
+    options: ['Option 1', 'Option 2', 'Option 3'],
     selectedItem: '',
-    options: ['Option 1', 'Option 2', 'Option 3']
+    selectedSettingsList: {}
   };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
@@ -298,7 +302,7 @@ const DropDown = (props) => {
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
     if (isPreview) return;
-    setValues({ ...values, selectedItem: e.target.value })
+    setValues(prev => ({ ...prev, selectedItem: e.target.value }));
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, selectedItem: e.target.value });
   };
   return (
@@ -345,6 +349,7 @@ const RadioButtons = (props) => {
   const defaultValues = {
     fieldName: 'Radio Buttons',
     selectedItem: '',
+    selectedSettingsList: {},
     options: ['Radio 1', 'Radio 2', 'Radio 3']
   };
   const [values, setValues] = useState(defaultValues);
@@ -362,7 +367,7 @@ const RadioButtons = (props) => {
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
     if (isPreview) return;
-    setValues({ ...values, selectedItem: e.target.value });
+    setValues(prev => ({ ...prev, selectedItem: e.target.value }));
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, selectedItem: e.target.value });
   };
   return (
@@ -403,6 +408,7 @@ const Checkboxes = (props) => {
   const defaultValues = {
     fieldName: 'Checkboxes',
     selectedOptions: [],
+    selectedSettingsList: {},
     options: ['Checkbox 1', 'Checkbox 2', 'Checkbox 3']
   };
   const [values, setValues] = useState(defaultValues);
@@ -417,7 +423,7 @@ const Checkboxes = (props) => {
     } else {
       newSelectedOptions = [...values.selectedOptions, option];
     }
-    setValues(prev => ({ ...prev,  selectedOptions: newSelectedOptions }));
+    setValues(prev => ({ ...prev, selectedOptions: newSelectedOptions }));
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, selectedOptions: newSelectedOptions });
   };
 
@@ -547,6 +553,8 @@ const Currency = (props) => {
   const defaultValues = {
     fieldName: 'Currency',
     initialValue: 0,
+    repeated: false,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
@@ -673,6 +681,7 @@ const Email = (props) => {
   const defaultValues = {
     fieldName: 'Email',
     initialValue: '',
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
@@ -734,6 +743,7 @@ const Decimal = (props) => {
   const defaultValues = {
     fieldName: 'Decimal',
     initialValue: 0,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
@@ -793,6 +803,7 @@ const URL = (props) => {
   const defaultValues = {
     fieldName: 'URL',
     initialValue: '',
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
@@ -926,10 +937,10 @@ const DecisionBox = (props) => {
     fieldName: 'Decision Box',
     selectedItem: '',
     options: ['Switch 1', 'Switch 2', 'Switch 3'],
-    selectedOptions: []
+    selectedOptions: [],
+    selectedSettingsList: {}
   };
   const [values, setValues] = useState(defaultValues);
-  const [isOneSelected, setIsOneSelected] = useState(false);
   const handleCustomFieldClick = () => {
     props.onSelect(props.id, 'decisionBox', values, setValues);
   };
@@ -941,32 +952,19 @@ const DecisionBox = (props) => {
     } else {
       newSelectedOptions = [...values.selectedOptions, option];
     }
-    setValues(prev => ({ ...prev,  selectedOptions: newSelectedOptions }));
+    setValues(prev => ({ ...prev, selectedOptions: newSelectedOptions }));
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, selectedOptions: newSelectedOptions });
   };
 
   useEffect(() => {
     if (!isEmpty(props.values)) {
-      setValues({ ...props.values, selectedOptions: props.values.selectedOptions || [] });
+      setValues({ ...props.values, selectedOptions: props.values.selectedOptions || [], selectedSettingsList: props.values.selectedSettingsList || {} });
     } else {
       setValues(defaultValues);
     }
   }, [props.values]);
 
-  useEffect(() => {
-    let count = 0;
-    values.options.forEach((opt, index) => {
-      if (!values[`check${index}`]) {
-        count++;
-      }
-    });
-
-    if (count !== values.options.length) {
-      setIsOneSelected(true);
-    } else {
-      setIsOneSelected(false);
-    }
-  }, [values])
+  useEffect(() => console.log(values), [values]);
 
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
@@ -1275,8 +1273,10 @@ const SingleLineSettings = (props) => {
     maxLength: 255,
     mandatory: false,
     repeated: false,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const settingsConstants = (useSettingsConstants() || []).map(({ _id: id, name, value }) => ({ id, name, value })) || [];
 
   const handleOnChange = name => e => {
     let newValue = e.target.value;
@@ -1293,6 +1293,20 @@ const SingleLineSettings = (props) => {
       })
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
+  };
+
+  const handleSettingsConstantValue = ({ id, name, value }) => {
+    if (!value) {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+      return;
+    }
+
+    const selectedSettingsConstant = { id, name, value };
+    setValues({ ...values, initialValue: value, selectedSettingsConstant });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: value }));
+    props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: value, selectedSettingsConstant });
   };
 
   useEffect(() => {
@@ -1321,6 +1335,7 @@ const SingleLineSettings = (props) => {
         />
         <TextField
           className="custom-field-settings-wrapper__initial-value"
+          disabled={Object.entries(values.selectedSettingsConstant || {}).length > 0}
           label="Initial Value"
           value={values.initialValue}
           onChange={handleOnChange('initialValue')}
@@ -1337,6 +1352,29 @@ const SingleLineSettings = (props) => {
         />
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-Constants-Extra-Data"
+                getOptionLabel={(constant) => constant.name}
+                onChange={(event, value) => handleSettingsConstantValue(value || { id: '', name: '', value: '' })}
+                options={settingsConstants}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Constants'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsConstant || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
@@ -1357,9 +1395,12 @@ const MultiLineSettings = (props) => {
   const defaultValues = {
     fieldName: 'Multi Line',
     mandatory: false,
-    repeated: false
+    repeated: false,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const settingsConstants = (useSettingsConstants() || []).map(({ _id: id, name, value }) => ({ id, name, value })) || [];
+
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
@@ -1376,6 +1417,21 @@ const MultiLineSettings = (props) => {
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
   }
+
+  const handleSettingsConstantValue = ({ id, name, value }) => {
+    if (!value) {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+      return;
+    }
+
+    const selectedSettingsConstant = { id, name, value };
+    setValues({ ...values, initialValue: value, selectedSettingsConstant });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: value }));
+    props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: value, selectedSettingsConstant });
+  };
+
   useEffect(() => {
     if (!isEmpty(props.selfValues)) {
       setValues(props.selfValues);
@@ -1396,6 +1452,29 @@ const MultiLineSettings = (props) => {
         />
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-Constants-Extra-Data"
+                getOptionLabel={(constant) => constant.name}
+                onChange={(event, value) => handleSettingsConstantValue(value || { id: '', name: '', value: '' })}
+                options={settingsConstants}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Constants'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsConstant || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
@@ -1565,11 +1644,14 @@ const DateTimeSettings = (props) => {
 const DropDownSettings = (props) => {
   const defaultValues = {
     fieldName: 'Drop Down',
+    mandatory: false,
     newOption: '',
     options: ['Option 1', 'Option 2', 'Option 3'],
-    mandatory: false,
+    selectedSettingsList: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const [selectedSettingsListOptions, setSelectedSettingsListOptions] = useState([]);
+  const settingsList = (useSettingsList() || []).map(({ _id: id, name, options }) => ({ id, name, options })) || [];
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
@@ -1585,18 +1667,34 @@ const DropDownSettings = (props) => {
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
   };
+  const handleSettingsListOptions = ({ id, name, options }) => {
+    setSelectedSettingsListOptions(options);
+
+    if (!options.length) {
+      const reducedOptions = values.options.filter((option) => !selectedSettingsListOptions.includes(option));
+      setValues({ ...values, options: reducedOptions, selectedSettingsList: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options: reducedOptions, selectedSettingsList: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options: reducedOptions, selectedSettingsList: {} });
+      return;
+    }
+
+    const selectedSettingsList = { id, name, options };
+    setValues({ ...values, options, selectedSettingsList });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
+    props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options, selectedSettingsList });
+  };
   const handleAddOption = () => {
     if (!values.newOption) return;
     const options = [values.newOption, ...values.options];
     setValues({ ...values, options, newOption: '' });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   const handleDeleteOption = (ix) => {
     const options = [...values.options];
     options.splice(ix, 1);
     setValues({ ...values, options });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   const handleMoveOption = (ix, direction = 'up') => {
@@ -1607,7 +1705,7 @@ const DropDownSettings = (props) => {
     const delFactor = direction === 'up' ? ix + 1 : ix;
     options.splice(delFactor, 1);
     setValues({ ...values, options });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   useEffect(() => {
@@ -1639,7 +1737,7 @@ const DropDownSettings = (props) => {
               type="text"
               margin="normal"
             />
-            <Fab size="small" color="secondary" aria-label="Add" className="custom-field-preview-wrapper__add-icon" onClick={handleAddOption}>
+            <Fab size="small" color="secondary" aria-label="Add" className="custom-field-preview-wrapper__add-icon" disabled={Object.entries(values.selectedSettingsList || {}).length > 0} onClick={handleAddOption}>
               <AddIcon />
             </Fab>
           </div>
@@ -1668,6 +1766,29 @@ const DropDownSettings = (props) => {
         </div>
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-List-Extra-Data"
+                getOptionLabel={(option) => option.name}
+                onChange={(event, value) => handleSettingsListOptions(value || { id: '', name: '', options: [] })}
+                options={settingsList}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Lists'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsList || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
@@ -1683,11 +1804,14 @@ const DropDownSettings = (props) => {
 const RadioButtonsSettings = (props) => {
   const defaultValues = {
     fieldName: 'Radio Buttons',
+    mandatory: false,
     newOption: '',
     options: ['Radio 1', 'Radio 2', 'Radio 3'],
-    mandatory: false,
+    selectedSettingsList: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const [selectedSettingsListOptions, setSelectedSettingsListOptions] = useState([]);
+  const settingsList = (useSettingsList() || []).map(({ _id: id, name, options }) => ({ id, name, options })) || [];
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
@@ -1703,18 +1827,34 @@ const RadioButtonsSettings = (props) => {
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
   };
+  const handleSettingsListOptions = ({ id, name, options }) => {
+    setSelectedSettingsListOptions(options);
+
+    if (!options.length) {
+      const reducedOptions = values.options.filter((option) => !selectedSettingsListOptions.includes(option));
+      setValues({ ...values, options: reducedOptions, selectedSettingsList: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options: reducedOptions, selectedSettingsList: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options: reducedOptions, selectedSettingsList: {} });
+      return;
+    }
+
+    const selectedSettingsList = { id, name, options };
+    setValues({ ...values, options, selectedSettingsList });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
+    props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options, selectedSettingsList });
+  };
   const handleAddOption = () => {
     if (!values.newOption) return;
     const options = [values.newOption, ...values.options];
     setValues({ ...values, options, newOption: '' });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   const handleDeleteOption = (ix) => {
     const options = [...values.options];
     options.splice(ix, 1);
     setValues({ ...values, options });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   const handleMoveOption = (ix, direction = 'up') => {
@@ -1757,7 +1897,7 @@ const RadioButtonsSettings = (props) => {
               type="text"
               margin="normal"
             />
-            <Fab size="small" color="secondary" aria-label="Add" className="custom-field-preview-wrapper__add-icon" onClick={handleAddOption}>
+            <Fab size="small" color="secondary" aria-label="Add" className="custom-field-preview-wrapper__add-icon" disabled={Object.entries(values.selectedSettingsList || {}).length > 0} onClick={handleAddOption}>
               <AddIcon />
             </Fab>
           </div>
@@ -1786,6 +1926,29 @@ const RadioButtonsSettings = (props) => {
         </div>
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-List-Extra-Data"
+                getOptionLabel={(option) => option.name}
+                onChange={(event, value) => handleSettingsListOptions(value || { id: '', name: '', options: [] })}
+                options={settingsList}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Lists'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsList || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
@@ -1804,9 +1967,12 @@ const CheckboxesSettings = (props) => {
     newOption: '',
     options: ['Checkbox 1', 'Checkbox 2', 'Checkbox 3'],
     mandatory: false,
-    selectedOptions: []
+    selectedOptions: [],
+    selectedSettingsList: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const [selectedSettingsListOptions, setSelectedSettingsListOptions] = useState([]);
+  const settingsList = (useSettingsList() || []).map(({ _id: id, name, options }) => ({ id, name, options })) || [];
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
@@ -1822,18 +1988,34 @@ const CheckboxesSettings = (props) => {
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
   };
+  const handleSettingsListOptions = ({ id, name, options }) => {
+    setSelectedSettingsListOptions(options);
+
+    if (!options.length) {
+      const reducedOptions = values.options.filter((option) => !selectedSettingsListOptions.includes(option));
+      setValues({ ...values, options: reducedOptions, selectedSettingsList: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options: reducedOptions, selectedSettingsList: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options: reducedOptions, selectedSettingsList: {} });
+      return;
+    }
+
+    const selectedSettingsList = { id, name, options };
+    setValues({ ...values, options, selectedSettingsList });
+    props.setValues({ ...props.values, fieldName: values.fieldName, options, selectedSettingsList });
+    props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options, selectedSettingsList });
+  };
   const handleAddOption = () => {
     if (!values.newOption) return;
     const options = [values.newOption, ...values.options];
     setValues({ ...values, options, newOption: '' });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   const handleDeleteOption = (ix) => {
     const options = [...values.options];
     options.splice(ix, 1);
     setValues({ ...values, options });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   const handleMoveOption = (ix, direction = 'up') => {
@@ -1844,7 +2026,7 @@ const CheckboxesSettings = (props) => {
     const delFactor = direction === 'up' ? ix + 1 : ix;
     options.splice(delFactor, 1);
     setValues({ ...values, options });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   useEffect(() => {
@@ -1876,7 +2058,7 @@ const CheckboxesSettings = (props) => {
               type="text"
               margin="normal"
             />
-            <Fab size="small" color="secondary" aria-label="Add" className="custom-field-preview-wrapper__add-icon" onClick={handleAddOption}>
+            <Fab size="small" color="secondary" aria-label="Add" className="custom-field-preview-wrapper__add-icon" disabled={Object.entries(values.selectedSettingsList || {}).length > 0} onClick={handleAddOption}>
               <AddIcon />
             </Fab>
           </div>
@@ -1905,6 +2087,29 @@ const CheckboxesSettings = (props) => {
         </div>
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-List-Extra-Data"
+                getOptionLabel={(option) => option.name}
+                onChange={(event, value) => handleSettingsListOptions(value || { id: '', name: '', options: [] })}
+                options={settingsList}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Lists'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsList || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
@@ -1975,9 +2180,11 @@ const CurrencySettings = (props) => {
     fieldName: 'Currency',
     initialValue: '',
     mandatory: false,
-    repeated: false
+    repeated: false,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const settingsConstants = (useSettingsConstants() || []).map(({ _id: id, name, value }) => ({ id, name, value })) || [];
 
   const handleOnChange = name => e => {
     let newValue = e.target.value;
@@ -1994,6 +2201,26 @@ const CurrencySettings = (props) => {
       })
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
+  };
+
+  const handleSettingsConstantValue = ({ id, name, value }) => {
+    if (!value) {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+      return;
+    }
+
+    if (!isNaN(value)) {
+      const selectedSettingsConstant = { id, name, value };
+      setValues({ ...values, initialValue: value, selectedSettingsConstant });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: value }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: value, selectedSettingsConstant });
+    } else {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+    }
   };
 
   useEffect(() => {
@@ -2022,6 +2249,7 @@ const CurrencySettings = (props) => {
         />
         <TextField
           className="custom-field-settings-wrapper__initial-value"
+          disabled={Object.entries(values.selectedSettingsConstant || {}).length > 0}
           label="Initial Value"
           value={values.initialValue}
           onChange={handleOnChange('initialValue')}
@@ -2030,6 +2258,29 @@ const CurrencySettings = (props) => {
         />
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-Constants-Extra-Data"
+                getOptionLabel={(constant) => constant.name}
+                onChange={(event, value) => handleSettingsConstantValue(value || { id: '', name: '', value: '' })}
+                options={settingsConstants}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Constants'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsConstant || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
@@ -2051,9 +2302,11 @@ const PercentageSettings = (props) => {
     fieldName: 'Percentage',
     initialValue: '',
     mandatory: false,
-    repeated: false
+    repeated: false,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const settingsConstants = (useSettingsConstants() || []).map(({ _id: id, name, value }) => ({ id, name, value })) || [];
 
   const handleOnChange = name => e => {
     let newValue = e.target.value;
@@ -2070,6 +2323,26 @@ const PercentageSettings = (props) => {
       })
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
+  };
+
+  const handleSettingsConstantValue = ({ id, name, value }) => {
+    if (!value) {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+      return;
+    }
+
+    if (!isNaN(value)) {
+      const selectedSettingsConstant = { id, name, value };
+      setValues({ ...values, initialValue: value, selectedSettingsConstant });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: value }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: value, selectedSettingsConstant });
+    } else {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+    }
   };
 
   useEffect(() => {
@@ -2098,6 +2371,7 @@ const PercentageSettings = (props) => {
         />
         <TextField
           className="custom-field-settings-wrapper__initial-value"
+          disabled={Object.entries(values.selectedSettingsConstant || {}).length > 0}
           label="Initial Value"
           value={values.initialValue}
           onChange={handleOnChange('initialValue')}
@@ -2106,6 +2380,29 @@ const PercentageSettings = (props) => {
         />
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-Constants-Extra-Data"
+                getOptionLabel={(constant) => constant.name}
+                onChange={(event, value) => handleSettingsConstantValue(value || { id: '', name: '', value: '' })}
+                options={settingsConstants}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Constants'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsConstant || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
@@ -2127,9 +2424,11 @@ const EmailSettings = (props) => {
     fieldName: 'Email',
     initialValue: '',
     mandatory: false,
-    repeated: false
+    repeated: false,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const settingsConstants = (useSettingsConstants() || []).map(({ _id: id, name, value }) => ({ id, name, value })) || [];
 
   const handleOnChange = name => e => {
     let newValue = e.target.value;
@@ -2146,6 +2445,20 @@ const EmailSettings = (props) => {
       })
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
+  };
+
+  const handleSettingsConstantValue = ({ id, name, value }) => {
+    if (!value) {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+      return;
+    }
+
+    const selectedSettingsConstant = { id, name, value };
+    setValues({ ...values, initialValue: value, selectedSettingsConstant });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: value }));
+    props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: value, selectedSettingsConstant });
   };
 
   useEffect(() => {
@@ -2169,6 +2482,7 @@ const EmailSettings = (props) => {
         />
         <TextField
           className="custom-field-settings-wrapper__initial-value"
+          disabled={Object.entries(values.selectedSettingsConstant || {}).length > 0}
           label="Initial Value"
           value={values.initialValue}
           onChange={handleOnChange('initialValue')}
@@ -2177,6 +2491,29 @@ const EmailSettings = (props) => {
         />
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-Constants-Extra-Data"
+                getOptionLabel={(constant) => constant.name}
+                onChange={(event, value) => handleSettingsConstantValue(value || { id: '', name: '', value: '' })}
+                options={settingsConstants}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Constants'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsConstant || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
@@ -2198,9 +2535,11 @@ const DecimalSettings = (props) => {
     fieldName: 'Decimal',
     initialValue: '0.00',
     mandatory: false,
-    repeated: false
+    repeated: false,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const settingsConstants = (useSettingsConstants() || []).map(({ _id: id, name, value }) => ({ id, name, value })) || [];
 
   const handleOnChange = name => e => {
     let newValue = e.target.value;
@@ -2217,6 +2556,26 @@ const DecimalSettings = (props) => {
       })
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
+  };
+
+  const handleSettingsConstantValue = ({ id, name, value }) => {
+    if (!value) {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+      return;
+    }
+
+    if (!isNaN(value)) {
+      const selectedSettingsConstant = { id, name, value };
+      setValues({ ...values, initialValue: value, selectedSettingsConstant });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: value }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: value, selectedSettingsConstant });
+    } else {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+    }
   };
 
   useEffect(() => {
@@ -2245,6 +2604,7 @@ const DecimalSettings = (props) => {
         />
         <TextField
           className="custom-field-settings-wrapper__initial-value"
+          disabled={Object.entries(values.selectedSettingsConstant || {}).length > 0}
           label="Initial Value"
           value={values.initialValue}
           onChange={handleOnChange('initialValue')}
@@ -2253,6 +2613,29 @@ const DecimalSettings = (props) => {
         />
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-Constants-Extra-Data"
+                getOptionLabel={(constant) => constant.name}
+                onChange={(event, value) => handleSettingsConstantValue(value || { id: '', name: '', value: '' })}
+                options={settingsConstants}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Constants'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsConstant || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
@@ -2274,9 +2657,11 @@ const URLSettings = (props) => {
     fieldName: 'URL',
     initialValue: '',
     mandatory: false,
-    repeated: false
+    repeated: false,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const settingsConstants = (useSettingsConstants() || []).map(({ _id: id, name, value }) => ({ id, name, value })) || [];
 
   const handleOnChange = name => e => {
     let newValue = e.target.value;
@@ -2293,6 +2678,20 @@ const URLSettings = (props) => {
       })
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
+  };
+
+  const handleSettingsConstantValue = ({ id, name, value }) => {
+    if (!value) {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+      return;
+    }
+
+    const selectedSettingsConstant = { id, name, value };
+    setValues({ ...values, initialValue: value, selectedSettingsConstant });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: value }));
+    props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: value, selectedSettingsConstant });
   };
 
   useEffect(() => {
@@ -2316,6 +2715,7 @@ const URLSettings = (props) => {
         />
         <TextField
           className="custom-field-settings-wrapper__initial-value"
+          disabled={Object.entries(values.selectedSettingsConstant || {}).length > 0}
           label="Initial Value"
           value={values.initialValue}
           onChange={handleOnChange('initialValue')}
@@ -2324,6 +2724,29 @@ const URLSettings = (props) => {
         />
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-Constants-Extra-Data"
+                getOptionLabel={(constant) => constant.name}
+                onChange={(event, value) => handleSettingsConstantValue(value || { id: '', name: '', value: '' })}
+                options={settingsConstants}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Constants'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsConstant || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
@@ -2402,9 +2825,12 @@ const DecisionBoxSettings = (props) => {
     newOption: '',
     options: ['Switch 1', 'Switch 2', 'Switch 3'],
     selectedOptions: [],
+    selectedSettingsList: {},
     mandatory: false,
   };
   const [values, setValues] = useState(defaultValues);
+  const [selectedSettingsListOptions, setSelectedSettingsListOptions] = useState([]);
+  const settingsList = (useSettingsList() || []).map(({ _id: id, name, options }) => ({ id, name, options })) || [];
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
@@ -2420,18 +2846,33 @@ const DecisionBoxSettings = (props) => {
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
   };
+  const handleSettingsListOptions = ({ id, name, options }) => {
+    setSelectedSettingsListOptions(options);
+
+    if (!options.length) {
+      setValues({ ...values, options: [], selectedSettingsList: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options: [], selectedSettingsList: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options: [], selectedSettingsList: {} });
+      return;
+    }
+
+    const selectedSettingsList = { id, name, options };
+    setValues({ ...values, options, selectedSettingsList });
+    props.setValues({ ...props.values, fieldName: values.fieldName, options, selectedSettingsList });
+    props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options, selectedSettingsList });
+  };
   const handleAddOption = () => {
     if (!values.newOption) return;
     const options = [values.newOption, ...values.options];
     setValues({ ...values, options, newOption: '' });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   const handleDeleteOption = (ix) => {
     const options = [...values.options];
     options.splice(ix, 1);
     setValues({ ...values, options });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   const handleMoveOption = (ix, direction = 'up') => {
@@ -2442,11 +2883,12 @@ const DecisionBoxSettings = (props) => {
     const delFactor = direction === 'up' ? ix + 1 : ix;
     options.splice(delFactor, 1);
     setValues({ ...values, options });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   useEffect(() => {
     if (!isEmpty(props.selfValues)) {
+      console.log(props.selfValues);
       setValues(props.selfValues);
     } else {
       setValues(defaultValues);
@@ -2474,7 +2916,7 @@ const DecisionBoxSettings = (props) => {
               type="text"
               margin="normal"
             />
-            <Fab size="small" color="secondary" aria-label="Add" className="custom-field-preview-wrapper__add-icon" onClick={handleAddOption}>
+            <Fab size="small" color="secondary" aria-label="Add" className="custom-field-preview-wrapper__add-icon" disabled={Object.entries(values.selectedSettingsList || {}).length > 0} onClick={handleAddOption}>
               <AddIcon />
             </Fab>
           </div>
@@ -2503,6 +2945,29 @@ const DecisionBoxSettings = (props) => {
         </div>
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-List-Extra-Data"
+                getOptionLabel={(option) => option.name}
+                onChange={(event, value) => handleSettingsListOptions(value || { id: '', name: '', options: [] })}
+                options={settingsList}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Lists'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsList || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
@@ -2711,6 +3176,7 @@ const SingleLineIntegrated = (props) => {
     maxLength: 255,
     mandatory: false,
     repeated: false,
+    selectedSettingsConstant: {}
   });
   const handleCustomFieldClick = (customFieldName) => {
     props.onSelect(customFieldName, values, setValues);

@@ -119,6 +119,7 @@ const ModalEmployees = ({
   employeeProfileRows,
   policies,
   reloadTable,
+  reloadProfiles,
   showModal,
   setShowModal,
   userLocations
@@ -508,6 +509,7 @@ const ModalEmployees = ({
   const saveAndReload = (folderName, id) => {
     saveImage(image, folderName, id);
     reloadTable();
+    reloadProfiles();
   };
 
   useEffect(() => {

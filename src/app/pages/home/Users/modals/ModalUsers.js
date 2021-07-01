@@ -111,7 +111,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows, user, updateUserPic, policies }) => {
+const ModalUsers = ({ showModal, setShowModal, reloadProfiles, reloadTable, id, userProfileRows, user, updateUserPic, policies }) => {
   const dispatch = useDispatch();
   const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
   const { fulfillUser } = auth.actions;
@@ -267,6 +267,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   const saveAndReload = (folderName, id) => {
     saveImage(image, folderName, id);
     reloadTable();
+    reloadProfiles();
   };
   const updateLocationsAssignments = (locationsTable = [], assignedTo) => {
     (locationsTable).forEach(({ parent: locationId }) => {
