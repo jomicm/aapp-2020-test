@@ -1,8 +1,9 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
-import { differenceInDays } from 'date-fns';
-import { Chip, Tab, Tabs } from "@material-ui/core";
+import Select from 'react-select';
+import { differenceInDays, sub } from 'date-fns';
+import { Chip, makeStyles, Tab, Tabs, Typography } from "@material-ui/core";
 import Notification from '@material-ui/icons/NotificationImportant';
 import { getDB, getDBComplex, getCountDB, deleteDB } from '../../../../crud/api';
 import {
@@ -21,6 +22,15 @@ import ModalProcessesLive from '../modals/ModalProcessLive';
 const createLiveProcessesHeadRows = (id, folio, name, type, approvals, status, alert, creator, creation_date, updateDate) => {
   return { id, folio, name, type, approvals, status, alert, creator, creation_date, updateDate};
 };
+
+const useStyles = makeStyles((theme) => ({
+  select: {
+    width: '200px',
+    [theme.breakpoints.down('md')]: {
+      width: '70%'
+    }
+  },
+}));
 
 const orderByCorrection = {
   name: 'processData.name',
@@ -49,7 +59,23 @@ const collections = {
   }
 };
 
+const overdueFilter = [
+  {value: {days: 8}, label: '1 week'},
+  {value: {months: 1, days: 1}, label: '1 month'},
+  {value: {months: 6, days: 1}, label: '6 months'},
+  {value: {months: 6, days: 1}, label: 'more'},
+];
+
+const processTypes = [
+  { value: 'creation', label: 'Creation' },
+  { value: 'movement', label: 'Movement'},
+  { value: 'short', label: 'Short Movement' },
+  { value: 'decommission', label: 'Decommission' },
+  { value: 'maintenance', label: 'Maintenance'}
+];
+
 const LiveProcesses = ({ user }) => {
+  const classes = useStyles();
   const loggedUserId = user.id;
   const [control, setControl] = useState({
     idLayoutEmployee: null,
@@ -77,6 +103,12 @@ const LiveProcesses = ({ user }) => {
   });
 
   const [allAlerts, setAllAlerts] = useState([]);
+  const [complementaryValues, setComplementaryValues] = useState({});
+  const [processFilters, setProcessFilters] = useState({
+    processType: null,
+    stage: null,
+    overdue: null
+  });
   const [tableControl, setTableControl] = useState({
     processLive: {
       collection: 'processes',
@@ -171,6 +203,21 @@ const LiveProcesses = ({ user }) => {
         const condition = [{'requestUser.id': loggedUserId }];
         let queryLike = '';
 
+        if (processFilters.processType) {
+          condition.push({'processData.selectedProcessType': processFilters.processType.value});
+        }
+        if (processFilters.stage) {
+          condition.push({'selectedProcess': { '$in': complementaryValues.processesWithStage}});
+        }
+        if (processFilters.overdue) {
+          if(processFilters.overdue.label === 'more'){
+            condition.push({'dueDate': { '$gte': `ISODate(${complementaryValues.overdue})`}});
+          }
+          else {
+            condition.push({'dueDate': { '$gte': `${complementaryValues.overdue}`}});
+          }
+        }
+
         queryLike = tableControl.processLive.searchBy ? (
           [{ 
             key: liveProcessesHeadRows.find(({id}) => tableControl.processLive.searchBy === id).searchBy || tableControl.processLive.searchBy, 
@@ -202,7 +249,7 @@ const LiveProcesses = ({ user }) => {
             skip: tableControl[collectionName].rowsPerPage * tableControl[collectionName].page,
             sort: [{ key: tableControl[collectionName].orderBy, value: tableControl[collectionName].order}],
             queryLike: tableControl[collectionName].search ? queryLike : null,
-          condition
+            condition
          })
           .then(response => response.json())
           .then(data => {
@@ -229,6 +276,22 @@ const LiveProcesses = ({ user }) => {
             .then(data => {
               const processLive = data.response.map(({ processId }) => processId);
               const condition = [{ "processLiveId": { "$in": processLive }}];
+
+              if( processFilters.processType){
+                condition.push({'processData.selectedProcessType': processFilters.processType.value});
+              }
+              if (processFilters.stage) {
+                condition.push({'selectedProcess': { '$in': complementaryValues.processesWithStage}});
+              }
+              if (processFilters.overdue) {
+                if(processFilters.overdue.label === 'more'){
+                  condition.push({'dueDate': { '$gte': `ISODate(${complementaryValues.overdue})`}});
+                }
+                else {
+                  condition.push({'dueDate': { '$gte': `${complementaryValues.overdue}`}});
+                }
+              }
+
               let queryLike = '';
               queryLike = tableControl[controlKey].searchBy ? (
                 [{ 
@@ -281,16 +344,60 @@ const LiveProcesses = ({ user }) => {
     });
   };
 
-  useEffect(() => {
-    loadLayoutsData();
+  const handleChangeProcessFilters = (name, value) => {
+    setProcessFilters(prev => ({...prev, [name]: value}));
+  };
 
+  useEffect(() => {
     getDB('settingsProcesses')
     .then(response => response.json())
     .then(data => {
       setAllAlerts(data.response[0].alerts || []);
     })
     .catch(error => console.log(error));
+
+    const fields = [{ key: '_id', value: 1 }, { key: 'name', value: 1 }];  
+
+    getDBComplex({collection: 'processStages', fields})
+      .then(response => response.json())
+      .then(data => {
+        const processedStagesInfo = data.response.map(({ _id, name }) => ({ value: _id, label: name }));
+        setComplementaryValues((prev) => ({...prev, processedStagesInfo}));
+      })
+    .catch(error => console.log(error));
+    loadLayoutsData();
   }, []);
+
+  useEffect(() => {
+    if(processFilters.stage){
+      const condition = [{ processStages: { $elemMatch: { id: processFilters.stage.value }}}];
+      const fields = [{ key: '_id', value: 1 }];
+      getDBComplex({collection: 'processes', condition, fields})
+      .then(response => response.json())
+      .then(data => {
+        const processesWithStage = data.response.map(({ _id }) => _id);
+        setComplementaryValues((prev) => ({...prev, processesWithStage}));
+      })
+    .catch(error => console.log(error));
+    }
+    else {
+      setComplementaryValues((prev) => ({...prev, processesWithStage: []}));
+    }
+  }, [processFilters.stage])
+
+  useEffect(() => {
+    if(processFilters.overdue) {
+      const fecha = sub(new Date(), processFilters.overdue.value).toISOString();
+      setComplementaryValues((prev) => ({...prev, overdue: fecha}))
+    }
+    else {
+      setComplementaryValues((prev) => ({...prev, overdue: ''}))
+    }
+  }, [processFilters.overdue])
+
+  useEffect(() => {
+    loadLayoutsData();
+  }, [processFilters.processType, complementaryValues.processesWithStage, complementaryValues.overdue])
 
   useEffect(() => {
     loadLayoutsData('processLive');
@@ -307,6 +414,46 @@ const LiveProcesses = ({ user }) => {
   return (
     <div>
       <Portlet>
+        <div style={{display: 'flex', justifyContent: 'space-around', alignContent: 'center', padding: '20px'}}>
+          <div>
+          <Typography style={{margin: '5px'}}>Type:</Typography>
+            <Select
+              className={classes.select}
+              classNamePrefix="select"
+              isClearable={true}
+              menuPosition="absolute"
+              name="KPI"
+              onChange={(value) => handleChangeProcessFilters('processType', value)}
+              value={processFilters.processType}
+              options={processTypes}
+            />
+          </div>
+          <div>
+          <Typography style={{margin: '5px'}}>Stage:</Typography>
+            <Select
+              className={classes.select}
+              classNamePrefix="select"
+              isClearable={true}
+              menuPosition="absolute"
+              name="KPI"
+              onChange={(value) => handleChangeProcessFilters('stage', value)}
+              value={processFilters.stage}
+              options={complementaryValues.processedStagesInfo}
+            />
+          </div> <div>
+            <Typography style={{margin: '5px'}}>Overdue:</Typography>
+            <Select
+              className={classes.select}
+              classNamePrefix="select"
+              isClearable={true}
+              menuPosition="absolute"
+              name="KPI"
+              onChange={(value) => handleChangeProcessFilters('overdue', value)}
+              value={processFilters.overdue}
+              options={overdueFilter}
+            />
+          </div>
+        </div>
         <PortletHeader
           toolbar={
             <PortletHeaderToolbar>

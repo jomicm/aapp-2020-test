@@ -1259,9 +1259,6 @@ const ModalProcessLive = (props) => {
     if (!id || !Array.isArray(id)) {
       return;
     }
-
-    
-      
     getOneDB('processStages/', id[0])
       .then(response => response.json())
       .then(data => {
