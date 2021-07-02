@@ -86,11 +86,16 @@ export const simplePost = (collection, object) => {
     .catch((error) => console.error('ERROR', error))
 };
 
-export const getLocationPath = async (locationId) => {
+export const getLocationPath = async (locationId, returnId = false) => {
   const allLocations = await getAllLocations();
   const firstLocation = allLocations.find(({ id }) => id === locationId);
-  const response = recursiveLocationPath(firstLocation, allLocations);
-  return response;
+  const response = recursiveLocationPath(firstLocation, allLocations, returnId);
+  
+  if (!returnId) {
+    return response;
+  } else {
+    return response.split('/');
+  }
 };
 
 const getAllLocations = async () => {
@@ -103,14 +108,23 @@ const getAllLocations = async () => {
     .catch(error => console.log(error));
 }
 
-const recursiveLocationPath = (currentLocation, allLocations) => {
-  const { name, parent } = currentLocation;
-  if (parent === 'root') {
+const recursiveLocationPath = (currentLocation, allLocations, returnId = false) => {
+  const { name, parent, id} = currentLocation;
+  if (parent === 'root' && !returnId) {
     return name;
+  }
+  else if (parent === 'root' && returnId) {
+    return id;
   }
   else {
     const newLocation = allLocations.find(({ id }) => id === parent);
-    return recursiveLocationPath(newLocation, allLocations).concat('/', name);
+    if(returnId){
+      return recursiveLocationPath(newLocation, allLocations, returnId).concat('/', id);
+    }
+    else {
+      return recursiveLocationPath(newLocation, allLocations, returnId).concat('/', name);
+    }
+    ;
   }
 };
 

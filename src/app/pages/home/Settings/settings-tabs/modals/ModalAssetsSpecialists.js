@@ -18,6 +18,7 @@ import {
 } from "@material-ui/core";
 import CloseIcon from "@material-ui/icons/Close";
 import { actions } from '../../../../../store/ducks/general.duck';
+import { getLocationPath } from '../../../utils';
 import { getDB, getOneDB, updateDB, postDB } from '../../../../../crud/api';
 import TreeView from '../../../Components/TreeViewComponent';
 
@@ -85,9 +86,12 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ModalAssetsSpecialists = ({ showModal, setShowModal, reloadTable, id, employeeProfileRows }) => {
+const ModalAssetsSpecialists = ({ showModal, setShowModal, reloadTable, id, employeeProfileRows, locationsTree }) => {
   const dispatch = useDispatch();
   const { showErrorAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
+  const [categories, setCategories] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [treeViewProps, setTreeViewProps] = useState({});
   
   const classes = useStyles();
   const handleSave = () => {
@@ -97,6 +101,7 @@ const ModalAssetsSpecialists = ({ showModal, setShowModal, reloadTable, id, empl
       return;
     }
     const body = { ...values };
+    console.log(omit(body, ['categories', 'user']));
     if (!id) {
       postDB('settingsAssetSpecialists', omit(body, ['categories', 'user']))
         .then(data => data.json())
@@ -133,6 +138,7 @@ const ModalAssetsSpecialists = ({ showModal, setShowModal, reloadTable, id, empl
       userSelected: 0,
       location: {}
     });
+    setTreeViewProps({});
   };
 
   useEffect(() => {
@@ -144,57 +150,38 @@ const ModalAssetsSpecialists = ({ showModal, setShowModal, reloadTable, id, empl
     
     getOneDB('settingsAssetSpecialists/', id[0])
       .then(response => response.json())
-      .then(data => { 
-        const values = data.response;
-        setValues(values);
+      .then(async (data) => { 
+        const { categorySelected, userSelected, location } = data.response;
+        const { location: { locationSelected } } = data.response;
+        setValues(prev => ({ ...prev, categorySelected, userSelected, location }));
+        let path = await getLocationPath(locationSelected, true);
+
+        if (path.length) {
+          path.splice(0, 0, 'root');
+          path.splice(path.length - 1, 1);
+          setTreeViewProps({ expanded: path });
+        }
       })
-      .catch(error => dispatch(showErrorAlert()));
+      .catch(error => console.log(error));
   }, [id, employeeProfileRows]);
 
-  let locations;
-  const [locationsTree, setLocationsTree] = useState({});
-  const loadInitData = (collectionNames = ['locationsReal', 'user', 'categories']) => {
+  const loadInitData = (collectionNames = ['user', 'categories']) => {
     collectionNames =  !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
       getDB(collectionName)
-      .then(response => response.json())
-      .then(data => {
-        if (collectionName === 'locationsReal') {
-          locations = data.response.map(res => ({ ...res, id: res._id }));
-          const homeLocations = data.response.filter(loc => loc.profileLevel === 0);
-          const children = constructLocationTreeRecursive(homeLocations);
-          locationsTreeData.children = children;
-          setLocationsTree(locationsTreeData);
-        }
-        if (collectionName === 'user') {
-          const user = data.response.map(({ _id: value, email: label, name, lastName }) => ({ value, label, name, lastName }));
-          setValues(prev => ({ ...prev, user }));
-        }
-        if (collectionName === 'categories') {
-          const categories = data.response.map(({ _id: value, name: label }) => ({ value, label }));
-          setValues(prev => ({ ...prev, categories }));
-        }
-      })
-      .catch(error => console.log('error>', error));
+        .then(response => response.json())
+        .then(data => {
+          if (collectionName === 'user') {
+            const user = data.response.map(({ _id: value, email: label, name, lastName }) => ({ value, label, name, lastName }));
+            setUsers(user);
+          }
+          if (collectionName === 'categories') {
+            const categories = data.response.map(({ _id: value, name: label }) => ({ value, label }));
+            setCategories(categories);
+          }
+        })
+        .catch(error => console.log('error>', error));
     });
-  };
-
-  const locationsTreeData = {
-    id: 'root',
-    name: 'Locations',
-    profileLevel: -1,
-    parent: null
-  };
-  const constructLocationTreeRecursive = (locs) => {
-    if (!locs || !Array.isArray(locs) || !locs.length) return [];
-    let res = [];
-    locs.forEach((location) => {
-      const locObj = (({_id: id, name, profileLevel, parent}) => ({id, name, profileLevel, parent}))(location);
-      const children = locations.filter(loc => loc.parent === locObj.id);
-      locObj.children = constructLocationTreeRecursive(children);
-      res.push(locObj);
-    });
-    return res;
   };
 
   const [values, setValues] = useState({
@@ -237,7 +224,7 @@ const ModalAssetsSpecialists = ({ showModal, setShowModal, reloadTable, id, empl
                     classNamePrefix="select"
                     isClearable={true}
                     name="color"
-                    options={values.categories}
+                    options={categories}
                   />
                 </FormGroup>
               </div>
@@ -250,13 +237,20 @@ const ModalAssetsSpecialists = ({ showModal, setShowModal, reloadTable, id, empl
                     classNamePrefix="select"
                     isClearable={true}
                     name="color"
-                    options={values.user}
+                    options={users}
                   />
                 </FormGroup>
               </div>
               <div style={{ margin: '30px 8px' }}>
                 <FormLabel style={{marginTop: '0px'}} component="legend">Location Finder</FormLabel>
-                <TreeView data={locationsTree} onClick={handleSetProfileLocationFilter} />
+                <TreeView
+                  key="treeview-specialists"
+                  customProps={Object.entries(treeViewProps).length ? treeViewProps : null}
+                  data={locationsTree}
+                  onClick={handleSetProfileLocationFilter}
+                  selected={values.location.locationSelected}
+                  onNodeToggle={(event, nodes) => setTreeViewProps({ expanded: nodes })}
+                />
               </div>
             </div>
           </div>

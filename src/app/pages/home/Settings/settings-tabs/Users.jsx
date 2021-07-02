@@ -71,6 +71,7 @@ const Users = props => {
     witnessesRowsSelected: [],
   });
   const [tab, setTab] = useState(0);
+  const [locationsTree, setLocationsTree] = useState({})
   const tableActions = (collectionName) => {
     const collection = collections[collectionName];
     return {
@@ -97,37 +98,66 @@ const Users = props => {
       }
     }
   };
-  const loadInitData = (collectionNames = ['settingsAssetSpecialists', 'settingsWitnesses']) => {
-  // const loadInitData = (collectionNames = ['settingsAssetSpecialists']) => {
-    collectionNames =  !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
+
+  let locations;
+
+  const locationsTreeData = {
+    id: 'root',
+    name: 'Locations',
+    profileLevel: -1,
+    parent: null
+  };
+
+  const constructLocationTreeRecursive = (locs) => {
+    if (!locs || !Array.isArray(locs) || !locs.length) return [];
+    let res = [];
+    locs.forEach((location) => {
+      const locObj = (({_id: id, name, profileLevel, parent}) => ({id, name, profileLevel, parent}))(location);
+      const children = locations.filter(loc => loc.parent === locObj.id);
+      locObj.children = constructLocationTreeRecursive(children);
+      res.push(locObj);
+    });
+    return res;
+  };
+
+  const loadInitData = (collectionNames = ['settingsAssetSpecialists', 'settingsWitnesses', 'locationsReal']) => {
+    // const loadInitData = (collectionNames = ['settingsAssetSpecialists']) => {
+    collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
       getDB(collectionName)
-      .then(response => response.json())
-      .then(data => {
-        if (collectionName === 'settingsAssetSpecialists') {
-          const rows = data.response.map(row => {
-            const { _id, categorySelected: { label: category }, userSelected: { label: user }, location: { locationName } } = row;
-            const date = utcToZonedTime(row.creationDate).toLocaleString();
-            return createAssetSpecialistRow(_id, category, user, locationName, row.creationUserFullName, date);
-          });
-          setControl(prev => ({ ...prev, assetSpecialistRows: rows, assetSpecialistRowsSelected: [] }));
-        } else if (collectionName === 'settingsWitnesses') {
-          const rows = data.response.map(row => {
-            const { _id, description, userSelected: { label: user }, location: { locationName } } = row;
-            const date = utcToZonedTime(row.creationDate).toLocaleString();
-            // return createWitnessesRow(_id, category, user, locationName, 'Admin', '11/03/2020');
-            return createWitnessesRow(_id, description, user, locationName, row.creationUserFullName, date);
-          });
-          setControl(prev => ({ ...prev, witnessesRows: rows, witnessesRowsSelected: [] }));
-        }
-        // if (collectionName === 'employees') {
-        //   const rows = data.response.map(row => {
-        //     return createEmployeeRow(row._id, row.name, row.lastName, row.email, row.designation, row.manager, 'Admin', '11/03/2020');
-        //   });
-        //   setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));
-        // }
-      })
-      .catch(error => console.log('error>', error));
+        .then(response => response.json())
+        .then(data => {
+          if (collectionName === 'settingsAssetSpecialists') {
+            console.log(data.response);
+            const rows = data.response.map(row => {
+              const { _id, categorySelected: { label: category }, userSelected: { label: user }, location: { locationName } } = row;
+              const date = utcToZonedTime(row.creationDate).toLocaleString();
+              return createAssetSpecialistRow(_id, category, user, locationName, row.creationUserFullName, date);
+            });
+            setControl(prev => ({ ...prev, assetSpecialistRows: rows, assetSpecialistRowsSelected: [] }));
+          } else if (collectionName === 'settingsWitnesses') {
+            const rows = data.response.map(row => {
+              const { _id, description, userSelected: { label: user }, location: { locationName } } = row;
+              const date = utcToZonedTime(row.creationDate).toLocaleString();
+              // return createWitnessesRow(_id, category, user, locationName, 'Admin', '11/03/2020');
+              return createWitnessesRow(_id, description, user, locationName, row.creationUserFullName, date);
+            });
+            setControl(prev => ({ ...prev, witnessesRows: rows, witnessesRowsSelected: [] }));
+          } else if (collectionName === 'locationsReal') {
+            locations = data.response.map(res => ({ ...res, id: res._id }));
+            const homeLocations = data.response.filter(loc => loc.profileLevel === 0);
+            const children = constructLocationTreeRecursive(homeLocations);
+            locationsTreeData.children = children;
+            setLocationsTree(locationsTreeData);
+          }
+          // if (collectionName === 'employees') {
+          //   const rows = data.response.map(row => {
+          //     return createEmployeeRow(row._id, row.name, row.lastName, row.email, row.designation, row.manager, 'Admin', '11/03/2020');
+          //   });
+          //   setControl(prev => ({ ...prev, usersRows: rows, usersRowsSelected: [] }));
+          // }
+        })
+        .catch(error => console.log('error>', error));
     });
   };
 
@@ -168,6 +198,7 @@ const Users = props => {
                     reloadTable={() => loadInitData('settingsAssetSpecialists')}
                     id={control.idAssetSpecialist}
                     employeeProfileRows={[]}
+                    locationsTree={locationsTree}
                   />
                   <div className="kt-section__content">
                     <TableComponent
@@ -197,6 +228,7 @@ const Users = props => {
                     reloadTable={() => loadInitData('settingsWitnesses')}
                     id={control.idWitnesses}
                     employeeProfileRows={[]}
+                    locationsTree={locationsTree}
                   />
                   <div className="kt-section__content">
                     <TableComponent
