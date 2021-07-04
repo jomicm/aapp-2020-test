@@ -16,7 +16,7 @@ export const defaultValues = {
   selectedModule: '',
   fields: {
     user: {
-      userProfile: { id: 'userProfile', name: 'User Profile', caption: '', mandatory: false, regex: '' },
+      userProfile: { id: 'selectedUserProfile', name: 'User Profile', caption: '', mandatory: false, regex: '' },
       name: { id: 'name', name: 'Name', caption: '', mandatory: false, regex: '' },
       lastName: { id: 'lastName', name: 'Last Name', caption: '', mandatory: false, regex: '' },
       email: { id: 'email', name: 'Email', caption: '', mandatory: false, regex: '' },
@@ -33,7 +33,7 @@ export const defaultValues = {
       lastName: { id: 'lastName', name: 'Last Name', caption: '', mandatory: false, regex: '' },
       email: { id: 'email', name: 'Email', caption: '', mandatory: false, regex: '' },
       employee_id: { id: 'employee_id', name: 'Employee Id', caption: '', mandatory: false, regex: '' },
-      responsibilityLayout: { id: 'responsibilityLayout', name: 'Responsibility Layout', caption: '', mandatory: false, regex: '' }
+      responsibilityLayout: { id: 'layoutSelected', name: 'Responsibility Layout', caption: '', mandatory: false, regex: '' }
     },
     employeeReferences: {
       name: { id: 'name', name: 'Name', caption: '', mandatory: false, regex: '' },

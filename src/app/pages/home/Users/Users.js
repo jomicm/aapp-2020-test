@@ -36,8 +36,8 @@ function Users({ globalSearch, setGeneralSearch, user }) {
   const { policies, setPolicies } = usePolicies();
 
   const policiesBaseFields = {
-    list: { id: { validationId: 'userId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.userList },
-    references: { id: { validationId: 'userReferenceId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.userReferences }
+    list: { ...allBaseFields.userList },
+    references: { ...allBaseFields.userReferences }
   };
 
   const createUserProfilesRow = (id, name, creator, creationDate, updateDate, fileExt) => {
@@ -315,7 +315,7 @@ function Users({ globalSearch, setGeneralSearch, user }) {
             id.forEach(_id => {
               deleteDB(`${collection.name}/`, _id)
                 .then((response) => response.json())
-                .then((data) => {
+                .then((userData) => {
                   dispatch(showDeletedAlert());
                   const currentCollection = collection.name === 'user' ? 'list' : 'references';
                   executePolicies('OnDelete', 'user', currentCollection, response);
@@ -323,12 +323,12 @@ function Users({ globalSearch, setGeneralSearch, user }) {
                   loadUserProfiles();
 
                   if (currentCollection === 'list') {
-                    const { response: { value: { groups } } } = data;
+                    const { response: { value: { groups } } } = userData;
                     groups.forEach(({ id: groupId }) => {
                       getOneDB('settingsGroups/', groupId)
                         .then((response) => response.json())
-                        .then((data) => {
-                          const { name, members } = data.response;
+                        .then((groupData) => {
+                          const { members } = groupData.response;
                           const membersUpdated = members.filter(({ value: userId }) => userId !== _id) || [];
                           updateDB('settingsGroups/', { members: membersUpdated, numberOfMembers: membersUpdated.length }, groupId)
                             .catch((error) => console.log(error));

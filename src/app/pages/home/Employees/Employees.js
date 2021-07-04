@@ -37,8 +37,8 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
   const [allEmployeeProfiles, setAllEmployeeProfiles] = useState([]);
 
   const policiesBaseFields = {
-    list: { id: { validationId: 'employeeId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.employees },
-    references: { id: { validationId: 'employeeReferenceId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.employeeReferences }
+    list: { ...allBaseFields.employees },
+    references: { ...allBaseFields.employeeReferences }
   };
 
   const { policies, setPolicies } = usePolicies();
@@ -340,7 +340,7 @@ const Employees = ({ globalSearch, setGeneralSearch, user }) => {
                 .then((data) => {
                   dispatch(showDeletedAlert());
                   const currentCollection = collection.name === 'employees' ? 'list' : 'references';
-                  executePolicies('OnDelete', 'employees', currentCollection, response);
+                  executePolicies('OnDelete', 'employees', currentCollection, response, data.response.value);
                   loadEmployeesData(collection.name);
                   loadEmployeeProfiles();
 

@@ -131,15 +131,18 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id, policies 
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('userProfiles', _id);
-          executePolicies('OnAdd', 'user', 'references', policies);
+          executePolicies('OnAdd', 'user', 'references', policies, response.response[0]);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('userProfiles/', body, id[0])
-        .then(response => {
+        .then(response => response.json())
+        .then((data) => {
+          const { response: { value } } = data;
+
           dispatch(showUpdatedAlert());
           saveAndReload('userProfiles', id[0]);
-          executePolicies('OnEdit', 'user', 'references', policies);
+          executePolicies('OnEdit', 'user', 'references', policies, value);
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -191,7 +194,7 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id, policies 
       .then(response => response.json())
       .then(data => {
         const { name, depreciation, customFieldsTab, profilePermissions, fileExt } = data.response;
-        executePolicies('OnLoad', 'user', 'references', policies);
+        executePolicies('OnLoad', 'user', 'references', policies, data.response);
         const obj = {
           name,
           depreciation,

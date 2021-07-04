@@ -32,6 +32,26 @@ export const modules = [
   { key: 'settings', name: 'Settings' },
 ];
 
+export const modulesCatalogues = {
+  assets: {
+    list: 'assets',
+    references: 'references',
+    categories: 'categories'
+  },
+  user: {
+    list: 'userList',
+    references: 'userReferences'
+  },
+  employees: {
+    list: 'employees',
+    references: 'employeeReferences'
+  },
+  locations: {
+    list: 'locationsList',
+    profiles: 'locations'
+  }
+}
+
 export const collections = {
   messages: 'messages',
   notifications: 'notifications',
@@ -112,6 +132,7 @@ export const CustomFieldsPreview = (props) => {
 
 export const allBaseFields = {
   userList: {
+    id: { realId: '_id', validationId: 'id', compLabel: 'ID' },
     userProfile: {
       component: 'dropSelect',
       compLabel: 'Profile Selected',
@@ -127,21 +148,24 @@ export const allBaseFields = {
       style: { marginTop: '15px' },
       validationId: 'selectedBoss'
     },
-    userGroups: {
+    groups: {
       component: 'dropSelect',
       compLabel: 'Groups',
       style: { marginTop: '15px' },
-      validationId: 'selectedUserGroups'
+      validationId: 'groups'
     },
   },
   userReferences: {
+    id: { realId: '_id', validationId: 'id', compLabel: 'ID' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
   },
   categories: {
+    id: { realId: '_id', validationId: 'id', compLabel: 'ID' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     depreciation: { validationId: 'depreciation', component: 'textField', compLabel: 'Depreciation' },
   },
   references: {
+    id: { realId: '_id', validationId: 'id', compLabel: 'ID' },
     category: { validationId: 'selectedProfile', component: 'dropSelect', compLabel: 'Category' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     brand: { validationId: 'brand', component: 'textField', compLabel: 'Brand' },
@@ -150,27 +174,32 @@ export const allBaseFields = {
     depreciation: { validationId: 'depreciation', component: 'textField', compLabel: 'Depreciation' },
   },
   employees: {
+    id: { realId: '_id', validationId: 'id', compLabel: 'ID' },
     employeeProfile: { validationId: 'employeeProfile', component: 'dropSelect', compLabel: 'Employee Profile' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     lastName: { validationId: 'lastName', component: 'textField', compLabel: 'Last Name' },
     email: { validationId: 'email', component: 'textField', compLabel: 'Email' },
     employee_id: { validationId: 'employee_id', component: 'textField', compLabel: 'Employee Id' },
-    responsibilityLayout: { validationId: 'responsibilityLayout', component: 'dropSelect', compLabel: 'Responsibility Layout' },
+    responsibilityLayout: { validationId: 'layoutSelected', component: 'dropSelect', compLabel: 'Responsibility Layout' },
   },
   employeeReferences: {
+    id: { realId: '_id', validationId: 'id', compLabel: 'ID' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
   },
   locations: {
+    id: { realId: '_id', validationId: 'id', compLabel: 'ID' },
     selectedLevel: { validationId: 'selectedLevel', component: 'textField', compLabel: 'Level' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
   },
   locationsList: {
+    id: { realId: '_id', validationId: 'id', compLabel: 'ID' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     fileExt: { validationId: 'fileExt', compLabel: 'Layout' },
     imageInfo: { validationId: 'imageInfo', compLabel: 'Pin Layout' },
     mapInfo: { validationId: 'mapInfo', compLabel: 'Pin Map' },
   },
   assets1: {
+    id: { realId: '_id', validationId: 'id', compLabel: 'ID' },
     name: { validationId: 'name', component: 'textField', compLabel: 'Name' },
     brand: { validationId: 'brand', component: 'textField', compLabel: 'Brand' },
     model: { validationId: 'model', component: 'textField', compLabel: 'Model' },

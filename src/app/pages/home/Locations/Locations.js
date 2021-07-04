@@ -126,9 +126,12 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
         .then((response) => response.json())
         .then((data) => {
           deleteDB('locationsReal/', parentSelected)
-            .then((_) => {
+            .then((locationResponse) => locationResponse.json())
+            .then((locationData) => {
+              const { response: { value } } = locationData;
+
               dispatch(showDeletedAlert());
-              executePolicies('OnDelete', 'locations', 'list', data.response);
+              executePolicies('OnDelete', 'locations', 'list', data.response, value);
               handleLoadLocations();
             })
             .catch((error) => dispatch(showErrorAlert()));
@@ -251,9 +254,12 @@ const Locations = ({ globalSearch, setGeneralSearch, user }) => {
       .then((data => {
         id.forEach(_id => {
           deleteDB('locations/', _id)
-            .then((_) => {
+            .then((locationResponse) => locationResponse.json())
+            .then((locationData) => {
+              const { response: { value } } = locationData;
+
               dispatch(showDeletedAlert());
-              executePolicies('OnDelete', 'locations', 'profiles', data.response);
+              executePolicies('OnDelete', 'locations', 'profiles', data.response, value);
               loadLocationsProfilesData();
               updateGeneralProfileLocations();
             })

@@ -29,8 +29,6 @@ export default function RecursiveTreeView(props) {
       </TreeItem>
   );
 
-  console.log(props.customProps);
-
   return (
     <TreeView
       {...(props.customProps || {})}

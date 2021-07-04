@@ -184,15 +184,18 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('references', _id);
-          executePolicies('OnAdd', 'assets', 'references', policies);
+          executePolicies('OnAdd', 'assets', 'references', policies, response.response[0]);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('references/', body, id[0])
-        .then(response => {
+        .then(response => response.json())
+        .then(data => {
+          const { response: { value } } = data;
+
           dispatch(showUpdatedAlert());
           saveAndReload('references', id[0]);
-          executePolicies('OnEdit', 'assets', 'references', policies);
+          executePolicies('OnEdit', 'assets', 'references', policies, value);
         })
         .catch(error => console.log(error));
     }

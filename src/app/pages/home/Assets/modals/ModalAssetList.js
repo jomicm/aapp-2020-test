@@ -560,7 +560,7 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
           const { _id } = response.response[0];
           handleChildrenOnSaving(_id);
           saveAndReload('assets', _id);
-          executePolicies('OnAdd', 'assets', 'list', policies);
+          executePolicies('OnAdd', 'assets', 'list', policies, response.response[0]);
         })
         .catch(error => {
           dispatch(showErrorAlert())
@@ -572,9 +572,10 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
           dispatch(showUpdatedAlert());
           handleChildrenOnSaving(id[0]);
           saveAndReload('assets', id[0]);
-          executePolicies('OnEdit', 'assets', 'list', policies);
-
-          const { response: { value: { assigned } } } = data;
+          
+          const { response: { value, value: { assigned } } } = data;
+          
+          executePolicies('OnEdit', 'assets', 'list', policies, value);
 
           if (assigned) {
             if (assigned.length) {
@@ -699,7 +700,7 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
         const locationPath = await getLocationPath(location);
         const assignedParent = assets.find(({ id }) => id === parent);
         const assignedParentText = assignedParent ? `${assignedParent.name || 'No Name'}, ${assignedParent.brand || 'No Brand'}, ${ assignedParent.model ||'No Model'}, ${ assignedParent.serial ||'No Serial Number'}, ${ assignedParent.EPC ? `(${assignedParent.EPC})` : 'No EPC'}` : 'No Parent Assigned';
-        executePolicies('OnLoad', 'assets', 'list', policies);
+        executePolicies('OnLoad', 'assets', 'list', policies, data.response);
         setAssetLocation(location);
         setLayoutMarker(layoutCoords) //* null if not specified
         setMapMarker(mapCoords) //* null if not specified

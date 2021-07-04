@@ -53,7 +53,6 @@ const LocationAssignment = ({ locationsTable, setLocationsTable }) => {
         const homeLocations = data.response.filter(loc => loc.profileLevel === 0);
         const children = constructLocationTreeRecursive(homeLocations);
         locationsTreeData.children = children;
-        console.log('locationsTreeData:', locationsTreeData)
         setLocationsTree(locationsTreeData);
       })
       .catch(error => console.log('error>', error));

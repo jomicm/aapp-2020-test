@@ -243,16 +243,19 @@ const ModalLocationList = ({
           dispatch(showSavedAlert());
           const { _id } = data.response[0];
           saveAndReload('locationsReal', _id);
-          executePolicies('OnAdd', 'locations', 'list', policies);
+          executePolicies('OnAdd', 'locations', 'list', policies, data.response[0]);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
       body.parent = realParent;
       updateDB('locationsReal/', body, parent)
-        .then((response) => {
+        .then((response) => response.json())
+        .then((data) => {
+          const { response: { value } } = data;
+
           dispatch(showUpdatedAlert());
           saveAndReload('locationsReal', parent);
-          executePolicies('OnEdit', 'locations', 'list', policies);
+          executePolicies('OnEdit', 'locations', 'list', policies, value);
         })
         .catch(error => dispatch(showErrorAlert()));
     }

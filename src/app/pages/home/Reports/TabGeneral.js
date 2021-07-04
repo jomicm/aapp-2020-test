@@ -282,6 +282,38 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     }
   };
 
+  const getExtraCondition = (condition) => {
+    if (values.selectedReport === 'assets') {
+      condition.push({ "location": { "$in": userLocations } });
+    } else if (values.selectedReport === 'user') {
+      condition.push({ "locationsTable.parent": { "$in": userLocations } });
+    }
+
+    return condition;
+  };
+
+  const getDateFilters = () => {
+    if (values.startDate && values.endDate) {
+      let condition = [{ "creationDate": { "$gte": `${new Date(values.startDate).toISOString()}`, "$lte": `${new Date(values.endDate).toISOString()}` } }];
+      condition = getExtraCondition(condition);
+      return condition;
+    } else if (values.startDate && !values.endDate) {
+      let condition = [{ "creationDate": { "$gte": `${new Date(values.startDate).toISOString()}` } }];
+      condition = getExtraCondition(condition);
+      return condition;
+    } else if (!values.startDate && values.endDate) {
+      let condition = [{ "creationDate": { "$lte": `${new Date(values.endDate).toISOString()}` } }];
+      condition = getExtraCondition(condition);
+      return condition;
+    }
+
+    if (values.selectedReport === 'assets') {
+      return [{ "location": { "$in": userLocations } }];
+    } else if (values.selectedReport === 'user') {
+      return [{ "locationsTable.parent": { "$in": userLocations } }];
+    }
+  };
+
   const loadProcessData = () => {
     //GET Folios 
     getDBComplex({
@@ -629,11 +661,12 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
       }
 
       const condition = collectionName === 'processLive' ? await getFiltersProcess() : null;
-
+      const dateFilters = getDateFilters();
+      console.log(dateFilters);
       getCountDB({
         collection: collectionName,
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : collectionName === 'user' ? [{ "locationsTable.parent": { "$in": userLocations } }] : null
+        condition: collectionName === 'processLive' ? condition : dateFilters
       })
         .then(response => response.json())
         .then(data => {
@@ -649,7 +682,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
         skip: tableControl.rowsPerPage * tableControl.page,
         sort: collectionName === 'processLive' && !tableControl.order ? [{ key: 'folio', value: 1 }] : [{ key: tableControl.orderBy, value: tableControl.order }],
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : collectionName === 'user' ? [{ "locationsTable.parent": { "$in": userLocations } }] : null
+        condition: collectionName === 'processLive' ? condition : dateFilters
       })
         .then(response => response.json())
         .then(data => {

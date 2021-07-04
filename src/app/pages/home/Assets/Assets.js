@@ -408,17 +408,18 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
         getDB('policies')
           .then((response) => response.json())
           .then((data => {
+            const { response } = data;
             id.forEach(_id => {
               deleteDB(`${collection.name}/`, _id)
                 .then(response => response.json())
                 .then((data) => {
+                  const { response: { value, value: { children, parent, assigned } } } = data;
+
                   dispatch(showDeletedAlert());
                   const currentCollection = collection.name === 'assets' ? 'list' : collection.name;
-                  executePolicies('OnDelete', 'assets', currentCollection, data.response);
+                  executePolicies('OnDelete', 'assets', currentCollection, response, value);
                   loadAssetsData(collection.name);
-
-                  const { response: { value: { children, parent, assigned } } } = data;
-
+                  
                   children.forEach(({ id: childId }) => {
                     updateDB('assets/', { parent: null }, childId)
                       .catch((error) => console.log(error));

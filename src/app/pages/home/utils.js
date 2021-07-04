@@ -70,7 +70,7 @@ export const getVariables = (html) => {
     } else {
       return acu;
     }
-  }, []);
+  }, []) || [];
 };
 
 export const getCurrentDateTime = () => {
