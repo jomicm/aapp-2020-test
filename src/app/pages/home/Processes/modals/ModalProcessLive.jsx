@@ -31,12 +31,13 @@ import { postDB, getDB, getOneDB, updateDB, deleteDB, postFILE, getDBComplex, ge
 import CircularProgressCustom from '../../Components/CircularProgressCustom';
 import CustomFields from '../../Components/CustomFields/CustomFields';
 import { CustomFieldsPreview } from '../../constants';
-import { getCurrentDateTime, simplePost, getLocationPath } from '../../utils';
+import { getCurrentDateTime, simplePost, getLocationPath, getVariables } from '../../utils';
 import AssetFinderPreview from '../../Components/AssetFinderPreview';
 import TableComponent2 from '../../Components/TableComponent2';
 import { collections } from '../../constants';
 import LiveProcessTab from '../components/LiveProcessTab.jsx';
 import { transformProcess } from './utils';
+import { extractCustomFieldValues } from '../../Reports/reportsHelpers'
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -442,6 +443,7 @@ const ModalProcessLive = (props) => {
         .then(data => data.json())
         .then(async response => {
           const processLiveResponse = response.response[0];
+          setProcessInfo(processLiveResponse);
           const { _id } = processLiveResponse;
           groomProcess(processLiveResponse);
           const { processData: { selectedProcessType } } = processLiveResponse;
@@ -520,7 +522,7 @@ const ModalProcessLive = (props) => {
 
   const applyApproval = () => {
     const { dateFormatted, timeFormatted } = getCurrentDateTime();
-    const { processData } = processInfo;
+    const { processData, requestUser, _id: liveProcessId } = processInfo;
     const { currentStage } = processData;
     if (currentStage === 0) {
       return initializeStage(process);
@@ -531,6 +533,10 @@ const ModalProcessLive = (props) => {
     currentUserApproval.cartRows = cartRows;
     currentUserApproval.fulfilled = true;
     currentUserApproval.fulfillDate = `${dateFormatted} ${timeFormatted}`;
+    const isLastApproval = !approvals.map(({ fulfilled }) => fulfilled).includes(false);
+    if (isLastApproval) {
+      sendMessages(currentStageData, requestUser, liveProcessId, processData.id, processInfo, 'end'); // Notifications
+    } 
 
     return processData;
   };
@@ -611,79 +617,158 @@ const ModalProcessLive = (props) => {
       .catch(error => console.log(error));
   };
 
-   const sendMessages = (stageData, requestUser, processId) => {
+   const sendMessages = (stageData, requestUser, liveProcessId, processId, localProcessInfo, stageMoment) => {
     // Notifications are simple messages, Approvals are simple messages + ProcessApprovals DB posting
     const { dateFormatted, rawDate: formatDate, timeFormatted } = getCurrentDateTime();
     const { stageId, stageName, notifications: stageNotifications, approvals: stageApprovals } = stageData;
-    const { validMessages: { notifications, approvals } } = processes[0];
+    const thisProcessData = processes.find(({ _id }) => _id === processId); 
+    const { validMessages: { notifications, approvals } } = thisProcessData;
     const processNotifications = notifications[stageId] || [];
     const processApprovals = approvals[stageId] || [];
+    
+    const getVariableValues = {
+      stageName: () => {
+        return stageName || 'N/A';
+      },
+      creator: () => {
+        const { name, lastName, email} = requestUser;
+        return `${name} ${lastName} (${email})` || 'N/A';
+      },
+      creationDate: () => {
+        return localProcessInfo.creationDate?.split('T')[0] || 'N/A';
+      },
+      approvals: () => {
+        const approvalsFormated = stageApprovals.map(({ name, lastName, email}) => `${name} ${lastName} (${email})`);
+        return approvalsFormated.length ? approvalsFormated.join(', ') : 'N/A';
+      },
+      notifications: () => {        
+        const notificationsFormated = stageNotifications.map(({ name, lastName, email}) => `${name} ${lastName} (${email})`);
+        return notificationsFormated.length ? notificationsFormated.join(', ') : 'N/A';
+      }
+    };
 
-    const filteredProcessMessages = (message) => Object.entries(message).map(([userId, val]) => {
-      const transformedMessages = val.reduce((acu, cur) => {
-        const { checked, id: layoutId, name: layoutName, selectedType: layoutType } = cur;
-        const notificationObj = { layoutId, layoutName, layoutType };
+    const getCustomFieldValues = () => {
+      let filteredCustomFields = {};
+      Object.values(stageData.customFieldsTab || {}).forEach(tab => {
+        const allCustomFields = [...tab.left, ...tab.right];
+        allCustomFields.map(field => {
+          filteredCustomFields = { ...filteredCustomFields, ...extractCustomFieldValues(field) };
+        });
+      });
 
-        return checked ? [...acu, notificationObj] : acu;
-      }, []);
+      return filteredCustomFields;
+    };
 
-      return { ...transformedMessages[0], userId };
-    });
+    const formatHTML = (html) => {
+      const variables = getVariables(html);
+      let offsetVar = 0;
+      const allStageCustomFields = getCustomFieldValues();
+  
+      variables.forEach(({ varName, start, end }) => {
+        let htmlArr = html.split('');
+        let variableContent;
+
+        if(getVariableValues[varName]){
+          variableContent = getVariableValues[varName]();
+        }
+        else {
+          variableContent = allStageCustomFields[varName] || 'N/A';
+        }
+      
+        if (variableContent) {
+          htmlArr.splice(start - offsetVar, (end - start) + 1, variableContent);
+          offsetVar += varName.length - variableContent.length + 3;
+        }
+        html = htmlArr.join('');
+      });
+
+      return html;
+    };
+
+    const filteredProcessMessages = (message) => {
+      let filteredMessages = []
+      Object.entries(message).map(([userId, val]) => {
+        val.reduce((acu, cur) => {
+          const { checked, id: layoutId, name: layoutName, sendMessageAt } = cur;
+          const notificationObj = { layoutId, layoutName, sendMessageAt };
+          if (checked) {
+            filteredMessages.push({...notificationObj, userId})
+          }
+        }, []);
+      });
+      return filteredMessages;
+    }
     
     const sendStageMessages = (messages, type) => {
       const isNotification = type === 'notification';
       const messagesType = isNotification ? stageNotifications : stageApprovals;
 
       messagesType.forEach(async(message) => {        
-        const foundMessage = messages.find(({ userId }) => userId === message._id);
-        const layoutId = foundMessage ? foundMessage.layoutId : null;
-        const fromObj = pick(requestUser, ['email', 'name', 'lastName']);
-        const from = [{ _id: requestUser.id, ...fromObj }];
-        const html = layoutId ? processLayouts.find(({ id }) => id === layoutId).layout || '' : null;
+        const foundMessages = []
+        if (message.virtualUser){
+          foundMessages.push(...messages.filter(({ userId }) => userId === message.virtualUser));
+        }
+        else {
+          foundMessages.push(...messages.filter(({ userId }) => userId === message._id))
+        }
         const timeStamp = `${dateFormatted} ${timeFormatted}`;
-        const subject = isNotification ?
-          `New notification from Stage: ${stageName}` :
-          `New approval request from Stage: ${stageName}`;
-        
         let targetUserInfo = {
           email: message.email,
           id: message._id,
           lastName: message.lastName,
           name: message.name
         };
-  
-        const messageObj = {
-          html,
-          formatDate,
-          from,
-          read: false,
-          status: `new`,
-          subject,
-          timeStamp,
-          to: [{
-            _id: targetUserInfo.id,
-            email: targetUserInfo.email,
-            lastName: 'Target LastName TBD',
-            name: 'Target Name TBD'
-          }]
-        };
-        if (html) {
-          simplePost(collections.messages, messageObj);
-        }
+        foundMessages.map((foundMessage) => {
+          const layoutId = foundMessage ? foundMessage.layoutId : null;
+          const fromObj = pick(requestUser, ['email', 'name', 'lastName']);
+          const from = [{ _id: requestUser.id, ...fromObj }];
+          const thisLayoutInfo = processLayouts.find(({ id }) => id === layoutId) || null;
+          const html = thisLayoutInfo ? thisLayoutInfo.layout || '' : null;
+          const sendMessageAt =  thisLayoutInfo ? thisLayoutInfo.sendMessageAt || '' : null;
+          const newHtml = formatHTML(html); 
+          const subject = isNotification ?
+            `New notification from Stage: ${stageName}` : 
+              stageMoment === 'start' ? 
+              `New approval request from Stage: ${stageName}`:
+              `The following Stage has been finished: ${stageName}`;
+            
+          debugger;
+    
+          const messageObj = {
+            html: newHtml,
+            formatDate,
+            from,
+            read: false,
+            status: `new`,
+            subject,
+            timeStamp,
+            to: [{
+              _id: targetUserInfo.id,
+              email: targetUserInfo.email,
+              lastName: 'Target LastName TBD',
+              name: 'Target Name TBD'
+            }]
+          };
+          if (html && sendMessageAt === stageMoment) {
+            simplePost(collections.messages, messageObj);
+          }
+        })
 
         if (isNotification) {
           message.sent = true;
           message.sentDate = timeStamp;
         } else {
-          const approvalObj = {
-            email: targetUserInfo.email,
-            fulfilled: false,
-            fulfilledData: '',
-            processId,
-            userId: targetUserInfo.id, 
-            stageId,
-          };
-          simplePost(collections.processApprovals, approvalObj);
+          if(stageMoment === 'start'){
+            const approvalObj = {
+              email: targetUserInfo.email,
+              fulfilled: false,
+              fulfilledData: '',
+              processId: liveProcessId,
+              userId: targetUserInfo.id,
+              stageId,
+            };
+            simplePost(collections.processApprovals, approvalObj);
+          }
         }
       });
     };
@@ -899,11 +984,11 @@ const ModalProcessLive = (props) => {
   };
 
   const initializeStage = (process) => {
-    const { processData, requestUser, _id: processId } = process;
+    const { processData, requestUser, _id: liveProcessId } = process;
     const nextStage = processData.currentStage + 1;
     processData.currentStage = nextStage;
     const stageData = getCurrentStageData(nextStage, processData);
-    sendMessages(stageData, requestUser, processId); // Notifications & Approvals
+    sendMessages(stageData, requestUser, liveProcessId, processData.id, process, 'start'); // Approvals
     stageData.stageInitialized = true;
   };
 
@@ -1118,9 +1203,8 @@ const ModalProcessLive = (props) => {
     getDB('processes')
       .then(response => response.json())
       .then(data => {
-        // const processes = data.response.map(({ _id, name, processStages, validMessages }) => ({ id: _id, name, processStages, validMessages }));
         const processes = data.response.map(
-          (process) => ({ ...pick(process, ['name', 'processStages', 'validMessages', 'selectedProcessType']), id: process._id })
+          (process) => ({ ...pick(process, ['name', 'processStages', 'validMessages', 'selectedProcessType', '_id']), id: process._id })
         );
         setProcesses(processes);
       })
@@ -1229,7 +1313,6 @@ const ModalProcessLive = (props) => {
   };
 
   const handleChangeAssetValues = (values, id) => {
-    // console.log('values:', values, id);
     const temporalCartRows = cartRows;
     const indexToChange = temporalCartRows.findIndex(({_id}) => _id === id);
     temporalCartRows[indexToChange] = values;

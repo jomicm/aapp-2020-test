@@ -139,8 +139,6 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
     name: ""
   });
   const [editor, setEditor] = useState(EditorState.createEmpty());
-  const [profileSelected, setProfileSelected] = useState(0);
-  const [layoutSelected, setLayoutSelected] = useState(0);
 
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value });
@@ -191,7 +189,6 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
   };
 
   const handleCloseModal = () => {
-    setProfileSelected(null);
     setValues({ 
       name: ""
     });

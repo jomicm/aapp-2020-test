@@ -179,7 +179,7 @@ const AssetFinder = ({
                 <AccordionSummary expandIcon={<ExpandMoreIcon />} >
                   <Typography>Set Location</Typography>
                 </AccordionSummary>
-                <AccordionDetails style={{ overflow: 'hidden', height: '275px' }}>
+                <AccordionDetails style={{ overflow: 'auto', height: '275px', marginBottom: '10px' }}>
                   <LocationsTreeView onTreeElementClick={handleTreeElement} />
                 </AccordionDetails>
               </Accordion>

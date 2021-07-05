@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from "react-redux";
 import {
   Button,
   Dialog,
@@ -8,42 +9,33 @@ import {
   DialogActions,
   Typography,
   IconButton,
-  Tab,
-  Tabs,
-  Paper,
   TextField,
   FormControl,
-  FormLabel,
-  FormGroup,
   ExpansionPanel,
   ExpansionPanelSummary,
   ExpansionPanelDetails,
+  List,
   InputLabel,
   MenuItem,
   Select
 } from "@material-ui/core";
 import {
   withStyles,
-  useTheme,
   makeStyles
 } from "@material-ui/core/styles";
-import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
-import CustomFields from '../../../Components/CustomFields/CustomFields';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import { TreeItem, TreeView } from "@material-ui/lab";
 
-// import './ModalAssetCategories.scss';
-import ImageUpload from '../../../Components/ImageUpload';
-import { postDBEncryptPassword, getDB, getOneDB, updateDB, postDB } from '../../../../../crud/api';
-import ModalYesNo from '../../../Components/ModalYesNo';
-import Permission from '../../components/Permission';
-import { getFileExtension, saveImage, getImageURL } from '../../../utils';
+import { actions } from '../../../../../store/ducks/general.duck';
+import { getDB, getOneDB, updateDB, postDB } from '../../../../../crud/api';
 
 import { Editor } from 'react-draft-wysiwyg';
 import { EditorState, ContentState, convertToRaw, convertFromHTML, Modifier } from 'draft-js';
 import draftToHtml from 'draftjs-to-html';
 import htmlToDraft from 'html-to-draftjs';
-
+import './ModalLayoutStages.scss'
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -124,33 +116,49 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeProfileRows }) => {
+  const dispatch = useDispatch();
+  const { showCustomAlert } = actions;
   // Example 4 - Tabs
   const classes4 = useStyles4();
-  const theme4 = useTheme();
-  const [value4, setValue4] = useState(0);
-  function handleChange4(event, newValue) {
-    setValue4(newValue);
-  }
-  function handleChangeIndex4(index) {
-    setValue4(index);
-  }
-
-  // Example 1 - TextField
+    // Example 1 - TextField
   const classes = useStyles();
   const [values, setValues] = useState({
     name: ""
   });
   const [editor, setEditor] = useState(EditorState.createEmpty());
-  const [profileSelected, setProfileSelected] = useState(0);
-  const [layoutSelected, setLayoutSelected] = useState(0);
   const [stages, setStages] = useState([]);
+  const [stageCustomFields, setStageCustomFields] = useState([]);
 
   const handleChange = name => event => {
     setValues({ ...values, [name]: event.target.value });
   };
 
   const handleSave = () => {
-    const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
+    if(!values.name){
+      dispatch(showCustomAlert({
+        type: 'warning',
+        open: true,
+        message: `Please add a name`
+      }));
+      return;
+    }
+    if(!values.selectedStage){
+      dispatch(showCustomAlert({
+        type: 'warning',
+        open: true,
+        message: `Please select a stage`
+      }));
+      return;
+    }
+    if(!values.sendMessageAt){
+      dispatch(showCustomAlert({
+        type: 'warning',
+        open: true,
+        message: `Please select when to send the message`
+      }));
+      return;
+    }
+    const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));    
     const body = { ...values, layout };
 
     if (!id) {
@@ -176,12 +184,11 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
   };
 
   const handleCloseModal = () => {
-    setProfileSelected(null);
     setValues({ 
       name: ""
     });
+    setStageCustomFields([]);
     setShowModal(false);
-    setValue4(0);
     setEditor(EditorState.createEmpty());
     setStages([]);
   };
@@ -194,8 +201,8 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
     getOneDB('settingsLayoutsStages/', id[0])
       .then(response => response.json())
       .then(data => { 
-        const { name, selectedType, selectedStage, layout = '<p></p>' } = data.response;
-        setValues({ ...values, name, selectedType, selectedStage });
+        const { name, selectedType, selectedStage, layout = '<p></p>',  sendMessageAt } = data.response;
+        setValues({ ...values, name, selectedType, selectedStage, sendMessageAt });
         // htmlToDraft
         // setEditor(EditorState.createWithContent(htmlToDraft(layout)));
         const contentBlock = htmlToDraft(layout);
@@ -214,10 +221,29 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
     })
     .catch(error => console.log(error));
   }, [showModal])
+  
+  useEffect(() => {
+    if (values.selectedStage) {
+      getOneDB('processStages/', values.selectedStage)
+      .then(response => response.json())
+      .then(data => { 
+        const allCustomFields = []
+        Object.values(data.response.customFieldsTab || {}).forEach(tab => {
+          const localCustomFields = [...tab.left, ...tab.right];
+          allCustomFields.push(...localCustomFields);
+        });
+        setStageCustomFields(allCustomFields);
+      })
+      .catch(error => console.log(error));
+    }
+    else {
+      setStageCustomFields([]);
+    }
+  }, [values.selectedStage])
 
   const stageVariables = [
     {id: 'stageName', name: 'Stage Name'}, 
-    {id: 'creationDate', name: 'Creation Date'}, 
+    {id: 'creationDate', name: 'Process Creation Date'}, 
     {id: 'creator', name: 'Creator'}, 
     {id: 'approvals', name: 'Approvals'},
     {id: 'notifications', name: 'Notifications'}
@@ -275,6 +301,19 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
                           className={classes.textField}
                           style={{ width: '33%', margin: '0 20px' }}
                         >
+                          <InputLabel>Send:</InputLabel>
+                          <Select
+                            value={values.sendMessageAt || ''}
+                            onChange={handleChange('sendMessageAt')}
+                          >
+                            <MenuItem value={'end'}>After the approval</MenuItem>
+                            <MenuItem value={'start'}>Before the approval</MenuItem>
+                          </Select>
+                        </FormControl>
+                        {/* <FormControl
+                          className={classes.textField}
+                          style={{ width: '33%', margin: '0 20px' }}
+                        >
                           <InputLabel>Type:</InputLabel>
                           <Select
                             value={values.selectedType || ''}
@@ -284,7 +323,7 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
                             <MenuItem value={'notification'}>Notification</MenuItem>
                             <MenuItem value={'document'}>Document</MenuItem>
                           </Select>
-                        </FormControl>
+                        </FormControl> */}
                         <FormControl
                           className={classes.textField}
                           style={{ width: '33%', margin: '0 20px' }}
@@ -312,7 +351,7 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
                       <Typography className={classes.heading}>Layout Variable</Typography>
                     </ExpansionPanelSummary>
                     <ExpansionPanelDetails>
-                      <div className='custom-controls-wrapper'>
+                      {/* <div className='custom-controls-wrapper'>
                         {stageVariables.map((variable, ix) => {
                           return (
                             <div
@@ -324,6 +363,63 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
                             </div>
                           )
                         })}
+                      </div> */}
+                      <div style={{display: 'flex', width: '100%', justifyContent: 'space-evenly', marginBottom: '10px'}}>
+                        <div style={{display: 'flex', flexDirection: 'column', width: '200px'}}>
+                            <h4>Base Fields: </h4>
+                            <TreeView
+                              defaultCollapseIcon={<ExpandMoreIcon />}
+                              defaultExpandIcon={<ChevronRightIcon />}
+                            >
+                              <List className='__container-baseandcustom-panel'>
+                                {stageVariables.map(({ id, name }, ix) => {
+                                  return (
+                                    <TreeItem
+                                      className="baseform-tree-item"
+                                      key={`tree-item-catalogue-${ix}`}
+                                      label={name.replace(/\w\S*/g, (w) => (w.replace(/^\w/, (c) => c.toUpperCase())))}
+                                      nodeId={id}
+                                      style={{ margin: "0 0 10px 0px" }}
+                                      onClick={() => insertVariable(id)}
+                                    >
+                                    </TreeItem>
+                                  );
+                                })}
+                              </List>
+                            </TreeView>
+                          </div>
+                          <div style={{display: 'flex', flexDirection: 'column', width: '200px'}}>
+                            <h4>Custom Fields: </h4>
+                            {
+                              values.sendMessageAt === 'start' || stageCustomFields.length === 0 ? (
+                                <div style={{display: 'flex', flexDirection: 'row'}}>
+                                  <CloseIcon />
+                                  <span>{!values.selectedStage ? 'First select a stage' : values.sendMessageAt === 'start' ? 'Custom fields are edited during the approval' : 'This stage has no custom fields'}</span>
+                                </div>
+                              ) : (
+                                <TreeView
+                                  defaultCollapseIcon={<ExpandMoreIcon />}
+                                  defaultExpandIcon={<ChevronRightIcon />}
+                                >
+                                  <List className='__container-baseandcustom-panel'>
+                                    {stageCustomFields.map(({ id, values: { fieldName } }, ix) => {
+                                      return (
+                                        <TreeItem
+                                          className="baseform-tree-item"
+                                          key={`tree-item-catalogue-${ix}`}
+                                          label={fieldName.replace(/\w\S*/g, (w) => (w.replace(/^\w/, (c) => c.toUpperCase())))}
+                                          nodeId={id}
+                                          style={{ margin: "0 0 10px" }}
+                                          onClick={() => insertVariable(id)}
+                                        >
+                                        </TreeItem>
+                                      );
+                                    })}
+                                  </List>
+                                </TreeView>
+                              )
+                            }
+                          </div>
                       </div>
                     </ExpansionPanelDetails>
                   </ExpansionPanel>

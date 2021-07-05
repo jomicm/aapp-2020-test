@@ -69,7 +69,8 @@ const LiveProcessTab = ({
    };
 
    const stageApprovals = currentStage.approvals.map(({_id}) => _id);
-   if(!stageApprovals.includes(user.id) || currentStage.stageFulfilled){
+   const thisApproval = currentStage.approvals.find(({_id}) => user.id === _id )
+   if(!stageApprovals.includes(user.id) || !thisApproval || thisApproval.fulfilled ){
      return false;
    }
    
