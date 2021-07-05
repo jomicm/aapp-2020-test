@@ -644,9 +644,18 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
         result.push({ [key]: { "$in": filtersSelected.processLive[key].map(({ id }) => (id)) } });
       }
     }));
+
+    const dateFilters = getDateFilters();
+
+    if (dateFilters) {
+      result.push(...dateFilters);
+    }
+
     if (lookById.length) {
       result.push({ "processLiveId": { "$in": lookById } });
     }
+
+    console.log(result);
     return result.length > 0 ? result : null;
   };
 

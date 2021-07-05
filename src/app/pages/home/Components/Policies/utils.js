@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { getCurrentDateTime, simplePost, getVariables } from '../../utils';
 import { collections, allBaseFields, modulesCatalogues } from '../../constants';
+import { extractCustomFieldValues } from '../../Reports/reportsHelpers';
 import objectPath from 'object-path';
 
 export const executePolicies = (actionName, module, selectedCatalogue, policies, record = {}) => {
@@ -143,7 +144,9 @@ const replaceBulk = (str, findArray, replaceArray) => {
 const changeVariables = (text, record, module, selectedCatalogue) => {
   let convertedMessage = null;
   let newChars = [];
+  let customFields = [];
   const variables = getVariables(text);
+  var regex = /^[0-9a-f]{12}/i;
 
   if (variables.length) {
     variables.forEach(({ varName }) => {
@@ -158,8 +161,20 @@ const changeVariables = (text, record, module, selectedCatalogue) => {
         newChars.push(value);
       } else if (typeof newMessage === 'string' || typeof newMessage === 'number') {
         newChars.push(newMessage.toString());
+      } else if (regex.test(varName)) {
+        console.log('Es un custom field');
+        customFields.push(varName);
       } else {
-        newChars.push('Data not found');
+        newChars.push('N/A');
+      }
+    });
+
+    const customFieldsValues = getCustomFieldValues(record);
+
+    Object.entries(customFieldsValues || {}).forEach((field) => {
+      if (customFields.includes(field[0])) {
+        const index = variables.findIndex(({ varName }) => varName === field[0]);
+        newChars.splice(index, 0, field[1]);
       }
     });
 
@@ -167,4 +182,17 @@ const changeVariables = (text, record, module, selectedCatalogue) => {
   }
 
   return convertedMessage;
+};
+
+const getCustomFieldValues = (record) => {
+  let filteredCustomFields = {};
+  console.log('CustomFieldsFunc: ', Object.values(record.customFieldsTab || {}))
+  Object.values(record.customFieldsTab || {}).forEach(tab => {
+    const allCustomFields = [...tab.left, ...tab.right];
+    allCustomFields.map(field => {
+      filteredCustomFields = { ...filteredCustomFields, ...extractCustomFieldValues(field) };
+    });
+  });
+
+  return filteredCustomFields;
 };

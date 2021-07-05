@@ -103,6 +103,29 @@ export const extractGeneralField = (collectionName, row) => {
   return filteredGeneralFields;
 };
 
+export const extractCustomFieldValues = field => {
+  const { content, values, id } = field;
+  if (isEmpty(values)) {
+    return { [content]: '' };
+  }
+  const { fieldName, initialValue, options, selectedItem, fileName, selectedOptions } = values;
+  if (_types['simpleType'].includes(content)) {
+    return { [id]: initialValue || '' };
+  } else if (_types['dropType'].includes(content)) {
+    return { [id]: options[selectedItem] || '' };
+  } else if (_types['radioType'].includes(content)) {
+    if (!selectedItem) return { [fieldName]: '' };
+    const selected = selectedItem.slice(-1);
+    return { [id]: options[Number(selected) - 1] || '' };
+  } else if (_types['checkType'].includes(content)) {
+    return { [id]: selectedOptions ? selectedOptions.join(', ') : '' };
+  } else if (_types['fileType'].includes(content)) {
+    return { [id]: fileName ? `${fileName}` : '' };
+  } else if (_types['imageType'].includes(content)) {
+    return { [id]: fileName ? `${fileName}.${initialValue}` : '' };
+  }
+};
+
 export const extractCustomField = field => {
   const { content, values } = field;
   if (isEmpty(values)) {
@@ -190,6 +213,6 @@ export const getUserPermittedModules = (user) => {
       }
     }
   });
-  
+
   return modules;
 };
