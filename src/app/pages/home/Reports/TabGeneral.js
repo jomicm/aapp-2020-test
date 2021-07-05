@@ -312,6 +312,8 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     } else if (values.selectedReport === 'user') {
       return [{ "locationsTable.parent": { "$in": userLocations } }];
     }
+
+    return null;
   };
 
   const loadProcessData = () => {
@@ -544,12 +546,15 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
 
     const condition = collectionName === 'processLive' ? await getFiltersProcess() : null;
 
+    const dateFilters = getDateFilters();
+
     getDBComplex(({
       collection: collectionName,
-      condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : collectionName === 'user' ? [{ "locationsTable.parent": { "$in": userLocations } }] : null
+      condition: collectionName === 'processLive' ? condition : dateFilters
     }))
       .then((response) => response.json())
-      .then(({ response }) => {
+      .then((data) => {
+        const { response } = data;
         let csv;
         const { name } = modules.find(({ id }) => id === collectionName);
         let headers = [];
@@ -662,7 +667,6 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
 
       const condition = collectionName === 'processLive' ? await getFiltersProcess() : null;
       const dateFilters = getDateFilters();
-      console.log(dateFilters);
       getCountDB({
         collection: collectionName,
         queryLike: tableControl.search ? queryLike : null,
@@ -744,15 +748,19 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     const { id } = values || {};
 
     if (filter === 'module' && module === 'fieldValuesRepeated' && id) {
-      const baseFieldId  = baseFieldsPerModule[id];
+      const baseFieldId = baseFieldsPerModule[id];
       let baseFields = [];
 
       if (Array.isArray(baseFieldId)) {
         baseFieldId.forEach((key) => {
-          Object.entries(allBaseFields[key] || []).forEach((field) => baseFields.push({ id: field[1].validationId, label: field[1].compLabel }));
+          Object.entries(allBaseFields[key] || []).forEach((field) => {
+            if (field[0] !== 'id') baseFields.push({ id: field[1].validationId, label: field[1].compLabel });
+          });
         });
       } else {
-        Object.entries(allBaseFields[baseFieldId] || []).forEach((field) => baseFields.push({ id: field[1].validationId, label: field[1].compLabel }));
+        Object.entries(allBaseFields[baseFieldId] || []).forEach((field) => {
+          if (field[0] !== 'id') baseFields.push({ id: field[1].validationId, label: field[1].compLabel });
+        });
       }
 
       setSpecificFiltersOptions(prev => ({

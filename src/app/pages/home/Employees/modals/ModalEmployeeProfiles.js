@@ -216,7 +216,6 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id, polic
         const imageURL = getImageURL(id, 'employeeProfiles', fileExt);
         const obj = { name, depreciation, imageURL };
         setValues(obj);
-        executePolicies('OnLoad', 'employees', 'references', policies, data.response);
         setCustomFieldsTab(customFieldsTab);
         setIsAssetRepository(isAssetRepository);
         setProfilePermissions(profilePermissions);

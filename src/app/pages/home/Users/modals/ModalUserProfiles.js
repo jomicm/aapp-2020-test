@@ -194,7 +194,6 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id, policies 
       .then(response => response.json())
       .then(data => {
         const { name, depreciation, customFieldsTab, profilePermissions, fileExt } = data.response;
-        executePolicies('OnLoad', 'user', 'references', policies, data.response);
         const obj = {
           name,
           depreciation,

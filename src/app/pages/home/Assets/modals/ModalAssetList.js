@@ -700,20 +700,19 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
         const locationPath = await getLocationPath(location);
         const assignedParent = assets.find(({ id }) => id === parent);
         const assignedParentText = assignedParent ? `${assignedParent.name || 'No Name'}, ${assignedParent.brand || 'No Brand'}, ${ assignedParent.model ||'No Model'}, ${ assignedParent.serial ||'No Serial Number'}, ${ assignedParent.EPC ? `(${assignedParent.EPC})` : 'No EPC'}` : 'No Parent Assigned';
-        executePolicies('OnLoad', 'assets', 'list', policies, data.response);
         setAssetLocation(location);
         setLayoutMarker(layoutCoords) //* null if not specified
         setMapMarker(mapCoords) //* null if not specified
         setAssetsBeforeSaving(children ? children : []) //* null if not specified
 
         getOneDB('references/', referenceId)
-          .then((response) => response.json())
-          .then(async (data) => {
-            const { selectedProfile: { value, label } } = data.response;
-            const onLoadResponse = await executeOnLoadPolicy(value, 'assets', 'list', policies);
+          .then((referenceResponse) => referenceResponse.json())
+          .then(async (referenceData) => {
+            const { selectedProfile: { value, label }, fileExt } = referenceData.response;
+            const onLoadResponse = await executeOnLoadPolicy(value, 'assets', 'list', policies, data.response);
             setCustomFieldsPathResponse(onLoadResponse);
             setValues(prev => ({ ...prev, category: { value, label } }));
-            setReferenceImage(getImageURL(referenceId, 'references', data.response.fileExt));
+            setReferenceImage(getImageURL(referenceId, 'references', fileExt));
           })
           .catch((error) => showCustomAlert(({
             type: 'error',

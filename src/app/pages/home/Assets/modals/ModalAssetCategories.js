@@ -205,7 +205,6 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id, polici
       .then(response => response.json())
       .then(data => {
         const { name, depreciation, customFieldsTab, fileExt } = data.response;
-        executePolicies('OnLoad', 'assets', 'categories', policies,  data.response);
         const imageURL = getImageURL(id, 'categories', fileExt);
         const obj = { name, depreciation, imageURL };
         console.log('obj:', obj)

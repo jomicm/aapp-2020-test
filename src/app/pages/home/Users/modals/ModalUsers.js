@@ -347,7 +347,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadProfiles, reloadTable, id, 
       .then(response => response.json())
       .then(async (data) => {
         const { name, lastName, email, groups, customFieldsTab, profilePermissions, idUserProfile, locationsTable, fileExt, selectedBoss } = data.response;
-        const onLoadResponse = await executeOnLoadPolicy(idUserProfile, 'user', 'list', policies);
+        const onLoadResponse = await executeOnLoadPolicy(idUserProfile, 'user', 'list', policies, data.response);
         setCustomFieldsPathResponse(onLoadResponse);
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);

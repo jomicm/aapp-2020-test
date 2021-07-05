@@ -334,7 +334,7 @@ const ModalLocationList = ({
           profileName
         } = data.response;
         const imageURL = realParent !== "root" ? getImageURL(realParent, 'locationsReal', parentExt) : '';
-        const onLoadResponse = await executeOnLoadPolicy(profileId, 'locations', 'list', policies);
+        const onLoadResponse = await executeOnLoadPolicy(profileId, 'locations', 'list', policies, data.response);
         setCustomFieldsPathResponse(onLoadResponse);
         setValues({ ...values, name, profileId, profileLevel, profileName, customFieldsTab, imageURL });
         setMarkers(imageInfo !== null ? mapInfo ? [{ top: imageInfo.top, left: imageInfo.left }] :[] : []);

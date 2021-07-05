@@ -294,7 +294,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
       .then(async(data) => {
         const { name, brand, model, price, depreciation, customFieldsTab, fileExt, selectedProfile } = data.response;
         const { value } = selectedProfile;
-        const onLoadResponse = await executeOnLoadPolicy(value, 'assets', 'references', policies);
+        const onLoadResponse = await executeOnLoadPolicy(value, 'assets', 'references', policies, data.response);
         setCustomFieldsPathResponse(onLoadResponse);
         setValues({
           ...values,

@@ -253,7 +253,6 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, polic
             isLocationControl: isLocationControl || false,
             imageURL: getImageURL(id, 'locations', fileExt)
           };
-          executePolicies('OnLoad', 'locations', 'profiles', policies, data.response);
           setValues(obj);
           setCustomFieldsTab(customFieldsTab);
           setIsNew(false);

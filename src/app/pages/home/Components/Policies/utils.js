@@ -31,53 +31,33 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies,
     tokenEnabled
   }) => {
     if (!messageDisabled) {
-      let convertedMessage;
-      let newChars = [];
-      const variables = getVariables(html);
-
-      if (variables.length) {
-        console.log(record);
-        variables.forEach(({ varName }) => {
-          const recordField = allBaseFields[modulesCatalogues[module][selectedCatalogue]][varName]?.realId;
-          const newMessage = record[recordField] || record[varName];
-
-          if (Array.isArray(newMessage)) {
-            const values = newMessage.map(({ name, label }) => name || label).join(', ');
-            newChars.push(values);
-          } else if (typeof newMessage === 'object') {
-            const value = newMessage.name || newMessage.label;
-            newChars.push(value);
-          } else if (typeof newMessage === 'string' || typeof newMessage === 'number') {
-            newChars.push(newMessage.toString());
-          } else {
-            newChars.push('Data not found');
-          }
-        });
-
-        convertedMessage = replaceBulk(html, variables.map(({ varName }) => `%{${varName}}`), newChars);
-      }
+      const convertedHTML = changeVariables(html, record, module, selectedCatalogue);
+      const convertedSubject = changeVariables(subjectMessage, record, module, selectedCatalogue);
 
       const messageObj = {
         formatDate: rawDate,
         from: messageFrom,
-        html: convertedMessage || html,
+        html: convertedHTML || html,
         read: false,
         status: 'new',
-        subject: subjectMessage,
+        subject: convertedSubject || subjectMessage,
         timeStamp,
         to: messageTo
       };
       simplePost(collections.messages, messageObj);
     }
     if (!notificationDisabled) {
+      const convertedMessage = changeVariables(messageNotification, record, module, selectedCatalogue);
+      const convertedSubject = changeVariables(subjectNotification, record, module, selectedCatalogue);
+
       const notificationObj = {
         formatDate: rawDate,
         from: notificationFrom,
         icon,
-        message: messageNotification,
+        message: convertedMessage || messageNotification,
         read: false,
         status: 'new',
-        subject: subjectNotification,
+        subject: convertedSubject || subjectNotification,
         timeStamp,
         to: notificationTo
       };
@@ -85,10 +65,11 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies,
     }
     if (!apiDisabled) {
       try {
+        const convertedURL = changeVariables(urlAPI, record, module, selectedCatalogue);
         const validBody = JSON.parse(bodyAPI);
         const headers = { Authorization: `Bearer ${token}` };
         await axios.post(
-          urlAPI,
+          convertedURL || urlAPI,
           validBody,
           { ...(tokenEnabled ? { headers } : {}) }
         );
@@ -99,7 +80,7 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies,
   })
 };
 
-export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, policies) => {
+export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, policies, record = {}) => {
   const filteredPolicies = policies.find(
     (policy) => policy.selectedAction === 'OnLoad' && policy.selectedOnLoadCategory?.id === itemID && policy.selectedCatalogue === selectedCatalogue && policy.module === module
   );
@@ -111,9 +92,10 @@ export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, pol
   let res;
 
   if (!onLoadDisabled) {
-    if (tokenOnLoadEnabled) {      
+    if (tokenOnLoadEnabled) {
       try {
-        const { data } = await axios.get(urlOnLoad, {
+        const convertedURL = changeVariables(urlOnLoad, record, module, selectedCatalogue);
+        const { data } = await axios.get(convertedURL || urlOnLoad, {
           headers: {
             Authorization: `Bearer ${tokenOnLoad}`,
           }
@@ -124,7 +106,8 @@ export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, pol
       }
     } else {
       try {
-        const { data } = await axios.get(urlOnLoad);
+        const convertedURL = changeVariables(urlOnLoad, record, module, selectedCatalogue);
+        const { data } = await axios.get(convertedURL || urlOnLoad);
         res = handlePathResponse(data, onLoadFields);
       } catch (error) {
         console.log(error);
@@ -144,15 +127,44 @@ const handlePathResponse = (response, onLoadFields, res = {}) => {
 };
 
 const replaceBulk = (str, findArray, replaceArray) => {
-  var i, regex = [], map = {}; 
-  for( i=0; i<findArray.length; i++ ){ 
-    regex.push( findArray[i].replace(/([-[\]{}()*+?.\\^$|#,])/g,'\\$1') );
-    map[findArray[i]] = replaceArray[i]; 
+  var i, regex = [], map = {};
+  for (i = 0; i < findArray.length; i++) {
+    regex.push(findArray[i].replace(/([-[\]{}()*+?.\\^$|#,])/g, '\\$1'));
+    map[findArray[i]] = replaceArray[i];
   }
   regex = regex.join('|');
-  str = str.replace( new RegExp( regex, 'g' ), function(matched) {
+  str = str.replace(new RegExp(regex, 'g'), function (matched) {
     return map[matched];
   });
 
   return str;
 }
+
+const changeVariables = (text, record, module, selectedCatalogue) => {
+  let convertedMessage = null;
+  let newChars = [];
+  const variables = getVariables(text);
+
+  if (variables.length) {
+    variables.forEach(({ varName }) => {
+      const recordField = allBaseFields[modulesCatalogues[module][selectedCatalogue]][varName]?.realId;
+      const newMessage = record[recordField] || record[varName];
+
+      if (Array.isArray(newMessage)) {
+        const values = newMessage.map(({ name, label }) => name || label).join(', ');
+        newChars.push(values);
+      } else if (typeof newMessage === 'object') {
+        const value = newMessage.name || newMessage.label;
+        newChars.push(value);
+      } else if (typeof newMessage === 'string' || typeof newMessage === 'number') {
+        newChars.push(newMessage.toString());
+      } else {
+        newChars.push('Data not found');
+      }
+    });
+
+    convertedMessage = replaceBulk(text, variables.map(({ varName }) => `%{${varName}}`), newChars);
+  }
+
+  return convertedMessage;
+};

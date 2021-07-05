@@ -558,7 +558,7 @@ const ModalEmployees = ({
           fileExt,
           assetsAssigned = []
         } = data.response;
-        const onLoadResponse = await executeOnLoadPolicy(idUserProfile, 'employees', 'list', policies);
+        const onLoadResponse = await executeOnLoadPolicy(idUserProfile, 'employees', 'list', policies, data.response);
         setCustomFieldsPathResponse(onLoadResponse);
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
