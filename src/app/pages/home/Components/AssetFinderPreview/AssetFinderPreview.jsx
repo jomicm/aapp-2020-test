@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useEffect, useState } from 'react';
+import { omit } from "lodash";
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import {
@@ -11,9 +12,11 @@ import {
   CardContent,
   IconButton,
   InputBase,
-  Typography
+  Typography,
+  Tooltip
 } from '@material-ui/core';
 import SearchIcon from '@material-ui/icons/Search';
+import DoneIcon from '@material-ui/icons/Done';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ThumbUpIcon from '@material-ui/icons/ThumbUp';
 import ThumbDownIcon from '@material-ui/icons/ThumbDown';
@@ -35,23 +38,36 @@ const AssetFinder = ({
   isPreviewTable = false,
   processType = 'default',
   processInfo,
-  assetEditionValues,
-  setAssetEditionValues
+  updateAssetValues = () => {},
+  showAssetEdition = () => {},
+  isLinkedToProcess = false,
 }) => {
-  const collection = isAssetReference ? 'references' : 'assets';
   const classes = useStyles();
-  const [searchText, setSearchText] = useState('');
-  const [assetRows, setAssetRows] = useState(rows);
+  const collection = isAssetReference ? 'references' : 'assets';
   const [selectedRows, setSelectedRows] = useState([]); 
   const [selectedAsset, setSelectedAsset] = useState(defaultAsset);
+  const [searchText, setSearchText] = useState('');
+  const [assetRows, setAssetRows] = useState(rows);
 
   useEffect(() => {
-    // console.log('SelectionTable:', isSelectionTable, 'PreviewTable:', isPreviewTable)
-  }, [isSelectionTable, isPreviewTable, processInfo])
+    if(rows === assetRows || !rows.length || !rows) {
+      return;
+    }
+    setAssetRows(rows);
+  }, [rows])
 
   const handleChangeValues = (values) => {
-    // console.log('values2:', {...selectedAsset,  ...values})
-    setAssetEditionValues({...selectedAsset, ...values}, selectedAsset.id)
+    const newValues = omit(values, ['id']);
+    const idsToChange = selectedRows.map(({id}) => id);
+    const temporalCartRows = [...assetRows];
+
+    const newCartRows = temporalCartRows.map((asset) => {
+      if(idsToChange.includes(asset.id)){
+        return {...asset, ...newValues};
+      }
+      return asset;
+    })
+    setAssetRows(newCartRows);
   }
   
   const handleOnSearchClick = () => {
@@ -98,14 +114,17 @@ const AssetFinder = ({
       .catch(error => console.log(error));
   };
 
+  const isAssetEdition = () => {
+    return processInfo?.processData?.stages[`stage_${processInfo.processData.currentStage}`]?.isAssetEdition
+  }
+
   const handleSelectionChange = (selection) => {
     onSelectionChange(selection);
     if (selection.rows.length) {
       setSelectedRows(selection.rows);
-      // console.log('selection:', selection.rows.slice(-1)[0])
-      const { brand, model, name, id, fileExt } = selection.rows.slice(-1)[0];
+      const {id, fileExt } = selection.rows.slice(-1)[0];
       const picUrl = fileExt ? getImageURL(id, collection, fileExt) : defaultAsset.picUrl;
-      setSelectedAsset(selection.rows.slice(-1)[0]);
+      setSelectedAsset({...selection.rows.slice(-1)[0], picUrl});
     } else {
       setSelectedRows([]);
       setSelectedAsset(defaultAsset);
@@ -145,8 +164,10 @@ const AssetFinder = ({
           </button>
           <div style={{ display: 'flex' }}>
             {
-              processType === 'creation' ? (
+              processType === 'creation' && !isLinkedToProcess ? (
                 <Table columns={[...getColumns(isAssetReference), locationColumn]} rows={rows} setTableRowsInner={handleSelectionChange} />
+              ) : processType === 'creation' && isLinkedToProcess ? (
+                <Table columns={[...getColumns(isAssetReference), originalLocationColumn]} rows={rows} setTableRowsInner={handleSelectionChange} />
               ) : processType === 'decommission' || processType === 'maintenance' ? (
                 <Table columns={[...getColumns(isAssetReference), originalLocationColumn]} rows={rows} setTableRowsInner={handleSelectionChange} />
               ) : processType === 'movement' || processType === 'short' ? (
@@ -164,25 +185,35 @@ const AssetFinder = ({
                   <AssetPreviewBox selectedAsset={selectedAsset} />
                 </AccordionDetails>
               </Accordion>
-              {/* {
-                processType === 'creation' && 
+              {
+                processType === 'creation' &&
                 <Accordion>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />} >
-                    <Typography>Asset Edition</Typography>
+                    <div style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                      <Typography>Asset Edition</Typography>
+                      <Tooltip title='Apply Changes'>
+                        <IconButton onClick={() => updateAssetValues(assetRows)} className={classes.iconButton} aria-label="search" size='small'>
+                          <DoneIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </div>
                   </AccordionSummary>
                   <AccordionDetails>
-                    <AssetEdition assetEditionValues={assetEditionValues} assetEditionValues={selectedAsset} setAssetEditionValues={(values) => handleChangeValues(values)} />
+                    <AssetEdition assetEditionValues={selectedAsset} setAssetEditionValues={(values) => handleChangeValues(values)} />
                   </AccordionDetails>
                 </Accordion>
-              } */}
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />} >
-                  <Typography>Set Location</Typography>
-                </AccordionSummary>
-                <AccordionDetails style={{ overflow: 'hidden', height: '275px' }}>
-                  <LocationsTreeView onTreeElementClick={handleTreeElement} />
-                </AccordionDetails>
-              </Accordion>
+              }
+              {
+                !isLinkedToProcess &&
+                <Accordion>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />} >
+                    <Typography>Set Location</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails style={{ overflow: 'hidden', height: '275px' }}>
+                    <LocationsTreeView onTreeElementClick={handleTreeElement} />
+                  </AccordionDetails>
+                </Accordion>
+              }
             </div>
           </div>
         </div>
@@ -211,13 +242,20 @@ const AssetFinder = ({
                 </AccordionDetails>
               </Accordion>
               {
-                processType === 'creation' && processInfo?.processData?.stages[`stage_${processInfo.currentStage}`]?.isAssetEdition &&
+                processType === 'creation' && isAssetEdition() && showAssetEdition() &&
                 <Accordion>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />} >
-                    <Typography>Asset Edition</Typography>
+                    <div style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                      <Typography>Asset Edition</Typography>
+                      <Tooltip title='Apply Changes'>
+                        <IconButton onClick={() => updateAssetValues(assetRows)} className={classes.iconButton} aria-label="search" size='small'>
+                          <DoneIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </div>
                   </AccordionSummary>
                   <AccordionDetails>
-                    <AssetEdition assetEditionValues={assetEditionValues} assetEditionValues={selectedAsset} setAssetEditionValues={(values) => setAssetEditionValues(values)}/>
+                    <AssetEdition assetEditionValues={selectedAsset} setAssetEditionValues={(values) => handleChangeValues(values)}/>
                   </AccordionDetails>
                 </Accordion>
               }
@@ -277,7 +315,6 @@ const getColumns = (isAssetReference) => {
   } else {
     return [
       ...assetReference,
-      { field: 'assigned', headerName: 'Assigned', width: 90 },
       { field: 'id', headerName: 'EPC', width: 200 },
       { field: 'sn', headerName: 'Serial Number', width: 200 }
     ]

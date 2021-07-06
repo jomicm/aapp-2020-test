@@ -20,7 +20,9 @@ const LiveProcessTab = ({
   processType,
   setCartRows,
   onSetRows,
-  user
+  user,
+  rows,
+  setProcessCartInfo,
 }) => {
   const [tabIndex, setTabIndex] = useState(0);
   const [openModal, setOpenModal] = useState(false);
@@ -31,12 +33,19 @@ const LiveProcessTab = ({
 
   useEffect(() => {
     if(Object.keys(processInfo).length){
-      setLocalCartRows(processInfo.cartRows);
       const stageKeys = Object.keys(processInfo.processData.stages);
       const _currentStage = processInfo.processData.stages[stageKeys[processInfo.processData.currentStage-1]];
       setCurrentStage(_currentStage);
     }
   }, [processInfo]);
+
+  useEffect(() => {
+    setLocalCartRows(rows);
+  }, [rows]);
+
+  const handleChangeAssetValues = (newCartRows) => {
+    setProcessCartInfo(newCartRows);
+  };
 
   const handleRejectionClick = () => {
     if (selection.length) {
@@ -63,7 +72,10 @@ const LiveProcessTab = ({
   const handleSelection = ({ rows }) => {
     setSelection(rows);
   };
-  const showButtons = () => {
+  const showButtons = (isCreation = false) => {
+   if(isCreation){
+     return true;
+   }
    if(!currentStage || !Object.keys(currentStage).length > 0){
      return false;
    };
@@ -204,6 +216,8 @@ const LiveProcessTab = ({
               onSetRows={setCartRows}
               processType={processType}
               processInfo={processInfo}
+              updateAssetValues={(newCartRows) => handleChangeAssetValues(newCartRows)}
+              showAssetEdition={() => showButtons(processInfo.processData.currentStage === 0)}
             />
           </div>
         </TabContainer>
