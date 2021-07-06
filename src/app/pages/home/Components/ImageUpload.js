@@ -29,7 +29,6 @@ const ImageUpload = ({ children, setImage = () => { }, image = null, disabled = 
   };
 
   useEffect(() => {
-
     if (image && image?.length) {
       console.log(image);
       getFile();
