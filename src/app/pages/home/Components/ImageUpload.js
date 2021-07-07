@@ -12,6 +12,7 @@ const ImageUpload = ({ children, setImage = () => { }, image = null, disabled = 
   });
   const updateValues = e => {
     const file = e.target.files[0];
+    console.log(file);
     setImage(file);
     setValues({
       ...values,
@@ -30,7 +31,6 @@ const ImageUpload = ({ children, setImage = () => { }, image = null, disabled = 
 
   useEffect(() => {
     if (image && image?.length) {
-      console.log(image);
       getFile();
     }
 

@@ -699,6 +699,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
         .then(response => response.json())
         .then(data => {
           const { response } = data;
+          console.log(response);
           const baseHeaders = getGeneralFieldsHeaders(collection.id);
           if (collectionName === 'processLive') {
             const headerIndexToChange = baseHeaders.findIndex(({ id }) => id === 'dueDate');

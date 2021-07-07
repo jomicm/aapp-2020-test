@@ -177,6 +177,8 @@ const ModalUsers = ({ showModal, setShowModal, reloadProfiles, reloadTable, id, 
       values.selectedBoss = { ...values.selectedBoss, name, lastName };
     }
 
+    console.log(body.profilePermissions);
+
     if (!id) {
       body.idUserProfile = idUserProfile;
       postDBEncryptPassword('user', body)

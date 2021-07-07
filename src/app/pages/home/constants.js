@@ -231,7 +231,6 @@ export const allBaseFields = {
     serialNumber: { validationId: 'serialNumber', component: 'textField', compLabel: 'Serial Number' },
     notes: { validationId: 'notes', component: 'textField', compLabel: 'Notes' },
     quantity: { validationId: 'quantity', component: 'textField', compLabel: 'Quantity' },
-    location: { validationId: 'location', component: 'textField', compLabel: 'Location' },
   },
 };
 
