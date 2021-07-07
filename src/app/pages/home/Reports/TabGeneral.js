@@ -655,7 +655,6 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
       result.push({ "processLiveId": { "$in": lookById } });
     }
 
-    console.log(result);
     return result.length > 0 ? result : null;
   };
 
