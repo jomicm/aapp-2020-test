@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useEffect, useState } from 'react';
+import { omit } from "lodash";
 import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import {
@@ -38,18 +39,18 @@ const AssetFinder = ({
   isPreviewTable = false,
   processType = 'default',
   processInfo,
-  assetEditionValues,
-  setAssetEditionValues
+  updateAssetValues = () => {},
+  showAssetEdition = () => {},
+  isLinkedToProcess = false,
 }) => {
-  const collection = isAssetReference ? 'references' : 'assets';
   const classes = useStyles();
-  const [searchText, setSearchText] = useState('');
-  const [assetRows, setAssetRows] = useState(rows);
+  const collection = isAssetReference ? 'references' : 'assets';
   const [selectedRows, setSelectedRows] = useState([]); 
   const [selectedAsset, setSelectedAsset] = useState(defaultAsset);
   const [locationSelected, setLocationSelected] = useState();
   const [accordionControled, setAccordionControled] = useState({
     location: false,
+    assetEditon: false,
   });
 
   const extractValidAssets = (cartRows, { stages }) => {
@@ -96,10 +97,28 @@ const AssetFinder = ({
       }
     }    
   }, [processInfo])
+  const [searchText, setSearchText] = useState('');
+  const [assetRows, setAssetRows] = useState(rows);
+
+  useEffect(() => {
+    if(rows === assetRows || !rows.length || !rows) {
+      return;
+    }
+    setAssetRows(rows);
+  }, [rows])
 
   const handleChangeValues = (values) => {
-    // console.log('values2:', {...selectedAsset,  ...values})
-    setAssetEditionValues({...selectedAsset, ...values}, selectedAsset.id)
+    const newValues = omit(values, ['id']);
+    const idsToChange = selectedRows.map(({id}) => id);
+    const temporalCartRows = [...assetRows];
+
+    const newCartRows = temporalCartRows.map((asset) => {
+      if(idsToChange.includes(asset.id)){
+        return {...asset, ...newValues};
+      }
+      return asset;
+    })
+    setAssetRows(newCartRows);
   }
   
   const handleOnSearchClick = () => {
@@ -146,14 +165,17 @@ const AssetFinder = ({
       .catch(error => console.log(error));
   };
 
+  const isAssetEdition = () => {
+    return processInfo?.processData?.stages[`stage_${processInfo.processData.currentStage}`]?.isAssetEdition
+  }
+
   const handleSelectionChange = (selection) => {
     onSelectionChange(selection);
     if (selection.rows.length) {
       setSelectedRows(selection.rows);
-      // console.log('selection:', selection.rows.slice(-1)[0])
-      const { brand, model, name, id, fileExt } = selection.rows.slice(-1)[0];
+      const {id, fileExt } = selection.rows.slice(-1)[0];
       const picUrl = fileExt ? getImageURL(id, collection, fileExt) : defaultAsset.picUrl;
-      setSelectedAsset(selection.rows.slice(-1)[0]);
+      setSelectedAsset({...selection.rows.slice(-1)[0], picUrl});
     } else {
       setSelectedRows([]);
       setSelectedAsset(defaultAsset);
@@ -197,8 +219,10 @@ const AssetFinder = ({
           </button>
           <div style={{ display: 'flex' }}>
             {
-              processType === 'creation' ? (
+              processType === 'creation' && !isLinkedToProcess ? (
                 <Table columns={[...getColumns(isAssetReference), locationColumn]} rows={rows} setTableRowsInner={handleSelectionChange} />
+              ) : processType === 'creation' && isLinkedToProcess ? (
+                <Table columns={[...getColumns(isAssetReference), originalLocationColumn]} rows={rows} setTableRowsInner={handleSelectionChange} />
               ) : processType === 'decommission' || processType === 'maintenance' ? (
                 <Table columns={[...getColumns(isAssetReference), originalLocationColumn]} rows={rows} setTableRowsInner={handleSelectionChange} />
               ) : processType === 'movement' || processType === 'short' ? (
@@ -216,36 +240,51 @@ const AssetFinder = ({
                   <AssetPreviewBox selectedAsset={selectedAsset} />
                 </AccordionDetails>
               </Accordion>
-              {/* {
-                processType === 'creation' && 
-                <Accordion>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />} >
-                    <Typography>Asset Edition</Typography>
+              {
+                processType === 'creation' &&
+                <Accordion expanded={accordionControled.assetEditon}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon onClick={() => setAccordionControled((prev) => ({...prev, assetEditon: !prev.assetEditon}))}/>} >
+                    <div style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                      <Typography>Asset Edition</Typography>
+                      {
+                        accordionControled.assetEditon && (
+                          <Tooltip title='Apply Changes'>
+                            <IconButton onClick={() => updateAssetValues(assetRows)} className={classes.iconButton} aria-label="search" size='small'>
+                              <DoneIcon />
+                            </IconButton>
+                          </Tooltip>
+                        )
+                      }
+                      
+                    </div>
                   </AccordionSummary>
                   <AccordionDetails>
-                    <AssetEdition assetEditionValues={assetEditionValues} assetEditionValues={selectedAsset} setAssetEditionValues={(values) => handleChangeValues(values)} />
+                    <AssetEdition assetEditionValues={selectedAsset} setAssetEditionValues={(values) => handleChangeValues(values)} />
                   </AccordionDetails>
                 </Accordion>
-              } */}
-              <Accordion expanded={accordionControled.location}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon onClick={() => setAccordionControled((prev) => ({...prev, location: !prev.location}))} />} >
-                  <div style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-                    <Typography>Set Location</Typography>
-                    {
-                      accordionControled.location && (
-                        <Tooltip title='Apply Location Selected'>
-                          <IconButton onClick={() => handleTreeElement()} className={classes.iconButton} aria-label="search" size='small'>
-                            <DoneIcon />
-                          </IconButton>
-                        </Tooltip>
-                      )
-                    }
-                  </div>
-                </AccordionSummary>
-                <AccordionDetails style={{ overflow: 'auto', height: '275px', marginBottom: '10px' }}>
-                  <LocationsTreeView onTreeElementClick={setLocationSelected} />
-                </AccordionDetails>
-              </Accordion>
+              }
+              {
+                !isLinkedToProcess &&
+                <Accordion expanded={accordionControled.location}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon onClick={() => setAccordionControled((prev) => ({...prev, location: !prev.location}))} />} >
+                    <div style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                      <Typography>Set Location</Typography>
+                      {
+                        accordionControled.location && (
+                          <Tooltip title='Apply Location Selected'>
+                            <IconButton onClick={() => handleTreeElement()} className={classes.iconButton} aria-label="search" size='small'>
+                              <DoneIcon />
+                            </IconButton>
+                          </Tooltip>
+                        )
+                      }
+                    </div>
+                  </AccordionSummary>
+                  <AccordionDetails style={{ overflow: 'auto', height: '275px', marginBottom: '10px' }}>
+                    <LocationsTreeView onTreeElementClick={setLocationSelected} />
+                  </AccordionDetails>
+                </Accordion>
+              }
             </div>
           </div>
         </div>
@@ -274,13 +313,20 @@ const AssetFinder = ({
                 </AccordionDetails>
               </Accordion>
               {
-                processType === 'creation' && processInfo?.processData?.stages[`stage_${processInfo.currentStage}`]?.isAssetEdition &&
+                processType === 'creation' && isAssetEdition() && showAssetEdition() &&
                 <Accordion>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />} >
-                    <Typography>Asset Edition</Typography>
+                    <div style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                      <Typography>Asset Edition</Typography>
+                      <Tooltip title='Apply Changes'>
+                        <IconButton onClick={() => updateAssetValues(assetRows)} className={classes.iconButton} aria-label="search" size='small'>
+                          <DoneIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </div>
                   </AccordionSummary>
                   <AccordionDetails>
-                    <AssetEdition assetEditionValues={assetEditionValues} assetEditionValues={selectedAsset} setAssetEditionValues={(values) => setAssetEditionValues(values)}/>
+                    <AssetEdition assetEditionValues={selectedAsset} setAssetEditionValues={(values) => handleChangeValues(values)}/>
                   </AccordionDetails>
                 </Accordion>
               }
@@ -340,7 +386,6 @@ const getColumns = (isAssetReference) => {
   } else {
     return [
       ...assetReference,
-      { field: 'assigned', headerName: 'Assigned', width: 90 },
       { field: 'id', headerName: 'EPC', width: 200 },
       { field: 'sn', headerName: 'Serial Number', width: 200 }
     ]

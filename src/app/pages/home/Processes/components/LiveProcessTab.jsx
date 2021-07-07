@@ -22,7 +22,9 @@ const LiveProcessTab = ({
   processType,
   setCartRows,
   onSetRows,
-  user
+  user,
+  rows,
+  setProcessCartInfo,
 }) => {
   const dispatch = useDispatch();
   const { showCustomAlert } = actions;
@@ -35,7 +37,6 @@ const LiveProcessTab = ({
 
   useEffect(() => {
     if(Object.keys(processInfo).length){
-      setLocalCartRows(processInfo.cartRows);
       const stageKeys = Object.keys(processInfo.processData.stages);
       const _currentStage = processInfo.processData.stages[stageKeys[processInfo.processData.currentStage-1]];
       setCurrentStage(_currentStage);
@@ -43,7 +44,7 @@ const LiveProcessTab = ({
   }, [processInfo]);
 
   useEffect(() => {
-    const allApproved = localCartRows.length === 0 ? false : localCartRows.map(({status}) => status).every((eachStatus) => eachStatus);
+    const allApproved = !localCartRows || localCartRows.length === 0 ? false : localCartRows.map(({status}) => status).every((eachStatus) => eachStatus);
     if (allApproved) {
       dispatch(showCustomAlert({
         type: 'success',
@@ -51,7 +52,15 @@ const LiveProcessTab = ({
         message: `All assets are validated`
       }));
     }
-  }, [localCartRows])
+  }, [localCartRows]);
+
+  useEffect(() => {
+    setLocalCartRows(rows);
+  }, [rows]);
+
+  const handleChangeAssetValues = (newCartRows) => {
+    setProcessCartInfo(newCartRows);
+  };
 
   const handleRejectionClick = () => {
     if (selection.length) {
@@ -78,7 +87,10 @@ const LiveProcessTab = ({
   const handleSelection = ({ rows }) => {
     setSelection(rows);
   };
-  const showButtons = () => {
+  const showButtons = (isCreation = false) => {
+   if(isCreation){
+     return true;
+   }
    if(!currentStage || !Object.keys(currentStage).length > 0){
      return false;
    };
@@ -220,6 +232,8 @@ const LiveProcessTab = ({
               onSetRows={setCartRows}
               processType={processType}
               processInfo={processInfo}
+              updateAssetValues={(newCartRows) => handleChangeAssetValues(newCartRows)}
+              showAssetEdition={() => showButtons(processInfo.processData.currentStage === 0)}
             />
           </div>
         </TabContainer>

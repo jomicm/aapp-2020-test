@@ -409,7 +409,6 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
       setProcessStages(processStages);
       setUsersProcess(usersProcess);
       setValidMessages(validMessages);
-      setValues(prev => ({ ...prev, selectedProcessType }));
     })
     .catch(error => console.log(error));
   }, [id]);
