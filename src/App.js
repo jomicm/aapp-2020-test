@@ -25,6 +25,12 @@ export default function App({ store, persistor, basename }) {
     };
   };
 
+  // window.addEventListener('storage', () => {
+  //   if (!localStorage.getItem('accessToken')) {
+  //     window.location.assign('/logout');
+  //   }
+  // });
+
   useEffect(() => {
     getDB('settingsGeneral')
       .then(response => response.json())

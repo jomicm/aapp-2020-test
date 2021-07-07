@@ -84,6 +84,7 @@ function Login(props) {
                   .then(({ response }) => {
                     disableLoading();
                     const { accessToken, email, fileExt, id, profilePermissions, selectedBoss: boss } = response;
+                    localStorage.setItem('accessToken', accessToken);
                     // global.token = accessToken;
                     const pic = fileExt ?
                       `${apiHost}/uploads/user/${id}.${fileExt}` :

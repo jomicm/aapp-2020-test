@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { getDB, postDB, getOneDB, updateDB } from '../../crud/api';
+import { getDB, postDB } from '../../crud/api';
 import { postFILE } from '../../crud/api';
 
 const {

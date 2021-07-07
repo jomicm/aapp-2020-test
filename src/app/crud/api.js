@@ -48,8 +48,7 @@ const getAPIPath = (
 const getAPIFilePath = (foldername) => `${host}${version}upload/${foldername}`;
 
 const getHeaders = (isFile = false) => {
-  const state = store.default.getState();
-  const token = state?.auth?.user?.accessToken || REACT_APP_TOKEN;
+  const token = localStorage.getItem('accessToken') || REACT_APP_TOKEN;
 
   const headers = new Headers();
   headers.set('Authorization', `Bearer ${token}`);
