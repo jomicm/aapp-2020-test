@@ -201,8 +201,8 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
     getOneDB('settingsLayoutsStages/', id[0])
       .then(response => response.json())
       .then(data => { 
-        const { name, selectedType, selectedStage, layout = '<p></p>',  sendMessageAt } = data.response;
-        setValues({ ...values, name, selectedType, selectedStage, sendMessageAt });
+        const { name, selectedType, selectedStage, layout = '<p></p>',  sendMessageAt, stageName } = data.response;
+        setValues({ ...values, name, selectedType, selectedStage, sendMessageAt, stageName });
         // htmlToDraft
         // setEditor(EditorState.createWithContent(htmlToDraft(layout)));
         const contentBlock = htmlToDraft(layout);
@@ -233,6 +233,7 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
           allCustomFields.push(...localCustomFields);
         });
         setStageCustomFields(allCustomFields);
+        setValues({ ...values, stageName: data.response.name });
       })
       .catch(error => console.log(error));
     }
@@ -278,7 +279,7 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
               <div className="profile-tab-wrapper">
                 <div name="Expansion Panel" style={{ width: '95%', margin: '15px' }}>
                   {/* Custom Controls */}
-                  <ExpansionPanel>
+                  <ExpansionPanel defaultExpanded={true}>
                     <ExpansionPanelSummary
                       expandIcon={<ExpandMoreIcon />}
                       aria-controls="panel1a-content"
@@ -306,8 +307,8 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
                             value={values.sendMessageAt || ''}
                             onChange={handleChange('sendMessageAt')}
                           >
-                            <MenuItem value={'end'}>After the approval</MenuItem>
-                            <MenuItem value={'start'}>Before the approval</MenuItem>
+                            <MenuItem value={'end'}>At the start</MenuItem>
+                            <MenuItem value={'start'}>At the end</MenuItem>
                           </Select>
                         </FormControl>
                         {/* <FormControl
@@ -342,7 +343,7 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
                     </ExpansionPanelDetails>
                   </ExpansionPanel>
                   {/* Tab Properties */}
-                  <ExpansionPanel>
+                  <ExpansionPanel defaultExpanded={true}>
                     <ExpansionPanelSummary
                       expandIcon={<ExpandMoreIcon />}
                       aria-controls="panel2a-content"
@@ -424,7 +425,7 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
                     </ExpansionPanelDetails>
                   </ExpansionPanel>
                   {/* Field Properties */}
-                  <ExpansionPanel>
+                  <ExpansionPanel defaultExpanded={true}>
                     <ExpansionPanelSummary
                       expandIcon={<ExpandMoreIcon />}
                       aria-controls="panel3a-content"

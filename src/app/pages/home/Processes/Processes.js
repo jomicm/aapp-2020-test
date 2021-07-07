@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { utcToZonedTime } from 'date-fns-tz';
 import { isEmpty } from 'lodash';
-import { Tabs } from '@material-ui/core';
+import { Chip, Tabs, Typography} from '@material-ui/core';
 import { actions } from '../../../store/ducks/general.duck';
 import {
   Portlet,
@@ -15,6 +15,8 @@ import {
 // AApp Components
 import { TabsTitles } from '../Components/Translations/tabsTitles';
 import TableComponent2 from '../Components/TableComponent2';
+import UsersPerStageCell from './components/UsersPerStageCell';
+import CustomizedToolTip from '../Components/CustomizedToolTip';
 import ModalProcessStages from './modals/ModalProcessStages';
 import ModalProcesses from './modals/ModalProcesses';
 
@@ -23,44 +25,174 @@ import { deleteDB, getDBComplex, getCountDB } from '../../../crud/api';
 import ModalYesNo from '../Components/ModalYesNo';
 import LiveProcesses from './components/LiveProcesses';
 
+const orderByCorrection = { 
+  creator: 'creationUserFullName',
+};
+
 const localStorageActiveTabKey = 'builderActiveTab';
 const Processes = (props) => {
   const dispatch = useDispatch();
   const { showDeletedAlert, showErrorAlert  } = actions;
   const [tab, setTab] = useState(0);
 
-  const createProcessStageRow = (id, name, fn, type, custom, notification, creator, creationDate, updateDate) => {
-    return { id, name, function: fn, type, custom, notification, creator, creationDate, updateDate };
+  const createProcessStageRow = (id, name, custom, notifications, approvals, creator, creationDate, updateDate) => {
+    return { id, name, custom, notifications, approvals, creator, creationDate, updateDate };
   };
-  const createProcessRow = (id, name, numberOfStages, creator, creationDate, updateDate) => {
-    return { id, name, numberOfStages, creator, creationDate, updateDate};
+  const createProcessRow = (id, name, numberOfStages, selectedProcessType, notifications, approvals,  creator, creationDate, updateDate) => {
+    return { id, name, numberOfStages, selectedProcessType, notifications, approvals, creator, creationDate, updateDate};
   };
 
   const processStagesHeadRows = [
     { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
-    { id: 'function', numeric: false, disablePadding: false, label: 'Function' },
-    { id: 'type', numeric: false, disablePadding: false, label: 'Type' },
-    { id: 'custom', numeric: false, disablePadding: false, label: 'Custom' },
-    { id: 'notification', numeric: false, disablePadding: false, label: 'Notification' },
+    { id: 'custom', numeric: false, disablePadding: false, label: 'Custom', sortByDisabled: true },
+    { id: 'notifications', numeric: false, disablePadding: false, label: 'Notifications', sortByDisabled: true, renderCell: (value) => {
+      const users = value.map(({name, lastName, email}) => `${name} ${lastName} (${email})`);
+      return (
+        <div style={{ display:'table-cell', verticalAlign: 'middle', textAlign:'center', padding: '16px', borderBottom: '1px solid rgba(224, 224, 224, 1)'}}>
+          {
+            users.length > 0 && (
+              <CustomizedToolTip 
+                tooltipContent={
+                  <ul style={{marginTop: '10px'}}>
+                    {
+                      users.map((user) => (
+                        <li style={{ marginRight: '10px' }}>{user}</li>
+                      ))
+                    }
+                  </ul>
+                }
+                content = {
+                  <Chip
+                    label={`Users: ${users.length}`}
+                    style={{ backgroundColor: '#8e8e8e', height: '28px' }}
+                    color='secondary'
+                    onClick={() => {}}
+                  />
+                }
+              />
+            )
+          }
+          {
+            users.length === 0 && (
+              <il> 
+                <Typography style={{ fontSize: '0.875rem' }}>
+                  N/A
+                </Typography>
+              </il>
+            )
+          }
+        </div>
+      ) 
+    }},
+    { id: 'approvals', numeric: false, disablePadding: false, label: 'Approvals', sortByDisabled: true,  renderCell: (value) => {
+      const users = value.map(({name, lastName, email}) => `${name} ${lastName} (${email})`);
+      return (
+        <div style={{ display:'table-cell', verticalAlign: 'middle', textAlign:'center', padding: '16px', borderBottom: '1px solid rgba(224, 224, 224, 1)'}}>
+          {
+            users.length > 0 && (
+              <CustomizedToolTip 
+                tooltipContent={
+                  <ul style={{marginTop: '10px'}}>
+                    {
+                      users.map((user) => (
+                        <li style={{ marginRight: '10px' }}>{user}</li>
+                      ))
+                    }
+                  </ul>
+                }
+                content = {
+                  <Chip
+                    label={`Users: ${users.length}`}
+                    style={{ backgroundColor: '#8e8e8e', height: '28px'}}
+                    color='secondary'
+                    onClick={() => {}}
+                  />
+                }
+              />
+            )
+          }
+          {
+            users.length === 0 && (
+              <il> 
+                <Typography style={{ fontSize: '0.875rem' }}>
+                  N/A
+                </Typography>
+              </il>
+            )
+          }
+        </div>
+      ) 
+    }},
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator' },
     { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date' },
     { id: "updateDate", numeric: false, disablePadding: false, label: "Update Date", searchByDisabled: true}
   ];
 
-  const liveProcessesHeadRows = [
-    { id: 'folio', numeric: false, disablePadding: false, label: 'Folio' },
-    { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
-    { id: 'type', numeric: false, disablePadding: false, label: 'Type' },
-    { id: 'date', numeric: false, disablePadding: false, label: 'Date' },
-    { id: 'approvals', numeric: false, disablePadding: false, label: 'Approvals' },
-    { id: 'status', numeric: false, disablePadding: false, label: 'Status' },
-    { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
-    { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true }
-  ];
-
   const processesHeadRows = [
     { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
-    { id: 'numberOfStages', numeric: false, disablePadding: false, label: 'Number of Stages' },
+    { id: 'numberOfStages', numeric: false, disablePadding: false, label: 'Number of Stages', sortByDisabled: true, renderCell: (value = []) => {
+      return (
+        <div style={{ display:'table-cell', verticalAlign: 'middle', textAlign:'center', padding: '16px', borderBottom: '1px solid rgba(224, 224, 224, 1)'}}>
+          {
+            value.length > 0 && (
+              <CustomizedToolTip 
+                tooltipContent={
+                  <ol style={{marginTop: '15px', marginRight: '20px'}}>
+                    {
+                      value.map(({ name, goBackEnabled, goBackTo }) => (
+                        <li style={{ marginTop: '10px' }}>
+                            <h6>{` ${name}`}</h6>
+                            {
+                              goBackEnabled && (
+                                <ul style={{ paddingLeft: '5px' }}>
+                                  <li style={{ marginBottom: '5px', fontWeight: 'normal', color: '#b2b2b2'}}>
+                                    <p>Go Back To: <i>{value.find(({id}) => id === goBackTo)?.name || "Coulnd't found the stage" }</i></p>
+                                  </li>
+                                </ul>
+                              )
+                            }
+                        </li>
+                      ))
+                    }
+                  </ol>
+                }
+                content = {
+                  <Chip
+                    label={`Stages: ${value.length}`}
+                    style={{ backgroundColor: '#8e8e8e', height: '28px' }}
+                    color='secondary'
+                    onClick={() => {}}
+                  />
+                }
+              />
+            )
+          }
+          {
+            value.length === 0 && (
+              <Chip
+                label={`No Stages`}
+                style={{ backgroundColor: '#8e8e8e', height: '28px' }}
+                color='secondary'
+                onClick={() => {}}
+              />
+            )
+          }
+        </div>
+      ) 
+    }},
+    { id: 'selectedProcessType', numeric: false, disablePadding: false, label: 'Type'},
+    { id: 'notifications', numeric: false, disablePadding: false, label: 'Notifications', searchByDisabled: true, sortByDisabled: true, renderCell: (value) => {
+      const users = [].concat(...value.map(({users}) => (users))).length;
+      return (
+        <UsersPerStageCell number={users} values={value}/>
+      ) 
+    }},
+    { id: 'approvals', numeric: false, disablePadding: false, label: 'Approvals', searchByDisabled: true, sortByDisabled: true, renderCell: (value) => {
+      const users = [].concat(...value.map(({users}) => (users))).length;
+      return (
+        <UsersPerStageCell number={users} values={value}/>
+      ) 
+    }},
     { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
     { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true },
     { id: "updateDate", numeric: false, disablePadding: false, label: "Update Date", searchByDisabled: true}
@@ -133,11 +265,11 @@ const Processes = (props) => {
         .then(data => {
           if (collectionName === 'processStages') {
             const rows = data.response.map(row => {
-              const { functions, selectedFunction, types, selectedType, customFieldTabs, creationUserFullName, creationDate, updateDate } = row;
-              const isCustom = String(!isEmpty(customFieldTabs)).toUpperCase();
+              const { customFieldsTab, creationUserFullName, creationDate, updateDate, notifications, approvals } = row;
+              const isCustom = Object.keys(customFieldsTab).length ? 'True' : 'False';
               const update_date = String(new Date(updateDate)).split('GMT')[0];
               const creation_date = String(new Date(creationDate)).split('GMT')[0];
-              return createProcessStageRow(row._id, row.name, functions[selectedFunction], types[selectedType], isCustom, 'FALSE', creationUserFullName, creation_date, update_date);
+              return createProcessStageRow(row._id, row.name, isCustom, notifications, approvals, creationUserFullName, creation_date, update_date);
             });
             setControl(prev => ({ ...prev, processStagesRows: rows, processStagesRowsSelected: [] }));
           }
@@ -145,7 +277,15 @@ const Processes = (props) => {
             const rows = data.response.map(row => {
               const update_date = String(new Date(row.updateDate)).split('GMT')[0];
               const creation_date = String(new Date(row.creationDate)).split('GMT')[0];
-              return createProcessRow(row._id, row.name, row.processStages.length || 'N/A', row.creationUserFullName, creation_date, update_date);
+              const notificationsPerStage = [];
+              const approvalsPerStage = [];
+              const numberOfStages = [];
+              row.processStages.map(({ id, name, notifications, approvals, goBackEnabled, goBackTo }) => {
+                notificationsPerStage.push({ name, users: notifications.map(({ name, lastName, email }) => `${name} ${lastName} (${email})`)});
+                approvalsPerStage.push(({ name, users: approvals.map(({ name, lastName, email }) => `${name} ${lastName} (${email})`)}));
+                numberOfStages.push({ id, name, goBackEnabled, goBackTo });
+              });
+              return createProcessRow(row._id, row.name, numberOfStages, row.selectedProcessType, notificationsPerStage, approvalsPerStage, row.creationUserFullName, creation_date, update_date);
             });
             setControl(prev => ({ ...prev, processRows: rows, processRowsSelected: [] }));
           }
@@ -328,7 +468,7 @@ const Processes = (props) => {
                             ...prev,
                             processes: {
                               ...prev.processes,
-                              orderBy: orderBy,
+                              orderBy: orderByCorrection[orderBy] ? orderByCorrection[orderBy] : orderBy,
                               order: order,
                             }
                           }))
@@ -393,7 +533,7 @@ const Processes = (props) => {
                             ...prev,
                             processStages: {
                               ...prev.processStages,
-                              orderBy: orderBy,
+                              orderBy: orderByCorrection[orderBy] ? orderByCorrection[orderBy] : orderBy,
                               order: order,
                             }
                           }))

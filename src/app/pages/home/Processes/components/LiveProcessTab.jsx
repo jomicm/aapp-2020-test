@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useDispatch } from "react-redux";
 import {
   Button,
   Icon,
@@ -12,6 +13,7 @@ import AssetFinderPreview from '../../Components/AssetFinderPreview';
 import ModalOneField from '../../Components/ModalOneField';
 import LiveProcessInfo from './LiveProcessInfo';
 import ModalYesNo from '../../Components/ModalYesNo';
+import { actions } from '../../../../store/ducks/general.duck';
 
 const LiveProcessTab = ({
   onSelectionChange,
@@ -22,6 +24,8 @@ const LiveProcessTab = ({
   onSetRows,
   user
 }) => {
+  const dispatch = useDispatch();
+  const { showCustomAlert } = actions;
   const [tabIndex, setTabIndex] = useState(0);
   const [openModal, setOpenModal] = useState(false);
   const [selection, setSelection] = useState([]);
@@ -37,6 +41,17 @@ const LiveProcessTab = ({
       setCurrentStage(_currentStage);
     }
   }, [processInfo]);
+
+  useEffect(() => {
+    const allApproved = localCartRows.length === 0 ? false : localCartRows.map(({status}) => status).every((eachStatus) => eachStatus);
+    if (allApproved) {
+      dispatch(showCustomAlert({
+        type: 'success',
+        open: true,
+        message: `All assets are validated`
+      }));
+    }
+  }, [localCartRows])
 
   const handleRejectionClick = () => {
     if (selection.length) {

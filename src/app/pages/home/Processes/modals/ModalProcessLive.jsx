@@ -263,6 +263,24 @@ const ModalProcessLive = (props) => {
     return true;
   };
 
+  const checkValidInitiator = async (_processData, _stageKeys) => {
+    const {id: _id, name, lastName, email } = user;
+    const initiator = { _id, name, lastName, email };
+    if(!initiator){
+      dispatch(showCustomAlert({
+        type: 'warning',
+        open: true,
+        message: "Couldn't calculate the Process Initiator "
+      }));
+      return false;
+    }
+    _stageKeys.map(stageKey => {
+      _processData.stages[stageKey].approvals[_processData.stages[stageKey].approvals.findIndex(e => e._id === 'initiator')] = {...initiator, fulfillDate: '', fulfilled: false, virtualUser: 'initiator'};
+      _processData.stages[stageKey].notifications[_processData.stages[stageKey].notifications.findIndex(e => e._id === 'initiator')] = {...initiator, fulfillDate: '', fulfilled: false, virtualUser: 'initiator'};
+    });
+    return true;
+  };
+
   const checkValidLocationManager = async(_cartRows, _processData, _stageKeys) => {
     const {locationId, locationName} = _cartRows[0];
     const manager = await getLocationManagerInfo(locationId);
@@ -385,7 +403,7 @@ const ModalProcessLive = (props) => {
       dueDate,
     };
     if (!id) {
-      if(processes.find(({id}) => id === values.selectedProcess)?.processStages[0]?.isControlDueDate && !dueDate){
+      if (processes.find(({id}) => id === values.selectedProcess)?.processStages[0]?.isControlDueDate && !dueDate) {
         dispatch(showCustomAlert({
           type: 'error',
           open: true,
@@ -398,6 +416,11 @@ const ModalProcessLive = (props) => {
       const allApprovals = stageKeys.map(e => (body.processData.stages[e].approvals)).flat().map(f => (f._id));
       if (allApprovals.includes('boss')) {
         if(! await checkValidDirectBoss(body.processData, stageKeys)){
+          return;
+        }
+      }
+      if (allApprovals.includes('initiator')) {
+        if(! await checkValidInitiator(body.processData, stageKeys)){
           return;
         }
       }
@@ -732,7 +755,6 @@ const ModalProcessLive = (props) => {
               `New approval request from Stage: ${stageName}`:
               `The following Stage has been finished: ${stageName}`;
             
-          debugger;
     
           const messageObj = {
             html: newHtml,
@@ -985,8 +1007,9 @@ const ModalProcessLive = (props) => {
 
   const initializeStage = (process) => {
     const { processData, requestUser, _id: liveProcessId } = process;
+    const selfApprove = processData.stages['stage_1'].isSelfApprove;
     const nextStage = processData.currentStage + 1;
-    processData.currentStage = nextStage;
+    processData.currentStage = selfApprove ? processData.totalStages : nextStage;
     const stageData = getCurrentStageData(nextStage, processData);
     sendMessages(stageData, requestUser, liveProcessId, processData.id, process, 'start'); // Approvals
     stageData.stageInitialized = true;
@@ -1186,11 +1209,6 @@ const ModalProcessLive = (props) => {
   useEffect(() => {
     loadUserLocations()
   }, []);
-
-  // useEffect(() => {
-  //   console.log('cartRows', cartRows); 
-  // }, [cartRows]);
-  
   useEffect(() => {
     loadAssetsData('assets');
   }, [userLocations]);
@@ -1308,6 +1326,11 @@ const ModalProcessLive = (props) => {
   const onAddAssetToCart = () => {
     // const convertAssets = assetsSelected.map(({ name, brand, model }, ix) => createAssetReferenceCartRow('id' + ix, name, brand, model));
     // setCartRows([ ...cartRows, ...convertAssets ]);
+    dispatch(showCustomAlert({
+      type: 'info',
+      open: true,
+      message: `${assetsSelected.length || 'No'} Asset${assetsSelected.length === 1 ? '' : 's'} added`
+    }));
     setCartRows([...cartRows, ...assetsSelected]);
     setAssetsSelected([]);
   };

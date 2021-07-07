@@ -144,7 +144,10 @@ const useStyles = makeStyles(theme => ({
   textField: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
-    width: 200
+    width: '100%'
+  },
+  list: {
+    width: '100%'
   },
   dense: {
     marginTop: 19
@@ -585,7 +588,7 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                         subheader={
                           <TextField
                             id="outlined-adornment-password"
-                            className={classes.textField}
+                            className={classes.list}
                             label="All Stages"
                             value={searchStage}
                             onChange={handleSearchStage}
@@ -599,18 +602,20 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                           />
                         }
                       >
-                        {(stages || []).map((stage, ix) => (
-                          <ListItem
-                            key={`${stage.name}_${stage.name}`}
-                            button
-                            onClick={() => handleStageClick(stage)}
-                          >
-                            <ListItemIcon>
-                              <AccountTree />
-                            </ListItemIcon>
-                            <ListItemText primary={stage.name} />
-                          </ListItem>  
-                        ))}
+                        <div style={{maxHeight: '200px', overflow: 'auto', marginTop: '10px'}}>
+                          {(stages || []).map((stage, ix) => (
+                            <ListItem
+                              key={`${stage.name}_${stage.name}`}
+                              button
+                              onClick={() => handleStageClick(stage)}
+                            >
+                              <ListItemIcon>
+                                <AccountTree />
+                              </ListItemIcon>
+                              <ListItemText primary={stage.name} />
+                            </ListItem>  
+                          ))}
+                        </div>
                       </List>
                     </div>
                     <div style={{ minHeight: '400px' }} className="profile-tab-wrapper__content">
@@ -712,7 +717,7 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                                       const labelId = `checkbox-list-secondary-label-${name}`;
                                       return (
                                         <ListItem key={name} button disabled={usersProcess.notificationsDisabled}>
-                                          <ListItemText id={labelId} primary={name} secondary={sendMessageAt === 'start' ? 'Before' : sendMessageAt === 'end' ? 'After' : null }/>
+                                          <ListItemText id={labelId} primary={name} secondary={sendMessageAt === 'start' ? 'At the start' : sendMessageAt === 'end' ? 'At the end' : null }/>
                                           <ListItemSecondaryAction>
                                             <Checkbox
                                               edge="end"
@@ -763,7 +768,7 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                                       const labelId = `checkbox-list-secondary-label-approvals-${name}`;
                                       return (
                                         <ListItem key={name} button disabled={usersProcess.approvalsDisabled}>
-                                          <ListItemText id={labelId} primary={name} secondary={sendMessageAt === 'start' ? 'Before' : sendMessageAt === 'end' ? 'After' : null } />
+                                          <ListItemText id={labelId} primary={name} secondary={sendMessageAt === 'start' ? 'At the star' : sendMessageAt === 'end' ? 'At the end' : null } />
                                           <ListItemSecondaryAction>
                                             <Checkbox
                                               edge="end"

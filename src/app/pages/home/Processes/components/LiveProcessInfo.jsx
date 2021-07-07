@@ -186,7 +186,7 @@ const LiveProcessInfo = ({ processInfo }) => {
                 {(val.approvals || []).map(({ cartRows, email, fulfilled, fulfillDate, name, lastName, virtualUser }) => (
                   <StyledTreeItem
                     nodeId={getRandomId()}
-                    labelText={`${virtualUser ? (virtualUser === 'boss' ? '[DB] ' : virtualUser === 'locationManager' ? '[LM] ' : virtualUser === 'locationWitness' ? '[LW] ' : virtualUser === 'assetSpecialist' ? '[AS] ' : '') : ''}${name} ${lastName} (${email})`}
+                    labelText={`${virtualUser ? (virtualUser === 'boss' ? '[DB] ' : virtualUser === 'locationManager' ? '[LM] ' : virtualUser === 'locationWitness' ? '[LW] ' : virtualUser === 'assetSpecialist' ? '[AS] ' : virtualUser === 'initiator' ? '[PI] ' : '') : ''}${name} ${lastName} (${email})`}
                     labelIcon={!fulfillDate ? HourglassEmptyIcon : AccountCircleIcon}
                     labelInfo={!fulfillDate ? 'Pending' : 'Fulfilled'}
                   >

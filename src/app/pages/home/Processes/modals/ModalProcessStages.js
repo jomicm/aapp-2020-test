@@ -266,7 +266,8 @@ const ModalProcessStages = ({ showModal, setShowModal, reloadTable, id }) => {
         const locationUser = { _id: 'locationManager', email: 'auto', name: 'Location', lastName: 'Manager' };
         const witnessUser = { _id: 'locationWitness', email: 'auto', name: 'Location', lastName: 'Witness' };
         const asssetSpecialistUser = { _id: 'assetSpecialist', email: 'auto', name: 'Asset', lastName: 'Specialist' };
-        setUsers([bossUser, locationUser, witnessUser, asssetSpecialistUser ,...groupUsers, ...users]);
+        const initiator = { _id: 'initiator', email: 'auto', name: 'Process', lastName: 'Initiator' };
+        setUsers([bossUser, locationUser, witnessUser, asssetSpecialistUser, initiator, ...groupUsers, ...users]);
       })
       .catch(error => console.log(error))
     })

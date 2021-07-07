@@ -129,7 +129,7 @@ const useStyles = makeStyles(theme => ({
   inputSearchByDisabled: {
     marginTop: '16px',
     width: '100%',
-    height: '35px'
+    height: '29px'
   },
   popover: {
     width: '800px',
@@ -584,7 +584,8 @@ const TableComponentTile = props => {
               <TableSortLabel
                 active={orderBy === row.id}
                 direction={order}
-                onClick={createSortHandler(row.id)}
+                onClick={row.sortByDisabled ? () => {} : createSortHandler(row.id)}
+                hideSortIcon={row.sortByDisabled}
               >
                 {row.label}
               </TableSortLabel>
@@ -596,6 +597,7 @@ const TableComponentTile = props => {
                     onChange={(event) => handleInputChange(event, row.id)}
                     // onKeyDown={(event) => handleKeyDown(event, row.id)}
                     placeholder={`Search by...`}
+                    title={`Search by...`}
                     value={row.id === controlValues.searchBy ? controlValues.search : null}
                   />
                 )

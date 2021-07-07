@@ -11,15 +11,18 @@ import {
   CardContent,
   IconButton,
   InputBase,
-  Typography
+  Typography,
+  Tooltip
 } from '@material-ui/core';
 import SearchIcon from '@material-ui/icons/Search';
+import DoneIcon from '@material-ui/icons/Done';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ThumbUpIcon from '@material-ui/icons/ThumbUp';
 import ThumbDownIcon from '@material-ui/icons/ThumbDown';
 import { getDBComplex } from '../../../../crud/api';
 import { getImageURL, getLocationPath } from '../../utils';
 import LocationsTreeView from '../LocationsTreeView/LocationsTreeView';
+import CustomizedToolTip from '../../Components/CustomizedToolTip';
 import Table from './Table';
 import AssetEdition from './AssetEditon';
 import AssetPreviewBox from './AssetPreviewBox';
@@ -44,10 +47,55 @@ const AssetFinder = ({
   const [assetRows, setAssetRows] = useState(rows);
   const [selectedRows, setSelectedRows] = useState([]); 
   const [selectedAsset, setSelectedAsset] = useState(defaultAsset);
+  const [locationSelected, setLocationSelected] = useState();
+  const [accordionControled, setAccordionControled] = useState({
+    location: false,
+  });
+
+  const extractValidAssets = (cartRows, { stages }) => {
+    const requestedAssetsIds = cartRows.map(({ id }) => id);
+    Object.entries(stages).forEach(([key, { approvals }]) => {
+      approvals.forEach(({ cartRows }) => {
+        cartRows.forEach(({ id, status }) => {
+          if (status !== 'Approved' && requestedAssetsIds.includes(id)) {
+            const index = requestedAssetsIds.indexOf(id);
+            requestedAssetsIds.splice(index, 1);
+          }
+        });
+      });
+    });
+
+    return requestedAssetsIds.map((reqId) => cartRows.find(({ id }) => reqId === id));
+  };
 
   useEffect(() => {
-    // console.log('SelectionTable:', isSelectionTable, 'PreviewTable:', isPreviewTable)
-  }, [isSelectionTable, isPreviewTable, processInfo])
+    if (processInfo && Object.keys(processInfo).length){
+      const { cartRows, processData } = processInfo;
+      const stageFulfilled = Object.values(processData.stages || []).map(({ stageFulfilled }) => ({ stageFulfilled }));
+      const isProcessComplete = stageFulfilled.every(({ stageFulfilled }) => stageFulfilled === true);
+      if(isProcessComplete && stageFulfilled.length !== 0){
+        const validAssetsID =  extractValidAssets(cartRows, processData).map(({id}) => (id)); 
+        const invalidAssetsID = cartRows.filter(({id}) => !validAssetsID.includes(id)).map(({id}) => (id)) || [];
+
+        const tempAssetRows = cartRows.map((asset) => {
+          if(validAssetsID.includes(asset.id)){
+            return ({...asset, status: 'approved'});
+          }
+          else if(invalidAssetsID.includes(asset.id)){
+            return ({...asset, status: 'rejected'});
+          }
+          else {
+            return asset;
+          }
+        });
+        setAssetRows(tempAssetRows);
+      }
+      else if (processData.stages['stage_1'].isSelfApprove) {
+        const tempAssetRows = cartRows.map((asset) => ({...asset, status: 'approved'})); 
+        setAssetRows(tempAssetRows);
+      }
+    }    
+  }, [processInfo])
 
   const handleChangeValues = (values) => {
     // console.log('values2:', {...selectedAsset,  ...values})
@@ -113,7 +161,11 @@ const AssetFinder = ({
   };
 
   const renderContent = () => {
-    const handleTreeElement = (id, profileLevel, parent, name) => {
+    const handleTreeElement = () => {
+      if(!locationSelected){
+        return;
+      }
+      const { id, profileLevel, name } = locationSelected;
       if (profileLevel < 0) {
         return;
       }
@@ -175,12 +227,23 @@ const AssetFinder = ({
                   </AccordionDetails>
                 </Accordion>
               } */}
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />} >
-                  <Typography>Set Location</Typography>
+              <Accordion expanded={accordionControled.location}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon onClick={() => setAccordionControled((prev) => ({...prev, location: !prev.location}))} />} >
+                  <div style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                    <Typography>Set Location</Typography>
+                    {
+                      accordionControled.location && (
+                        <Tooltip title='Apply Location Selected'>
+                          <IconButton onClick={() => handleTreeElement()} className={classes.iconButton} aria-label="search" size='small'>
+                            <DoneIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )
+                    }
+                  </div>
                 </AccordionSummary>
                 <AccordionDetails style={{ overflow: 'auto', height: '275px', marginBottom: '10px' }}>
-                  <LocationsTreeView onTreeElementClick={handleTreeElement} />
+                  <LocationsTreeView onTreeElementClick={setLocationSelected} />
                 </AccordionDetails>
               </Accordion>
             </div>
@@ -192,13 +255,13 @@ const AssetFinder = ({
         <div style={{ display: 'flex' }}>
           {
               processType === 'creation' ? (
-                <Table columns={[...getColumns(isAssetReference), locationColumn, ...processColumns]} rows={rows} setTableRowsInner={handleSelectionChange} />
+                <Table columns={[...processColumns, ...getColumns(isAssetReference), locationColumn]} rows={assetRows.length > 0 ? assetRows : rows} setTableRowsInner={handleSelectionChange} />
               ) : processType === 'decommission' || processType === 'maintenance' ? (
-                <Table columns={[...getColumns(isAssetReference), originalLocationColumn, ...processColumns]} rows={rows} setTableRowsInner={handleSelectionChange} />
+                <Table columns={[...processColumns, ...getColumns(isAssetReference), originalLocationColumn]} rows={assetRows.length > 0 ? assetRows : rows} setTableRowsInner={handleSelectionChange} />
               ) : processType === 'movement' || processType === 'short' ? (
-                <Table columns={[...getColumns(isAssetReference), originalLocationColumn, locationColumn, ...processColumns]} rows={rows} setTableRowsInner={handleSelectionChange} />
+                <Table columns={[...processColumns, ...getColumns(isAssetReference), originalLocationColumn, locationColumn]} rows={assetRows.length > 0 ? assetRows : rows} setTableRowsInner={handleSelectionChange} />
               ) : (
-                <Table columns={[...getColumns(isAssetReference), ...processColumns]} rows={rows} setTableRowsInner={handleSelectionChange} /> 
+                <Table columns={[...processColumns, ...getColumns(isAssetReference) ]} rows={assetRows.length > 0 ? assetRows : rows} setTableRowsInner={handleSelectionChange} /> 
               )
             }
           <Card style={{ width: '350px', marginLeft: '15px' }}>
@@ -284,8 +347,18 @@ const getColumns = (isAssetReference) => {
   }
 }; 
 
-const locationColumn = { field: 'locationName', headerName: 'Final Location', width: 200 };
-const originalLocationColumn = { field: 'originalLocation', headerName: 'Original Location', width: 500 };
+const locationColumn = { field: 'locationName', headerName: 'Final Location', width: 200, renderCell: (params) =>  (
+  <CustomizedToolTip tooltipContent={params.data.locationName} content={
+    <span style={{ whiteSpace: 'noWrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{params.data.locationName}</span>
+  }/>
+ ),
+};
+const originalLocationColumn = { field: 'originalLocation', headerName: 'Original Location', width: 200, renderCell: (params) =>  (
+  <CustomizedToolTip tooltipContent={params.data.originalLocation} content={
+    <span style={{ whiteSpace: 'noWrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{params.data.originalLocation}</span>
+  }/>
+ ),
+};
 
 const processColumns = [
   {
@@ -303,10 +376,22 @@ const processColumns = [
           // clickable
           color='secondary'
         />
-      ) : null;
+      ) : <i style={{ color: '#7f7f7f' }}>Approval Pending</i>;
     }
   },
-  { field: 'message', headerName: 'Message', width: 130 },
+  { field: 'message', headerName: 'Message', width: 130, renderCell: (params) =>  {
+    if (params.data.message) {
+      return (
+        <CustomizedToolTip tooltipContent={params.data.message} content={
+          <span style={{ whiteSpace: 'noWrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{params.data.message}</span>
+        }/>        
+      ); 
+    } else {
+      return (
+        <i style={{ color: '#7f7f7f' }}>No message</i>
+      );
+    }
+  }},
 ];
 
 const useStyles = makeStyles((theme) => ({

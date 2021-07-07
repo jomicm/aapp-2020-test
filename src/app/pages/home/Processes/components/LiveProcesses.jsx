@@ -15,11 +15,12 @@ import {
 // App Components
 import TableComponent2 from '../../Components/TableComponent2';
 import ModalProcessesLive from '../modals/ModalProcessLive';
+import UsersPerStageCell from '../components/UsersPerStageCell';
 // import ModalLayoutEmployees from './modals/ModalLayoutEmployees';
 // import ModalLayoutStages from './modals/ModalLayoutStages';
 
-const createLiveProcessesHeadRows = (id, folio, name, type, approvals, status, alert, creator, creation_date, updateDate) => {
-  return { id, folio, name, type, approvals, status, alert, creator, creation_date, updateDate};
+const createLiveProcessesHeadRows = (id, folio, name, type, notifications, approvals, status, alert, creator, creation_date, updateDate) => {
+  return { id, folio, name, type, notifications, approvals, status, alert, creator, creation_date, updateDate};
 };
 
 const orderByCorrection = {
@@ -114,7 +115,18 @@ const LiveProcesses = ({ user }) => {
     { id: "folio", numeric: false, disablePadding: false, label: "Folio",},
     { id: "name", numeric: false, disablePadding: false, label: "Name", searchBy: 'processData.name'},
     { id: "type", numeric: false, disablePadding: false, label: "Type", searchBy: 'processData.selectedProcessType'},
-    { id: "approvals", numeric: false, disablePadding: false, label: "Approvals", searchByDisabled: true},
+    { id: 'notifications', numeric: false, disablePadding: false, label: 'Notifications', searchByDisabled: true, sortByDisabled: true, renderCell: (value) => {
+      const users = [].concat(...value.map(({users}) => (users))).length;
+      return (
+        <UsersPerStageCell number={users} values={value}/>
+      ) 
+    }},
+    { id: 'approvals', numeric: false, disablePadding: false, label: 'Approvals', searchByDisabled: true, sortByDisabled: true, renderCell: (value) => {
+      const users = [].concat(...value.map(({users}) => (users))).length;
+      return (
+        <UsersPerStageCell number={users} values={value}/>
+      ) 
+    }},
     { id: "status", numeric: false, disablePadding: false, label: "Status", searchBy: 'processData.processStatus'},
     { id: "alert", numeric: false, disablePadding: false, label: "Alert", searchByDisabled: true, searchBy: 'dueDate', renderCell: (value) => {
       const biggerThan = allAlerts.filter((element) => (value*-1) >= Number(element.days)).map(({days}) => days);
@@ -211,7 +223,9 @@ const LiveProcesses = ({ user }) => {
               const localDate = String(new Date(creationDate)).split('GMT')[0];
               const update_date = String(new Date(updateDate)).split('GMT')[0];
               const pastDue = differenceInDays(new Date(dueDate), new Date());
-              return createLiveProcessesHeadRows(id, id.slice(-6), name, selectedProcessType, 'Approvals', processStatus, pastDue, creationUserFullName, localDate, update_date);
+              const approvalsPerStage = Object.values(row.processData.stages).map(({stageName, approvals}) => ({name: stageName, users: approvals.map(({name, lastName, fulfilled}) => `${name} ${lastName} (${fulfilled ? 'Fulfilled' : 'Pending'})`) }));
+              const notificationsPerStage = Object.values(row.processData.stages).map(({stageName, notifications}) => ({name: stageName, users: notifications.map(({name, lastName, sent}) => `${name} ${lastName} (${sent ? 'Sent' : 'Pending'})`) }));
+              return createLiveProcessesHeadRows(id, id.slice(-6), name, selectedProcessType, notificationsPerStage, approvalsPerStage, processStatus, pastDue, creationUserFullName, localDate, update_date);
             });
             setControl(prev => ({ ...prev, processLiveRows: rows, ProcessLiveRowsSelected: [] }));
           })
@@ -269,7 +283,9 @@ const LiveProcesses = ({ user }) => {
                     const localDate = String(new Date(creationDate)).split('GMT')[0];
                     const update_date = String(new Date(updateDate)).split('GMT')[0];
                     const pastDue = differenceInDays(new Date(dueDate), new Date());
-                    return createLiveProcessesHeadRows(id, id.slice(-6), name, selectedProcessType, 'Approvals', processStatus, pastDue, creationUserFullName, localDate, update_date);
+                    const approvalsPerStage = Object.values(row.processData.stages).map(({stageName, approvals}) => ({name: stageName, users: approvals.map(({name, lastName, fulfilled}) => `${name} ${lastName} (${fulfilled ? 'Fulfilled' : 'Pending'})`) }));
+                    const notificationsPerStage = Object.values(row.processData.stages).map(({stageName, notifications}) => ({name: stageName, users: notifications.map(({name, lastName, sent}) => `${name} ${lastName} (${sent ? 'Sent' : 'Pending'})`) }));
+                    return createLiveProcessesHeadRows(id, id.slice(-6), name, selectedProcessType, notificationsPerStage, approvalsPerStage, processStatus, pastDue, creationUserFullName, localDate, update_date);
                   });
                   setControl(prev => ({ ...prev, [controlArray]: rows, ProcessLiveApprovalsRowsSelected: [] }));
                 })
