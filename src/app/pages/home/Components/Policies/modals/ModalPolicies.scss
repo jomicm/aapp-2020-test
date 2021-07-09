@@ -156,3 +156,15 @@
     flex-direction: row;
     margin-bottom: 25px;
 }
+
+.__base-fields-accordion {
+    display: flex;
+    &__no-info {
+        align-items: center;
+        display: flex;
+        font-weight: 700;
+        justify-content: center;
+        height: 80px;
+        width: 100%;
+    }
+}

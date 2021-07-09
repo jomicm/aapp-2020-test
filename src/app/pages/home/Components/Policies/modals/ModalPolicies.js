@@ -41,7 +41,6 @@ import {
   Typography,
   withStyles,
 } from '@material-ui/core';
-import { TabPanel } from '@material-ui/lab';
 import CloseIcon from '@material-ui/icons/Close';
 import {
   PortletBody,
@@ -177,7 +176,8 @@ const ModalPolicies = ({
     { value: 'OnAdd', label: 'On Add' },
     { value: 'OnEdit', label: 'On Edit' },
     { value: 'OnDelete', label: 'On Delete' },
-    { value: 'OnLoad', label: 'On Load' }
+    { value: 'OnLoad', label: 'On Load' },
+    { value: 'OnField', label: 'On Field' }
   ];
   const modules = [
     { id: 'user', name: 'Users', custom: 'userProfiles' },
@@ -673,10 +673,14 @@ const ModalPolicies = ({
                         <div className='__container-baseandcustom-panel'>
                           <div className='__container-basefield'>
                             <h4>Base Fields</h4>
-                            <BaseFieldAccordion
-                              data={baseFields}
-                              onElementClick={insertVariable}
-                            />
+                            {values.selectedCatalogue ? (
+                              <BaseFieldAccordion
+                                data={{ [values.selectedCatalogue]: baseFields[values.selectedCatalogue] }}
+                                onElementClick={insertVariable}
+                              />
+                            ) : (
+                              <div className="__base-fields-accordion__no-info"> Please select a catalogue </div>
+                            )}
                           </div>
                           <div className='__container-customfield'>
                             <h4>Custom Fields</h4>

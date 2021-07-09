@@ -17,7 +17,7 @@ const BaseFieldsAccordion = ({ data, onElementClick }) => {
         defaultCollapseIcon={<ExpandMoreIcon />}
         defaultExpandIcon={<ChevronRightIcon />}
       >
-        <List style={{ fontSize: "3rem" }}>
+        <List style={{ fontSize: "3rem", paddingBottom: '0px' }}>
           {Object.keys(data).map((keyName, ix) => {
             return (
               <TreeItem
