@@ -22,13 +22,16 @@ import { postDB, getCountDB, getDBComplex, getOneDB, getDB } from '../../../crud
 import TableReportsGeneral from '../Components/TableReportsGeneral';
 import CircularProgressCustom from '../Components/CircularProgressCustom';
 import {
+  baseFieldsPerModule,
   convertRowsToDataTableObjects,
   extractCustomField,
   extractGeneralField,
   formatData,
   getGeneralFieldsHeaders,
-  normalizeRows
+  getUserPermittedModules,
+  normalizeRows,
 } from './reportsHelpers';
+import { allBaseFields } from '../constants';
 import ChangeReportName from './modals/ChangeReportName';
 
 const { Parser, transforms: { unwind } } = require('json2csv');
@@ -43,7 +46,9 @@ const modules = [
   { index: 5, id: 'assets', name: 'Assets', custom: 'categories' },
   { index: 6, id: 'depreciation', name: 'Depreciation', custom: '' },
   { index: 7, id: 'processLive', name: 'Processes', custom: '' },
-  { index: 8, id: 'inventories', name: 'Inventories', custom: '' }
+  { index: 8, id: 'inventories', name: 'Inventories', custom: '' },
+  { index: 9, id: 'logbook', name: 'Logbook', custom: '' },
+  { index: 10, id: 'fieldValuesRepeated', name: 'Field Values Repeated', custom: '' }
 ];
 
 const specificFilters = {
@@ -86,6 +91,30 @@ const specificFilters = {
       id: "idSession",
       label: "ID Session"
     },
+  ],
+  logbook: [
+    {
+      id: 'requestUser',
+      label: 'Request User'
+    },
+    {
+      id: 'method',
+      label: 'Method'
+    },
+    {
+      id: 'module',
+      label: 'Module'
+    }
+  ],
+  fieldValuesRepeated: [
+    {
+      id: 'module',
+      label: 'Module'
+    },
+    {
+      id: 'baseFields',
+      label: 'Base Fields'
+    }
   ]
 };
 
@@ -114,6 +143,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     enabled: false,
     reportName: ''
   });
+  const [permittedModules, setPermittedModules] = useState(getUserPermittedModules(user));
   const [specificFiltersOptions, setSpecificFiltersOptions] = useState({
     processLive: {
       folios: [],
@@ -127,6 +157,15 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     inventories: {
       inventoryUser: [{ label: "Joe Doe" }, { label: "John Smith" }],
       idSession: [{ label: "3345" }, { label: "123" }, { label: "25899" }],
+    },
+    logbook: {
+      method: [{ id: 'GET', label: 'GET' }, { id: 'POST', label: 'POST' }, { id: 'PUT', label: 'PUT' }, { id: 'UPDATE', label: 'UPDATE' }, { id: 'DELETE', label: 'DELETE' }],
+      module: permittedModules || [],
+      requestUser: []
+    },
+    fieldValuesRepeated: {
+      module: permittedModules || [],
+      baseFields: []
     }
   });
   const defaultFilterSelected = {
@@ -149,12 +188,40 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     inventories: {
       inventoryUser: [],
       idSession: [],
+    },
+    logbook: {
+      method: [],
+      module: [],
+      requestUser: []
+    },
+    fieldValuesRepeated: {
+      module: [],
+      baseFields: []
     }
   };
 
   const [filtersSelected, setFiltersSelected] = useState(defaultFilterSelected);
 
   const permissions = user.profilePermissions.reports || [];
+
+  const loadAllUsers = () => {
+    getDBComplex({
+      collection: 'user',
+      condition: [{ "locationsTable.parent": { "$in": userLocations } }]
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        const users = data.response.map(({ _id: id, name, lastName, email }) => ({ id, label: `${name} ${lastName} <${email.length ? email : 'No email'}>` }));
+        setSpecificFiltersOptions(prev => ({
+          ...prev,
+          logbook: {
+            ...prev.logbook,
+            requestUser: users
+          }
+        }));
+      })
+      .catch((error) => console.log(error));
+  };
 
   const loadCustomFields = (selectedReport, customSelected) => {
     if (!customSelected) {
@@ -215,6 +282,40 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     }
   };
 
+  const getExtraCondition = (condition) => {
+    if (values.selectedReport === 'assets') {
+      condition.push({ "location": { "$in": userLocations } });
+    } else if (values.selectedReport === 'user') {
+      condition.push({ "locationsTable.parent": { "$in": userLocations } });
+    }
+
+    return condition;
+  };
+
+  const getDateFilters = () => {
+    if (values.startDate && values.endDate) {
+      let condition = [{ "creationDate": { "$gte": `${new Date(values.startDate).toISOString()}`, "$lte": `${new Date(values.endDate).toISOString()}` } }];
+      condition = getExtraCondition(condition);
+      return condition;
+    } else if (values.startDate && !values.endDate) {
+      let condition = [{ "creationDate": { "$gte": `${new Date(values.startDate).toISOString()}` } }];
+      condition = getExtraCondition(condition);
+      return condition;
+    } else if (!values.startDate && values.endDate) {
+      let condition = [{ "creationDate": { "$lte": `${new Date(values.endDate).toISOString()}` } }];
+      condition = getExtraCondition(condition);
+      return condition;
+    }
+
+    if (values.selectedReport === 'assets') {
+      return [{ "location": { "$in": userLocations } }];
+    } else if (values.selectedReport === 'user') {
+      return [{ "locationsTable.parent": { "$in": userLocations } }];
+    }
+
+    return null;
+  };
+
   const loadProcessData = () => {
     //GET Folios 
     getDBComplex({
@@ -223,7 +324,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     })
       .then(response => response.json())
       .then(data => {
-        const users = uniqBy(data.response.map(({ creationUserId, creationUserFullName, requestUser: { email } }) => ({ id: creationUserId, label: `${creationUserFullName} <${email}>` })), 'id');
+        const users = uniqBy(data.response.map(({ creationUserId, creationUserFullName, requestUser: { email } }) => ({ id: creationUserId, label: `${creationUserFullName} <${email.length ? email : 'No email'}>` })), 'id');
         const folios = uniqBy(data.response.map(({ _id, folio }) => ({ id: _id, label: folio })), 'id');
         setSpecificFiltersOptions(prev => ({
           ...prev,
@@ -279,7 +380,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
         getDB('user')
           .then((response) => response.json())
           .then((userData) => {
-            const processApprovals = uniqBy(data.response.map(({ userId, creationUserFullName, email }) => ({ id: userId, label: `${userData.response.find(({ _id }) => _id === userId)?.name} ${userData.response.find(({ _id }) => _id === userId)?.lastName} <${email}>` })), 'id').filter((e) => e.id && e.label);
+            const processApprovals = uniqBy(data.response.map(({ userId, creationUserFullName, email }) => ({ id: userId, label: `${userData.response.find(({ _id }) => _id === userId)?.name} ${userData.response.find(({ _id }) => _id === userId)?.lastName} <${email.length ? email : 'No email'}>` })), 'id').filter((e) => e.id && e.label);
             setSpecificFiltersOptions(prev => ({
               ...prev,
               processLive: {
@@ -296,7 +397,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
 
   const handleChange = (name) => (event) => {
     const { value } = event.target;
-    // console.log(new Date(value).toISOString());
+
     if (value) {
       setValues({ ...values, [name]: value });
     } else {
@@ -305,6 +406,11 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     if (name === 'selectedReport') {
       setFiltersSelected(defaultFilterSelected);
       setId('');
+
+      if (value === 'logbook') {
+        loadAllUsers();
+      }
+
       if (value === 'processLive') {
         getDB('settingsProcesses')
           .then(response => response.json())
@@ -440,12 +546,15 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
 
     const condition = collectionName === 'processLive' ? await getFiltersProcess() : null;
 
+    const dateFilters = getDateFilters();
+
     getDBComplex(({
       collection: collectionName,
-      condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : null
+      condition: collectionName === 'processLive' ? condition : dateFilters
     }))
       .then((response) => response.json())
-      .then(({ response }) => {
+      .then((data) => {
+        const { response } = data;
         let csv;
         const { name } = modules.find(({ id }) => id === collectionName);
         let headers = [];
@@ -535,9 +644,17 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
         result.push({ [key]: { "$in": filtersSelected.processLive[key].map(({ id }) => (id)) } });
       }
     }));
+
+    const dateFilters = getDateFilters();
+
+    if (dateFilters) {
+      result.push(...dateFilters);
+    }
+
     if (lookById.length) {
       result.push({ "processLiveId": { "$in": lookById } });
     }
+
     return result.length > 0 ? result : null;
   };
 
@@ -557,11 +674,11 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
       }
 
       const condition = collectionName === 'processLive' ? await getFiltersProcess() : null;
-
+      const dateFilters = getDateFilters();
       getCountDB({
         collection: collectionName,
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : null
+        condition: collectionName === 'processLive' ? condition : dateFilters
       })
         .then(response => response.json())
         .then(data => {
@@ -577,7 +694,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
         skip: tableControl.rowsPerPage * tableControl.page,
         sort: collectionName === 'processLive' && !tableControl.order ? [{ key: 'folio', value: 1 }] : [{ key: tableControl.orderBy, value: tableControl.order }],
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : collectionName === 'assets' ? [{ "location": { "$in": userLocations } }] : null
+        condition: collectionName === 'processLive' ? condition : dateFilters
       })
         .then(response => response.json())
         .then(data => {
@@ -637,6 +754,41 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
   };
 
   const changeFiltersSelected = (module, filter) => (event, values) => {
+    const { id } = values || {};
+
+    if (filter === 'module' && module === 'fieldValuesRepeated' && id) {
+      const baseFieldId = baseFieldsPerModule[id];
+      let baseFields = [];
+
+      if (Array.isArray(baseFieldId)) {
+        baseFieldId.forEach((key) => {
+          Object.entries(allBaseFields[key] || []).forEach((field) => {
+            if (field[0] !== 'id') baseFields.push({ id: field[1].validationId, label: field[1].compLabel });
+          });
+        });
+      } else {
+        Object.entries(allBaseFields[baseFieldId] || []).forEach((field) => {
+          if (field[0] !== 'id') baseFields.push({ id: field[1].validationId, label: field[1].compLabel });
+        });
+      }
+
+      setSpecificFiltersOptions(prev => ({
+        ...prev,
+        [module]: {
+          ...prev[module],
+          baseFields
+        }
+      }));
+    } else if (filter === 'module' && module === 'fieldValuesRepeated' && !id) {
+      setSpecificFiltersOptions(prev => ({
+        ...prev,
+        [module]: {
+          ...prev[module],
+          baseFields: []
+        }
+      }));
+    }
+
     setFiltersSelected(prev => ({
       ...prev,
       [module]: {
@@ -812,7 +964,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
                   className={classes.filters}
                   defaultValue={filtersSelected[values.selectedReport][e.id]}
                   getOptionLabel={(option) => option.label}
-                  multiple
+                  multiple={['fieldValuesRepeated', 'logbook'].includes(values.selectedReport) && e.id === 'module' ? false : true}
                   onChange={changeFiltersSelected(values.selectedReport, e.id)}
                   options={specificFiltersOptions[values.selectedReport][e.id]}
                   renderInput={(params) => (

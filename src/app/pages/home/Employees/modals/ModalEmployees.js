@@ -21,7 +21,7 @@ import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import { CustomFieldsPreview } from '../../constants';
 import ImageUpload from '../../Components/ImageUpload'
-import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import { getFileExtension, saveImage, getImageURL, verifyCustomFields, verifyRepeatedValues } from '../../utils';
 import {
   getDB,
   getOneDB,
@@ -119,6 +119,7 @@ const ModalEmployees = ({
   employeeProfileRows,
   policies,
   reloadTable,
+  reloadProfiles,
   showModal,
   setShowModal,
   userLocations
@@ -156,6 +157,7 @@ const ModalEmployees = ({
     categoryPic: '/media/misc/placeholder-image.jpg',
     categoryPicDefault: '/media/misc/placeholder-image.jpg',
     email: '',
+    employee_id: '',
     isDisableUserProfile: false,
     lastName: '',
     name: '',
@@ -202,6 +204,7 @@ const ModalEmployees = ({
       setValues(prev => ({ ...prev, employeeProfile: e }));
       setCustomFieldsTab({});
       setProfilePermissions({});
+      setProfileSelected(e);
       setTabs([]);
       return;
     }
@@ -250,6 +253,11 @@ const ModalEmployees = ({
         onChange: handleChange('email')
       }
     },
+    employee_id: {
+      componentProps: {
+        onChange: handleChange('employee_id')
+      }
+    },
     responsibilityLayout: {
       style: {
         marginTop: '15px'
@@ -268,8 +276,8 @@ const ModalEmployees = ({
           } else {
             setResponsabilityLayout(prev => ({ ...prev, added: {}, removed: prev.initial }));
           }
-
-          setValues(prev => ({ ...prev, responsibilityLayout: layout }));
+          
+          setValues(prev => ({ ...prev, layoutSelected: layout }));
           setLayoutSelected(layout);
         },
         options: layoutOptions,
@@ -287,6 +295,7 @@ const ModalEmployees = ({
       categoryPic: '/media/misc/placeholder-image.jpg',
       categoryPicDefault: '/media/misc/placeholder-image.jpg',
       email: '',
+      employee_id: '',
       isDisableUserProfile: false,
       lastName: '',
       name: '',
@@ -384,6 +393,11 @@ const ModalEmployees = ({
       return;
     }
 
+    if (!verifyCustomFields(customFieldsTab)) {
+      dispatch(showFillFieldsAlert());
+      return;
+    }
+
     const fileExt = getFileExtension(image);
 
     let reassignedAssets = [];
@@ -403,7 +417,7 @@ const ModalEmployees = ({
           .then((response) => response.json())
           .then((data) => {
             const { response: { assetsAssigned } } = data;
-            const newAssetsAssigned = assetsAssigned.filter(({ id: assetId }) =>!assets.includes(assetId));
+            const newAssetsAssigned = assetsAssigned.filter(({ id: assetId }) => !assets.includes(assetId));
             updateDB('employees/', { assetsAssigned: newAssetsAssigned }, employeeId)
               .catch((error) => console.log(error));
           })
@@ -431,52 +445,55 @@ const ModalEmployees = ({
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('employees', _id);
-          executePolicies('OnAdd', 'employees', 'list', policies);
+          executePolicies('OnAdd', 'employees', 'list', policies, response.response[0]);
           handleAssignmentsOnSaving(_id);
-          
+
           if (Object.entries(responsibilityLayout.added || {}).length) {
             getOneDB('settingsLayoutsEmployees/', responsibilityLayout.added.value)
-            .then((response) => response.json())
-            .then((data) => {
-              const { used } = data.response;
-              const value = (typeof used === 'number' ? used : 0) + 1;
-              updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.added.value)
-                .catch((error) => console.log(error));
-            })
-            .catch((error) => console.log(error));
+              .then((response) => response.json())
+              .then((data) => {
+                const { used } = data.response;
+                const value = (typeof used === 'number' ? used : 0) + 1;
+                updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.added.value)
+                  .catch((error) => console.log(error));
+              })
+              .catch((error) => console.log(error));
           }
         })
         .catch((error) => dispatch(showErrorAlert()));
     } else {
       updateDB('employees/', body, id[0])
-        .then((response) => {
+        .then((response) => response.json())
+        .then(data => {
+          const { response: { value } } = data;
+
           dispatch(showUpdatedAlert());
           saveAndReload('employees', id[0]);
           handleAssignmentsOnSaving(id[0]);
-          executePolicies('OnEdit', 'employees', 'list', policies);
+          executePolicies('OnEdit', 'employees', 'list', policies, value);
 
           if (Object.entries(responsibilityLayout.added || {}).length) {
             getOneDB('settingsLayoutsEmployees/', responsibilityLayout.added.value)
-            .then((response) => response.json())
-            .then((data) => {
-              const { used } = data.response;
-              const value = (typeof used === 'number' ? used : 0) + 1;
-              updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.added.value)
-                .catch((error) => console.log(error));
-            })
-            .catch((error) => console.log(error));
+              .then((response) => response.json())
+              .then((data) => {
+                const { used } = data.response;
+                const value = (typeof used === 'number' ? used : 0) + 1;
+                updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.added.value)
+                  .catch((error) => console.log(error));
+              })
+              .catch((error) => console.log(error));
           }
 
           if (Object.entries(responsibilityLayout.removed || {}).length) {
             getOneDB('settingsLayoutsEmployees/', responsibilityLayout.removed.value)
-            .then((response) => response.json())
-            .then((data) => {
-              const { used } = data.response;
-              const value = (typeof used === 'number' ? used : 1) - 1;
-              updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.removed.value)
-                .catch((error) => console.log(error));
-            })
-            .catch((error) => console.log(error));
+              .then((response) => response.json())
+              .then((data) => {
+                const { used } = data.response;
+                const value = (typeof used === 'number' ? used : 1) - 1;
+                updateDB('settingsLayoutsEmployees/', { used: value }, responsibilityLayout.removed.value)
+                  .catch((error) => console.log(error));
+              })
+              .catch((error) => console.log(error));
           }
         })
         .catch(error => dispatch(showErrorAlert()));
@@ -496,6 +513,7 @@ const ModalEmployees = ({
   const saveAndReload = (folderName, id) => {
     saveImage(image, folderName, id);
     reloadTable();
+    reloadProfiles();
   };
 
   useEffect(() => {
@@ -531,6 +549,7 @@ const ModalEmployees = ({
           name,
           lastName,
           email,
+          employee_id,
           customFieldsTab,
           profilePermissions,
           idUserProfile,
@@ -539,7 +558,7 @@ const ModalEmployees = ({
           fileExt,
           assetsAssigned = []
         } = data.response;
-        const onLoadResponse = await executeOnLoadPolicy(idUserProfile, 'employees', 'list', policies);
+        const onLoadResponse = await executeOnLoadPolicy(idUserProfile, 'employees', 'list', policies, data.response);
         setCustomFieldsPathResponse(onLoadResponse);
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
@@ -555,9 +574,12 @@ const ModalEmployees = ({
           ...values,
           name,
           lastName,
+          layoutSelected,
           email,
+          employee_id: employee_id || '',
           isDisableUserProfile: true,
-          imageURL: getImageURL(id, 'employees', fileExt)
+          imageURL: getImageURL(id, 'employees', fileExt),
+          employeeProfile: employeeProfilesFiltered.filter((profile) => profile.value === idUserProfile)
         });
         setAssetsBeforeSaving(assetsAssigned);
         const tabs = Object.keys(customFieldsTab).map((key) => ({

@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import {
   Button,
   Dialog,
@@ -27,23 +28,14 @@ import {
   useTheme,
   makeStyles
 } from "@material-ui/core/styles";
-import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
-import CustomFields from '../../../Components/CustomFields/CustomFields';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-
-// import './ModalAssetCategories.scss';
-import ImageUpload from '../../../Components/ImageUpload';
-import { postDBEncryptPassword, getDB, getOneDB, updateDB, postDB } from '../../../../../crud/api';
-import ModalYesNo from '../../../Components/ModalYesNo';
-import Permission from '../../components/Permission';
-import { getFileExtension, saveImage, getImageURL } from '../../../utils';
-
+import { getDB, getOneDB, updateDB, postDB } from '../../../../../crud/api';
 import { Editor } from 'react-draft-wysiwyg';
-import { EditorState, ContentState, convertToRaw, convertFromHTML, Modifier } from 'draft-js';
+import { EditorState, ContentState, convertToRaw, Modifier } from 'draft-js';
 import draftToHtml from 'draftjs-to-html';
 import htmlToDraft from 'html-to-draftjs';
-
+import { actions } from '../../../../../store/ducks/general.duck';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -124,6 +116,8 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeProfileRows }) => {
+  const dispatch = useDispatch();
+  const { showCustomAlert } = actions;
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -146,10 +140,19 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
   const [stages, setStages] = useState([]);
 
   const handleChange = name => event => {
-    setValues({ ...values, [name]: event.target.value });
+    setValues(prev => ({ ...prev, [name]: event.target.value }));
   };
 
   const handleSave = () => {
+    if (!values.name || !values.selectedStage) {
+      dispatch(showCustomAlert({
+        message: 'Please assign a name and a stage',
+        open: true,
+        type: 'warning'
+      }));
+      return;
+    }
+
     const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
     const body = { ...values, layout };
 
@@ -252,7 +255,7 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
               <div className="profile-tab-wrapper">
                 <div name="Expansion Panel" style={{ width: '95%', margin: '15px' }}>
                   {/* Custom Controls */}
-                  <ExpansionPanel>
+                  <ExpansionPanel defaultExpanded={true}>
                     <ExpansionPanelSummary
                       expandIcon={<ExpandMoreIcon />}
                       aria-controls="panel1a-content"
@@ -303,7 +306,7 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
                     </ExpansionPanelDetails>
                   </ExpansionPanel>
                   {/* Tab Properties */}
-                  <ExpansionPanel>
+                  <ExpansionPanel defaultExpanded={true}>
                     <ExpansionPanelSummary
                       expandIcon={<ExpandMoreIcon />}
                       aria-controls="panel2a-content"
@@ -328,7 +331,7 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
                     </ExpansionPanelDetails>
                   </ExpansionPanel>
                   {/* Field Properties */}
-                  <ExpansionPanel>
+                  <ExpansionPanel defaultExpanded={true}>
                     <ExpansionPanelSummary
                       expandIcon={<ExpandMoreIcon />}
                       aria-controls="panel3a-content"
@@ -340,7 +343,6 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
                       <div className="field-properties-wrapper">
                         <div style={{ marginTop: '0px', marginBottom: '20px' }}>
                           <Editor
-                            onClick={e => console.log('>>>>>>>click', e)}
                             editorState={editor}
                             toolbarClassName="toolbarClassName"
                             wrapperClassName="wrapperClassName"

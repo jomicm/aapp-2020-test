@@ -26,7 +26,7 @@ import { actions } from '../../../../store/ducks/general.duck';
 import './ModalAssetCategories.scss';
 import ImageUpload from '../../Components/ImageUpload';
 import { postDB, getOneDB, updateDB, getDB } from '../../../../crud/api';
-import { getFileExtension, saveImage, getImageURL } from '../../utils';
+import { getFileExtension, saveImage, getImageURL, verifyCustomFields } from '../../utils';
 import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetReferences.scss';
 import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
@@ -168,6 +168,11 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
       return;
     }
 
+    if (!verifyCustomFields(customFieldsTab)) {
+      dispatch(showFillFieldsAlert());
+      return;
+    }
+
     const fileExt = getFileExtension(image);
     
     const body = { ...values, price: values.price.toString(), customFieldsTab, fileExt };
@@ -179,15 +184,18 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('references', _id);
-          executePolicies('OnAdd', 'assets', 'references', policies);
+          executePolicies('OnAdd', 'assets', 'references', policies, response.response[0]);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('references/', body, id[0])
-        .then(response => {
+        .then(response => response.json())
+        .then(data => {
+          const { response: { value } } = data;
+
           dispatch(showUpdatedAlert());
           saveAndReload('references', id[0]);
-          executePolicies('OnEdit', 'assets', 'references', policies);
+          executePolicies('OnEdit', 'assets', 'references', policies, value);
         })
         .catch(error => console.log(error));
     }
@@ -196,6 +204,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
 
   const [image, setImage] = useState(null);
   const saveAndReload = (folderName, id) => {
+    console.log(image);
     saveImage(image, folderName, id);
     reloadTable();
   };
@@ -285,7 +294,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
       .then(async(data) => {
         const { name, brand, model, price, depreciation, customFieldsTab, fileExt, selectedProfile } = data.response;
         const { value } = selectedProfile;
-        const onLoadResponse = await executeOnLoadPolicy(value, 'assets', 'references', policies);
+        const onLoadResponse = await executeOnLoadPolicy(value, 'assets', 'references', policies, data.response);
         setCustomFieldsPathResponse(onLoadResponse);
         setValues({
           ...values,

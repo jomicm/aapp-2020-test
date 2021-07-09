@@ -48,8 +48,7 @@ const getAPIPath = (
 const getAPIFilePath = (foldername) => `${host}${version}upload/${foldername}`;
 
 const getHeaders = (isFile = false) => {
-  const state = store.default.getState();
-  const token = state?.auth?.user?.accessToken || REACT_APP_TOKEN;
+  const token = localStorage.getItem('accessToken') || REACT_APP_TOKEN;
 
   const headers = new Headers();
   headers.set('Authorization', `Bearer ${token}`);
@@ -87,7 +86,7 @@ const postFILE = (foldername, filename, image) => {
     body: formData,
     redirect: 'follow'
   };
-  return fetch(getAPIFilePath(foldername), requestOptions)
+  return fetch(getAPIFilePath(foldername), requestOptions);
 };
 
 const urltoFile = (url, filename, type) => {
@@ -95,8 +94,6 @@ const urltoFile = (url, filename, type) => {
     method: 'GET',
     headers: getHeaders(true)
   };
-
-  console.log(url);
 
   return (
     fetch(url, requestOptions)
