@@ -70,15 +70,18 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   select: {
-    width: '200px',
-    [theme.breakpoints.down('md')]: {
+    width: '350px',
+    [theme.breakpoints.down('sm')]: {
       width: '70%'
     }
   },
   selectContainer: {
     marginTop: '30px',
-    textAlign: '-webkit-center',
-    width: '100%'
+    textAlign: '-webkit-left',
+    width: '100%',
+    [theme.breakpoints.down('sm')]: {
+      textAlign: '-webkit-center',
+    }
   },
 }));
 
@@ -87,7 +90,7 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
   const dispatch = useDispatch();
   const [tab, setTab] = useState(0);
   const [userLocations, setUserLocations] = useState([]);
-  const [kpiSelected, setKpiSelected] = useState({});
+  const [kpiSelected, setKpiSelected] = useState([]);
   const { policies, setPolicies } = usePolicies();
 
   const policiesBaseFields = {
@@ -252,8 +255,9 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
         )
       }
 
-      const kpi = kpiSelected || {};
-      const list = kpi.value ? [{ "location": { "$in": userLocations } }, { 'status': kpi.value }] : [{ "location": { "$in": userLocations } }];
+      const userLocationsQuery = { "location": { "$in": userLocations } };
+      const kpi = kpiSelected || [];
+      const list = kpi.length ? [userLocationsQuery, { 'status': { "$in": kpi.map(({ value }) => value) } }] : [userLocationsQuery];
       const condition = collectionName === 'assets' ? list : null;
 
       getCountDB({
@@ -283,7 +287,6 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
         .then(response => response.json())
         .then(data => {
           if (collectionName === 'assets') {
-            console.log(data.response);
             const rows = data.response.map(row => {
               const creationDate = String(new Date(row.creationDate)).split('GMT')[0];
               const updateDate = String(new Date(row.updateDate)).split('GMT')[0];
@@ -405,17 +408,18 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
         getDB('policies')
           .then((response) => response.json())
           .then((data => {
+            const { response } = data;
             id.forEach(_id => {
               deleteDB(`${collection.name}/`, _id)
                 .then(response => response.json())
                 .then((data) => {
+                  const { response: { value, value: { children, parent, assigned } } } = data;
+
                   dispatch(showDeletedAlert());
                   const currentCollection = collection.name === 'assets' ? 'list' : collection.name;
-                  executePolicies('OnDelete', 'assets', currentCollection, data.response);
+                  executePolicies('OnDelete', 'assets', currentCollection, response, value);
                   loadAssetsData(collection.name);
-
-                  const { response: { value: { children, parent, assigned } } } = data;
-
+                  
                   children.forEach(({ id: childId }) => {
                     updateDB('assets/', { parent: null }, childId)
                       .catch((error) => console.log(error));
@@ -610,6 +614,8 @@ function Assets({ globalSearch, user, setGeneralSearch, showDeletedAlert, showEr
                         className={classes.select}
                         classNamePrefix="select"
                         isClearable={true}
+                        isMulti
+                        maxMenuHeight={90}
                         menuPosition="absolute"
                         name="KPI"
                         onChange={setKpiSelected}

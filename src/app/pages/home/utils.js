@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { getDB, postDB, getOneDB, updateDB } from '../../crud/api';
+import { getDB, postDB } from '../../crud/api';
 import { postFILE } from '../../crud/api';
 
 const {
@@ -70,7 +69,7 @@ export const getVariables = (html) => {
     } else {
       return acu;
     }
-  }, []);
+  }, []) || [];
 };
 
 export const getCurrentDateTime = () => {
@@ -86,11 +85,16 @@ export const simplePost = (collection, object) => {
     .catch((error) => console.error('ERROR', error))
 };
 
-export const getLocationPath = async (locationId) => {
+export const getLocationPath = async (locationId, returnId = false) => {
   const allLocations = await getAllLocations();
   const firstLocation = allLocations.find(({ id }) => id === locationId);
-  const response = recursiveLocationPath(firstLocation, allLocations);
-  return response;
+  const response = recursiveLocationPath(firstLocation, allLocations, returnId);
+  
+  if (!returnId) {
+    return response;
+  } else {
+    return response.split('/');
+  }
 };
 
 const getAllLocations = async () => {
@@ -103,13 +107,82 @@ const getAllLocations = async () => {
     .catch(error => console.log(error));
 }
 
-const recursiveLocationPath = (currentLocation, allLocations) => {
-  const { name, parent } = currentLocation;
-  if (parent === 'root') {
+const recursiveLocationPath = (currentLocation, allLocations, returnId = false) => {
+  const { name, parent, id} = currentLocation;
+  if (parent === 'root' && !returnId) {
     return name;
+  }
+  else if (parent === 'root' && returnId) {
+    return id;
   }
   else {
     const newLocation = allLocations.find(({ id }) => id === parent);
-    return recursiveLocationPath(newLocation, allLocations).concat('/', name);
+    if(returnId){
+      return recursiveLocationPath(newLocation, allLocations, returnId).concat('/', id);
+    }
+    else {
+      return recursiveLocationPath(newLocation, allLocations, returnId).concat('/', name);
+    }
+    ;
   }
+};
+
+export const verifyCustomFields = (customFieldsTab) => {
+  let flag = true;
+  if (!Object.keys(customFieldsTab).length) return true;
+  const RightAndLeft = ['right', 'left'];
+  const customInitialValue = ['singleLine', 'multiLine', 'date', 'dateTime', 'imageUpload', 'currency', 'percentage', 'email', 'decimal', 'richText', 'url', 'formula'];
+  const customSelectedItem = ['dropDown', 'radioButtons'];
+  const customSelectedOptions = ['checkboxes', 'decisionBox'];
+  const customOther = ['fileUpload'];
+  Object.keys(customFieldsTab).map((tabName) => {
+    RightAndLeft.map((side) => {
+      customFieldsTab[tabName][side].forEach(({ content, values: { mandatory, initialValue, fileExt, selectedItem, selectedOptions } }) => {
+        if (!flag || !mandatory) return;
+        if (customInitialValue.includes(content)) {
+          if (content === 'richText') {
+            flag = initialValue.length > 8;
+          } else if (!initialValue) {
+            flag = false;
+          }
+        } else if (customSelectedItem.includes(content)) {
+          if (!selectedItem) {
+            flag = false;
+          }
+        } else if (customSelectedOptions.includes(content)) {
+          if (!selectedOptions || !selectedOptions?.length) {
+            flag = false;
+          }
+        } else if (customOther.includes(content)) {
+          if (content === 'fileUpload') {
+            if (!fileExt) {
+              flag = false;
+            }
+          }
+        }
+      });
+    })
+  });
+
+  return flag;
+};
+
+export const verifyRepeatedValues = (customFieldsTab) => {
+  let data = [];
+  const customInitialValue = ['singleLine', 'multiLine', 'date', 'dateTime', 'currency', 'percentage', 'email', 'decimal', 'url'];
+  const RightAndLeft = ['right', 'left'];
+  if (!Object.keys(customFieldsTab).length) return true;
+
+  Object.keys(customFieldsTab).map((tabName) => {
+    RightAndLeft.map((side) => {
+      customFieldsTab[tabName][side].forEach((customField) => {
+        if (!customInitialValue.includes(customField.content)) return;
+        if (customField.values.repeated) {
+          data.push(customField);
+        }
+      });
+    })
+  });
+  
+  console.log(data);
 };

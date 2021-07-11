@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-imports */
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import {
   Button,
   Dialog,
@@ -8,40 +9,24 @@ import {
   DialogActions,
   Typography,
   IconButton,
-  Tab,
-  Tabs,
-  Paper,
   TextField,
-  FormControl,
-  FormLabel,
-  FormGroup,
   ExpansionPanel,
   ExpansionPanelSummary,
   ExpansionPanelDetails
 } from "@material-ui/core";
-import Select from 'react-select';
 import {
   withStyles,
   useTheme,
   makeStyles
 } from "@material-ui/core/styles";
-import SwipeableViews from "react-swipeable-views";
 import CloseIcon from "@material-ui/icons/Close";
-import CustomFields from '../../../Components/CustomFields/CustomFields';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-
-// import './ModalAssetCategories.scss';
-import ImageUpload from '../../../Components/ImageUpload';
-import { postDBEncryptPassword, getOneDB, updateDB, postDB, getDB } from '../../../../../crud/api';
-import ModalYesNo from '../../../Components/ModalYesNo';
-import Permission from '../../components/Permission';
-import { getFileExtension, saveImage, getImageURL } from '../../../utils';
-
+import { getOneDB, updateDB, postDB, getDB } from '../../../../../crud/api';
+import { actions } from '../../../../../store/ducks/general.duck';
 import { Editor } from 'react-draft-wysiwyg';
-import { EditorState, ContentState, convertToRaw, convertFromHTML, Modifier } from 'draft-js';
+import { EditorState, ContentState, convertToRaw, Modifier } from 'draft-js';
 import draftToHtml from 'draftjs-to-html';
 import htmlToDraft from 'html-to-draftjs';
-
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -122,6 +107,8 @@ const useStyles = makeStyles(theme => ({
 }));
 
 const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employeeProfileRows }) => {
+  const dispatch = useDispatch();
+  const { showCustomAlert } = actions;
   // Example 4 - Tabs
   const classes4 = useStyles4();
   const theme4 = useTheme();
@@ -147,6 +134,15 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
   };
 
   const handleSave = () => {
+    if (!values.name) {
+      dispatch(showCustomAlert({
+        message: 'Please assign a name to the layout',
+        open: true,
+        type: 'warning'
+      }));
+      return;
+    }
+    
     const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
     const body = { ...values, layout };
 
@@ -256,7 +252,7 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
               <div className="profile-tab-wrapper">
                 <div name="Expansion Panel" style={{ width: '95%', margin: '15px' }}>
                   {/* Custom Controls */}
-                  <ExpansionPanel>
+                  <ExpansionPanel defaultExpanded={true}>
                     <ExpansionPanelSummary
                       expandIcon={<ExpandMoreIcon />}
                       aria-controls="panel1a-content"
@@ -276,7 +272,7 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
                     </ExpansionPanelDetails>
                   </ExpansionPanel>
                   {/* Tab Properties */}
-                  <ExpansionPanel>
+                  <ExpansionPanel defaultExpanded={true}>
                     <ExpansionPanelSummary
                       expandIcon={<ExpandMoreIcon />}
                       aria-controls="panel2a-content"
@@ -301,7 +297,7 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
                     </ExpansionPanelDetails>
                   </ExpansionPanel>
                   {/* Field Properties */}
-                  <ExpansionPanel>
+                  <ExpansionPanel defaultExpanded={true}>
                     <ExpansionPanelSummary
                       expandIcon={<ExpandMoreIcon />}
                       aria-controls="panel3a-content"
@@ -313,11 +309,6 @@ const ModalLayoutEmployees = ({ showModal, setShowModal, reloadTable, id, employ
                       <div className="field-properties-wrapper">
                         <div style={{ marginTop: '0px', marginBottom: '20px' }}>
                           <Editor
-                            // onFocus={e => EditorState.moveFocusToEnd(editor)}
-                            // onFocus={e => console.log('>>>>>>>focus', EditorState.moveFocusToEnd(editor))}
-                            // onBlur={e => console.log('>>>>>>>blur')}
-                            // onBlur={addStar}
-                            onClick={e => console.log('>>>>>>>click', e)}
                             editorState={editor}
                             toolbarClassName="toolbarClassName"
                             wrapperClassName="wrapperClassName"

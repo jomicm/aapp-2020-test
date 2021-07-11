@@ -37,7 +37,7 @@ import { actions } from '../../../../store/ducks/general.duck';
 import { postDB, getOneDB, updateDB } from '../../../../crud/api';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import ImageUpload from '../../Components/ImageUpload';
-import { getFileExtension, saveImage, getImageURL, getLocationPath } from '../../utils';
+import { getFileExtension, saveImage, getImageURL, getLocationPath, verifyCustomFields } from '../../utils';
 import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetList.scss';
 import OtherModalTabs from '../components/OtherModalTabs';
@@ -508,6 +508,11 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
       return;
     }
 
+    if (!verifyCustomFields(customFieldsTab)) {
+      dispatch(showFillFieldsAlert());
+      return;
+    }
+
     const fileExt = getFileExtension(image);
 
     let reassignedAssets = [];
@@ -536,8 +541,9 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
 
     const parseAssetsAssigned = assetsBeforeSaving.map(({ id, name, brand, model, EPC, serial }) => ({ id, name, brand, model, EPC, serial }));
 
+    const { creationDate, ...otherValues } = values;
     const body = {
-      ...values,
+      ...otherValues,
       customFieldsTab,
       fileExt,
       layoutCoords: layoutMarker ? layoutMarker : null,
@@ -554,7 +560,7 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
           const { _id } = response.response[0];
           handleChildrenOnSaving(_id);
           saveAndReload('assets', _id);
-          executePolicies('OnAdd', 'assets', 'list', policies);
+          executePolicies('OnAdd', 'assets', 'list', policies, response.response[0]);
         })
         .catch(error => {
           dispatch(showErrorAlert())
@@ -566,9 +572,10 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
           dispatch(showUpdatedAlert());
           handleChildrenOnSaving(id[0]);
           saveAndReload('assets', id[0]);
-          executePolicies('OnEdit', 'assets', 'list', policies);
-
-          const { response: { value: { assigned } } } = data;
+          
+          const { response: { value, value: { assigned } } } = data;
+          
+          executePolicies('OnEdit', 'assets', 'list', policies, value);
 
           if (assigned) {
             if (assigned.length) {
@@ -665,11 +672,12 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
       getOneDB('references/', referencesSelectedId)
         .then(response => response.json())
         .then(data => {
-          const { name, brand, model, customFieldsTab, fileExt } = data.response;
+          const { name, brand, model, customFieldsTab, fileExt, selectedProfile } = data.response;
           setValues({
             ...values,
             name,
             brand,
+            category: selectedProfile,
             model
           });
           const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
@@ -692,20 +700,19 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
         const locationPath = await getLocationPath(location);
         const assignedParent = assets.find(({ id }) => id === parent);
         const assignedParentText = assignedParent ? `${assignedParent.name || 'No Name'}, ${assignedParent.brand || 'No Brand'}, ${ assignedParent.model ||'No Model'}, ${ assignedParent.serial ||'No Serial Number'}, ${ assignedParent.EPC ? `(${assignedParent.EPC})` : 'No EPC'}` : 'No Parent Assigned';
-        executePolicies('OnLoad', 'assets', 'list', policies);
         setAssetLocation(location);
         setLayoutMarker(layoutCoords) //* null if not specified
         setMapMarker(mapCoords) //* null if not specified
         setAssetsBeforeSaving(children ? children : []) //* null if not specified
 
         getOneDB('references/', referenceId)
-          .then((response) => response.json())
-          .then(async (data) => {
-            const { selectedProfile: { value, label } } = data.response;
-            const onLoadResponse = await executeOnLoadPolicy(value, 'assets', 'list', policies);
+          .then((referenceResponse) => referenceResponse.json())
+          .then(async (referenceData) => {
+            const { selectedProfile: { value, label }, fileExt } = referenceData.response;
+            const onLoadResponse = await executeOnLoadPolicy(value, 'assets', 'list', policies, data.response);
             setCustomFieldsPathResponse(onLoadResponse);
             setValues(prev => ({ ...prev, category: { value, label } }));
-            setReferenceImage(getImageURL(referenceId, 'references', data.response.fileExt));
+            setReferenceImage(getImageURL(referenceId, 'references', fileExt));
           })
           .catch((error) => showCustomAlert(({
             type: 'error',

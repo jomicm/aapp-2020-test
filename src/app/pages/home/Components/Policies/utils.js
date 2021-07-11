@@ -1,14 +1,17 @@
 import axios from 'axios';
-import { getCurrentDateTime, simplePost } from '../../utils';
-import { collections } from '../../constants';
+import { getCurrentDateTime, simplePost, getVariables } from '../../utils';
+import { collections, allBaseFields, modulesCatalogues } from '../../constants';
+import { extractCustomFieldValues } from '../../Reports/reportsHelpers';
 import objectPath from 'object-path';
 
-export const executePolicies = (actionName, module, selectedCatalogue, policies) => {
+export const executePolicies = (actionName, module, selectedCatalogue, policies, record = {}) => {
   const { dateFormatted, rawDate, timeFormatted } = getCurrentDateTime();
   const timeStamp = `${dateFormatted} ${timeFormatted}`;
   const filteredPolicies = policies.filter(
     (policy) => policy.selectedAction === actionName && policy.selectedCatalogue === selectedCatalogue && policy.module === module
   );
+
+  console.log(selectedCatalogue, module);
 
   filteredPolicies.forEach(async ({
     apiDisabled,
@@ -29,27 +32,33 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
     tokenEnabled
   }) => {
     if (!messageDisabled) {
+      const convertedHTML = changeVariables(html, record, module, selectedCatalogue);
+      const convertedSubject = changeVariables(subjectMessage, record, module, selectedCatalogue);
+
       const messageObj = {
         formatDate: rawDate,
         from: messageFrom,
-        html,
+        html: convertedHTML || html,
         read: false,
         status: 'new',
-        subject: subjectMessage,
+        subject: convertedSubject || subjectMessage,
         timeStamp,
         to: messageTo
       };
       simplePost(collections.messages, messageObj);
     }
     if (!notificationDisabled) {
+      const convertedMessage = changeVariables(messageNotification, record, module, selectedCatalogue);
+      const convertedSubject = changeVariables(subjectNotification, record, module, selectedCatalogue);
+
       const notificationObj = {
         formatDate: rawDate,
         from: notificationFrom,
         icon,
-        message: messageNotification,
+        message: convertedMessage || messageNotification,
         read: false,
         status: 'new',
-        subject: subjectNotification,
+        subject: convertedSubject || subjectNotification,
         timeStamp,
         to: notificationTo
       };
@@ -57,10 +66,11 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
     }
     if (!apiDisabled) {
       try {
+        const convertedURL = changeVariables(urlAPI, record, module, selectedCatalogue);
         const validBody = JSON.parse(bodyAPI);
         const headers = { Authorization: `Bearer ${token}` };
         await axios.post(
-          urlAPI,
+          convertedURL || urlAPI,
           validBody,
           { ...(tokenEnabled ? { headers } : {}) }
         );
@@ -71,7 +81,7 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies)
   })
 };
 
-export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, policies) => {
+export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, policies, record = {}) => {
   const filteredPolicies = policies.find(
     (policy) => policy.selectedAction === 'OnLoad' && policy.selectedOnLoadCategory?.id === itemID && policy.selectedCatalogue === selectedCatalogue && policy.module === module
   );
@@ -83,9 +93,10 @@ export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, pol
   let res;
 
   if (!onLoadDisabled) {
-    if (tokenOnLoadEnabled) {      
+    if (tokenOnLoadEnabled) {
       try {
-        const { data } = await axios.get(urlOnLoad, {
+        const convertedURL = changeVariables(urlOnLoad, record, module, selectedCatalogue);
+        const { data } = await axios.get(convertedURL || urlOnLoad, {
           headers: {
             Authorization: `Bearer ${tokenOnLoad}`,
           }
@@ -96,7 +107,8 @@ export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, pol
       }
     } else {
       try {
-        const { data } = await axios.get(urlOnLoad);
+        const convertedURL = changeVariables(urlOnLoad, record, module, selectedCatalogue);
+        const { data } = await axios.get(convertedURL || urlOnLoad);
         res = handlePathResponse(data, onLoadFields);
       } catch (error) {
         console.log(error);
@@ -113,4 +125,74 @@ const handlePathResponse = (response, onLoadFields, res = {}) => {
   });
 
   return res;
+};
+
+const replaceBulk = (str, findArray, replaceArray) => {
+  var i, regex = [], map = {};
+  for (i = 0; i < findArray.length; i++) {
+    regex.push(findArray[i].replace(/([-[\]{}()*+?.\\^$|#,])/g, '\\$1'));
+    map[findArray[i]] = replaceArray[i];
+  }
+  regex = regex.join('|');
+  str = str.replace(new RegExp(regex, 'g'), function (matched) {
+    return map[matched];
+  });
+
+  return str;
+}
+
+const changeVariables = (text, record, module, selectedCatalogue) => {
+  let convertedMessage = null;
+  let newChars = [];
+  let customFields = [];
+  const variables = getVariables(text);
+  var regex = /^[0-9a-f]{12}/i;
+
+  if (variables.length) {
+    variables.forEach(({ varName }) => {
+      const recordField = allBaseFields[modulesCatalogues[module][selectedCatalogue]][varName]?.realId;
+      const newMessage = record[recordField] || record[varName];
+
+      if (Array.isArray(newMessage)) {
+        const values = newMessage.map(({ name, label }) => name || label).join(', ');
+        newChars.push(values);
+      } else if (typeof newMessage === 'object') {
+        const value = newMessage.name || newMessage.label;
+        newChars.push(value);
+      } else if (typeof newMessage === 'string' || typeof newMessage === 'number') {
+        newChars.push(newMessage.toString());
+      } else if (regex.test(varName)) {
+        console.log('Es un custom field');
+        customFields.push(varName);
+      } else {
+        newChars.push('N/A');
+      }
+    });
+
+    const customFieldsValues = getCustomFieldValues(record);
+
+    Object.entries(customFieldsValues || {}).forEach((field) => {
+      if (customFields.includes(field[0])) {
+        const index = variables.findIndex(({ varName }) => varName === field[0]);
+        newChars.splice(index, 0, field[1]);
+      }
+    });
+
+    convertedMessage = replaceBulk(text, variables.map(({ varName }) => `%{${varName}}`), newChars);
+  }
+
+  return convertedMessage;
+};
+
+const getCustomFieldValues = (record) => {
+  let filteredCustomFields = {};
+  console.log('CustomFieldsFunc: ', Object.values(record.customFieldsTab || {}))
+  Object.values(record.customFieldsTab || {}).forEach(tab => {
+    const allCustomFields = [...tab.left, ...tab.right];
+    allCustomFields.map(field => {
+      filteredCustomFields = { ...filteredCustomFields, ...extractCustomFieldValues(field) };
+    });
+  });
+
+  return filteredCustomFields;
 };

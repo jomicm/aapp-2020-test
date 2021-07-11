@@ -31,10 +31,13 @@ export default function RecursiveTreeView(props) {
 
   return (
     <TreeView
+      {...(props.customProps || {})}
       className={classes.root}
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpanded={['root']}
       defaultExpandIcon={<ChevronRightIcon />}
+      selected={props.selected || null}
+      onNodeToggle={(props.onNodeToggle || function (event, nodes) {})}
     >
       {renderTree(props.data)}
     </TreeView>

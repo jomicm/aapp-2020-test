@@ -31,12 +31,13 @@ function Users({ globalSearch, setGeneralSearch, user }) {
   const { showDeletedAlert, showErrorAlert } = actions;
   const [tab, setTab] = useState(0);
   const [userLocations, setUserLocations] = useState([]);
+  const [allUserProfiles, setAllUserProfiles] = useState([]);
 
   const { policies, setPolicies } = usePolicies();
 
   const policiesBaseFields = {
-    list: { id: { validationId: 'userId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.userList },
-    references: { id: { validationId: 'userReferenceId', component: 'textField', compLabel: 'ID' }, ...allBaseFields.userReferences }
+    list: { ...allBaseFields.userList },
+    references: { ...allBaseFields.userReferences }
   };
 
   const createUserProfilesRow = (id, name, creator, creationDate, updateDate, fileExt) => {
@@ -135,6 +136,20 @@ function Users({ globalSearch, setGeneralSearch, user }) {
       .catch((error) => dispatch(showErrorAlert()));
   };
 
+  const loadUserProfiles = () => {
+    getDB('userProfiles')
+      .then((response) => response.json())
+      .then((data) => {
+        const userProfiles = data.response.map((row) => {
+          const date = String(new Date(row.creationDate)).split('GMT')[0];
+          const updateDate = String(new Date(row.updateDate)).split('GMT')[0];
+          return createUserProfilesRow(row._id, row.name, row.creationUserFullName, date, updateDate, row.fileExt)
+        }) || [];
+        setAllUserProfiles(userProfiles);
+      })
+      .catch((error) => console.log(error));
+  };
+
   const loadUsersData = (collectionNames = ['user', 'userProfiles']) => {
     collectionNames = !Array.isArray(collectionNames) ? [collectionNames] : collectionNames;
     collectionNames.forEach(collectionName => {
@@ -149,7 +164,6 @@ function Users({ globalSearch, setGeneralSearch, user }) {
       if (collectionName === 'user') {
         if (tableControl.user.locationsFilter.length) {
           queryLike = tableControl.user.locationsFilter.map(locationID => ({ key: 'locationsTable.parent', value: locationID }))
-          console.log(queryLike);
         } else {
           queryLike = tableControl.user.searchBy ? (
             [{ key: tableControl.user.searchBy, value: tableControl.user.search }]
@@ -178,7 +192,7 @@ function Users({ globalSearch, setGeneralSearch, user }) {
           }))
         });
 
-    
+
       getDBComplex({
         collection: collectionName,
         condition,
@@ -211,7 +225,10 @@ function Users({ globalSearch, setGeneralSearch, user }) {
     });
   };
 
-  useEffect(() => loadUserLocations(), []);
+  useEffect(() => {
+    loadUserLocations();
+    loadUserProfiles();
+  }, []);
 
   useEffect(() => {
     loadUsersData('user');
@@ -298,19 +315,20 @@ function Users({ globalSearch, setGeneralSearch, user }) {
             id.forEach(_id => {
               deleteDB(`${collection.name}/`, _id)
                 .then((response) => response.json())
-                .then((data) => {
+                .then((userData) => {
                   dispatch(showDeletedAlert());
                   const currentCollection = collection.name === 'user' ? 'list' : 'references';
                   executePolicies('OnDelete', 'user', currentCollection, response);
                   loadUsersData(collection.name)
-                  
+                  loadUserProfiles();
+
                   if (currentCollection === 'list') {
-                    const { response: { value: { groups } } } = data;
+                    const { response: { value: { groups } } } = userData;
                     groups.forEach(({ id: groupId }) => {
                       getOneDB('settingsGroups/', groupId)
                         .then((response) => response.json())
-                        .then((data) => {
-                          const { name, members } = data.response;
+                        .then((groupData) => {
+                          const { members } = groupData.response;
                           const membersUpdated = members.filter(({ value: userId }) => userId !== _id) || [];
                           updateDB('settingsGroups/', { members: membersUpdated, numberOfMembers: membersUpdated.length }, groupId)
                             .catch((error) => console.log(error));
@@ -371,9 +389,10 @@ function Users({ globalSearch, setGeneralSearch, user }) {
                       policies={policies}
                       showModal={control.openUsersModal}
                       setShowModal={(onOff) => setControl({ ...control, openUsersModal: onOff })}
+                      reloadProfiles={() => loadUserProfiles()}
                       reloadTable={() => loadUsersData('user')}
                       id={control.idUser}
-                      userProfileRows={control.userProfilesRows}
+                      userProfileRows={allUserProfiles}
                     />
                     <div className='kt-separator kt-separator--dashed' />
                     <div className='kt-section__content'>
@@ -381,7 +400,6 @@ function Users({ globalSearch, setGeneralSearch, user }) {
                         controlValues={tableControl.user}
                         headRows={usersHeadRows}
                         locationControl={(locations) => {
-                          console.log(locations);
                           setTableControl(prev => ({
                             ...prev,
                             user: {

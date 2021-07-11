@@ -154,15 +154,18 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id, polici
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('categories', _id);
-          executePolicies('OnAdd', 'assets', 'categories', policies);
+          executePolicies('OnAdd', 'assets', 'categories', policies, response.response[0]);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('categories/', body, id[0])
-        .then(response => {
+        .then(response => response.json())
+        .then(data => {
+          const { response: { value } } = data;
+
           dispatch(showUpdatedAlert());
           saveAndReload('categories', id[0]);
-          executePolicies('OnEdit', 'assets', 'categories', policies);
+          executePolicies('OnEdit', 'assets', 'categories', policies, value);
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -202,7 +205,6 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id, polici
       .then(response => response.json())
       .then(data => {
         const { name, depreciation, customFieldsTab, fileExt } = data.response;
-        executePolicies('OnLoad', 'assets', 'categories', policies);
         const imageURL = getImageURL(id, 'categories', fileExt);
         const obj = { name, depreciation, imageURL };
         console.log('obj:', obj)

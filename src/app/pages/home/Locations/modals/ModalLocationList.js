@@ -30,7 +30,7 @@ import {
 } from '../../../../partials/content/Portlet';
 import { getOneDB, postDB, updateDB } from '../../../../crud/api';
 import { CustomFieldsPreview } from '../../constants';
-import { getFileExtension, getImageURL, saveImage } from '../../utils';
+import { getFileExtension, getImageURL, saveImage, verifyCustomFields } from '../../utils';
 import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
 import { usePolicies } from '../../Components/Policies/hooks';
 import GoogleMaps from '../../Components/GoogleMaps';
@@ -156,7 +156,7 @@ const ModalLocationList = ({
   const [tab, setTab] = useState(activeTab ? +activeTab : 0);
   const [tabs, setTabs] = useState([]);
   const theme4 = useTheme();
-  const { showCustomAlert, showErrorAlert, showSavedAlert, showUpdatedAlert } = actions;
+  const { showCustomAlert, showErrorAlert, showSavedAlert, showUpdatedAlert, showFillFieldsAlert } = actions;
   const [value4, setValue4] = useState(0);
   const [values, setValues] = useState({
     categoryPic: '/media/misc/placeholder-image.jpg',
@@ -222,6 +222,12 @@ const ModalLocationList = ({
       );
       return;
     }
+
+    if (!verifyCustomFields(values.customFieldsTab)) {
+      dispatch(showFillFieldsAlert());
+      return;
+    }
+
     const fileExt = getFileExtension(image);
     const body = {
       ...values,
@@ -237,16 +243,19 @@ const ModalLocationList = ({
           dispatch(showSavedAlert());
           const { _id } = data.response[0];
           saveAndReload('locationsReal', _id);
-          executePolicies('OnAdd', 'locations', 'list', policies);
+          executePolicies('OnAdd', 'locations', 'list', policies, data.response[0]);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
       body.parent = realParent;
       updateDB('locationsReal/', body, parent)
-        .then((response) => {
+        .then((response) => response.json())
+        .then((data) => {
+          const { response: { value } } = data;
+
           dispatch(showUpdatedAlert());
           saveAndReload('locationsReal', parent);
-          executePolicies('OnEdit', 'locations', 'list', policies);
+          executePolicies('OnEdit', 'locations', 'list', policies, value);
         })
         .catch(error => dispatch(showErrorAlert()));
     }
@@ -325,7 +334,7 @@ const ModalLocationList = ({
           profileName
         } = data.response;
         const imageURL = realParent !== "root" ? getImageURL(realParent, 'locationsReal', parentExt) : '';
-        const onLoadResponse = await executeOnLoadPolicy(profileId, 'locations', 'list', policies);
+        const onLoadResponse = await executeOnLoadPolicy(profileId, 'locations', 'list', policies, data.response);
         setCustomFieldsPathResponse(onLoadResponse);
         setValues({ ...values, name, profileId, profileLevel, profileName, customFieldsTab, imageURL });
         setMarkers(imageInfo !== null ? mapInfo ? [{ top: imageInfo.top, left: imageInfo.left }] :[] : []);

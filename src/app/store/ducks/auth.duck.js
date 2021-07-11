@@ -38,6 +38,7 @@ export const reducer = persistReducer(
 
         case actionTypes.Logout: {
           routerHelpers.forgotLastLocation();
+          localStorage.removeItem('accessToken');
           return initialAuthState;
         }
 

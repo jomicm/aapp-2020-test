@@ -20,6 +20,18 @@ const _generalFields = {
   processLive: ['folio', 'name', 'stages', 'type', 'dueDate', 'creator', 'creationDate']
 };
 
+export const baseFieldsPerModule = {
+  assets: ['assets1', 'assets2'],
+  references: 'references',
+  categories: 'categories',
+  user: 'userList',
+  userProfiles: 'userReferences',
+  employees: 'employees',
+  employeeProfiles: 'employeeReferences',
+  locations: 'locations',
+  locationsReal: 'locationsList'
+}
+
 export const formatCollection = (collectionName, completeFields) => {
   let customFieldNames = {};
   const rowToObjects = completeFields.map(row => {
@@ -78,7 +90,7 @@ export const extractGeneralField = (collectionName, row) => {
 
     if (collectionName === 'user' && (field === 'boss' || field === 'groups')) {
       if (field === 'boss') {
-        objectValue = row['selectedBoss'] ? `${row['selectedBoss'].name} ${row['selectedBoss'].lastName}` : ''; 
+        objectValue = row['selectedBoss'] ? `${row['selectedBoss'].name} ${row['selectedBoss'].lastName}` : '';
       }
 
       if (field === 'groups') {
@@ -89,6 +101,29 @@ export const extractGeneralField = (collectionName, row) => {
     filteredGeneralFields = { ...filteredGeneralFields, [currentField]: objectValue ? objectValue : label };
   });
   return filteredGeneralFields;
+};
+
+export const extractCustomFieldValues = field => {
+  const { content, values, id } = field;
+  if (isEmpty(values)) {
+    return { [content]: '' };
+  }
+  const { fieldName, initialValue, options, selectedItem, fileName, selectedOptions } = values;
+  if (_types['simpleType'].includes(content)) {
+    return { [id]: initialValue || '' };
+  } else if (_types['dropType'].includes(content)) {
+    return { [id]: options[selectedItem] || '' };
+  } else if (_types['radioType'].includes(content)) {
+    if (!selectedItem) return { [fieldName]: '' };
+    const selected = selectedItem.slice(-1);
+    return { [id]: options[Number(selected) - 1] || '' };
+  } else if (_types['checkType'].includes(content)) {
+    return { [id]: selectedOptions ? selectedOptions.join(', ') : '' };
+  } else if (_types['fileType'].includes(content)) {
+    return { [id]: fileName ? `${fileName}` : '' };
+  } else if (_types['imageType'].includes(content)) {
+    return { [id]: fileName ? `${fileName}.${initialValue}` : '' };
+  }
 };
 
 export const extractCustomField = field => {
@@ -120,9 +155,9 @@ export const extractCustomFieldId = (field) => {
   const { fieldName } = values;
   let res;
   Object.entries(_types).forEach(([key, value]) => {
-      if (value.includes(content)) {
-        res = { [id]: fieldName || content };
-      }
+    if (value.includes(content)) {
+      res = { [id]: fieldName || content };
+    }
   });
 
   return res;
@@ -154,7 +189,30 @@ export const convertRowsToDataTableObjects = rows => {
 };
 
 export const getGeneralFieldsHeaders = collection => {
-  if(!collection) return [];
-  const headerObject = _generalFields[collection].map((e) => ({id: e, label: e}))
+  if (!collection) return [];
+  const headerObject = _generalFields[collection].map((e) => ({ id: e, label: e }))
   return headerObject;
 }
+
+export const getUserPermittedModules = (user) => {
+  const modulePermissions = ['assets', 'users', 'employees', 'locations'];
+  let modules = [];
+  modulePermissions.forEach((permission) => {
+    if (Object.keys(user.profilePermissions).includes(permission)) {
+      if (permission === 'assets') {
+        modules.push({ id: 'assets', label: 'Assets' }, { id: 'references', label: 'References' }, { id: 'categories', label: 'Categories' });
+      }
+      if (permission === 'users') {
+        modules.push({ id: 'user', label: 'Users' }, { id: 'userProfiles', label: 'User Profiles' });
+      }
+      if (permission === 'employees') {
+        modules.push({ id: 'employees', label: 'Employees' }, { id: 'employeeProfiles', label: 'Employee Profiles' });
+      }
+      if (permission === 'locations') {
+        modules.push({ id: 'locationsReal', label: 'Locations' }, { id: 'locations', label: 'Location Profiles' });
+      }
+    }
+  });
+
+  return modules;
+};

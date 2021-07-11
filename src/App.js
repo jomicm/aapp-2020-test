@@ -19,10 +19,21 @@ export default function App({ store, persistor, basename }) {
   });
 
   const handleIdle = () => {
+    const notLogoutRoutes = ['login', 'passwordRecovery'];
     const hrefSplitted = window.location.href.split('/');
-    if (hrefSplitted[hrefSplitted.length - 1] !== 'login' && logoutPreferences.selectedInactivity === 1) {
+    if (!notLogoutRoutes.includes(hrefSplitted[hrefSplitted.length - 1]) && logoutPreferences.selectedInactivity === 1) {
       window.location.replace('/logout');
     };
+  };
+
+  const handleLocalStorageToken = () => {
+    const token = localStorage.getItem('accessToken')
+    const notLogoutRoutes = ['login', 'passwordRecovery'];
+    const hrefSplitted = window.location.href.split('/');
+
+    if (!token && !notLogoutRoutes.includes(hrefSplitted[hrefSplitted.length - 1])) {
+      window.location.replace('/logout');
+    }
   };
 
   useEffect(() => {
@@ -39,6 +50,12 @@ export default function App({ store, persistor, basename }) {
     timeout: logoutPreferences.inactivityPeriod,
     onActive: () => { },
     onIdle: handleIdle,
+  });
+
+  useIdleTimer({
+    timeout: 300000,
+    onActive: () => { },
+    onIdle: handleLocalStorageToken,
   });
 
   return (
