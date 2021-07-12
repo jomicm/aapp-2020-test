@@ -85,6 +85,7 @@ const LiveProcessInfo = ({ processInfo }) => {
   const { processData = {}, requestUser } = processInfo;
   const { email: userEmail, name: userName, lastName: userLastName } = requestUser || {};
   const { name, currentStage, totalStages, selectedProcessType } = processData;
+  const selfApprove = processData?.stages?.stage_1.isSelfApprove || selectedProcessType === 'short';
   const processInfoTexts = [
     { label: 'Process Name:', value: name },
     { label: 'Process Creator:', value: `${userName} ${userLastName} (${userEmail})` },
@@ -188,7 +189,7 @@ const LiveProcessInfo = ({ processInfo }) => {
                     nodeId={getRandomId()}
                     labelText={`${virtualUser ? (virtualUser === 'boss' ? '[DB] ' : virtualUser === 'locationManager' ? '[LM] ' : virtualUser === 'locationWitness' ? '[LW] ' : virtualUser === 'assetSpecialist' ? '[AS] ' : virtualUser === 'initiator' ? '[PI] ' : '') : ''}${name} ${lastName} (${email})`}
                     labelIcon={!fulfillDate ? HourglassEmptyIcon : AccountCircleIcon}
-                    labelInfo={!fulfillDate ? 'Pending' : 'Fulfilled'}
+                    labelInfo={selfApprove || fulfilled === 'skipped' ? 'Skipped' : !fulfillDate ? 'Pending' : 'Fulfilled'}
                   >
                     {fulfillDate &&
                       <>
@@ -214,7 +215,7 @@ const LiveProcessInfo = ({ processInfo }) => {
                     nodeId={getRandomId()}
                     labelText={`${virtualUser ? (virtualUser === 'boss' ? '[DB] ' : virtualUser === 'locationManager' ? '[LM] ' : virtualUser === 'locationWitness' ? '[LW] ' : virtualUser === 'assetSpecialist' ? '[AS] ' : '') : ''}${name} ${lastName} (${email})`}
                     labelIcon={!sentDate ? HourglassEmptyIcon : sent ? SendIcon : ThumbDownIcon}
-                    labelInfo={!sentDate ? 'Pending' : sent ? 'Sent' : 'Not Sent'}
+                    labelInfo={selfApprove ? 'Skipped' : !sentDate ? 'Pending' : sent ? 'Sent' : 'Not Sent'}
                   >
                     {sentDate &&
                       <StyledTreeItem

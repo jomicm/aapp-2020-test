@@ -265,7 +265,7 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
     category: '',
     status: '',
     serial: '',
-    responsible: '',
+    assignedTo: '',
     notes: '',
     quantity: 0,
     purchase_date: '',
@@ -278,7 +278,8 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
     creator: '',
     creationDate: '',
     labeling_user: '',
-    labeling_date: ''
+    labeling_date: '',
+    parent: '',
   });
   const [customFieldsTab, setCustomFieldsTab] = useState({});
   const [tabs, setTabs] = useState([]);
@@ -314,7 +315,7 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
     category: {
       componentProps: {
         onChange: handleChange('category'),
-        value: values.category?.label,
+        value: values.category?.label || '',
         inputProps: {
           readOnly: true,
         }

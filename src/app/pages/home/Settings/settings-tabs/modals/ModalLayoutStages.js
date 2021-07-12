@@ -307,8 +307,8 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
                             value={values.sendMessageAt || ''}
                             onChange={handleChange('sendMessageAt')}
                           >
-                            <MenuItem value={'end'}>At the start</MenuItem>
-                            <MenuItem value={'start'}>At the end</MenuItem>
+                            <MenuItem value={'end'}>At the end</MenuItem>
+                            <MenuItem value={'start'}>At the start</MenuItem>
                           </Select>
                         </FormControl>
                         {/* <FormControl

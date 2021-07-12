@@ -88,15 +88,16 @@ const LiveProcessTab = ({
     setSelection(rows);
   };
   const showButtons = (isCreation = false) => {
+    const selfApprove = processInfo?.processData?.stages['stage_1'].isSelfApprove || processInfo?.processData?.selectedProcessType === 'short';
    if(isCreation){
      return true;
    }
-   if(!currentStage || !Object.keys(currentStage).length > 0){
+   if(!currentStage || !Object.keys(currentStage).length > 0 || selfApprove){
      return false;
    };
-
-   const stageApprovals = currentStage.approvals.map(({_id}) => _id);
-   const thisApproval = currentStage.approvals.find(({_id}) => user.id === _id )
+   
+   const stageApprovals = currentStage.approvals.map(({_id, id}) => _id || id);
+   const thisApproval = currentStage.approvals.find(({_id, id}) => user.id === (_id || id) )
    if(!stageApprovals.includes(user.id) || !thisApproval || thisApproval.fulfilled ){
      return false;
    }

@@ -56,8 +56,8 @@ const AssetFinder = ({
   const extractValidAssets = (cartRows, { stages }) => {
     const requestedAssetsIds = cartRows.map(({ id }) => id);
     Object.entries(stages).forEach(([key, { approvals }]) => {
-      approvals.forEach(({ cartRows }) => {
-        cartRows.forEach(({ id, status }) => {
+      (approvals || []).forEach(({ cartRows }) => {
+        (cartRows || []).forEach(({ id, status }) => {
           if (status !== 'Approved' && requestedAssetsIds.includes(id)) {
             const index = requestedAssetsIds.indexOf(id);
             requestedAssetsIds.splice(index, 1);
@@ -69,38 +69,64 @@ const AssetFinder = ({
     return requestedAssetsIds.map((reqId) => cartRows.find(({ id }) => reqId === id));
   };
 
+  const getMessages = (processData, asset) => {
+    const result = Object.values(processData.stages).map(({ approvals, stageName }) => {
+      const messages = [];
+      approvals.map(({name, lastName, email, cartRows}) => {
+        const thisAsset = cartRows.find(({id}) => id === asset.id);
+        if(thisAsset.message){
+          messages.push({ user: `${name} ${lastName} (${email})`, message: thisAsset.message })
+        }
+      })
+      return ({ stageName, messages});
+    });
+    return result;
+  }
+
   useEffect(() => {
     if (processInfo && Object.keys(processInfo).length){
-      const { cartRows, processData } = processInfo;
+      const { cartRows, processData, created } = processInfo;
       const stageFulfilled = Object.values(processData.stages || []).map(({ stageFulfilled }) => ({ stageFulfilled }));
       const isProcessComplete = stageFulfilled.every(({ stageFulfilled }) => stageFulfilled === true);
-      if(isProcessComplete && stageFulfilled.length !== 0){
-        const validAssetsID =  extractValidAssets(cartRows, processData).map(({id}) => (id)); 
-        const invalidAssetsID = cartRows.filter(({id}) => !validAssetsID.includes(id)).map(({id}) => (id)) || [];
+      const selfApprove = processData.stages['stage_1'].isSelfApprove || processData.selectedProcessType === 'short';
+      if(isProcessComplete && stageFulfilled.length !== 0 && !selfApprove){
+        const validAssetsID =  extractValidAssets(cartRows, processData).map(({id}) => (id));
+        const invalidAssetsID = cartRows.filter(({id}) => !validAssetsID.includes(id)).map(({id}) => (id)) || []; 
 
         const tempAssetRows = cartRows.map((asset) => {
+          const assetMessages = getMessages(processData, asset);
           if(validAssetsID.includes(asset.id)){
-            return ({...asset, status: 'approved'});
+            return ({...asset, id: asset._id || asset.id, message: assetMessages, status: 'approved'});
           }
           else if(invalidAssetsID.includes(asset.id)){
-            return ({...asset, status: 'rejected'});
+            return ({...asset, id: asset._id || asset.id, message: assetMessages, status: 'rejected'});
           }
           else {
-            return asset;
+            return ({...asset, id: asset._id || asset.id });;
           }
         });
         setAssetRows(tempAssetRows);
       }
-      else if (processData.stages['stage_1'].isSelfApprove) {
-        const tempAssetRows = cartRows.map((asset) => ({...asset, status: 'approved'})); 
+      else if (selfApprove) {
+        const tempAssetRows = created?.map((asset) => ({...asset, id: asset._id,  status: 'approved'})) || []; 
         setAssetRows(tempAssetRows);
       }
     }    
-  }, [processInfo])
+  }, [processInfo]);
+  
   const [searchText, setSearchText] = useState('');
   const [assetRows, setAssetRows] = useState(rows);
 
   useEffect(() => {
+    if(processInfo && Object.keys(processInfo).length){
+      const { processData } = processInfo;
+      const stageFulfilled = Object.values(processData.stages || []).map(({ stageFulfilled }) => ({ stageFulfilled }));
+      const isProcessComplete = stageFulfilled.every(({ stageFulfilled }) => stageFulfilled === true);
+
+      if(isProcessComplete){
+        return;
+      }
+    }
     if(rows === assetRows || !rows.length || !rows) {
       return;
     }
@@ -133,7 +159,7 @@ const AssetFinder = ({
       .then(response => response.json())
       .then( async data => {
         const rows = await Promise.all(data.response.map( async row => {
-          const { name, brand, model, _id: id, sn = 'sn', fileExt,customFieldsTab } = row;
+          const { name, brand, model, _id: id, sn = 'sn', fileExt,customFieldsTab, location } = row;
           const assigned = !!row.assigned;
           if( isAssetReference ){
             const {selectedProfile} = row;
@@ -158,7 +184,7 @@ const AssetFinder = ({
           }
           const locationPath = await getLocationPath(row.location);
           const history = row.history || [];
-          return { name, brand, model, id, sn, assigned, fileExt, originalLocation: locationPath, history,};
+          return { name, brand, model, id, sn, assigned, fileExt, originalLocation: locationPath, history, location};
         }));
         setAssetRows(rows);
       })
@@ -167,6 +193,14 @@ const AssetFinder = ({
 
   const isAssetEdition = () => {
     return processInfo?.processData?.stages[`stage_${processInfo.processData.currentStage}`]?.isAssetEdition
+  }
+
+  const showLocationTree = () => {
+    if(isLinkedToProcess || processType === 'decommission' || processType === 'maintenance' ){
+      return false;
+    }
+  
+    return true;
   }
 
   const handleSelectionChange = (selection) => {
@@ -264,7 +298,7 @@ const AssetFinder = ({
                 </Accordion>
               }
               {
-                !isLinkedToProcess &&
+                showLocationTree() &&
                 <Accordion expanded={accordionControled.location}>
                   <AccordionSummary expandIcon={<ExpandMoreIcon onClick={() => setAccordionControled((prev) => ({...prev, location: !prev.location}))} />} >
                     <div style={{width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
@@ -302,7 +336,7 @@ const AssetFinder = ({
               ) : (
                 <Table columns={[...processColumns, ...getColumns(isAssetReference) ]} rows={assetRows.length > 0 ? assetRows : rows} setTableRowsInner={handleSelectionChange} /> 
               )
-            }
+          }
           <Card style={{ width: '350px', marginLeft: '15px' }}>
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />} >
@@ -425,7 +459,65 @@ const processColumns = [
     }
   },
   { field: 'message', headerName: 'Message', width: 130, renderCell: (params) =>  {
-    if (params.data.message) {
+    if (Array.isArray(params.data.message)) {
+      return (
+        <div style={{ display:'table-cell', verticalAlign: 'middle', textAlign:'center', borderBottom: '1px solid rgba(224, 224, 224, 1)'}}>
+          {
+            params.data.message.length > 0 && (
+              <CustomizedToolTip 
+                tooltipContent={
+                  <ol style={{marginTop: '15px', marginRight: '20px'}}>
+                    {
+                      params.data.message.map(({ stageName, messages }) => (
+                        <li style={{ marginTop: '10px' }}>
+                            <h6>{` ${stageName}`}</h6>
+                            <ul style={{ paddingLeft: '5px' }}>
+                              {
+                                messages.map(({user, message}) => {
+                                  return (
+                                    <li style={{ marginBottom: '5px', fontWeight: 'normal', color: '#b2b2b2'}}>
+                                      <p>{`${user}: `}<i>{ message }</i></p>
+                                    </li>
+                                  )
+                                })
+                              }
+                              {
+                                messages.length === 0 && 
+                                  <li style={{ marginBottom: '5px', fontWeight: 'normal', color: '#b2b2b2'}}>
+                                    <p><i>{'no messages'}</i></p>
+                                  </li>
+                              }
+                            </ul>
+                        </li>
+                      ))
+                    }
+                  </ol>
+                }
+                content = {
+                  <Chip
+                    label={`Messages: ${params.data.message.length}`}
+                    style={{ backgroundColor: '#8e8e8e', height: '28px' }}
+                    color='secondary'
+                    onClick={() => {}}
+                  />
+                }
+              />
+            )
+          }
+          {
+            params.data.message.length === 0 && (
+              <Chip
+                label={`No messages`}
+                style={{ backgroundColor: '#8e8e8e', height: '28px' }}
+                color='secondary'
+                onClick={() => {}}
+              />
+            )
+          }
+        </div>
+      );
+    }
+    else if (params.data.message) {
       return (
         <CustomizedToolTip tooltipContent={params.data.message} content={
           <span style={{ whiteSpace: 'noWrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{params.data.message}</span>

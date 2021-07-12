@@ -158,7 +158,7 @@ const ModalProcessLive = (props) => {
   const [allLocations, setAllLocations] = useState([]);
   const [allStages, setAllStages] = useState([]);
   const [dueDate, setDueDate] = useState(undefined);
-  const [linkToProcess, setLinkToProcess] = useState(undefined);
+  
 
   function handleChange4(event, newValue) {
     setValue4(newValue);
@@ -292,20 +292,21 @@ const ModalProcessLive = (props) => {
     return true;
   };
 
-  const checkValidLocationManager = async(_cartRows, _processData, _stageKeys) => {
-    const {locationId, locationName} = _cartRows[0];
-    const manager = await getLocationManagerInfo(locationId);
+  const checkValidLocationManager = async(_cartRows, _body, _stageKeys) => {
+    const { processData } = _body;
+    const {locationId, locationName, location} = _cartRows[0];
+    const manager = await getLocationManagerInfo( processData.selectedProcessType === 'creation' ? locationId : location);
     if(!manager){
       dispatch(showCustomAlert({
         type: 'warning',
         open: true,
-        message: `${locationName} doesn't have a Location Manager`
+        message: `${locationName || 'This Location '} doesn't have a Location Manager`
       }));
       return false;
     }
     _stageKeys.map(stageKey => {
-      _processData.stages[stageKey].approvals[_processData.stages[stageKey].approvals.findIndex(e => e._id === 'locationManager')] = {...manager, fulfillDate: '', fulfilled: false, virtualUser: 'locationManager'};
-      _processData.stages[stageKey].notifications[_processData.stages[stageKey].notifications.findIndex(e => e._id === 'locationManager')] = {...manager, fulfillDate: '', fulfilled: false, virtualUser: 'locationManager'};
+      processData.stages[stageKey].approvals[processData.stages[stageKey].approvals.findIndex(e => e._id === 'locationManager')] = {...manager, fulfillDate: '', fulfilled: false, virtualUser: 'locationManager'};
+      processData.stages[stageKey].notifications[processData.stages[stageKey].notifications.findIndex(e => e._id === 'locationManager')] = {...manager, fulfillDate: '', fulfilled: false, virtualUser: 'locationManager'};
     });
 
     return true;
@@ -345,10 +346,11 @@ const ModalProcessLive = (props) => {
     return;
   };
   
-  const checkValidLocationWitness = async(_cartRows, _processData, _stageKeys) => {
-    const {locationId, locationName} = _cartRows[0];
+  const checkValidLocationWitness = async(_cartRows, body, _stageKeys) => {
+    const { processData } = body;
+    const {locationId, locationName, location} = _cartRows[0];
     const allWitnesses = await getWitnesses();
-    var currentLocation = allLocations.find(({id}) => locationId === id);
+    var currentLocation = allLocations.find(({id}) => ( processData.selectedProcessType === 'creation' ? locationId : location)  === id);
     var recursiveResult = await recursiveFindWitnessByLocation(allLocations, allWitnesses, currentLocation);
 
     if(!recursiveResult){
@@ -361,8 +363,8 @@ const ModalProcessLive = (props) => {
     }
     
     _stageKeys.map(stageKey => {
-      _processData.stages[stageKey].approvals[_processData.stages[stageKey].approvals.findIndex(e => e._id === 'locationWitness')] = {...recursiveResult, fulfillDate: '', fulfilled: false, virtualUser: 'locationWitness'};
-      _processData.stages[stageKey].notifications[_processData.stages[stageKey].notifications.findIndex(e => e._id === 'locationWitness')] = {...recursiveResult, fulfillDate: '', fulfilled: false, virtualUser: 'locationWitness'};
+      processData.stages[stageKey].approvals[processData.stages[stageKey].approvals.findIndex(e => e._id === 'locationWitness')] = {...recursiveResult, fulfillDate: '', fulfilled: false, virtualUser: 'locationWitness'};
+      processData.stages[stageKey].notifications[processData.stages[stageKey].notifications.findIndex(e => e._id === 'locationWitness')] = {...recursiveResult, fulfillDate: '', fulfilled: false, virtualUser: 'locationWitness'};
     });
     return true;
   };
@@ -428,12 +430,13 @@ const ModalProcessLive = (props) => {
       body.processData = transformProcess(processes, values.selectedProcess);
       const stageKeys = Object.keys(body.processData.stages);
       const allApprovals = stageKeys.map(e => (body.processData.stages[e].approvals)).flat().map(f => (f._id));
-      if (allApprovals.includes('boss')) {
+      const allNotifications = stageKeys.map(e => (body.processData.stages[e].notifications)).flat().map(f => (f._id));
+      if (allApprovals.includes('boss') || allNotifications.includes('boss')) {
         if(! await checkValidDirectBoss(body.processData, stageKeys)){
           return;
         }
       }
-      if (allApprovals.includes('initiator')) {
+      if (allApprovals.includes('initiator') || allNotifications.includes('initiator')) {
         if(! await checkValidInitiator(body.processData, stageKeys)){
           return;
         }
@@ -441,17 +444,19 @@ const ModalProcessLive = (props) => {
       if (!checkValidLocations(body.processData.selectedProcessType)) {
         return;
       }
-      if (allApprovals.includes('locationManager')) {
-         if(! await checkValidLocationManager(body.cartRows, body.processData, stageKeys)){
+      if (allApprovals.includes('locationManager') || allNotifications.includes('locationManager')) {
+        console.log('entramos')
+         if(! await checkValidLocationManager(body.cartRows, body, stageKeys)){
           return;
         }
       }
-      if (allApprovals.includes('locationWitness')) {
-        if(! await checkValidLocationWitness(body.cartRows, body.processData, stageKeys)){
+      if (allApprovals.includes('locationWitness') || allNotifications.includes('locationWitness')) {
+        if(! await checkValidLocationWitness(body.cartRows, body, stageKeys)){
+          console.log('imBreaking')
          return;
        }
      }
-     if (allApprovals.includes('assetSpecialist')) {
+     if (allApprovals.includes('assetSpecialist') || allNotifications.includes('assetSpecialist')) {
       if(! await checkValidAssetSpecialist(body.cartRows, body.processData, stageKeys)){
        return;
      }
@@ -463,17 +468,12 @@ const ModalProcessLive = (props) => {
           return Number(folio);
         })
       .catch(error => console.log(error));
-      if(!biggestFolio){
-        dispatch(showCustomAlert({
-          type: 'error',
-          open: true,
-          message: 'There was an error calculating the Folio, please try again.'
-        }));
-        return;
-      }
       const whiteFolio = [0, 0, 0, 0, 0, 0];
-      const prefix = whiteFolio.slice(0, 6 - String(biggestFolio+1).length);
-      const newFolio = prefix.join("").concat(String(biggestFolio+1));
+      let newFolio = whiteFolio.join("");
+      if(biggestFolio){
+        const prefix = whiteFolio.slice(0, 6 - String(biggestFolio+1).length);
+        newFolio = prefix.join("").concat(String(biggestFolio+1));
+      }
       body.processData.processStatus = 'inProcess';
       body.folio = newFolio;
       postDB('processLive', body)
@@ -485,12 +485,10 @@ const ModalProcessLive = (props) => {
           groomProcess(processLiveResponse);
           const { processData: { selectedProcessType } } = processLiveResponse;
           processLiveResponse.processLiveId = _id;
-          if (selectedProcessType !== 'short') {
-            updateDB('processLive/', omit(processLiveResponse, '_id'), _id)
-                .then(() => saveAndReload('processLive', processLiveResponse._id))
-                .catch(error => console.log(error));
-              setAssetsStatus(processLiveResponse, selectedProcessType);
-          }
+          updateDB('processLive/', omit(processLiveResponse, '_id'), _id)
+            .then(() => saveAndReload('processLive', processLiveResponse._id))
+            .catch(error => console.log(error));
+          setAssetsStatus(processLiveResponse, selectedProcessType);
         })
         .catch(error => console.log(error));
     } else {
@@ -581,14 +579,13 @@ const ModalProcessLive = (props) => {
 
   const groomProcess = (process) => {
     const { processData } = process;
-    const { currentStage, totalStages } = processData;
+    const { currentStage, totalStages, selectedProcessType } = processData;
     if (currentStage === 0) {
-      const { selectedProcessType } = processData;
       return selectedProcessType === 'short' || processData.stages['stage_1'].isSelfApprove ? finishProcess(process) : initializeStage(process);
     }
     const currentStageData = getCurrentStageData(currentStage, processData);
     const isStageFulfilled = getIsStageFulfilled(currentStageData);
-    if (!isStageFulfilled) {
+    if (!isStageFulfilled && !(currentStageData.isSelfApproveContinue || currentStageData.approvals.length === 0)) {
       return;
     }
     const isLastStage = currentStage === totalStages;
@@ -600,17 +597,17 @@ const ModalProcessLive = (props) => {
       finishProcess(process, (status) => processData.processStatus = status);
     }
     const currentStageDataUpdated = getCurrentStageData(process.processData.currentStage, process.processData)
-    if(currentStageDataUpdated.isSelfApproveContinue || currentStageDataUpdated.approvals.length === 0){
-      applyApproval();
-      groomProcess(process);
+    const skipNextStage = (currentStageDataUpdated.isSelfApproveContinue || currentStageDataUpdated.approvals.length === 0); 
+    if (skipNextStage) {
+      groomProcess(process)
     }
   };
-
+  
   const getWitnesses = () => {
     return getDB('settingsWitnesses/')
       .then(response => response.json())
       .then(data => {
-        const filtered = data.response.map(({_id : id, location, userSelected}) => ({ id, location, userSelected}));
+        const filtered = data.response.map(({_id, location, userSelected}) => ({ _id, location, userSelected}));
         return filtered;
       })
       .catch(error => console.log(error));
@@ -620,7 +617,7 @@ const ModalProcessLive = (props) => {
     return getDB('settingsAssetSpecialists/')
       .then(response => response.json())
       .then(data => {
-        const filtered = data.response.map(({_id : id, location, userSelected, categorySelected}) => ({ id, location, userSelected, categorySelected}));
+        const filtered = data.response.map(({_id, location, userSelected, categorySelected}) => ({ _id, location, userSelected, categorySelected}));
         return filtered;
       })
       .catch(error => console.log(error));
@@ -649,9 +646,8 @@ const ModalProcessLive = (props) => {
         if(!assignedTo || Object.keys(assignedTo).length <= 0){
           return undefined;
         }
-        const { userId: id, email, name, lastName } = assignedTo;
-
-        return { id, email, name, lastName };
+        const { userId: _id, email, name, lastName } = assignedTo;
+        return { _id, email, name, lastName };
       })
       .catch(error => console.log(error));
   };
@@ -753,7 +749,7 @@ const ModalProcessLive = (props) => {
         const timeStamp = `${dateFormatted} ${timeFormatted}`;
         let targetUserInfo = {
           email: message.email,
-          id: message._id,
+          id: message._id || message.id,
           lastName: message.lastName,
           name: message.name
         };
@@ -852,7 +848,7 @@ const ModalProcessLive = (props) => {
   const finishProcess = (process, updateProcessStatus) => {
     const { processData } = process;
     const { selectedProcessType } = processData;
-    const selfApprove = processData.stages['stage_1'].isSelfApprove || selectedProcessType === 'short';
+    const selfApprove = (processData.stages['stage_1'].isSelfApprove || selectedProcessType === 'short');
     var validAssets = [];
     var validAssetsID = [];
     var invalidAssets = [];
@@ -869,6 +865,16 @@ const ModalProcessLive = (props) => {
       else if(invalidAssets.length > 0 && validAssets.length > 0){
         updateProcessStatus('partiallyApproved');
       }
+    } 
+    else {
+      processData.currentStage = processData.totalStages;
+      processData.processStatus = 'approved';
+      //Fulfill all stages
+      Object.keys(processData.stages).map((stageKey) => {
+        const currentStage = processData.stages[stageKey];
+        currentStage.stageFulfilled = true;
+        currentStage.stageInitialized = true;       
+      });
     }
     
     const assetsToProcess = selfApprove ? cartRows : validAssets;
@@ -899,8 +905,8 @@ const ModalProcessLive = (props) => {
         }))
         .then(responses => Promise.all(responses.map(response => response.json())))
         .then(data => {
-          const assetsCreated = data.map(({response}) => response[0]);
-          updateDB('processLive/', { cartRows: assetsCreated}, process._id)
+          const assetsCreated = data.map(({response}) => response[0]).map((asset) => ({...asset, id: asset._id}));
+          updateDB('processLive/', { created: assetsCreated}, process._id)
             .then(response => response.json())
             .then(data => {})
             .catch(error => console.log('errorUpdating:', error));
@@ -993,7 +999,7 @@ const ModalProcessLive = (props) => {
         Promise.all(assetsToProcess.map((asset) => {
           const assetData = omit(asset, '_id');
           const customFieldsTabInherited = inheritCustomFields(processData, asset.customFieldsTab);
-          return updateDB('assets/', {...assetData, customFieldsTab: customFieldsTabInherited, status: 'active', history: [...assetData.history, {processId: process._id, processName: processData.name, processType: processData.selectedProcessType, label: 'Values Were Updated', date: `${dateFormatted} ${timeFormatted}`}]} , asset._id)
+          return updateDB('assets/', {...assetData, customFieldsTab: customFieldsTabInherited, status: 'active', history: [...assetData.history, {processId: process._id, processName: processData.name, processType: processData.selectedProcessType, label: 'Values Were Updated', date: `${dateFormatted} ${timeFormatted}`}]} , asset.id)
         }))
         .then(responses => Promise.all(responses.map(response => response.json())))
         .then(data => {
@@ -1021,8 +1027,8 @@ const ModalProcessLive = (props) => {
   const extractValidAssets = (cartRows, { stages }) => {
     const requestedAssetsIds = cartRows.map(({ id }) => id);
     Object.entries(stages).forEach(([key, { approvals }]) => {
-      approvals.forEach(({ cartRows }) => {
-        cartRows.forEach(({ id, status }) => {
+      (approvals || []).forEach(({ cartRows }) => {
+        (cartRows || []).forEach(({ id, status }) => {
           if (status !== 'Approved' && requestedAssetsIds.includes(id)) {
             const index = requestedAssetsIds.indexOf(id);
             requestedAssetsIds.splice(index, 1);
@@ -1093,16 +1099,24 @@ const ModalProcessLive = (props) => {
       .then(data => data.json())
       .then(response => handleCloseModal())
       .catch(error => showErrorAlert());
+
+      handleCloseModal();
   };
 
   const initializeStage = (process) => {
     const { processData, requestUser, _id: liveProcessId } = process;
-    const selfApprove = processData.stages['stage_1'].isSelfApprove;
+    const { currentStage } = processData;
+    const currentStageData = getCurrentStageData(currentStage, processData);
+    const skipStage = (currentStageData?.isSelfApproveContinue || currentStageData?.approvals?.length === 0); 
+    if (skipStage) {
+      sendMessages(currentStageData, requestUser, liveProcessId, processData.id, process, 'end'); // Approvals
+      currentStageData.approvals.map((approval) => approval.fulfilled = 'skipped');
+    }
     const nextStage = processData.currentStage + 1;
-    processData.currentStage = selfApprove ? processData.totalStages : nextStage;
-    const stageData = getCurrentStageData(nextStage, processData);
-    sendMessages(stageData, requestUser, liveProcessId, processData.id, process, 'start'); // Approvals
-    stageData.stageInitialized = true;
+    processData.currentStage = nextStage;
+    const nextStageData = getCurrentStageData(nextStage, processData);
+    sendMessages(nextStageData, requestUser, liveProcessId, processData.id, process, 'start'); // Approvals
+    nextStageData.stageInitialized = true;
   };
 
   const getIsStageFulfilled = (currentStageData) => {
@@ -1322,7 +1336,7 @@ const ModalProcessLive = (props) => {
         setCustomTabs(customtabs);
         setCustomFieldsTab(allCustomFields);
         //Set CartRows
-        Promise.all(data.response.cartRows.map( async (asset) => {
+        Promise.all(data.response.created.map( async (asset) => {
           const locationPath = await getLocationPath(asset.location);
           return ({...asset, originalLocation: locationPath, locationName: locationPath, id: asset._id});
         })).then(data => {
@@ -1395,17 +1409,17 @@ const ModalProcessLive = (props) => {
           customtabs.push({stage: stageName, tabs, index: ix});
         });
         const currentStageIndex = data.response.processData.currentStage;
-        if(currentStageIndex -1 <= 0){
-          if(data.response.linkToProcess){
-            const cartRowsProcessed = data.response.cartRows.map((element) => ({...element, id: element._id}))
-            setCartRows(cartRowsProcessed)
+        if (currentStageIndex -1 <= 0) {
+          if (data.response.linkToProcess) {
+            const cartRowsProcessed = data.response.cartRows.map((element) => (omit({...element, id: element._id}, 'status')));
+            setCartRows(cartRowsProcessed);
           }
-          else(
-            setCartRows(data.response.cartRows)
-          )
+          else{
+            setCartRows(data.response.cartRows);
+          }
         }
-        else if(currentStageIndex - 1 > 0){
-          setCartRows(getCurrentStageData(currentStageIndex -1 , data.response.processData).cartRows);
+        else if (currentStageIndex - 1 > 0) {
+          setCartRows(getCurrentStageData(currentStageIndex -1 , data.response.processData).cartRows.map((asset) => (omit(asset, 'status'))));
         }
         setCustomTabs(customtabs);
         setCustomFieldsTab(allCustomFields);
@@ -1499,7 +1513,7 @@ const ModalProcessLive = (props) => {
       collection: 'processLive',
       fields: [{key:'processData.name', value: 1}, {key:'_id', value: 1}, {key:'folio', value: 1}],
       sort:[{key:'folio', value: 1}],
-      condition:[{ "processData.selectedProcessType": "creation"}]
+      condition:[{ "processData.selectedProcessType": "creation"}, {"processData.processStatus": "approved"}]
     })
       .then(response => response.json())
       .then(data => {
@@ -1579,6 +1593,7 @@ const ModalProcessLive = (props) => {
                           onChange={handleSelectProcessToLink}
                           value={values.linkToProcess}
                           className={classes.menu}
+                          disabled={cartRows.length}
                         >
                           {allFolios.map(({ id, name, folio }, ix) => (
                             <MenuItem key={`opt-name-${ix}`} value={id}>

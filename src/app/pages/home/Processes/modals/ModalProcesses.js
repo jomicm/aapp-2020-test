@@ -334,6 +334,26 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
       stage.approvals = processApprovals;
       return stage;
     });
+
+    if(processedStages[0].isSelfApproveContinue || processedStages[processedStages.length - 1 ].isSelfApproveContinue ) {
+      dispatch(showCustomAlert({
+        type: 'warning',
+        open: true,
+        message: "SelfApproveContinue stages cannot be placed at the beginning or the end of a process"
+      }));
+      return; 
+    }
+
+    console.log('Whatsb:', processedStages);
+    if(!processedStages[processedStages.length - 1 ].approvals.length) {
+      dispatch(showCustomAlert({
+        type: 'warning',
+        open: true,
+        message: "Stages without approvals cannot be placed at the beginning or the end of a process"
+      }));
+      return; 
+    }
+
     const body = { ...values, processStages: processedStages, usersProcess, validMessages };
     if (!id) {
       body.idUserProfile = idUserProfile;
@@ -485,7 +505,7 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
 
   const getStagesGoBack = () => {
     const lastStageIndex = processStages.findIndex(({id}) => id === selectedStage);
-    const stages = processStages.filter((_ , ix) => ix < lastStageIndex);
+    const stages = processStages.filter((stage , ix) => ix < lastStageIndex && (stage.approvals.length && !stage.isSelfApproveContinue ));
     return stages;
   };
   
@@ -767,7 +787,7 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                                       const labelId = `checkbox-list-secondary-label-approvals-${name}`;
                                       return (
                                         <ListItem key={name} button disabled={usersProcess.approvalsDisabled}>
-                                          <ListItemText id={labelId} primary={name} secondary={sendMessageAt === 'start' ? 'At the star' : sendMessageAt === 'end' ? 'At the end' : null } />
+                                          <ListItemText id={labelId} primary={name} secondary={sendMessageAt === 'start' ? 'At the start' : sendMessageAt === 'end' ? 'At the end' : null } />
                                           <ListItemSecondaryAction>
                                             <Checkbox
                                               edge="end"
