@@ -211,7 +211,6 @@ const ModalUsers = ({ showModal, setShowModal, reloadProfiles, reloadTable, id, 
           const { response: { value } } = data;
           
           dispatch(showUpdatedAlert());
-          saveAndReload('user', id[0]);
           updateCurrentUserPic(id[0], fileExt);
           updateLocationsAssignments(locationsTable, { userId: id[0], name: body.name, email: body.email, lastName: body.lastName });
           executePolicies('OnEdit', 'user', 'list', policies, value);
@@ -245,9 +244,10 @@ const ModalUsers = ({ showModal, setShowModal, reloadProfiles, reloadTable, id, 
                   .catch((error) => console.log(error));
               });
             })
-            .catch((error) => dispatch(showErrorAlert()));
+            .catch((error) => {});
+            saveAndReload('user', id[0]);
         })
-        .catch(error => dispatch(showErrorAlert()));
+        .catch(error => {});
     }
   
     handleCloseModal();

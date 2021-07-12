@@ -17,15 +17,14 @@ import ModalLayoutStages from './modals/ModalLayoutStages';
 
 const stagesLayoutsHeadRows = [
   { id: "name", numeric: false, disablePadding: false, label: "Name" },
-  { id: "stage", numeric: false, disablePadding: false, label: "Stage" },
-  { id: "type", numeric: false, disablePadding: false, label: "Type" },
-  { id: "used", numeric: true, disablePadding: false, label: "Used" },
+  { id: "selectedStage", numeric: false, disablePadding: false, label: "Stage" },
+  { id: "sendMessageAt", numeric: false, disablePadding: false, label: "Send message" }, 
   { id: "creator", numeric: false, disablePadding: false, label: "Creator" },
   { id: "creationDate", numeric: false, disablePadding: false, label: "Creation Date" },
   { id: "updateDate", numeric: false, disablePadding: false, label: "Update Date" }
 ];
-const createLayoutsStageRow = (id, name, stage, type, used, creator, creation_date) => {
-  return { id, name, stage, type, used, creator, creation_date };
+const createLayoutsStageRow = (id, name, selectedStage, sendMessageAt, creator, creationDate, updateDate) => {
+  return { id, name, selectedStage, sendMessageAt, creator, creationDate, updateDate};
 };
 const layoutsHeadRows = [
   { id: "name", numeric: false, disablePadding: false, label: "Name" },
@@ -99,7 +98,9 @@ const LayoutsPresets = props => {
 
         id.forEach(_id => {
           deleteDB(`${collection.name}/`, _id)
-            .then(response => loadLayoutsData('settingsLayoutsEmployees'))
+            .then(response => {
+              loadLayoutsData(collection.name);
+            })
             .catch(error => console.log('Error', error));
         });
       },
@@ -115,12 +116,11 @@ const LayoutsPresets = props => {
     collectionNames.forEach(collectionName => {
       getDB(collectionName)
       .then(response => response.json())
-      .then(data => {
+      .then(async data => {
         if (collectionName === 'settingsLayoutsEmployees') {
           const rows = data.response.map(row => {
             const date = String(new Date(row.creationDate)).split('GMT')[0];
             const uptDate = String(new Date(row.updateDate)).split('GMT')[0];
-            console.log(row);
             return createLayoutsEmployeeRow(row._id, row.name, row.used, row.creationUserFullName, date, uptDate);
           });
           setControl(prev => ({ ...prev, layoutEmployeesRows: rows, layoutEmployeesRowsSelected: [] }));
@@ -129,7 +129,8 @@ const LayoutsPresets = props => {
           const rows = data.response.map(row => {
             const date = String(new Date(row.creationDate)).split('GMT')[0];
             const uptDate = String(new Date(row.updateDate)).split('GMT')[0];
-            return createLayoutsStageRow(row._id, row.name, row.stageName, 99, row.creationUserFullName, date, uptDate);
+            const sendMessage = row.sendMessageAt === 'start' ? 'At the start' : 'At the end';
+            return createLayoutsStageRow(row._id, row.name, row.stageName || 'N/A', sendMessage, row.creationUserFullName, date, uptDate);
           });
           setControl(prev => ({ ...prev, layoutStagesRows: rows, layoutStagesRowsSelected: [] }));
         }

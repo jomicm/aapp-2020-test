@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useDispatch } from "react-redux";
 import {
   Button,
   Icon,
@@ -12,6 +13,7 @@ import AssetFinderPreview from '../../Components/AssetFinderPreview';
 import ModalOneField from '../../Components/ModalOneField';
 import LiveProcessInfo from './LiveProcessInfo';
 import ModalYesNo from '../../Components/ModalYesNo';
+import { actions } from '../../../../store/ducks/general.duck';
 
 const LiveProcessTab = ({
   onSelectionChange,
@@ -24,6 +26,8 @@ const LiveProcessTab = ({
   rows,
   setProcessCartInfo,
 }) => {
+  const dispatch = useDispatch();
+  const { showCustomAlert } = actions;
   const [tabIndex, setTabIndex] = useState(0);
   const [openModal, setOpenModal] = useState(false);
   const [selection, setSelection] = useState([]);
@@ -38,6 +42,17 @@ const LiveProcessTab = ({
       setCurrentStage(_currentStage);
     }
   }, [processInfo]);
+
+  useEffect(() => {
+    const allApproved = !localCartRows || localCartRows.length === 0 ? false : localCartRows.map(({status}) => status).every((eachStatus) => eachStatus);
+    if (allApproved) {
+      dispatch(showCustomAlert({
+        type: 'success',
+        open: true,
+        message: `All assets are validated`
+      }));
+    }
+  }, [localCartRows]);
 
   useEffect(() => {
     setLocalCartRows(rows);
@@ -73,15 +88,17 @@ const LiveProcessTab = ({
     setSelection(rows);
   };
   const showButtons = (isCreation = false) => {
+    const selfApprove = processInfo?.processData?.stages['stage_1'].isSelfApprove || processInfo?.processData?.selectedProcessType === 'short';
    if(isCreation){
      return true;
    }
-   if(!currentStage || !Object.keys(currentStage).length > 0){
+   if(!currentStage || !Object.keys(currentStage).length > 0 || selfApprove){
      return false;
    };
-
-   const stageApprovals = currentStage.approvals.map(({_id}) => _id);
-   if(!stageApprovals.includes(user.id) || currentStage.stageFulfilled){
+   
+   const stageApprovals = currentStage.approvals.map(({_id, id}) => _id || id);
+   const thisApproval = currentStage.approvals.find(({_id, id}) => user.id === (_id || id) )
+   if(!stageApprovals.includes(user.id) || !thisApproval || thisApproval.fulfilled ){
      return false;
    }
    

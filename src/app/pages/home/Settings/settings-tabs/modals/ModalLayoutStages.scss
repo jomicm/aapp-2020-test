@@ -1,0 +1,32 @@
+.__container-baseandcustom-panel {
+    height: 220px;
+    margin-bottom: 5px;
+    font-size: 3rem;
+}
+.__container-baseandcustom-panel::-webkit-scrollbar {
+    -webkit-appearance: none;
+  }
+  
+  .__container-baseandcustom-panel::-webkit-scrollbar:vertical {
+    width: 10px;
+  }
+  
+  .__container-baseandcustom-panel::-webkit-scrollbar-button:increment,
+  .__container-baseandcustom-panel::-webkit-scrollbar-button {
+    display: none;
+  }
+  
+  .__container-baseandcustom-panel::-webkit-scrollbar:horizontal {
+    height: 10px;
+  }
+  
+  .__container-baseandcustom-panel::-webkit-scrollbar-thumb {
+    background-color: #797979;
+    border: 2px solid #f1f2f3;
+    border-radius: 20px;
+  }
+  
+  .__container-baseandcustom-panel::-webkit-scrollbar-track {
+    border-radius: 10px;
+  }
+  

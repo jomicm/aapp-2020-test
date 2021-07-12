@@ -144,14 +144,25 @@ const useStyles = makeStyles(theme => ({
   textField: {
     marginLeft: theme.spacing(1),
     marginRight: theme.spacing(1),
-    width: 200
+    width: '100%'
+  },
+  list: {
+    width: '100%'
   },
   dense: {
     marginTop: 19
   },
   menu: {
     width: 200
-  }
+  },
+  subTitle: {
+    fontStyle: 'italic',
+    color: 'grey'
+  },
+  title: {
+    fontWeight: 'bold',
+    marginRight: '5px'
+  },
 }));
 
 const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProfileRows }) => {
@@ -202,8 +213,7 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
 
 
   const [profileSelected, setProfileSelected] = useState(0);
-  const [layoutSelected, setLayoutSelected] = useState(0);
-
+  
   const [originalStages, setOriginalStages] = useState([]);
   const [stages, setStages] = useState([]);
   const [searchStage, setSearchStage] = useState('');
@@ -304,10 +314,6 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     }));
   };
 
-  const handleChangeCheck = name => event => {
-    setValues({ ...values, [name]: event.target.checked });
-  };
-
   const handleSave = () => {
     const processedStages = processStages.map((stage) => {
       const processApprovals = [];
@@ -328,6 +334,26 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
       stage.approvals = processApprovals;
       return stage;
     });
+
+    if(processedStages[0].isSelfApproveContinue || processedStages[processedStages.length - 1 ].isSelfApproveContinue ) {
+      dispatch(showCustomAlert({
+        type: 'warning',
+        open: true,
+        message: "SelfApproveContinue stages cannot be placed at the beginning or the end of a process"
+      }));
+      return; 
+    }
+
+    console.log('Whatsb:', processedStages);
+    if(!processedStages[processedStages.length - 1 ].approvals.length) {
+      dispatch(showCustomAlert({
+        type: 'warning',
+        open: true,
+        message: "Stages without approvals cannot be placed at the beginning or the end of a process"
+      }));
+      return; 
+    }
+
     const body = { ...values, processStages: processedStages, usersProcess, validMessages };
     if (!id) {
       body.idUserProfile = idUserProfile;
@@ -357,9 +383,6 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
       notificationsForUsers: {},
       selectedProcessType: ''
     }); 
-    setCustomFieldsTab({});
-    setProfilePermissions([]);
-    setTabs([]);
     setProfileSelected(null);
     setShowModal(false);
     setValue4(0);
@@ -425,56 +448,15 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     getDB('settingsLayoutsStages')
     .then(response => response.json())
     .then(data => {
-      const stageLayoutsData = data.response.map(({ _id, name, selectedStage, selectedType  }) => ({ id: _id, name, selectedStage, selectedType }));
+      const stageLayoutsData = data.response.map(({ _id, name, selectedStage, sendMessageAt  }) => ({ id: _id, name, selectedStage, sendMessageAt }));
       setStageLayouts(stageLayoutsData);
     })
     .catch(error => console.log(error));
   }, [id, processStages]);
 
-  const [customFieldsTab, setCustomFieldsTab] = useState({});
-  const [profilePermissions, setProfilePermissions] = useState({});
-  const [tabs, setTabs] = useState([]);
-  const [locationsTable, setLocationsTable] = useState([]);
-
-  const layoutOpts = [
-    { value: 'lay1', label: 'Layout 1' },
-    { value: 'lay2', label: 'Layout 2' },
-    { value: 'lay3', label: 'Layout 3' },
-  ];
 
   const [idUserProfile, setIdUserProfile] = useState('');
-  const onChangeEmployeeProfile = e => {
-    if (!e) {
-      setCustomFieldsTab({});
-      setProfilePermissions({});
-      setTabs([]);
-      return;
-    } 
-    setProfileSelected(e);
-    getOneDB('employeeProfiles/', e.value)
-    .then(response => response.json())
-    .then(data => { 
-      const { customFieldsTab, profilePermissions } = data.response;
-      const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
-      tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
-      setCustomFieldsTab(customFieldsTab);
-      setProfilePermissions(profilePermissions);
-      setTabs(tabs);
-      setIdUserProfile(e.value);
-    })
-    .catch(error => console.log(error));
-  };
-
-  // Function to update customFields
-  const handleUpdateCustomFields = (tab, id, colIndex, CFValues) => {
-    const colValue = ['left', 'right'];
-    console.log('Looking for you', tab, id, colIndex, values);
-    const customFieldsTabTmp = { ...customFieldsTab };
-
-    const field = customFieldsTabTmp[tab][colValue[colIndex]]
-      .find(cf => cf.id === id);
-    field.values = CFValues;
-  };
+    // Function to update customFields
 
   const handleStageClick = (stage) => {
     if (!processStages.includes(stage)) {
@@ -496,33 +478,34 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     }
   };
 
-  const [value, setValue] = useState(0);
-
-  const handleChangeTab = (event, newValue) => {
-    setValue(newValue);
-  };
-
+  
   //
   const [messagesTabIndex, setMessagesTabIndex] = useState(0);
-  const [layoutMessageTabIndex, setLayoutMessageTabIndex] = useState(0);
-  const handleToggleChecks = (type, name) => event => {
+
+  const handleToggleChecks = (type, id) => event => {
     const userMap = { notifications: 'selectedUserNotifications', approvals: 'selectedUserApprovals' };
     // let userFiltered = validMessages[type][validMessages[userMap[type]]];
     const user = validMessages[userMap[type]];
     let userFiltered = validMessages[type][selectedStage][user];
-    const userFilteredSpecific = userFiltered.filter(msg => msg.name === name)[0];
-    userFilteredSpecific.checked = event.target.checked;
+    const userFilteredSpecific = userFiltered.filter(msg => msg.id === id)[0];
+    if (userFilteredSpecific) {
+      userFilteredSpecific.checked = event.target.checked;
 
-    const tmpValidMessages = validMessages[type];
-    tmpValidMessages[selectedStage][user] = userFiltered;
-    // const finalMessages = { ...validMessages[type], [user]: userFiltered };
-    // setValidMessages(prev => ({ ...prev, [type]: finalMessages }));
-    setValidMessages(prev => ({ ...prev, [type]: tmpValidMessages }));
+      const tmpValidMessages = validMessages[type];
+      tmpValidMessages[selectedStage][user] = userFiltered;
+      setValidMessages(prev => ({ ...prev, [type]: tmpValidMessages }));
+    }
+    else {
+      const layoutToAdd = stageLayouts.find(stage => stage.id === id);
+      const tmpValidMessages = validMessages[type];
+      tmpValidMessages[selectedStage][user].push({...layoutToAdd, checked: event.target.checked});
+      setValidMessages(prev => ({ ...prev, [type]: tmpValidMessages }));
+    }
   };
 
   const getStagesGoBack = () => {
     const lastStageIndex = processStages.findIndex(({id}) => id === selectedStage);
-    const stages = processStages.filter((_ , ix) => ix < lastStageIndex);
+    const stages = processStages.filter((stage , ix) => ix < lastStageIndex && (stage.approvals.length && !stage.isSelfApproveContinue ));
     return stages;
   };
   
@@ -556,10 +539,11 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
     setProcessStages(goBackReseted);
    }
 
-  const notificationsList = selectedStage && validMessages.notifications[selectedStage] ?
-    (validMessages.notifications[selectedStage][validMessages.selectedUserNotifications] || []) : [];
-  const approvalsList = selectedStage && validMessages.approvals[selectedStage] ?
-    (validMessages.approvals[selectedStage][validMessages.selectedUserApprovals] || []) : [];
+  const notificationsList = selectedStage && validMessages.selectedUserNotifications ?
+    (stageLayouts.filter(({selectedStage: layoutSelectedStage}) => layoutSelectedStage === selectedStage)) : [];
+
+  const approvalsList = selectedStage && validMessages.selectedUserApprovals.length ?
+    (stageLayouts.filter(({selectedStage: layoutSelectedStage}) => layoutSelectedStage === selectedStage)) : [];
 
   return (
     <div style={{width:'1000px'}}>
@@ -623,7 +607,7 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                         subheader={
                           <TextField
                             id="outlined-adornment-password"
-                            className={classes.textField}
+                            className={classes.list}
                             label="All Stages"
                             value={searchStage}
                             onChange={handleSearchStage}
@@ -637,18 +621,20 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                           />
                         }
                       >
-                        {(stages || []).map((stage, ix) => (
-                          <ListItem
-                            key={`${stage.name}_${stage.name}`}
-                            button
-                            onClick={() => handleStageClick(stage)}
-                          >
-                            <ListItemIcon>
-                              <AccountTree />
-                            </ListItemIcon>
-                            <ListItemText primary={stage.name} />
-                          </ListItem>  
-                        ))}
+                        <div style={{maxHeight: '200px', overflow: 'auto', marginTop: '10px'}}>
+                          {(stages || []).map((stage, ix) => (
+                            <ListItem
+                              key={`${stage.name}_${stage.name}`}
+                              button
+                              onClick={() => handleStageClick(stage)}
+                            >
+                              <ListItemIcon>
+                                <AccountTree />
+                              </ListItemIcon>
+                              <ListItemText primary={stage.name} />
+                            </ListItem>  
+                          ))}
+                        </div>
                       </List>
                     </div>
                     <div style={{ minHeight: '400px' }} className="profile-tab-wrapper__content">
@@ -662,14 +648,23 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                     <div className="profile-tab-wrapper__content">
                       <Card style={{ width: '250px' }}>
                         <CardContent style={{ display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
-                          <Typography className={classes.title} color="textPrimary" gutterBottom>
-                            Properties
+                          <Typography className={classes.title} noWrap color="textPrimary" gutterBottom>
+                            Stage Properties:
                           </Typography>
+                          <div style={{display: 'flex'}}>
+                          <Typography style={{ width: '50px', marginRight: '10px'}} color="textPrimary" gutterBottom>
+                            Selected:
+                          </Typography>
+                            <Typography className={classes.subTitle} noWrap gutterBottom>
+                              { selectedStageObject?.name ? `${selectedStageObject?.name }` : 'No stage selected in this extended text' }
+                            </Typography>
+                          </div>
                           <FormControlLabel
                             value="end"
                             control={<Switch color="primary" checked={selectedStageObject?.goBackEnabled || false} onChange={handleChangeGoBack('goBackEnabled')} />}
                             label="Go Back"
                             labelPlacement="end"
+                            disabled={!selectedStageObject.name}
                           />
                           <FormControl disabled={selectedStageObject.goBackEnabled ? false : true} >
                             <InputLabel>To Stage:</InputLabel>
@@ -695,8 +690,8 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                                 variant="standard"
                                 aria-label="full width tabs example"
                               >
-                                <Tab style={{ width: '20px' }} label="Notifications" />
-                                <Tab label="Approvals" />
+                                <Tab style={{ width: '20px' }} disabled={!selectedStageObject.name} label="Notifications" />
+                                <Tab label="Approvals" disabled={!selectedStageObject.name}/>
                               </Tabs>
                             </AppBar>
                             <SwipeableViews
@@ -711,6 +706,7 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                                     <Select
                                       value={usersProcess.selectedUserNotification}
                                       onChange={handleChangeUserNotifApp('selectedUserNotification')}
+                                      disabled={!selectedStageObject.name}
                                     >
                                       {
                                         !selectedStage ? (
@@ -736,19 +732,16 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                                   >
                                     {/* {(selectedStageLayout || []).map(({ name, checked }) => { */}
                                     {/* {(validMessages.notifications[validMessages.selectedUserNotifications] || []).map(({ name, checked }) => { */}
-                                    {notificationsList.map(({ name, checked }) => {
+                                    {notificationsList.map(({ name, sendMessageAt, id }) => {
                                       const labelId = `checkbox-list-secondary-label-${name}`;
                                       return (
                                         <ListItem key={name} button disabled={usersProcess.notificationsDisabled}>
-                                          <ListItemText id={labelId} primary={name} />
+                                          <ListItemText id={labelId} primary={name} secondary={sendMessageAt === 'start' ? 'At the start' : sendMessageAt === 'end' ? 'At the end' : null }/>
                                           <ListItemSecondaryAction>
                                             <Checkbox
                                               edge="end"
-                                              checked={checked}
-                                              onChange={handleToggleChecks('notifications', name)}
-                                              // checked={checked.indexOf(value) !== -1}
-                                              // inputProps={{ 'aria-labelledby': labelId }}
-                                              // disabled={usersProcess.notificationsDisabled}
+                                              checked={validMessages.notifications[validMessages.selectedStage][validMessages.selectedUserNotifications].find(({id: layoutID}) => layoutID === id)?.checked}
+                                              onChange={handleToggleChecks('notifications', id)}
                                             />
                                           </ListItemSecondaryAction>
                                         </ListItem>
@@ -764,6 +757,7 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                                     <Select
                                       value={usersProcess.selectedUserApproval}
                                       onChange={handleChangeUserNotifApp('selectedUserApproval')}
+                                      disabled={!selectedStageObject.name}
                                     >
                                       {
                                         !selectedStage ? (
@@ -789,19 +783,16 @@ const ModalProcesses = ({ showModal, setShowModal, reloadTable, id, employeeProf
                                   >
                                     {/* {(selectedStageLayout || []).map(({ name, checked }) => { */}
                                     {/* {(validMessages.approvals[validMessages.selectedUserApprovals] || []).map(({ name, checked }) => { */}
-                                    {(approvalsList).map(({ name, checked }) => {
+                                    {(approvalsList).map(({ name, sendMessageAt, id }) => {
                                       const labelId = `checkbox-list-secondary-label-approvals-${name}`;
                                       return (
                                         <ListItem key={name} button disabled={usersProcess.approvalsDisabled}>
-                                          <ListItemText id={labelId} primary={name} />
+                                          <ListItemText id={labelId} primary={name} secondary={sendMessageAt === 'start' ? 'At the start' : sendMessageAt === 'end' ? 'At the end' : null } />
                                           <ListItemSecondaryAction>
                                             <Checkbox
                                               edge="end"
-                                              checked={checked}
-                                              onChange={handleToggleChecks('approvals', name)}
-                                              // checked={checked.indexOf(value) !== -1}
-                                              // inputProps={{ 'aria-labelledby': labelId }}
-                                              // disabled={usersProcess.approvalsDisabled}
+                                              checked={validMessages.approvals[validMessages.selectedStage][validMessages.selectedUserApprovals].find(({id: layoutID}) => layoutID === id)?.checked}
+                                              onChange={handleToggleChecks('approvals', id)}
                                             />
                                           </ListItemSecondaryAction>
                                         </ListItem>
