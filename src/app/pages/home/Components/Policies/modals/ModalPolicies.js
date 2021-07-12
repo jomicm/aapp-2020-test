@@ -188,6 +188,11 @@ const ModalPolicies = ({
     { id: 'processes', name: 'Processes', custom: '' },
     { id: 'inventories', name: 'Inventories', custom: '' }
   ];
+  const rules = [
+    { value: 'ruleOne', label: 'Rule 1' },
+    { value: 'ruleTwo', label: 'Rule 2' },
+    { value: 'ruleThree', label: 'Rule 3' }
+  ];
   const classes = useStyles();
   const classes4 = useStyles4();
   const [cursorPosition, setCursorPosition] = useState([0, 0]);
@@ -221,6 +226,9 @@ const ModalPolicies = ({
     onLoadDisabled: true,
     onLoadFields: {},
     policyName: '',
+    ruleOne: {},
+    ruleThree: {},
+    ruleTwo: {},
     selectedAction: '',
     selectedCatalogue: '',
     selectedIcon: '',
@@ -261,8 +269,32 @@ const ModalPolicies = ({
     setSelectedControlAndIndexes(event);
   };
 
+  const handleRuleOneChanges = (name) => (event) => {
+    const value = event.target.value;
+    setValues(prev => ({ ...prev, ruleOne: { ...prev.ruleOne, [name]: value } }));
+  };
+
+  const handleRuleOneChecks = (name) => (event) => {
+    const value = event.target.checked;
+    setValues(prev => ({ ...prev, ruleOne: { ...prev.ruleOne, [name]: value } }));
+  };
+
+  const handleRuleField = (rule) => (event) => {
+    const text = event.target.value;
+    setValues(prev => ({ ...prev, [rule]: { ...prev[rule], field: text } }));
+  };
+
+  const handleRuleValue = (rule) => (event) => {
+    const text = event.target.value;
+    setValues(prev => ({ ...prev, [rule]: { ...prev[rule], value: text } }));
+  };
+
   const handleClickIcon = (selectedIcon) => {
     setValues({ ...values, selectedIcon });
+  };
+
+  const handleOnFieldClickIcon = (onFieldSelectedIcon) => {
+    setValues({ ...values, onFieldSelectedIcon });
   };
 
   const handleCloseModal = () => {
@@ -296,7 +328,7 @@ const ModalPolicies = ({
       setTab(0);
     }
 
-    if ((value === 'OnLoad' && values.selectedCatalogue.length) || (name === 'selectedCatalogue' && values.selectedAction.length)) {
+    if ((value === 'OnLoad' && values.selectedCatalogue.length) || (name === 'selectedCatalogue' && values.selectedAction === 'OnLoad')) {
       getDB('policies')
         .then((res) => res.json())
         .then(({ response }) => {
@@ -348,12 +380,51 @@ const ModalPolicies = ({
     return jsonBodyAPI
   }
 
+  const verifyOnField = () => {
+    if (values.selectedAction === 'OnField') {
+      if (!values.selectedRule) {
+        dispatch(showCustomAlert({
+          message: 'Please select a rule',
+          open: true,
+          type: 'warning'
+        }));
+        return false;
+      }
+      if (['ruleOne', 'ruleTwo'].includes(values.selectedRule)) {
+        if (!values[values.selectedRule].field || !values[values.selectedRule].value) {
+          dispatch(showCustomAlert({
+            message: 'Please fill all the fields',
+            open: true,
+            type: 'warning'
+          }));
+          return false;
+        }
+      } else {
+        if (!values.ruleThree.numberOfDays || !values.ruleThree.timesRepeated) {
+          dispatch(showCustomAlert({
+            message: 'Please fill all the fields',
+            open: true,
+            type: 'warning'
+          }));
+          return false;
+        }
+      }
+    }
+
+    return true;
+  };
+
   const handleSave = () => {
     const { selectedAction, selectedCatalogue } = values;
     if (!selectedAction || !selectedCatalogue) {
       dispatch(showSelectValuesAlert());
       return;
     }
+
+    if (!verifyOnField()) {
+      return;
+    }
+
     const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
     const jsonBodyAPI = handleBodyAPI();
 
@@ -413,6 +484,34 @@ const ModalPolicies = ({
         onFieldEditor.getCurrentInlineStyle()
       );
       setOnFieldEditor(EditorState.push(onFieldEditor, contentState, 'insert-characters'));
+    } else if (rules.map(({ value }) => value).includes(selectedControl)) {
+      if (selectedControl === 'ruleTwo') {
+        let selectedCustomField;
+        customFields.forEach(({ rawCF }) => {
+          Object.entries(rawCF || {}).forEach((tab) => {
+            const values = [...tab[1].left, ...tab[1].right];
+            const found = values.find(({ id }) => id === varId);
+            console.log(found)
+            if (found) {
+              selectedCustomField = found;
+            }
+          });
+        });
+        if (selectedCustomField?.content !== 'date') {
+          dispatch(showCustomAlert({
+            message: 'Please select a field of type date',
+            open: true,
+            type: 'warning'
+          }));
+          return;
+        }
+      }
+
+      const text = values[selectedControl].field || '';
+      const left = text.substr(0, cursorPosition[0]);
+      const right = text.substr(cursorPosition[1], text.length);
+      const final = `${left}%{${varId}}${right}`;
+      setValues(prev => ({ ...prev, [selectedControl]: { ...prev[selectedControl], field: final } }));
     } else {
       try {
         const text = values[selectedControl];
@@ -442,6 +541,16 @@ const ModalPolicies = ({
     } else if (name === 'To') setNotificationTo(values);
   };
 
+  const onChangeOnFieldFromTo = (name, section) => (event, values) => {
+    if (name === 'From') {
+      if (section === 'messages') setValues(prev => ({ ...prev, onFieldMessageFrom: values }));
+      if (section === 'notifications') setValues(prev => ({ ...prev, onFieldNotificationFrom: values }));
+    } else {
+      if (section === 'messages') setValues(prev => ({ ...prev, onFieldMessageTo: values }));
+      if (section === 'notifications') setValues(prev => ({ ...prev, onFieldNotificationTo: values }));
+    }
+  };
+
   const reset = () => {
     setValues({
       apiDisabled: false,
@@ -454,6 +563,9 @@ const ModalPolicies = ({
       onLoadDisabled: true,
       onLoadFields: {},
       policyName: '',
+      ruleOne: {},
+      ruleThree: {},
+      ruleTwo: {},
       selectedAction: '',
       selectedCatalogue: '',
       selectedIcon: '',
@@ -541,12 +653,16 @@ const ModalPolicies = ({
           'onLoadDisabled',
           'onLoadFields',
           'policyName',
+          'ruleOne',
+          'ruleTwo',
+          'ruleThree',
           'selectedAction',
           'selectedCatalogue',
-          'selectedOnLoadCategory',
+          'selectedIcon',
           'subjectMessage',
           'subjectNotification',
-          'selectedIcon',
+          'selectedOnLoadCategory',
+          'selectedRule',
           'token',
           'tokenDisabled',
           'tokenEnabled',
@@ -582,6 +698,12 @@ const ModalPolicies = ({
         obj = !obj.tokenOnLoad ? { ...obj, tokenOnLoad: '' } : obj;
 
         obj = !obj.tokenOnLoadEnabled && typeof obj.tokenOnLoadEnabled !== 'boolean' ? { ...obj, tokenOnLoadEnabled: false } : obj;
+
+        obj = !obj.ruleOne ? { ...obj, ruleOne: {} } : obj;
+
+        obj = !obj.ruleTwo ? { ...obj, ruleTwo: {} } : obj;
+
+        obj = !obj.ruleThree ? { ...obj, ruleThree: {} } : obj;
 
         if (Object.entries(obj.selectedOnLoadCategory).length > 0) {
           // update custom fields
@@ -638,8 +760,6 @@ const ModalPolicies = ({
       })
       .catch(error => dispatch(showErrorAlert()));
   }, [module]);
-
-  console.log(values);
 
   return (
     <div style={{ width: '1000px' }}>
@@ -984,9 +1104,127 @@ const ModalPolicies = ({
                         </PortletBody>
                       )}
                       {tab === 4 && (
-                        <div>
-                          Rules
-                        </div>
+                        <>
+                          <FormControl style={{ margin: '15px 0px 20px 20px' }} className={classes.textField}>
+                            <InputLabel htmlFor='age-simple'>Selected rule</InputLabel>
+                            <Select
+                              onChange={handleOnChangeValue('selectedRule')}
+                              value={values.selectedRule}
+                            >
+                              {rules.map(({ value, label }) => (
+                                <MenuItem key={value} value={value}>
+                                  {label}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                          {values.selectedRule === 'ruleOne' && (
+                            <div style={{ alignItems: 'flex-end', display: 'flex', flexDirection: 'row', paddingRight: '60px' }}>
+                              <div className="__rules" style={{ marginLeft: '20px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end' }}>
+                                  <Typography style={{ fontSize: '1.2rem', marginRight: '8px' }}>No. of days:</Typography>
+                                  <TextField
+                                    className={classes.textField}
+                                    id='standard-rule-one-number-of-days'
+                                    margin='normal'
+                                    onChange={handleRuleOneChanges('numberOfDays')}
+                                    style={{ width: '60px', marginBottom: '0px' }}
+                                    type="number"
+                                    value={values.ruleOne?.numberOfDays}
+                                  />
+                                </div>
+                                <div style={{ marginBottom: '15px' }} />
+                                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end' }}>
+                                  <Typography style={{ fontSize: '1.2rem', marginRight: '8px' }}>Repeat</Typography>
+                                  <TextField
+                                    className={classes.textField}
+                                    id='standard-rule-one-times-repeated'
+                                    margin='normal'
+                                    onChange={handleRuleOneChanges('timesRepeated')}
+                                    style={{ width: '60px', marginBottom: '0px' }}
+                                    type="number"
+                                    value={values.ruleOne?.timesRepeated}
+                                  />
+                                  <Typography style={{ fontSize: '1.2rem', marginLeft: '8px' }}>times</Typography>
+                                </div>
+                                <div style={{ marginBottom: '15px' }} />
+                              </div>
+                              <Grid container direction="column">
+                                <FormControlLabel
+                                  control={
+                                    <Switch
+                                      color='primary'
+                                      checked={values.ruleOne.isInfinite || false}
+                                      onChange={handleRuleOneChecks('isInfinite')}
+                                    />
+                                  }
+                                  label='Infinite'
+                                  labelPlacement='start'
+                                  style={{ marginRight: '0px' }}
+                                  value='start'
+                                />
+                                <FormControlLabel
+                                  control={
+                                    <Switch
+                                      color='primary'
+                                      checked={values.ruleOne.includeOriginalDate || false}
+                                      onChange={handleRuleOneChecks('includeOriginalDate')}
+                                    />
+                                  }
+                                  label='Include Original Date'
+                                  labelPlacement='start'
+                                  style={{ marginRight: '0px' }}
+                                  value='start'
+                                />
+                              </Grid>
+                            </div>
+                          )}
+                          {values.selectedRule === 'ruleTwo' && (
+                            <div className="__rules" style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+                              <TextField
+                                className={classes.textField}
+                                id='standard-rule-two-field'
+                                margin='normal'
+                                onClick={() => setSelectedControl('ruleTwo')}
+                                onChange={handleRuleField('ruleTwo')}
+                                style={{ width: '120px', marginBottom: '0px' }}
+                                value={values.ruleTwo?.field}
+                              />
+                              <Typography style={{ fontSize: '1.2rem', marginLeft: '8px', marginRight: '8px' }}>is equal to:</Typography>
+                              <TextField
+                                className={classes.textField}
+                                id='standard-rule-two-value'
+                                margin='normal'
+                                onChange={handleRuleValue('ruleThree')}
+                                style={{ width: '120px', marginBottom: '0px' }}
+                                type="date"
+                                value={values.rulwTwo?.value}
+                              />
+                            </div>
+                          )}
+                          {values.selectedRule === 'ruleThree' && (
+                            <div className="__rules" style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+                              <TextField
+                                className={classes.textField}
+                                id='standard-rule-three-field'
+                                margin='normal'
+                                onClick={() => setSelectedControl('ruleThree')}
+                                onChange={handleRuleField('ruleThree')}
+                                style={{ width: '120px', marginBottom: '0px' }}
+                                value={values.ruleThree?.field}
+                              />
+                              <Typography style={{ fontSize: '1.2rem', marginLeft: '8px', marginRight: '8px' }}>is equal to:</Typography>
+                              <TextField
+                                className={classes.textField}
+                                id='standard-rule-three-value'
+                                margin='normal'
+                                onChange={handleRuleValue('ruleThree')}
+                                style={{ width: '120px', marginBottom: '0px' }}
+                                value={values.ruleThree?.value}
+                              />
+                            </div>
+                          )}
+                        </>
                       )}
                       {tab === 5 && (
                         <div style={{ marginLeft: '20px', marginBottom: '10px' }}>
@@ -1006,7 +1244,7 @@ const ModalPolicies = ({
                               disabledValue={values.onFieldMessageDisabled}
                               editor={onFieldEditor}
                               editorStateChange={setOnFieldEditor}
-                              fromOnChange={onChangeMessageFromTo('From')}
+                              fromOnChange={onChangeOnFieldFromTo('From', 'messages')}
                               fromOptions={users}
                               fromValue={values.onFieldMessageFrom || []}
                               internalOnChange={handleChangeCheck('onFieldMessageInternal')}
@@ -1019,7 +1257,7 @@ const ModalPolicies = ({
                               subjectOnChange={handleChangeName('onFieldMessageSubject')}
                               subjectOnClick={setSelectedControlAndIndexes}
                               subjectValue={values.onFieldMessageSubject}
-                              toOnChange={onChangeMessageFromTo('To')}
+                              toOnChange={onChangeOnFieldFromTo('To', 'messages')}
                               toOptions={users}
                               toValue={values.onFieldMessageTo || []}
                             />
@@ -1030,14 +1268,14 @@ const ModalPolicies = ({
                               disabledValue={values.onFieldNotificationDisabled || false}
                               disablesOnChange={handleChangeCheck('onFieldNotificationDisabled')}
                               handleAlignment={handleAlignment}
-                              handleClickIcon={handleClickIcon}
+                              handleClickIcon={handleOnFieldClickIcon}
                               key="onField-notification"
                               messageOnChange={handleChangeName('onFieldMessageNotification')}
                               messageValue={values.onFieldMessageNotification}
-                              notificationFromOnChange={onChangeNotificationFromTo('From')}
+                              notificationFromOnChange={onChangeOnFieldFromTo('From', 'notifications')}
                               notificationFromOptions={users}
                               notificationFromValue={values.onFieldNotificationFrom || []}
-                              notificationToOnChange={onChangeNotificationFromTo('To')}
+                              notificationToOnChange={onChangeOnFieldFromTo('To', 'notifications')}
                               notificationToOptions={users}
                               notificationToValue={values.onFieldNotificationTo || []}
                               selectedIcon={values.onFieldSelectedIcon}
