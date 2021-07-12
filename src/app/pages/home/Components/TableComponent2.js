@@ -1,7 +1,8 @@
 /* eslint-disable no-restricted-imports */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { connect } from 'react-redux';
 import clsx from 'clsx';
+import { debounce } from 'lodash';
 import {
   makeStyles,
   lighten,
@@ -178,6 +179,8 @@ const TableComponentTile = props => {
   } = props;
   const classes = useStyles();
 
+  const [searchText, setSearchText] = useState('');
+
   //Selected Rows
   const [selected, setSelected] = useState([]);
   const [selectedObject, setSelectedObject] = useState(selectedObjects);
@@ -197,6 +200,8 @@ const TableComponentTile = props => {
   const [openColumnSelector, setOpenColumnSelector] = useState(false);
   const [anchorEl, setAnchorEl] = useState();
   const [windowCoords, setWindowCoords] = useState({ left: 0, top: 0 });
+  const [columnInputValue, setColumnInputValue] = useState('');
+  const [searchBy, setSearchBy] = useState('');
 
   //Tree View
   const [findColumn, setFindColumn] = useState('');
@@ -215,7 +220,7 @@ const TableComponentTile = props => {
   }, [rowsPerPage, page]);
 
   useEffect(() => {
-    if(returnObjectOnSelect || selectedObject){
+    if (returnObjectOnSelect || selectedObject) {
       onSelect(selectedObject);
     }
   }, [selectedObject]);
@@ -318,12 +323,28 @@ const TableComponentTile = props => {
     setWindowCoords({ left: event.pageX - 60, top: event.pageY + 24 });
   }
 
-  const handleInputChange = (event, field) => {
+  const debouncer = (value, field) => {
+    setLoading(true);
+    searchControl({ value, field });
+  };
+
+  const inputChangeDebounced = useRef(debounce(debouncer, 1000));
+
+  const handleInputChangeDebounced = (event, field) => {
     if (event) {
-      setLoading(true);
-      searchControl({ value: event.target.value, field: field });
+      const { target: { value } } = event;
+      setColumnInputValue(value);
+      setSearchBy(field);
+      inputChangeDebounced.current(value, field);
     }
-  }
+  };
+
+  const handleInputChange = (event, field) => {
+    if (event.key === 'Enter') {
+      setLoading(true);
+      searchControl({ value: event.target.value, field });
+    }
+  };
 
   const EnhancedTableToolbar = props => {
     const classes = useToolbarStyles();
@@ -343,7 +364,7 @@ const TableComponentTile = props => {
     }, [numSelected]);
 
     const HeaderTools = () => {
-      if(disableActions){
+      if (disableActions) {
         return (
           <div></div>
         );
@@ -358,7 +379,7 @@ const TableComponentTile = props => {
                 </IconButton>
               </Tooltip>
             }
-            { numSelected === 1 && !noEdit && permissions.includes('edit') &&
+            {numSelected === 1 && !noEdit && permissions.includes('edit') &&
               <Tooltip title='Edit'>
                 <IconButton aria-label='Edit' onClick={props.onEdit}>
                   <EditIcon />
@@ -386,15 +407,16 @@ const TableComponentTile = props => {
               autoFocus={controlValues.searchBy === null}
               className={classes.inputInput}
               key='SearchField'
-              onChange={event => handleInputChange(event, null)}
+              onKeyPress={(event) => handleInputChange(event, null)}
               placeholder='Search...'
-              value={controlValues.searchBy ? null : controlValues.search}
-              onSubmit={event => handleInputChange(event, null)}
             />
             {
               (controlValues.search.length > 0 && !controlValues.searchBy) && (
                 <div>
-                  <IconButton size="small" onClick={() => searchControl({ value: '' })}>
+                  <IconButton size="small" onClick={() => {
+                    setSearchText('');
+                    searchControl({ value: '' });
+                  }}>
                     <ClearIcon />
                   </IconButton>
                 </div>
@@ -491,23 +513,23 @@ const TableComponentTile = props => {
     const { id } = row;
     const selectedIndex = selected.indexOf(id);
     let newSelected = [], newSelectedId = [], newSelectedObject = [];
-    
+
     if (selectedIndex === -1) {
       newSelected = newSelected.concat(selected, id);
       newSelectedId = newSelectedId.concat(selectedId, id);
-      if(returnObjectOnSelect){
+      if (returnObjectOnSelect) {
         newSelectedObject = newSelectedObject.concat(selectedObject, row);
       }
     } else if (selectedIndex === 0) {
       newSelected = newSelected.concat(selected.slice(1));
       newSelectedId = newSelectedId.concat(selectedId.slice(1));
-      if(returnObjectOnSelect){
+      if (returnObjectOnSelect) {
         newSelectedObject = newSelectedObject.concat(selectedObject.slice(1));
       }
     } else if (selectedIndex === selected.length - 1) {
       newSelected = newSelected.concat(selected.slice(0, -1));
       newSelectedId = newSelectedId.concat(selectedId.slice(0, -1));
-      if(returnObjectOnSelect){
+      if (returnObjectOnSelect) {
         newSelectedObject = newSelectedObject.concat(selectedObject.slice(0, -1));
       }
     } else if (selectedIndex > 0) {
@@ -519,7 +541,7 @@ const TableComponentTile = props => {
         selectedId.slice(0, selectedIndex),
         selectedId.slice(selectedIndex + 1)
       );
-      if(returnObjectOnSelect){
+      if (returnObjectOnSelect) {
         newSelectedObject = newSelectedObject.concat(
           selectedObject.slice(0, selectedIndex),
           selectedObject.slice(selectedIndex + 1)
@@ -527,8 +549,8 @@ const TableComponentTile = props => {
       }
     }
 
-    if(returnObjectOnSelect){
-      setSelectedObject(newSelectedObject);      
+    if (returnObjectOnSelect) {
+      setSelectedObject(newSelectedObject);
     }
 
     setSelected(newSelected);
@@ -542,12 +564,6 @@ const TableComponentTile = props => {
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(+event.target.value);
-  }
-
-  const handleKeyDown = (event, id) => {
-    if (event.key === 'Enter') {
-      handleInputChange(event, id)
-    }
   }
 
   const EnhancedTableHead = (props) => {
@@ -592,13 +608,11 @@ const TableComponentTile = props => {
               {
                 !disableSearchBy && !row.searchByDisabled && (
                   <input
-                    autoFocus={row.id === controlValues.searchBy}
+                    autoFocus={row.id === searchBy}
                     className={classes.inputSearchBy}
-                    onChange={(event) => handleInputChange(event, row.id)}
-                    // onKeyDown={(event) => handleKeyDown(event, row.id)}
+                    onChange={(event) => handleInputChangeDebounced(event, row.id)}
                     placeholder={`Search by...`}
-                    title={`Search by...`}
-                    value={row.id === controlValues.searchBy ? controlValues.search : null}
+                    value={row.id === searchBy ? columnInputValue : null}
                   />
                 )
               }
@@ -726,7 +740,7 @@ const TableComponentTile = props => {
             {
               viewControl.tree && (
                 <Grid conainer style={{ paddingLeft: '16px' }} item sm={12} md={2} lg={2}>
-                  <div style={{overflow: 'auto'}}>
+                  <div style={{ overflow: 'auto' }}>
                     <TreeView data={locationsTree} onClick={selectLocation} />
                   </div>
                 </Grid>
@@ -735,7 +749,7 @@ const TableComponentTile = props => {
             {
               justTreeView && (
                 <Grid conainer style={{ paddingLeft: '16px' }} item sm={12} md={2} lg={3}>
-                  <div style={{overflow: 'auto'}}>
+                  <div style={{ overflow: 'auto' }}>
                     <TreeView data={locationsTree} onClick={selectLocation} />
                   </div>
                 </Grid>
@@ -791,7 +805,7 @@ const TableComponentTile = props => {
                                     >
                                       <Typography variant='h5'>
                                         Sorry, no matching records found
-                                    </Typography>
+                                      </Typography>
                                     </TableCell>
                                   </TableRow>
                                 )
@@ -818,7 +832,7 @@ const TableComponentTile = props => {
                                       </TableCell>
 
                                       {columnPicker.filter((column) => column.visible).map((header, ix) => {
-                                        return(
+                                        return (
                                           <TableCell
                                             align={header.renderCell ? 'center' : 'left'}
                                             component={header.renderCell ? () => header.renderCell(row[header.id]) : 'th'}
@@ -869,7 +883,7 @@ const TableComponentTile = props => {
             if (count === 0) return 'No Pages';
 
             const currentPage = page + 1;
-            const totalPages = Math.floor(count / rowsPerPage) + 1;
+            const totalPages = Math.trunc(count / rowsPerPage) + (count % rowsPerPage === 0 ? 0 : 1);
             return `Page ${currentPage}/${totalPages}`;
           }}
           nextIconButtonProps={{

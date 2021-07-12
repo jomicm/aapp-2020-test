@@ -26,7 +26,7 @@ import { actions } from '../../../../store/ducks/general.duck';
 import * as auth from '../../../../store/ducks/auth.duck';
 import { postDBEncryptPassword, getOneDB, getDB, updateDB, postDB } from '../../../../crud/api';
 import ImageUpload from '../../Components/ImageUpload';
-import { hosts, getFileExtension, saveImage, getImageURL } from '../../utils';
+import { hosts, getFileExtension, saveImage, getImageURL, verifyCustomFields } from '../../utils';
 import { modules } from '../../constants';
 import { CustomFieldsPreview } from '../../constants';
 import BaseFields from '../../Components/BaseFields/BaseFields';
@@ -111,7 +111,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows, user, updateUserPic, policies }) => {
+const ModalUsers = ({ showModal, setShowModal, reloadProfiles, reloadTable, id, userProfileRows, user, updateUserPic, policies }) => {
   const dispatch = useDispatch();
   const { showErrorAlert, showFillFieldsAlert, showSavedAlert, showUpdatedAlert } = actions;
   const { fulfillUser } = auth.actions;
@@ -152,6 +152,11 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       return;
     }
 
+    if (!verifyCustomFields(customFieldsTab)) {
+      dispatch(showFillFieldsAlert());
+      return;
+    }
+
     const userGroups = selectedGroups.map(({ value: id, label: name, numberOfMembers }) => {
       if (removedGroups.findIndex(({ value }) => value === id) !== -1) {
         return;
@@ -165,7 +170,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     }) || [];
 
     const fileExt = getFileExtension(image);
-    const body = { ...values, customFieldsTab, profilePermissions, locationsTable, fileExt, groups: userGroups, selectedUserProfile: profileSelected ? profileSelected[0] : null };
+    const body = { ...values, customFieldsTab, profilePermissions, locationsTable, fileExt, groups: userGroups, selectedUserProfile: profileSelected };
 
     if (!isEmpty(values.selectedBoss)) {
       const { name, lastName } = allUsers.find(({ value }) => value === values.selectedBoss.value);
@@ -183,7 +188,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
           const { _id, email, name, lastName } = response.response[0];
           saveAndReload('user', _id);
           updateLocationsAssignments(locationsTable, { userId: _id, email, name, lastName });
-          executePolicies('OnAdd', 'user', 'list', policies);
+          executePolicies('OnAdd', 'user', 'list', policies, response.response[0]);
           getDB('settingsGroups')
             .then((response) => response.json())
             .then((data) => {
@@ -203,10 +208,12 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
       updateDB('user/', body, id[0])
         .then((response) => response.json())
         .then((data) => {
+          const { response: { value } } = data;
+          
           dispatch(showUpdatedAlert());
           updateCurrentUserPic(id[0], fileExt);
           updateLocationsAssignments(locationsTable, { userId: id[0], name: body.name, email: body.email, lastName: body.lastName });
-          executePolicies('OnEdit', 'user', 'list', policies);
+          executePolicies('OnEdit', 'user', 'list', policies, value);
           getDB('settingsGroups')
             .then((response) => response.json())
             .then((data) => {
@@ -262,6 +269,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
   const saveAndReload = (folderName, id) => {
     saveImage(image, folderName, id);
     reloadTable();
+    reloadProfiles();
   };
   const updateLocationsAssignments = (locationsTable = [], assignedTo) => {
     (locationsTable).forEach(({ parent: locationId }) => {
@@ -312,7 +320,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     setAddedGroups([]);
     setUserInitialGroups([]);
     setInitialProfilePermissions({});
-    window.history.replaceState({}, null, `${localHost}/users`);
+    window.history.replaceState({}, null, `${window.location.origin}/users`);
   };
 
   const [userProfilesFiltered, setUserProfilesFiltered] = useState([]);
@@ -340,22 +348,25 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     getOneDB('user/', id[0])
       .then(response => response.json())
       .then(async (data) => {
-        const { name, lastName, email, customFieldsTab, profilePermissions, idUserProfile, locationsTable, fileExt, selectedBoss } = data.response;
-        const onLoadResponse = await executeOnLoadPolicy(idUserProfile, 'user', 'list', policies);
+        const { name, lastName, email, groups, customFieldsTab, profilePermissions, idUserProfile, locationsTable, fileExt, selectedBoss } = data.response;
+        const onLoadResponse = await executeOnLoadPolicy(idUserProfile, 'user', 'list', policies, data.response);
         setCustomFieldsPathResponse(onLoadResponse);
         setCustomFieldsTab(customFieldsTab);
         setProfilePermissions(profilePermissions);
         setInitialProfilePermissions(profilePermissions);
-        setProfileSelected(userProfilesFiltered.filter(profile => profile.value === idUserProfile));
+        const selectedUserProfile = userProfilesFiltered.filter(profile => profile.value === idUserProfile);
+        setProfileSelected(selectedUserProfile ? selectedUserProfile[0] : null);
         setLocationsTable(locationsTable || []);
         setValues({
           ...values,
           name,
           lastName,
           email,
+          groups,
           isDisableUserProfile: true,
           imageURL: getImageURL(id, 'user', fileExt),
-          selectedBoss
+          selectedBoss,
+          selectedUserProfile: selectedUserProfile ? selectedUserProfile[0] : null
         });
         const tabs = Object.keys(customFieldsTab).map(key => ({ key, info: customFieldsTab[key].info, content: [customFieldsTab[key].left, customFieldsTab[key].right] }));
         tabs.sort((a, b) => a.key.split('-').pop() - b.key.split('-').pop());
@@ -409,9 +420,11 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
 
   const [idUserProfile, setIdUserProfile] = useState('');
   const onChangeUserProfile = e => {
+    setValues(prev => ({ ...prev, selectedUserProfile: e }));
     if (!e) {
       setCustomFieldsTab({});
       setProfilePermissions({});
+      setProfileSelected(null);
       setTabs([]);
       return;
     }
@@ -445,6 +458,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
     isValidForm: {}
   });
 
+  useEffect(() => console.log(profileSelected), [profileSelected]);
 
   const baseFieldsLocalProps = {
     userProfile: {
@@ -486,7 +500,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
         options: allUsers
       }
     },
-    userGroups: {
+    groups: {
       componentProps: {
         isClearable: true,
         isMulti: true,
@@ -508,9 +522,10 @@ const ModalUsers = ({ showModal, setShowModal, reloadTable, id, userProfileRows,
             }
           }
           setSelectedGroups(groupsUpdated);
+          setValues(prev => ({ ...prev, groups: groupsUpdated.length ? groupsUpdated : null }));
         },
         options: allGroups,
-        value: selectedGroups
+        value: values.groups
       }
     }
   };

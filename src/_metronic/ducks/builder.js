@@ -15,7 +15,6 @@ export const actionTypes = {
 export const selectors = {
   getClasses: (store, params) => {
     const { htmlClassServiceObjects } = store.builder;
-
     return htmlClassServiceObjects
       ? htmlClassServiceObjects.getClasses(params.path, params.toString)
       : "";

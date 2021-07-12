@@ -8,7 +8,7 @@ import {
   FormGroup,
   FormControlLabel,
   IconButton,
-  InputAdornment, 
+  InputAdornment,
   InputLabel,
   MenuItem,
   makeStyles,
@@ -20,6 +20,7 @@ import {
   Tooltip,
   Typography,
 } from "@material-ui/core";
+import Autocomplete from '@material-ui/lab/Autocomplete';
 import {
   ContentState,
   convertToRaw,
@@ -38,10 +39,12 @@ import EmailOutlinedIcon from '@material-ui/icons/EmailOutlined';
 import LinkIcon from '@material-ui/icons/Link';
 import HelpIcon from '@material-ui/icons/Help';
 
-import { postFILE } from '../../../../../crud/api';
+import { postFILE, getDB } from '../../../../../crud/api';
 import ImageUpload from '../../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../../utils';
 import './index.scss';
+import { useSettingsConstants, useSettingsList } from './hooks';
+import { id } from 'date-fns/locale';
 
 // Custom Fields Preview
 const SingleLine = (props) => {
@@ -70,22 +73,34 @@ const SingleLine = (props) => {
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
-    if (isPreview)  return;
+    if (isPreview) return;
     setValues({ ...values, initialValue: e.target.value });
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, initialValue: e.target.value });
   };
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
-      <TextField
-        className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__single-line`}
-        label={values.fieldName}
-        type="text"
-        margin="normal"
-        value={values.initialValue}
-        onChange={handleOnChange}
-        disabled= {props.disabled || false}
-      />
-      { isPreview &&
+      <div className="error-wrapper">
+        <TextField
+          className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__single-line`}
+          inputProps={{
+            maxlength: values.maxLength ? Number(values.maxLength) : null
+          }}
+          label={values.fieldName}
+          type="text"
+          margin="normal"
+          value={values.initialValue}
+          onChange={handleOnChange}
+          disabled={props.disabled || false}
+        />
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {values.initialValue ? null : 'Please fill the field'}
+            </span>
+          )
+        }
+      </div>
+      {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
         </IconButton>
@@ -120,24 +135,33 @@ const MultiLine = (props) => {
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
-    if (isPreview)  return;
+    if (isPreview) return;
     setValues({ ...values, initialValue: e.target.value });
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, initialValue: e.target.value });
   };
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
-      <TextField
-        className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__multi-line`}
-        label={values.fieldName}
-        multiline
-        rows="4"
-        defaultValue={values.initialValue}
-        margin="normal"
-        value={values.initialValue}
-        onChange={handleOnChange}
-        disabled= {props.disabled || false}
-      />
-      { isPreview &&
+      <div className="error-wrapper">
+        <TextField
+          className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__multi-line`}
+          label={values.fieldName}
+          multiline
+          rows="4"
+          defaultValue={values.initialValue}
+          margin="normal"
+          value={values.initialValue}
+          onChange={handleOnChange}
+          disabled={props.disabled || false}
+        />
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {values.initialValue ? null : 'Please fill the field'}
+            </span>
+          )
+        }
+      </div>
+      {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
         </IconButton>
@@ -165,25 +189,34 @@ const Date = (props) => {
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
-    if (isPreview)  return;
+    if (isPreview) return;
     setValues({ ...values, initialValue: e.target.value });
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, initialValue: e.target.value });
   };
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
-      <TextField
-        className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__date`}
-        label={values.fieldName}
-        type="date"
-        defaultValue={values.initialValue}
-        value={values.initialValue}
-        onChange={handleOnChange}
-        InputLabelProps={{
-          shrink: true,
-        }}
-        disabled= {props.disabled || false}
-      />
-      { isPreview &&
+      <div className="error-wrapper">
+        <TextField
+          className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__date`}
+          label={values.fieldName}
+          type="date"
+          defaultValue={values.initialValue}
+          value={values.initialValue}
+          onChange={handleOnChange}
+          InputLabelProps={{
+            shrink: true,
+          }}
+          disabled={props.disabled || false}
+        />
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {values.initialValue ? null : 'Please fill the field'}
+            </span>
+          )
+        }
+      </div>
+      {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
         </IconButton>
@@ -193,7 +226,7 @@ const Date = (props) => {
 };
 
 const DateTime = (props) => {
-  const defaultValues =  {
+  const defaultValues = {
     fieldName: 'Date Time',
     initialValue: '',
   };
@@ -211,25 +244,34 @@ const DateTime = (props) => {
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
-    if (isPreview)  return;
+    if (isPreview) return;
     setValues({ ...values, initialValue: e.target.value });
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, initialValue: e.target.value });
   };
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
-      <TextField
-        className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__date-time`}
-        label={values.fieldName}
-        type="datetime-local"
-        defaultValue={values.initialValue}
-        value={values.initialValue}
-        onChange={handleOnChange}
-        InputLabelProps={{
-          shrink: true,
-        }}
-        disabled= {props.disabled || false}
-      />
-      { isPreview &&
+      <div className="error-wrapper">
+        <TextField
+          className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__date-time`}
+          label={values.fieldName}
+          type="datetime-local"
+          defaultValue={values.initialValue}
+          value={values.initialValue}
+          onChange={handleOnChange}
+          InputLabelProps={{
+            shrink: true,
+          }}
+          disabled={props.disabled || false}
+        />
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {values.initialValue ? null : 'Please fill the field'}
+            </span>
+          )
+        }
+      </div>
+      {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
         </IconButton>
@@ -241,8 +283,9 @@ const DateTime = (props) => {
 const DropDown = (props) => {
   const defaultValues = {
     fieldName: 'Drop Down',
+    options: ['Option 1', 'Option 2', 'Option 3'],
     selectedItem: '',
-    options: ['Option 1', 'Option 2', 'Option 3']
+    selectedSettingsList: {}
   };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
@@ -258,33 +301,42 @@ const DropDown = (props) => {
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
-    if (isPreview)  return;
-    setValues({ ...values, selectedItem: e.target.value })
+    if (isPreview) return;
+    setValues(prev => ({ ...prev, selectedItem: e.target.value }));
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, selectedItem: e.target.value });
   };
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
-      <FormControl className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__drop-down`}>
-        <InputLabel htmlFor="age-simple">{values.fieldName}</InputLabel>
-        <Select
-          value={values.selectedItem}
-          // onChange={e => setValues({...values, selectedItem: e.target.value})}
-          onChange={handleOnChange}
-          inputProps={{
-            name: 'age',
-            id: 'age-simple',
-          }}
-          disabled= {props.disabled || false}
-        >
-          <MenuItem value="">
-            <em>None</em>
-          </MenuItem>
-          {values.options.map((opt, ix) => (
-            <MenuItem key={`opt-${ix}`} value={ix}>{opt}</MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-      { isPreview &&
+      <div className="error-wrapper">
+        <FormControl className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__drop-down`}>
+          <InputLabel htmlFor="age-simple">{values.fieldName}</InputLabel>
+          <Select
+            value={values.selectedItem}
+            // onChange={e => setValues({...values, selectedItem: e.target.value})}
+            onChange={handleOnChange}
+            inputProps={{
+              name: 'age',
+              id: 'age-simple',
+            }}
+            disabled={props.disabled || false}
+          >
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
+            {values.options.map((opt, ix) => (
+              <MenuItem key={`opt-${ix}`} value={ix}>{opt}</MenuItem>
+            ))}
+          </Select>
+          {
+            values.mandatory && !isPreview && (
+              <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+                {values.selectedItem ? null : 'Please fill the field'}
+              </span>
+            )
+          }
+        </FormControl>
+      </div>
+      {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
         </IconButton>
@@ -297,6 +349,7 @@ const RadioButtons = (props) => {
   const defaultValues = {
     fieldName: 'Radio Buttons',
     selectedItem: '',
+    selectedSettingsList: {},
     options: ['Radio 1', 'Radio 2', 'Radio 3']
   };
   const [values, setValues] = useState(defaultValues);
@@ -313,27 +366,36 @@ const RadioButtons = (props) => {
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
-    if (isPreview)  return;
-    setValues({ ...values, selectedItem: e.target.value });
+    if (isPreview) return;
+    setValues(prev => ({ ...prev, selectedItem: e.target.value }));
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, selectedItem: e.target.value });
   };
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
-      <FormControl component="fieldset">
-        <FormLabel component="legend">{values.fieldName}</FormLabel>
-        <RadioGroup
-          aria-label="Gender"
-          name="gender1"
-          value={values.selectedItem}
-          // onChange={e => setValues({ ...values, selectedItem: e.target.value })}
-          onChange={handleOnChange}
-        >
-        {values.options.map((opt, ix) => (
-          <FormControlLabel value={`rad${ix + 1}`} control={<Radio disabled= {props.disabled || false} />} label={opt} />
-        ))}
-        </RadioGroup>
-      </FormControl>
-      { isPreview &&
+      <div className="error-wrapper">
+        <FormControl component="fieldset">
+          <FormLabel component="legend">{values.fieldName}</FormLabel>
+          <RadioGroup
+            aria-label="Gender"
+            name="gender1"
+            value={values.selectedItem}
+            // onChange={e => setValues({ ...values, selectedItem: e.target.value })}
+            onChange={handleOnChange}
+          >
+            {values.options.map((opt, ix) => (
+              <FormControlLabel value={`rad${ix + 1}`} control={<Radio disabled={props.disabled || false} />} label={opt} />
+            ))}
+          </RadioGroup>
+        </FormControl>
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {values.selectedItem ? null : 'Please select an option'}
+            </span>
+          )
+        }
+      </div>
+      {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
         </IconButton>
@@ -345,45 +407,60 @@ const RadioButtons = (props) => {
 const Checkboxes = (props) => {
   const defaultValues = {
     fieldName: 'Checkboxes',
-    selectedItem: '',
+    selectedOptions: [],
+    selectedSettingsList: {},
     options: ['Checkbox 1', 'Checkbox 2', 'Checkbox 3']
   };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
     props.onSelect(props.id, 'checkboxes', values, setValues);
   };
-  const handleCheck = (index) => {
-    if (isPreview)  return;
-    setValues({
-      ...values,
-      [`check${index}`]: !values[`check${index}`]
-    });
-    props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, [`check${index}`]: !values[`check${index}`] });
+  const handleCheck = (option) => {
+    if (isPreview) return;
+    let newSelectedOptions = [];
+    if (values.selectedOptions.includes(option)) {
+      newSelectedOptions = values.selectedOptions.filter((opt) => opt !== option);
+    } else {
+      newSelectedOptions = [...values.selectedOptions, option];
+    }
+    setValues(prev => ({ ...prev, selectedOptions: newSelectedOptions }));
+    props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, selectedOptions: newSelectedOptions });
   };
+
   useEffect(() => {
     if (!isEmpty(props.values)) {
-      setValues(props.values);
+      setValues({ ...props.values, selectedOptions: props.values.selectedOptions || [] });
     } else {
       setValues(defaultValues);
     }
   }, [props.values]);
+
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
-      <FormControl component="fieldset">
-        <FormLabel component="legend">{values.fieldName}</FormLabel>
-        <FormGroup>
-          {values.options.map((opt, ix) => (
-            <FormControlLabel
-              key={`check-${ix}`}
-              control={<Checkbox checked={values[`check${ix}`] || false} onChange={() => handleCheck(ix)} value={ix} disabled= {props.disabled || false} />}
-              label={opt}
-            />
-          ))}
-        </FormGroup>
-      </FormControl>
-      { isPreview &&
+      <div className="error-wrapper">
+        <FormControl component="fieldset">
+          <FormLabel component="legend">{values.fieldName}</FormLabel>
+          <FormGroup>
+            {values.options.map((opt, ix) => (
+              <FormControlLabel
+                key={`check-${ix}`}
+                control={<Checkbox checked={values.selectedOptions.findIndex((option) => option === opt) !== -1} onChange={() => handleCheck(opt)} value={opt} disabled={props.disabled || false} />}
+                label={opt}
+              />
+            ))}
+          </FormGroup>
+        </FormControl>
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {values.selectedOptions.length ? null : 'Please select an option'}
+            </span>
+          )
+        }
+      </div>
+      {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
         </IconButton>
@@ -395,7 +472,7 @@ const Checkboxes = (props) => {
 const FileUpload = (props) => {
   const defaultValues = {
     fieldName: 'File Upload',
-    fileName: '', 
+    fileName: '',
     fileId: uuidv4().split('-').pop(),
     fileExt: ''
   };
@@ -404,9 +481,9 @@ const FileUpload = (props) => {
     props.onSelect(props.id, 'fileUpload', values, setValues);
   };
   useEffect(() => {
-    if (!isEmpty(props.values)) {      
-      if(!props.values.fileName){
-        const newValues = {...props.values, fileId: uuidv4().split('-').pop()};
+    if (!isEmpty(props.values)) {
+      if (!props.values.fileName) {
+        const newValues = { ...props.values, fileId: uuidv4().split('-').pop() };
         setValues(newValues);
       } else {
         setValues(props.values);
@@ -419,39 +496,51 @@ const FileUpload = (props) => {
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
-    if (isPreview)  return;
+    if (isPreview) return;
     const fileExt = e.target.files[0].type.split('/')[1];
     setValues({ ...values, fileName: e.target.files[0].name, fileExt });
     postFILE('customFields', values.fileId, e.target.files[0]);
-    props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, fileName: e.target.files[0].name, fileExt});
+    props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, fileName: e.target.files[0].name, fileExt });
   };
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
-      <div style={{ display:'flex', flexDirection: 'column'}}>
-        <h4 className="image-upload-wrapper__picture-title" style={{marginBottom: '10px'}}>{values.fieldName}</h4>
-        <div style={{ display:'flex', alignItems:'center'}}>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div className="error-wrapper">
+          <h4 className="image-upload-wrapper__picture-title" style={{ marginBottom: '10px' }}>{values.fieldName}</h4>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Button
+              variant="contained"
+              color="secondary"
+              style={{ width: '10px' }}
+              onClick={() => {
+                setValues(defaultValues);
+                props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...defaultValues });
+              }}
+              disabled={props.disabled || false}
+            >
+              <DeleteIcon />
+            </Button>
+            <input type="file" name="myImage" title="" style={{ marginLeft: '10px', color: 'transparent', width: '90px' }} onChange={handleOnChange} />
+          </div>
           <Button
             variant="contained"
-            color="secondary"
-            style={{width: '10px'}}
-            onClick={() => setValues({...values, fileName: '', file: '', })}
-            disabled= {props.disabled || false}
-          >
-            <DeleteIcon />
-          </Button>
-          <input type="file" name="myImage" title="" style={{marginLeft: '10px',color:'transparent', width:'90px'}} onChange={handleOnChange}/>
-        </div>
-          <Button
-            variant="contained"
-            style={{marginTop: '10px'}}
+            style={{ marginTop: '10px' }}
             disableElevation
             disabled={!values.fileName || props.disabled ? true : false}
             href={values.fileId && values.fileExt ? getImageURL(values.fileId, 'customFields', values.fileExt) : null}
           >
             {values.fileName || 'First choose a File '}
-          </Button>  
+          </Button>
+        </div>
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {values.fileName ? null : 'Please upload a file'}
+            </span>
+          )
+        }
       </div>
-      { isPreview &&
+      {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
         </IconButton>
@@ -464,6 +553,8 @@ const Currency = (props) => {
   const defaultValues = {
     fieldName: 'Currency',
     initialValue: 0,
+    repeated: false,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
@@ -479,7 +570,7 @@ const Currency = (props) => {
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
-    if (isPreview)  return;
+    if (isPreview) return;
     setValues({ ...values, initialValue: e.target.value });
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, initialValue: e.target.value });
   };
@@ -502,13 +593,17 @@ const Currency = (props) => {
           }}
           value={values.initialValue}
           onChange={handleOnChange}
-          disabled= {props.disabled || false}
+          disabled={props.disabled || false}
         />
-        <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
-          {values.initialValue >= 0 ? null : "Currency can't be negative"}
-        </span>
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {values.initialValue ? null : 'Please fill the field'}
+            </span>
+          )
+        }
       </div>
-      { isPreview &&
+      {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
         </IconButton>
@@ -536,7 +631,7 @@ const Percentage = (props) => {
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
-    if (isPreview)  return;
+    if (isPreview) return;
     setValues({ ...values, initialValue: e.target.value });
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, initialValue: e.target.value });
   };
@@ -560,13 +655,20 @@ const Percentage = (props) => {
           }}
           value={values.initialValue}
           onChange={handleOnChange}
-          disabled= {props.disabled || false}
+          disabled={props.disabled || false}
         />
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {values.initialValue ? null : 'Please fill the field'}
+            </span>
+          )
+        }
         <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
-            {values.initialValue >= 0 && values.initialValue <= 100 ? null : 'Please select a valid percentage between 0% and 100%'}
+          {values.initialValue >= 0 && values.initialValue <= 100 ? null : 'Please select a valid percentage between 0% and 100%'}
         </span>
       </div>
-      { isPreview &&
+      {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
         </IconButton>
@@ -579,6 +681,7 @@ const Email = (props) => {
   const defaultValues = {
     fieldName: 'Email',
     initialValue: '',
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
@@ -594,33 +697,40 @@ const Email = (props) => {
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
-    if (isPreview)  return;
+    if (isPreview) return;
     setValues({ ...values, initialValue: e.target.value });
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, initialValue: e.target.value });
   };
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
       <div className={'error-wrapper'}>
-      <TextField
-        className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__single-line`}
-        label={values.fieldName}
-        type="text"
-        margin="normal"
-        value={values.initialValue}
-        onChange={handleOnChange}
-        disabled= {props.disabled || false}
-        InputProps={{
-          startAdornment:
-            <InputAdornment position="start">
-              <EmailOutlinedIcon style={{ fill: 'grey' }} />
-            </InputAdornment>
-        }}
-      />
-      <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
-            {/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.initialValue) || !values.initialValue ? null : 'Please enter a valid email'}
+        <TextField
+          className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__single-line`}
+          label={values.fieldName}
+          type="text"
+          margin="normal"
+          value={values.initialValue}
+          onChange={handleOnChange}
+          disabled={props.disabled || false}
+          InputProps={{
+            startAdornment:
+              <InputAdornment position="start">
+                <EmailOutlinedIcon style={{ fill: 'grey' }} />
+              </InputAdornment>
+          }}
+        />
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {values.initialValue ? null : 'Please fill the field'}
+            </span>
+          )
+        }
+        <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+          {/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.initialValue) || !values.initialValue ? null : 'Please enter a valid email'}
         </span>
       </div>
-      { isPreview &&
+      {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
         </IconButton>
@@ -633,6 +743,7 @@ const Decimal = (props) => {
   const defaultValues = {
     fieldName: 'Decimal',
     initialValue: 0,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
@@ -648,7 +759,7 @@ const Decimal = (props) => {
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
-    if (isPreview)  return;
+    if (isPreview) return;
     setValues({ ...values, initialValue: e.target.value });
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, initialValue: e.target.value });
   };
@@ -663,7 +774,7 @@ const Decimal = (props) => {
           style={{
             width: '100%'
           }}
-          disabled= {props.disabled || false}
+          disabled={props.disabled || false}
           inputProps={{
             step: '0.01',
             placeholder: '0.00'
@@ -671,8 +782,15 @@ const Decimal = (props) => {
           value={values.initialValue}
           onChange={handleOnChange}
         />
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {values.initialValue.length ? null : 'Please fill the field'}
+            </span>
+          )
+        }
       </div>
-      { isPreview &&
+      {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
         </IconButton>
@@ -685,6 +803,7 @@ const URL = (props) => {
   const defaultValues = {
     fieldName: 'URL',
     initialValue: '',
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
@@ -700,33 +819,40 @@ const URL = (props) => {
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   const handleOnChange = e => {
-    if (isPreview)  return;
+    if (isPreview) return;
     setValues({ ...values, initialValue: e.target.value });
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, initialValue: e.target.value });
   };
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
       <div className={'error-wrapper'}>
-      <TextField
-        className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__single-line`}
-        disabled= {props.disabled || false}
-        label={values.fieldName}
-        type="text"
-        margin="normal"
-        value={values.initialValue}
-        onChange={handleOnChange}
-        InputProps={{
-          startAdornment:
-            <InputAdornment position="start">
-              <LinkIcon style={{ fill: 'grey' }} />
-            </InputAdornment>
-        }}
-      />
-      <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
-            {/((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/.test(values.initialValue) || !values.initialValue ? null : 'Please enter a valid URL'}
+        <TextField
+          className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__single-line`}
+          disabled={props.disabled || false}
+          label={values.fieldName}
+          type="text"
+          margin="normal"
+          value={values.initialValue}
+          onChange={handleOnChange}
+          InputProps={{
+            startAdornment:
+              <InputAdornment position="start">
+                <LinkIcon style={{ fill: 'grey' }} />
+              </InputAdornment>
+          }}
+        />
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {values.initialValue.length ? null : 'Please fill the field'}
+            </span>
+          )
+        }
+        <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+          {/((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/.test(values.initialValue) || !values.initialValue ? null : 'Please enter a valid URL'}
         </span>
       </div>
-      { isPreview &&
+      {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
         </IconButton>
@@ -749,9 +875,9 @@ const Image = (props) => {
   };
 
   useEffect(() => {
-    if (!isEmpty(props.values)) {      
-      if(!props.values.fileName){
-        const newValues = {...props.values, fileName: uuidv4().split('-').pop()};
+    if (!isEmpty(props.values)) {
+      if (!props.values.fileName) {
+        const newValues = { ...props.values, fileName: uuidv4().split('-').pop() };
         setValues(newValues);
       } else {
         setValues(props.values);
@@ -768,7 +894,7 @@ const Image = (props) => {
   }, [values]);
 
   const isFirstRun = useRef(true);
-  
+
   useEffect(() => {
     if (isFirstRun.current) {
       isFirstRun.current = false;
@@ -785,10 +911,19 @@ const Image = (props) => {
 
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
+      <div className={'error-wrapper'} style={{ alignItems: 'flex-start' }}>
         <ImageUpload setImage={setImage} image={imageURL} disabled={isPreview || props.disabled ? true : false}>
           {values.fieldName}
         </ImageUpload>
-      { isPreview &&
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {imageURL ? null : 'Please assign an image'}
+            </span>
+          )
+        }
+      </div>
+      {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
         </IconButton>
@@ -801,44 +936,62 @@ const DecisionBox = (props) => {
   const defaultValues = {
     fieldName: 'Decision Box',
     selectedItem: '',
-    options: ['Switch 1', 'Switch 2', 'Switch 3']
+    options: ['Switch 1', 'Switch 2', 'Switch 3'],
+    selectedOptions: [],
+    selectedSettingsList: {}
   };
   const [values, setValues] = useState(defaultValues);
   const handleCustomFieldClick = () => {
     props.onSelect(props.id, 'decisionBox', values, setValues);
   };
-  const handleCheck = (index) => {
-    if (isPreview)  return;
-    setValues({
-      ...values,
-      [`check${index}`]: !values[`check${index}`]
-    });
-    props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, [`check${index}`]: !values[`check${index}`] });
+  const handleCheck = (option) => {
+    if (isPreview) return;
+    let newSelectedOptions = [];
+    if (values.selectedOptions.includes(option)) {
+      newSelectedOptions = values.selectedOptions.filter((opt) => opt !== option);
+    } else {
+      newSelectedOptions = [...values.selectedOptions, option];
+    }
+    setValues(prev => ({ ...prev, selectedOptions: newSelectedOptions }));
+    props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, selectedOptions: newSelectedOptions });
   };
+
   useEffect(() => {
     if (!isEmpty(props.values)) {
-      setValues(props.values);
+      setValues({ ...props.values, selectedOptions: props.values.selectedOptions || [], selectedSettingsList: props.values.selectedSettingsList || {} });
     } else {
       setValues(defaultValues);
     }
   }, [props.values]);
+
+  useEffect(() => console.log(values), [values]);
+
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
-      <FormControl component="fieldset">
-        <FormLabel component="legend">{values.fieldName}</FormLabel>
-        <FormGroup>
-          {values.options.map((opt, ix) => (
-            <FormControlLabel
-              key={`check-${ix}`}
-              control={<Switch checked={values[`check${ix}`] || false} onChange={() => handleCheck(ix)} value={ix} disabled= {props.disabled || false}/>}
-              label={opt}
-            />
-          ))}
-        </FormGroup>
-      </FormControl>
-      { isPreview &&
+      <div className={'error-wrapper'}>
+        <FormControl component="fieldset">
+          <FormLabel component="legend">{values.fieldName}</FormLabel>
+          <FormGroup>
+            {values.options.map((opt, ix) => (
+              <FormControlLabel
+                key={`check-${ix}`}
+                control={<Switch checked={values.selectedOptions.findIndex((option) => option === opt) !== -1} onChange={() => handleCheck(opt)} value={opt} disabled={props.disabled || false} />}
+                label={opt}
+              />
+            ))}
+          </FormGroup>
+        </FormControl>
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {values.selectedOptions.length ? null : 'Please select an option'}
+            </span>
+          )
+        }
+      </div>
+      {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
         </IconButton>
@@ -877,29 +1030,38 @@ const RichText = (props) => {
       return;
     }
     const html = draftToHtml(convertToRaw(editor.getCurrentContent()));
-    setValues(prev => ({ ...prev, initialValue: html}));
-    if(typeof props.onUpdateCustomField === 'function'){
+    setValues(prev => ({ ...prev, initialValue: html }));
+    if (typeof props.onUpdateCustomField === 'function') {
       props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, initialValue: html });
     }
   }, [editor])
 
   const [isPreview, setIsPreview] = useState(true);
   useEffect(() => setIsPreview(!props.from), [props.from]);
-  
+
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
-      <div className='editor-general-container'>
-        <FormLabel component="legend">{values.fieldName}</FormLabel>
-        <Editor
-          editorClassName='editorClassName'
-          editorState={editor}
-          onEditorStateChange={(ed) => setEditor(ed)}
-          toolbarClassName='toolbarClassName'
-          wrapperClassName='editor-wrapper'
-          readOnly={props.disabled || false} 
-        />
+      <div className={'error-wrapper'}>
+        <div className='editor-general-container'>
+          <FormLabel component="legend">{values.fieldName}</FormLabel>
+          <Editor
+            editorClassName='editorClassName'
+            editorState={editor}
+            onEditorStateChange={setEditor}
+            toolbarClassName='toolbarClassName'
+            wrapperClassName='editor-wrapper'
+            readOnly={props.disabled || false}
+          />
+        </div>
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {values.initialValue.length > 8 ? null : 'Please fill the field'}
+            </span>
+          )
+        }
       </div>
-      { isPreview &&
+      {isPreview &&
         <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
           <DeleteIcon fontSize="inherit" />
         </IconButton>
@@ -928,17 +1090,17 @@ const Formula = (props) => {
     props.onSelect(props.id, 'formula', values, setValues);
   };
   const handleOnChange = e => {
-    if (isPreview)  return;
+    if (isPreview) return;
     setValues({ ...values, initialValue: e.target.value });
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, initialValue: e.target.value });
   };
 
   const showResult = (rawExpression) => {
     let readable = [];
-    const expression = rawExpression.replace(/\s/g, '').replace(/(?:,| |\+|-|\*|\|\/|\(|\))+/g, (e) => `,${e},` ).split(',');
+    const expression = rawExpression.replace(/\s/g, '').replace(/(?:,| |\+|-|\*|\|\/|\(|\))+/g, (e) => `,${e},`).split(',');
     const toEval = expression.map((e) => {
       var element = props.data.find((pos) => pos.id === e);
-      if(element){
+      if (element) {
         element.values.fieldName ? readable.push(element.values.fieldName) : readable.push(element.content)
       } else {
         readable.push(e);
@@ -948,7 +1110,7 @@ const Formula = (props) => {
     let result = "Error: There might be something wrong with the formula or the field's id";
     try {
       result = eval(toEval.join(''));
-    } catch (error) {}
+    } catch (error) { }
     return [result, readable.join(' ')];
   };
 
@@ -970,31 +1132,40 @@ const Formula = (props) => {
   const classes = useStyles();
   return (
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
-      <TextField
-        className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__single-line`}
-        disabled= {props.disabled || false}
-        label={values.fieldName}
-        type="text"
-        margin="normal"
-        value={isPreview ? values.initialValue : formulaResult}
-        InputProps={{
-          startAdornment:
-          <Tooltip arrow title={<Typography className={classes.typography}>{readableFormula}</Typography>} className='custom-field-help-tooltip'>
-            <InputAdornment position="start">
-              F(x)
-            </InputAdornment>
-          </Tooltip>
-        }}
-        onChange={handleOnChange}
-      />
-      { isPreview &&(
+      <div className={'error-wrapper'}>
+        <TextField
+          className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__single-line`}
+          disabled={props.disabled || false}
+          label={values.fieldName}
+          type="text"
+          margin="normal"
+          value={isPreview ? values.initialValue : formulaResult}
+          InputProps={{
+            startAdornment:
+              <Tooltip arrow title={<Typography className={classes.typography}>{readableFormula}</Typography>} className='custom-field-help-tooltip'>
+                <InputAdornment position="start">
+                  F(x)
+                </InputAdornment>
+              </Tooltip>
+          }}
+          onChange={handleOnChange}
+        />
+        {
+          values.mandatory && !isPreview && (
+            <span style={{ display: 'flex', justifyContent: 'start', color: 'red' }}>
+              {values.initialValue ? null : 'Please fill the field'}
+            </span>
+          )
+        }
+      </div>
+      {isPreview && (
         <>
-        <Tooltip arrow title={<Typography className={classes.typography}>{helpMessage}</Typography>} className='custom-field-help-tooltip'>
-          <HelpIcon className='custom-field-help-tooltip__icon'/>
-        </Tooltip>
-        <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
-          <DeleteIcon fontSize="inherit" />
-        </IconButton>
+          <Tooltip arrow title={<Typography className={classes.typography}>{helpMessage}</Typography>} className='custom-field-help-tooltip'>
+            <HelpIcon className='custom-field-help-tooltip__icon' />
+          </Tooltip>
+          <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
+            <DeleteIcon fontSize="inherit" />
+          </IconButton>
         </>
       )}
     </div>
@@ -1011,7 +1182,7 @@ const DateFormula = (props) => {
     fieldName: 'Date Formula',
     initialValue: '',
   };
-  const helpMessage = "To add any other CustomField to the Formula just insert its id as a variable, for example: \n 2 + Custom_Field_id"  
+  const helpMessage = "To add any other CustomField to the Formula just insert its id as a variable, for example: \n 2 + Custom_Field_id"
   const [values, setValues] = useState(defaultValues);
   const [isPreview, setIsPreview] = useState(true);
   const [formulaResult, setFormulaResult] = useState('Error');
@@ -1021,17 +1192,17 @@ const DateFormula = (props) => {
     props.onSelect(props.id, 'dateFormula', values, setValues);
   };
   const handleOnChange = e => {
-    if (isPreview)  return;
+    if (isPreview) return;
     setValues({ ...values, initialValue: e.target.value });
     props.onUpdateCustomField(props.tab.key, props.id, props.columnIndex, { ...values, initialValue: e.target.value });
   };
 
   const showResult = (rawExpression) => {
     let readable = [];
-    const expression = rawExpression.replace(/\s/g, '').replace(/(?:,| |\+|-|\*|\/|\(|\))+/g, (e) => `,${e},` ).split(',');
+    const expression = rawExpression.replace(/\s/g, '').replace(/(?:,| |\+|-|\*|\/|\(|\))+/g, (e) => `,${e},`).split(',');
     const toEval = expression.map((e) => {
       var element = props.data.find((pos) => pos.id === e);
-      if(element){
+      if (element) {
         element.values.fieldName ? readable.push(element.values.fieldName) : readable.push(element.content)
       } else {
         readable.push(e);
@@ -1041,7 +1212,7 @@ const DateFormula = (props) => {
     let result = "Error: There might be something wrong with the formula or the field's id";
     try {
       result = eval(toEval.join(''));
-    } catch (error) {}
+    } catch (error) { }
     return [result, readable.join(' ')]
   };
 
@@ -1065,29 +1236,29 @@ const DateFormula = (props) => {
     <div className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper`} onClick={handleCustomFieldClick}>
       <TextField
         className={`custom-field-${isPreview ? 'preview' : 'real'}-wrapper__single-line`}
-        disabled= {props.disabled || false}
+        disabled={props.disabled || false}
         label={values.fieldName}
         type="text"
         margin="normal"
         value={isPreview ? values.initialValue : formulaResult}
         InputProps={{
           startAdornment:
-          <Tooltip arrow title={<Typography className={classes.typography}>{readableFormula}</Typography>} className='custom-field-help-tooltip'>
-            <InputAdornment position="start">
-              F(x)
-            </InputAdornment>
-          </Tooltip>
+            <Tooltip arrow title={<Typography className={classes.typography}>{readableFormula}</Typography>} className='custom-field-help-tooltip'>
+              <InputAdornment position="start">
+                F(x)
+              </InputAdornment>
+            </Tooltip>
         }}
         onChange={handleOnChange}
       />
-      { isPreview &&(
+      {isPreview && (
         <>
-        <Tooltip arrow title={<Typography className={classes.typography}>{helpMessage}</Typography>} className='custom-field-help-tooltip'>
-          <HelpIcon className='custom-field-help-tooltip__icon'/>
-        </Tooltip>
-        <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
-          <DeleteIcon fontSize="inherit" />
-        </IconButton>
+          <Tooltip arrow title={<Typography className={classes.typography}>{helpMessage}</Typography>} className='custom-field-help-tooltip'>
+            <HelpIcon className='custom-field-help-tooltip__icon' />
+          </Tooltip>
+          <IconButton aria-label="Delete" size="medium" className="custom-field-preview-wrapper__delete-icon" onClick={props.onDelete}>
+            <DeleteIcon fontSize="inherit" />
+          </IconButton>
         </>
       )}
     </div>
@@ -1102,8 +1273,10 @@ const SingleLineSettings = (props) => {
     maxLength: 255,
     mandatory: false,
     repeated: false,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const settingsConstants = (useSettingsConstants() || []).map(({ _id: id, name, value }) => ({ id, name, value })) || [];
 
   const handleOnChange = name => e => {
     let newValue = e.target.value;
@@ -1120,6 +1293,20 @@ const SingleLineSettings = (props) => {
       })
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
+  };
+
+  const handleSettingsConstantValue = ({ id, name, value }) => {
+    if (!value) {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+      return;
+    }
+
+    const selectedSettingsConstant = { id, name, value };
+    setValues({ ...values, initialValue: value, selectedSettingsConstant });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: value }));
+    props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: value, selectedSettingsConstant });
   };
 
   useEffect(() => {
@@ -1148,6 +1335,7 @@ const SingleLineSettings = (props) => {
         />
         <TextField
           className="custom-field-settings-wrapper__initial-value"
+          disabled={Object.entries(values.selectedSettingsConstant || {}).length > 0}
           label="Initial Value"
           value={values.initialValue}
           onChange={handleOnChange('initialValue')}
@@ -1164,6 +1352,29 @@ const SingleLineSettings = (props) => {
         />
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-Constants-Extra-Data"
+                getOptionLabel={(constant) => constant.name}
+                onChange={(event, value) => handleSettingsConstantValue(value || { id: '', name: '', value: '' })}
+                options={settingsConstants}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Constants'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsConstant || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
@@ -1184,11 +1395,16 @@ const MultiLineSettings = (props) => {
   const defaultValues = {
     fieldName: 'Multi Line',
     mandatory: false,
+    repeated: false,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const settingsConstants = (useSettingsConstants() || []).map(({ _id: id, name, value }) => ({ id, name, value })) || [];
+
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
+    if (newValue === 'repeated') newValue = !values.repeated;
     setValues({
       ...values,
       [name]: newValue
@@ -1201,6 +1417,21 @@ const MultiLineSettings = (props) => {
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
   }
+
+  const handleSettingsConstantValue = ({ id, name, value }) => {
+    if (!value) {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+      return;
+    }
+
+    const selectedSettingsConstant = { id, name, value };
+    setValues({ ...values, initialValue: value, selectedSettingsConstant });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: value }));
+    props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: value, selectedSettingsConstant });
+  };
+
   useEffect(() => {
     if (!isEmpty(props.selfValues)) {
       setValues(props.selfValues);
@@ -1221,11 +1452,38 @@ const MultiLineSettings = (props) => {
         />
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-Constants-Extra-Data"
+                getOptionLabel={(constant) => constant.name}
+                onChange={(event, value) => handleSettingsConstantValue(value || { id: '', name: '', value: '' })}
+                options={settingsConstants}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Constants'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsConstant || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
             control={<Checkbox checked={values.mandatory} onChange={handleOnChange('mandatory')} value="mandatory" />}
             label="Mandatory"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={values.repeated} onChange={handleOnChange('repeated')} value="repeated" />}
+            label="No Repeated Values"
           />
         </FormGroup>
       </FormControl>
@@ -1386,11 +1644,14 @@ const DateTimeSettings = (props) => {
 const DropDownSettings = (props) => {
   const defaultValues = {
     fieldName: 'Drop Down',
+    mandatory: false,
     newOption: '',
     options: ['Option 1', 'Option 2', 'Option 3'],
-    mandatory: false,
+    selectedSettingsList: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const [selectedSettingsListOptions, setSelectedSettingsListOptions] = useState([]);
+  const settingsList = (useSettingsList() || []).map(({ _id: id, name, options }) => ({ id, name, options })) || [];
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
@@ -1406,18 +1667,34 @@ const DropDownSettings = (props) => {
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
   };
+  const handleSettingsListOptions = ({ id, name, options }) => {
+    setSelectedSettingsListOptions(options);
+
+    if (!options.length) {
+      const reducedOptions = values.options.filter((option) => !selectedSettingsListOptions.includes(option));
+      setValues({ ...values, options: reducedOptions, selectedSettingsList: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options: reducedOptions, selectedSettingsList: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options: reducedOptions, selectedSettingsList: {} });
+      return;
+    }
+
+    const selectedSettingsList = { id, name, options };
+    setValues({ ...values, options, selectedSettingsList });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
+    props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options, selectedSettingsList });
+  };
   const handleAddOption = () => {
-    if (!values.newOption)  return;
+    if (!values.newOption) return;
     const options = [values.newOption, ...values.options];
     setValues({ ...values, options, newOption: '' });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   const handleDeleteOption = (ix) => {
     const options = [...values.options];
     options.splice(ix, 1);
     setValues({ ...values, options });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   const handleMoveOption = (ix, direction = 'up') => {
@@ -1428,7 +1705,7 @@ const DropDownSettings = (props) => {
     const delFactor = direction === 'up' ? ix + 1 : ix;
     options.splice(delFactor, 1);
     setValues({ ...values, options });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   useEffect(() => {
@@ -1460,7 +1737,7 @@ const DropDownSettings = (props) => {
               type="text"
               margin="normal"
             />
-            <Fab size="small" color="secondary" aria-label="Add" className="custom-field-preview-wrapper__add-icon" onClick={handleAddOption}>
+            <Fab size="small" color="secondary" aria-label="Add" className="custom-field-preview-wrapper__add-icon" disabled={Object.entries(values.selectedSettingsList || {}).length > 0} onClick={handleAddOption}>
               <AddIcon />
             </Fab>
           </div>
@@ -1469,12 +1746,12 @@ const DropDownSettings = (props) => {
               <div className="custom-field-settings-wrapper__options-area__single">
                 <span className="custom-field-settings-wrapper__options-area__single__field">{opt}</span>
                 <div className="custom-field-settings-wrapper__options-area__single__icons">
-                  { (ix !== values.options.length - 1) &&
+                  {(ix !== values.options.length - 1) &&
                     <IconButton aria-label="Down" size="small" className="custom-field-settings-wrapper__options-area__single__icon options-up" onClick={() => handleMoveOption(ix, 'down')}>
                       <ArrowDownwardIcon fontSize="inherit" />
                     </IconButton>
                   }
-                  { (ix !== 0) &&
+                  {(ix !== 0) &&
                     <IconButton aria-label="Up" size="small" className="custom-field-settings-wrapper__options-area__single__icon options-down" onClick={() => handleMoveOption(ix, 'up')}>
                       <ArrowUpwardIcon fontSize="inherit" />
                     </IconButton>
@@ -1489,6 +1766,29 @@ const DropDownSettings = (props) => {
         </div>
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-List-Extra-Data"
+                getOptionLabel={(option) => option.name}
+                onChange={(event, value) => handleSettingsListOptions(value || { id: '', name: '', options: [] })}
+                options={settingsList}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Lists'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsList || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
@@ -1504,11 +1804,14 @@ const DropDownSettings = (props) => {
 const RadioButtonsSettings = (props) => {
   const defaultValues = {
     fieldName: 'Radio Buttons',
+    mandatory: false,
     newOption: '',
     options: ['Radio 1', 'Radio 2', 'Radio 3'],
-    mandatory: false,
+    selectedSettingsList: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const [selectedSettingsListOptions, setSelectedSettingsListOptions] = useState([]);
+  const settingsList = (useSettingsList() || []).map(({ _id: id, name, options }) => ({ id, name, options })) || [];
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
@@ -1524,18 +1827,34 @@ const RadioButtonsSettings = (props) => {
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
   };
+  const handleSettingsListOptions = ({ id, name, options }) => {
+    setSelectedSettingsListOptions(options);
+
+    if (!options.length) {
+      const reducedOptions = values.options.filter((option) => !selectedSettingsListOptions.includes(option));
+      setValues({ ...values, options: reducedOptions, selectedSettingsList: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options: reducedOptions, selectedSettingsList: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options: reducedOptions, selectedSettingsList: {} });
+      return;
+    }
+
+    const selectedSettingsList = { id, name, options };
+    setValues({ ...values, options, selectedSettingsList });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
+    props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options, selectedSettingsList });
+  };
   const handleAddOption = () => {
-    if (!values.newOption)  return;
+    if (!values.newOption) return;
     const options = [values.newOption, ...values.options];
     setValues({ ...values, options, newOption: '' });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   const handleDeleteOption = (ix) => {
     const options = [...values.options];
     options.splice(ix, 1);
     setValues({ ...values, options });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   const handleMoveOption = (ix, direction = 'up') => {
@@ -1578,7 +1897,7 @@ const RadioButtonsSettings = (props) => {
               type="text"
               margin="normal"
             />
-            <Fab size="small" color="secondary" aria-label="Add" className="custom-field-preview-wrapper__add-icon" onClick={handleAddOption}>
+            <Fab size="small" color="secondary" aria-label="Add" className="custom-field-preview-wrapper__add-icon" disabled={Object.entries(values.selectedSettingsList || {}).length > 0} onClick={handleAddOption}>
               <AddIcon />
             </Fab>
           </div>
@@ -1587,12 +1906,12 @@ const RadioButtonsSettings = (props) => {
               <div className="custom-field-settings-wrapper__options-area__single">
                 <span className="custom-field-settings-wrapper__options-area__single__field">{opt}</span>
                 <div className="custom-field-settings-wrapper__options-area__single__icons">
-                  { (ix !== values.options.length - 1) &&
+                  {(ix !== values.options.length - 1) &&
                     <IconButton aria-label="Down" size="small" className="custom-field-settings-wrapper__options-area__single__icon options-up" onClick={() => handleMoveOption(ix, 'down')}>
                       <ArrowDownwardIcon fontSize="inherit" />
                     </IconButton>
                   }
-                  { (ix !== 0) &&
+                  {(ix !== 0) &&
                     <IconButton aria-label="Up" size="small" className="custom-field-settings-wrapper__options-area__single__icon options-down" onClick={() => handleMoveOption(ix, 'up')}>
                       <ArrowUpwardIcon fontSize="inherit" />
                     </IconButton>
@@ -1607,6 +1926,29 @@ const RadioButtonsSettings = (props) => {
         </div>
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-List-Extra-Data"
+                getOptionLabel={(option) => option.name}
+                onChange={(event, value) => handleSettingsListOptions(value || { id: '', name: '', options: [] })}
+                options={settingsList}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Lists'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsList || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
@@ -1625,8 +1967,12 @@ const CheckboxesSettings = (props) => {
     newOption: '',
     options: ['Checkbox 1', 'Checkbox 2', 'Checkbox 3'],
     mandatory: false,
+    selectedOptions: [],
+    selectedSettingsList: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const [selectedSettingsListOptions, setSelectedSettingsListOptions] = useState([]);
+  const settingsList = (useSettingsList() || []).map(({ _id: id, name, options }) => ({ id, name, options })) || [];
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
@@ -1642,18 +1988,34 @@ const CheckboxesSettings = (props) => {
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
   };
+  const handleSettingsListOptions = ({ id, name, options }) => {
+    setSelectedSettingsListOptions(options);
+
+    if (!options.length) {
+      const reducedOptions = values.options.filter((option) => !selectedSettingsListOptions.includes(option));
+      setValues({ ...values, options: reducedOptions, selectedSettingsList: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options: reducedOptions, selectedSettingsList: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options: reducedOptions, selectedSettingsList: {} });
+      return;
+    }
+
+    const selectedSettingsList = { id, name, options };
+    setValues({ ...values, options, selectedSettingsList });
+    props.setValues({ ...props.values, fieldName: values.fieldName, options, selectedSettingsList });
+    props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options, selectedSettingsList });
+  };
   const handleAddOption = () => {
-    if (!values.newOption)  return;
+    if (!values.newOption) return;
     const options = [values.newOption, ...values.options];
     setValues({ ...values, options, newOption: '' });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   const handleDeleteOption = (ix) => {
     const options = [...values.options];
     options.splice(ix, 1);
     setValues({ ...values, options });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   const handleMoveOption = (ix, direction = 'up') => {
@@ -1664,7 +2026,7 @@ const CheckboxesSettings = (props) => {
     const delFactor = direction === 'up' ? ix + 1 : ix;
     options.splice(delFactor, 1);
     setValues({ ...values, options });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   useEffect(() => {
@@ -1696,7 +2058,7 @@ const CheckboxesSettings = (props) => {
               type="text"
               margin="normal"
             />
-            <Fab size="small" color="secondary" aria-label="Add" className="custom-field-preview-wrapper__add-icon" onClick={handleAddOption}>
+            <Fab size="small" color="secondary" aria-label="Add" className="custom-field-preview-wrapper__add-icon" disabled={Object.entries(values.selectedSettingsList || {}).length > 0} onClick={handleAddOption}>
               <AddIcon />
             </Fab>
           </div>
@@ -1705,12 +2067,12 @@ const CheckboxesSettings = (props) => {
               <div className="custom-field-settings-wrapper__options-area__single">
                 <span className="custom-field-settings-wrapper__options-area__single__field">{opt}</span>
                 <div className="custom-field-settings-wrapper__options-area__single__icons">
-                  { (ix !== values.options.length - 1) &&
+                  {(ix !== values.options.length - 1) &&
                     <IconButton aria-label="Down" size="small" className="custom-field-settings-wrapper__options-area__single__icon options-up" onClick={() => handleMoveOption(ix, 'down')}>
                       <ArrowDownwardIcon fontSize="inherit" />
                     </IconButton>
                   }
-                  { (ix !== 0) &&
+                  {(ix !== 0) &&
                     <IconButton aria-label="Up" size="small" className="custom-field-settings-wrapper__options-area__single__icon options-down" onClick={() => handleMoveOption(ix, 'up')}>
                       <ArrowUpwardIcon fontSize="inherit" />
                     </IconButton>
@@ -1725,6 +2087,29 @@ const CheckboxesSettings = (props) => {
         </div>
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-List-Extra-Data"
+                getOptionLabel={(option) => option.name}
+                onChange={(event, value) => handleSettingsListOptions(value || { id: '', name: '', options: [] })}
+                options={settingsList}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Lists'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsList || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
@@ -1795,12 +2180,16 @@ const CurrencySettings = (props) => {
     fieldName: 'Currency',
     initialValue: '',
     mandatory: false,
+    repeated: false,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const settingsConstants = (useSettingsConstants() || []).map(({ _id: id, name, value }) => ({ id, name, value })) || [];
 
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
+    if (newValue === 'repeated') newValue = !values.repeated;
     setValues({
       ...values,
       [name]: newValue
@@ -1812,6 +2201,26 @@ const CurrencySettings = (props) => {
       })
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
+  };
+
+  const handleSettingsConstantValue = ({ id, name, value }) => {
+    if (!value) {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+      return;
+    }
+
+    if (!isNaN(value)) {
+      const selectedSettingsConstant = { id, name, value };
+      setValues({ ...values, initialValue: value, selectedSettingsConstant });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: value }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: value, selectedSettingsConstant });
+    } else {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+    }
   };
 
   useEffect(() => {
@@ -1840,6 +2249,7 @@ const CurrencySettings = (props) => {
         />
         <TextField
           className="custom-field-settings-wrapper__initial-value"
+          disabled={Object.entries(values.selectedSettingsConstant || {}).length > 0}
           label="Initial Value"
           value={values.initialValue}
           onChange={handleOnChange('initialValue')}
@@ -1848,11 +2258,38 @@ const CurrencySettings = (props) => {
         />
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-Constants-Extra-Data"
+                getOptionLabel={(constant) => constant.name}
+                onChange={(event, value) => handleSettingsConstantValue(value || { id: '', name: '', value: '' })}
+                options={settingsConstants}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Constants'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsConstant || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
             control={<Checkbox checked={values.mandatory} onChange={handleOnChange('mandatory')} value="mandatory" />}
             label="Mandatory"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={values.repeated} onChange={handleOnChange('repeated')} value="repeated" />}
+            label="No Repeated Values"
           />
         </FormGroup>
       </FormControl>
@@ -1865,12 +2302,16 @@ const PercentageSettings = (props) => {
     fieldName: 'Percentage',
     initialValue: '',
     mandatory: false,
+    repeated: false,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const settingsConstants = (useSettingsConstants() || []).map(({ _id: id, name, value }) => ({ id, name, value })) || [];
 
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
+    if (newValue === 'repeated') newValue = !values.repeated;
     setValues({
       ...values,
       [name]: newValue
@@ -1882,6 +2323,26 @@ const PercentageSettings = (props) => {
       })
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
+  };
+
+  const handleSettingsConstantValue = ({ id, name, value }) => {
+    if (!value) {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+      return;
+    }
+
+    if (!isNaN(value)) {
+      const selectedSettingsConstant = { id, name, value };
+      setValues({ ...values, initialValue: value, selectedSettingsConstant });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: value }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: value, selectedSettingsConstant });
+    } else {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+    }
   };
 
   useEffect(() => {
@@ -1910,6 +2371,7 @@ const PercentageSettings = (props) => {
         />
         <TextField
           className="custom-field-settings-wrapper__initial-value"
+          disabled={Object.entries(values.selectedSettingsConstant || {}).length > 0}
           label="Initial Value"
           value={values.initialValue}
           onChange={handleOnChange('initialValue')}
@@ -1918,11 +2380,38 @@ const PercentageSettings = (props) => {
         />
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-Constants-Extra-Data"
+                getOptionLabel={(constant) => constant.name}
+                onChange={(event, value) => handleSettingsConstantValue(value || { id: '', name: '', value: '' })}
+                options={settingsConstants}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Constants'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsConstant || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
             control={<Checkbox checked={values.mandatory} onChange={handleOnChange('mandatory')} value="mandatory" />}
             label="Mandatory"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={values.repeated} onChange={handleOnChange('repeated')} value="repeated" />}
+            label="No Repeated Values"
           />
         </FormGroup>
       </FormControl>
@@ -1935,12 +2424,16 @@ const EmailSettings = (props) => {
     fieldName: 'Email',
     initialValue: '',
     mandatory: false,
+    repeated: false,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const settingsConstants = (useSettingsConstants() || []).map(({ _id: id, name, value }) => ({ id, name, value })) || [];
 
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
+    if (newValue === 'repeated') newValue = !values.repeated;
     setValues({
       ...values,
       [name]: newValue
@@ -1952,6 +2445,20 @@ const EmailSettings = (props) => {
       })
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
+  };
+
+  const handleSettingsConstantValue = ({ id, name, value }) => {
+    if (!value) {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+      return;
+    }
+
+    const selectedSettingsConstant = { id, name, value };
+    setValues({ ...values, initialValue: value, selectedSettingsConstant });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: value }));
+    props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: value, selectedSettingsConstant });
   };
 
   useEffect(() => {
@@ -1975,6 +2482,7 @@ const EmailSettings = (props) => {
         />
         <TextField
           className="custom-field-settings-wrapper__initial-value"
+          disabled={Object.entries(values.selectedSettingsConstant || {}).length > 0}
           label="Initial Value"
           value={values.initialValue}
           onChange={handleOnChange('initialValue')}
@@ -1983,11 +2491,38 @@ const EmailSettings = (props) => {
         />
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-Constants-Extra-Data"
+                getOptionLabel={(constant) => constant.name}
+                onChange={(event, value) => handleSettingsConstantValue(value || { id: '', name: '', value: '' })}
+                options={settingsConstants}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Constants'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsConstant || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
             control={<Checkbox checked={values.mandatory} onChange={handleOnChange('mandatory')} value="mandatory" />}
             label="Mandatory"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={values.repeated} onChange={handleOnChange('repeated')} value="repeated" />}
+            label="No Repeated Values"
           />
         </FormGroup>
       </FormControl>
@@ -2000,12 +2535,16 @@ const DecimalSettings = (props) => {
     fieldName: 'Decimal',
     initialValue: '0.00',
     mandatory: false,
+    repeated: false,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const settingsConstants = (useSettingsConstants() || []).map(({ _id: id, name, value }) => ({ id, name, value })) || [];
 
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
+    if (newValue === 'repeated') newValue = !values.repeated;
     setValues({
       ...values,
       [name]: newValue
@@ -2017,6 +2556,26 @@ const DecimalSettings = (props) => {
       })
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
+  };
+
+  const handleSettingsConstantValue = ({ id, name, value }) => {
+    if (!value) {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+      return;
+    }
+
+    if (!isNaN(value)) {
+      const selectedSettingsConstant = { id, name, value };
+      setValues({ ...values, initialValue: value, selectedSettingsConstant });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: value }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: value, selectedSettingsConstant });
+    } else {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+    }
   };
 
   useEffect(() => {
@@ -2045,6 +2604,7 @@ const DecimalSettings = (props) => {
         />
         <TextField
           className="custom-field-settings-wrapper__initial-value"
+          disabled={Object.entries(values.selectedSettingsConstant || {}).length > 0}
           label="Initial Value"
           value={values.initialValue}
           onChange={handleOnChange('initialValue')}
@@ -2053,11 +2613,38 @@ const DecimalSettings = (props) => {
         />
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-Constants-Extra-Data"
+                getOptionLabel={(constant) => constant.name}
+                onChange={(event, value) => handleSettingsConstantValue(value || { id: '', name: '', value: '' })}
+                options={settingsConstants}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Constants'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsConstant || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
             control={<Checkbox checked={values.mandatory} onChange={handleOnChange('mandatory')} value="mandatory" />}
             label="Mandatory"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={values.repeated} onChange={handleOnChange('repeated')} value="repeated" />}
+            label="No Repeated Values"
           />
         </FormGroup>
       </FormControl>
@@ -2070,12 +2657,16 @@ const URLSettings = (props) => {
     fieldName: 'URL',
     initialValue: '',
     mandatory: false,
+    repeated: false,
+    selectedSettingsConstant: {}
   };
   const [values, setValues] = useState(defaultValues);
+  const settingsConstants = (useSettingsConstants() || []).map(({ _id: id, name, value }) => ({ id, name, value })) || [];
 
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
+    if (newValue === 'repeated') newValue = !values.repeated;
     setValues({
       ...values,
       [name]: newValue
@@ -2087,6 +2678,20 @@ const URLSettings = (props) => {
       })
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
+  };
+
+  const handleSettingsConstantValue = ({ id, name, value }) => {
+    if (!value) {
+      setValues({ ...values, initialValue: '', selectedSettingsConstant: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: '', selectedSettingsConstant: {} });
+      return;
+    }
+
+    const selectedSettingsConstant = { id, name, value };
+    setValues({ ...values, initialValue: value, selectedSettingsConstant });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, initialValue: value }));
+    props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, initialValue: value, selectedSettingsConstant });
   };
 
   useEffect(() => {
@@ -2110,6 +2715,7 @@ const URLSettings = (props) => {
         />
         <TextField
           className="custom-field-settings-wrapper__initial-value"
+          disabled={Object.entries(values.selectedSettingsConstant || {}).length > 0}
           label="Initial Value"
           value={values.initialValue}
           onChange={handleOnChange('initialValue')}
@@ -2118,11 +2724,38 @@ const URLSettings = (props) => {
         />
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-Constants-Extra-Data"
+                getOptionLabel={(constant) => constant.name}
+                onChange={(event, value) => handleSettingsConstantValue(value || { id: '', name: '', value: '' })}
+                options={settingsConstants}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Constants'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsConstant || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
             control={<Checkbox checked={values.mandatory} onChange={handleOnChange('mandatory')} value="mandatory" />}
             label="Mandatory"
+          />
+          <FormControlLabel
+            control={<Checkbox checked={values.repeated} onChange={handleOnChange('repeated')} value="repeated" />}
+            label="No Repeated Values"
           />
         </FormGroup>
       </FormControl>
@@ -2191,9 +2824,13 @@ const DecisionBoxSettings = (props) => {
     fieldName: 'Decision Box',
     newOption: '',
     options: ['Switch 1', 'Switch 2', 'Switch 3'],
+    selectedOptions: [],
+    selectedSettingsList: {},
     mandatory: false,
   };
   const [values, setValues] = useState(defaultValues);
+  const [selectedSettingsListOptions, setSelectedSettingsListOptions] = useState([]);
+  const settingsList = (useSettingsList() || []).map(({ _id: id, name, options }) => ({ id, name, options })) || [];
   const handleOnChange = name => e => {
     let newValue = e.target.value;
     if (newValue === 'mandatory') newValue = !values.mandatory;
@@ -2209,18 +2846,33 @@ const DecisionBoxSettings = (props) => {
     }
     props.onUpdate(props.id, { ...values, [name]: newValue });
   };
+  const handleSettingsListOptions = ({ id, name, options }) => {
+    setSelectedSettingsListOptions(options);
+
+    if (!options.length) {
+      setValues({ ...values, options: [], selectedSettingsList: {} });
+      props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options: [], selectedSettingsList: {} }));
+      props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options: [], selectedSettingsList: {} });
+      return;
+    }
+
+    const selectedSettingsList = { id, name, options };
+    setValues({ ...values, options, selectedSettingsList });
+    props.setValues({ ...props.values, fieldName: values.fieldName, options, selectedSettingsList });
+    props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options, selectedSettingsList });
+  };
   const handleAddOption = () => {
-    if (!values.newOption)  return;
+    if (!values.newOption) return;
     const options = [values.newOption, ...values.options];
     setValues({ ...values, options, newOption: '' });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   const handleDeleteOption = (ix) => {
     const options = [...values.options];
     options.splice(ix, 1);
     setValues({ ...values, options });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   const handleMoveOption = (ix, direction = 'up') => {
@@ -2231,11 +2883,12 @@ const DecisionBoxSettings = (props) => {
     const delFactor = direction === 'up' ? ix + 1 : ix;
     options.splice(delFactor, 1);
     setValues({ ...values, options });
-    props.setValues({ ...props.values, fieldName: values.fieldName, options });
+    props.setValues(prev => ({ ...prev, fieldName: values.fieldName, options }));
     props.onUpdate(props.id, { ...props.values, fieldName: values.fieldName, options });
   };
   useEffect(() => {
     if (!isEmpty(props.selfValues)) {
+      console.log(props.selfValues);
       setValues(props.selfValues);
     } else {
       setValues(defaultValues);
@@ -2263,7 +2916,7 @@ const DecisionBoxSettings = (props) => {
               type="text"
               margin="normal"
             />
-            <Fab size="small" color="secondary" aria-label="Add" className="custom-field-preview-wrapper__add-icon" onClick={handleAddOption}>
+            <Fab size="small" color="secondary" aria-label="Add" className="custom-field-preview-wrapper__add-icon" disabled={Object.entries(values.selectedSettingsList || {}).length > 0} onClick={handleAddOption}>
               <AddIcon />
             </Fab>
           </div>
@@ -2272,12 +2925,12 @@ const DecisionBoxSettings = (props) => {
               <div className="custom-field-settings-wrapper__options-area__single">
                 <span className="custom-field-settings-wrapper__options-area__single__field">{opt}</span>
                 <div className="custom-field-settings-wrapper__options-area__single__icons">
-                  { (ix !== values.options.length - 1) &&
+                  {(ix !== values.options.length - 1) &&
                     <IconButton aria-label="Down" size="small" className="custom-field-settings-wrapper__options-area__single__icon options-up" onClick={() => handleMoveOption(ix, 'down')}>
                       <ArrowDownwardIcon fontSize="inherit" />
                     </IconButton>
                   }
-                  { (ix !== 0) &&
+                  {(ix !== 0) &&
                     <IconButton aria-label="Up" size="small" className="custom-field-settings-wrapper__options-area__single__icon options-down" onClick={() => handleMoveOption(ix, 'up')}>
                       <ArrowUpwardIcon fontSize="inherit" />
                     </IconButton>
@@ -2292,6 +2945,29 @@ const DecisionBoxSettings = (props) => {
         </div>
       </div>
       <FormControl component="fieldset" className="custom-field-settings-wrapper__right-content">
+        <FormLabel component="legend">Data Origin</FormLabel>
+        <FormGroup>
+          <FormControlLabel
+            control={(
+              <Autocomplete
+                id="Settings-List-Extra-Data"
+                getOptionLabel={(option) => option.name}
+                onChange={(event, value) => handleSettingsListOptions(value || { id: '', name: '', options: [] })}
+                options={settingsList}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Settings Lists'
+                    style={{ width: '255px', margin: '9px', marginBottom: '15px' }}
+                    defaultValue={values.selectedSettingsList?.name || null}
+                    variant='standard'
+                  />
+                )}
+                value={values.selectedSettingsList || null}
+              />
+            )}
+          />
+        </FormGroup>
         <FormLabel component="legend">Validations</FormLabel>
         <FormGroup>
           <FormControlLabel
@@ -2500,6 +3176,7 @@ const SingleLineIntegrated = (props) => {
     maxLength: 255,
     mandatory: false,
     repeated: false,
+    selectedSettingsConstant: {}
   });
   const handleCustomFieldClick = (customFieldName) => {
     props.onSelect(customFieldName, values, setValues);
@@ -2513,7 +3190,7 @@ const SingleLineIntegrated = (props) => {
       />
     )
   }
-  return <SingleLineSettings values={values} setValues={setValues}/>
+  return <SingleLineSettings values={values} setValues={setValues} />
 };
 
 export {

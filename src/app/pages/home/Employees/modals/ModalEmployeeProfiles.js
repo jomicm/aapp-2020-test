@@ -161,15 +161,17 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id, polic
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('employeeProfiles', _id);
-          executePolicies('OnAdd', 'employees', 'references', policies);
+          executePolicies('OnAdd', 'employees', 'references', policies, response.response[0]);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('employeeProfiles/', body, id[0])
-        .then(data => data.json())
-        .then(response => {
+        .then(response => response.json())
+        .then(data => {
+          const { response: { value } } = data;
+
           dispatch(showUpdatedAlert());
-          executePolicies('OnEdit', 'employees', 'references', policies);
+          executePolicies('OnEdit', 'employees', 'references', policies, value);
           saveAndReload('employeeProfiles', id[0]);
         })
         .catch(error => dispatch(showErrorAlert()));
@@ -214,7 +216,6 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id, polic
         const imageURL = getImageURL(id, 'employeeProfiles', fileExt);
         const obj = { name, depreciation, imageURL };
         setValues(obj);
-        executePolicies('OnLoad', 'employees', 'references', policies);
         setCustomFieldsTab(customFieldsTab);
         setIsAssetRepository(isAssetRepository);
         setProfilePermissions(profilePermissions);

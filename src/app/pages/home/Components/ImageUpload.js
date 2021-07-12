@@ -22,15 +22,14 @@ const ImageUpload = ({ children, setImage = () => { }, image = null, disabled = 
 
   const getFile = async () => {
     const filename = image.split('/')[5];
-    urltoFile(image, filename, `image/${filename.split('.')[1]}`).then(res => console.log(res));
-    setImage({
-      name: image,
-      type: `image/${image.split('.')[image.split('.').length - 1]}`
-    });
+    const urls = image.split('/');
+    const url = `${urls[3]}/${urls[4]}/${urls[5]}`;
+    urltoFile(url, filename, `image/${filename.split('.')[1]}`)
+      .then((res) => setImage(res))
+      .catch((error) => console.log(error));
   };
 
   useEffect(() => {
-
     if (image && image?.length) {
       getFile();
     }

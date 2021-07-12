@@ -13,9 +13,11 @@ const AssetFinder = ({ setTableRowsInner = () => { }, userLocations }) => {
   const [searchText, setSearchText] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleOnSearchClick = () => {
+  const handleOnSearchClick = (e) => {
+    const { target: { value } } = e;
+    setSearchText(value);
     setLoading(true);
-    const queryLike = ['name', 'brand', 'model', 'EPC', 'serial'].map(key => ({ key, value: searchText || '' }));
+    const queryLike = ['name', 'brand', 'model', 'EPC', 'serial'].map(key => ({ key, value: value || '' }));
     const condition = [{ "location": { "$in": userLocations } }];
     getDBComplex({ collection: 'assets', queryLike, condition })
       .then(response => response.json())
@@ -36,12 +38,12 @@ const AssetFinder = ({ setTableRowsInner = () => { }, userLocations }) => {
       <Paper className={classes.root}>
         <InputBase
           value={searchText}
-          onChange={e => setSearchText(e.target.value)}
+          onChange={handleOnSearchClick}
           className={classes.input}
           placeholder='Search Assets'
           inputProps={{ 'aria-label': 'search google maps' }}
         />
-        <IconButton onClick={handleOnSearchClick} className={classes.iconButton} aria-label='search'>
+        <IconButton className={classes.iconButton} aria-label='search'>
           <SearchIcon />
         </IconButton>
       </Paper>

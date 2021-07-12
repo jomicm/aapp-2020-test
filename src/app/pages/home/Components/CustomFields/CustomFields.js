@@ -144,6 +144,16 @@ function CustomFields(props) {
 
   const handleChange = name => e => {
     if (name === 'tabLayout') {
+      if (!tabs.length) {
+        dispatch(
+          showCustomAlert({
+            open: true,
+            message: 'First add a Tab',
+            type: 'warning'
+          })
+        );
+        return;
+      }
       const tabsTmp = [...tabs];
       tabsTmp[tabIndex].columns = Number(e.target.value);
       setTabs(tabsTmp);
@@ -176,12 +186,12 @@ function CustomFields(props) {
 
     if (index < tabs.length - 1) {
       setTabIndex(index);
-      setTabName(newTabs[index].name); 
+      setTabName(newTabs[index].name);
       setCustomFieldsColumns(Array(newTabs[index].columns).fill(1));
       handleChangeValue('tabLayout', String(newTabs[index].columns));
       let data = customFieldsTab;
       console.log(index, customFieldsTab.length);
-      const length =  Object.keys(customFieldsTab || []).length;
+      const length = Object.keys(customFieldsTab || []).length;
 
       for (var i = index; i < length; i++) {
         const oldKey = `tab-${i}`
@@ -293,6 +303,7 @@ function CustomFields(props) {
 
   // Save the custom field props from the settings CF to the preview CF
   const handleSetCustomFieldProps = (idSelectedCustomField, selectedCustomField, values, setValues) => {
+    console.log(values);
     setSelectedCustomFieldSettings({ idSelectedCustomField, selectedCustomField, values, setValues, selfValues: findValuesByCustomFieldId(idSelectedCustomField) });
   };
 
@@ -437,16 +448,18 @@ function CustomFields(props) {
                   onChange={handleChange("tabLayout")}
                 >
                   <FormControlLabel
-                    value="1"
                     control={<Radio color="primary" />}
+                    disabled={!tabs.length}
                     label="1 Column"
                     labelPlacement="start"
+                    value="1"
                   />
                   <FormControlLabel
-                    value="2"
                     control={<Radio color="primary" />}
+                    disabled={!tabs.length}
                     label="2 Column"
                     labelPlacement="start"
+                    value="2"
                   />
                 </RadioGroup>
               </FormControl>

@@ -196,16 +196,19 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, polic
           dispatch(showSavedAlert());
           const { _id } = response.response[0];
           saveAndReload('locations', _id);
-          executePolicies('OnAdd', 'locations', 'profiles', policies);
+          executePolicies('OnAdd', 'locations', 'profiles', policies, response.response[0]);
           updateGeneralProfileLocations();
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
       updateDB('locations/', body, id[0])
-        .then(response => {
+        .then(response => response.json())
+        .then((data) => {
+          const { response: { value } } = data;
+
           dispatch(showUpdatedAlert());
           saveAndReload('locations', id[0]);
-          executePolicies('OnEdit', 'locations', 'profiles', policies);
+          executePolicies('OnEdit', 'locations', 'profiles', policies, value);
           updateGeneralProfileLocations();
         })
         .catch(error => dispatch(showErrorAlert()));
@@ -250,7 +253,6 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, polic
             isLocationControl: isLocationControl || false,
             imageURL: getImageURL(id, 'locations', fileExt)
           };
-          executePolicies('OnLoad', 'locations', 'profiles', policies);
           setValues(obj);
           setCustomFieldsTab(customFieldsTab);
           setIsNew(false);

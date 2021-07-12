@@ -30,9 +30,8 @@ import { TreeItem, TreeView } from "@material-ui/lab";
 
 import { actions } from '../../../../../store/ducks/general.duck';
 import { getDB, getOneDB, updateDB, postDB } from '../../../../../crud/api';
-
 import { Editor } from 'react-draft-wysiwyg';
-import { EditorState, ContentState, convertToRaw, convertFromHTML, Modifier } from 'draft-js';
+import { EditorState, ContentState, convertToRaw, Modifier } from 'draft-js';
 import draftToHtml from 'draftjs-to-html';
 import htmlToDraft from 'html-to-draftjs';
 import './ModalLayoutStages.scss'
@@ -130,7 +129,7 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
   const [stageCustomFields, setStageCustomFields] = useState([]);
 
   const handleChange = name => event => {
-    setValues({ ...values, [name]: event.target.value });
+    setValues(prev => ({ ...prev, [name]: event.target.value }));
   };
 
   const handleSave = () => {
@@ -437,7 +436,6 @@ const ModalLayoutStages = ({ showModal, setShowModal, reloadTable, id, employeeP
                       <div className="field-properties-wrapper">
                         <div style={{ marginTop: '0px', marginBottom: '20px' }}>
                           <Editor
-                            onClick={e => console.log('>>>>>>>click', e)}
                             editorState={editor}
                             toolbarClassName="toolbarClassName"
                             wrapperClassName="wrapperClassName"

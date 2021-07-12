@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import Select from 'react-select';
 import draftToHtml from 'draftjs-to-html';
 import htmlToDraft from 'html-to-draftjs';
@@ -34,6 +35,7 @@ import {
   getOneDB,
   updateDB
 } from '../../../../crud/api';
+import { actions } from '../../../../store/ducks/general.duck'
 import './ModalReportsSaved.scss';
 
 const localStorageActiveTabKey = 'builderActiveTab';
@@ -120,6 +122,8 @@ const ModalReportsSaved = ({
   setShowModal,
   showModal
 }) => {
+  const dispatch = useDispatch();
+  const { showCustomAlert } = actions;
   const activeTab = localStorage.getItem(localStorageActiveTabKey);
   const classes = useStyles();
   const classes4 = useStyles4();
@@ -153,6 +157,16 @@ const ModalReportsSaved = ({
   };
 
   const handleSave = () => {
+
+    if (!from?.length || !to?.length) {
+      dispatch(showCustomAlert({
+        message: 'Please assign a sender and a reciever',
+        open: true,
+        type: 'warning'
+      }))
+      return;
+    }
+
     const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
     const body = {
       ...values,
