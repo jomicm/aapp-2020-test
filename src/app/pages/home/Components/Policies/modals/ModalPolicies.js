@@ -1126,6 +1126,7 @@ const ModalPolicies = ({
                                   <TextField
                                     className={classes.textField}
                                     id='standard-rule-one-number-of-days'
+                                    InputProps={{ inputProps: { min: 1 } }}
                                     margin='normal'
                                     onChange={handleRuleOneChanges('numberOfDays')}
                                     style={{ width: '60px', marginBottom: '0px' }}
@@ -1138,7 +1139,9 @@ const ModalPolicies = ({
                                   <Typography style={{ fontSize: '1.2rem', marginRight: '8px' }}>Repeat</Typography>
                                   <TextField
                                     className={classes.textField}
+                                    disabled={values.ruleOne.isInfinite}
                                     id='standard-rule-one-times-repeated'
+                                    InputProps={{ inputProps: { min: 1 } }}
                                     margin='normal'
                                     onChange={handleRuleOneChanges('timesRepeated')}
                                     style={{ width: '60px', marginBottom: '0px' }}
@@ -1195,10 +1198,10 @@ const ModalPolicies = ({
                                 className={classes.textField}
                                 id='standard-rule-two-value'
                                 margin='normal'
-                                onChange={handleRuleValue('ruleThree')}
+                                onChange={handleRuleValue('ruleTwo')}
                                 style={{ width: '120px', marginBottom: '0px' }}
                                 type="date"
-                                value={values.rulwTwo?.value}
+                                value={values.ruleTwo?.value}
                               />
                             </div>
                           )}
