@@ -42,7 +42,7 @@ import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetList.scss';
 import OtherModalTabs from '../components/OtherModalTabs';
 import { pick } from 'lodash';
-import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
+import { executePolicies, executeOnLoadPolicy, executeOnFieldPolicy } from '../../Components/Policies/utils';
 import ModalYesNo from '../../Components/ModalYesNo';
 
 // Example 5 - Modal
@@ -561,6 +561,7 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
           handleChildrenOnSaving(_id);
           saveAndReload('assets', _id);
           executePolicies('OnAdd', 'assets', 'list', policies, response.response[0]);
+          executeOnFieldPolicy('assets', 'list', policies, response.response[0]);
         })
         .catch(error => {
           dispatch(showErrorAlert())
@@ -576,6 +577,7 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
           const { response: { value, value: { assigned } } } = data;
           
           executePolicies('OnEdit', 'assets', 'list', policies, value);
+          executeOnFieldPolicy('assets', 'list', policies, value);
 
           if (assigned) {
             if (assigned.length) {

@@ -41,7 +41,6 @@ export default function NotificationTemplate({
     notificationsOffIcon: <NotificationsOffIcon />,
     notificationsPausedIcon: <NotificationsPausedIcon />
   };
-  console.log(selectedIcon);
   return (
     <PortletBody>
       <div className='__container-sendnotification-panel'>

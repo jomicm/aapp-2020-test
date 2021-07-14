@@ -29,7 +29,7 @@ import BaseFields from '../../Components/BaseFields/BaseFields';
 import CustomFields from '../../Components/CustomFields/CustomFields';
 import ImageUpload from '../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
-import { executePolicies } from '../../Components/Policies/utils';
+import { executePolicies, executeOnFieldPolicy } from '../../Components/Policies/utils';
 
 const styles5 = theme => ({
   root: {
@@ -162,6 +162,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id, polic
           const { _id } = response.response[0];
           saveAndReload('employeeProfiles', _id);
           executePolicies('OnAdd', 'employees', 'references', policies, response.response[0]);
+          executeOnFieldPolicy('employees', 'references', policies, response.response[0]);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -172,6 +173,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id, polic
 
           dispatch(showUpdatedAlert());
           executePolicies('OnEdit', 'employees', 'references', policies, value);
+          executeOnFieldPolicy('employees', 'references', policies, value);
           saveAndReload('employeeProfiles', id[0]);
         })
         .catch(error => dispatch(showErrorAlert()));

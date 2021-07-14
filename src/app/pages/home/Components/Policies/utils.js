@@ -11,9 +11,7 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies,
     (policy) => policy.selectedAction === actionName && policy.selectedCatalogue === selectedCatalogue && policy.module === module
   );
 
-  console.log(selectedCatalogue, module);
-
-  filteredPolicies.forEach(async ({
+  filteredPolicies.forEach(({
     apiDisabled,
     bodyAPI,
     layout: html,
@@ -31,53 +29,29 @@ export const executePolicies = (actionName, module, selectedCatalogue, policies,
     token,
     tokenEnabled
   }) => {
-    if (!messageDisabled) {
-      const convertedHTML = changeVariables(html, record, module, selectedCatalogue);
-      const convertedSubject = changeVariables(subjectMessage, record, module, selectedCatalogue);
-
-      const messageObj = {
-        formatDate: rawDate,
-        from: messageFrom,
-        html: convertedHTML || html,
-        read: false,
-        status: 'new',
-        subject: convertedSubject || subjectMessage,
-        timeStamp,
-        to: messageTo
-      };
-      simplePost(collections.messages, messageObj);
-    }
-    if (!notificationDisabled) {
-      const convertedMessage = changeVariables(messageNotification, record, module, selectedCatalogue);
-      const convertedSubject = changeVariables(subjectNotification, record, module, selectedCatalogue);
-
-      const notificationObj = {
-        formatDate: rawDate,
-        from: notificationFrom,
-        icon,
-        message: convertedMessage || messageNotification,
-        read: false,
-        status: 'new',
-        subject: convertedSubject || subjectNotification,
-        timeStamp,
-        to: notificationTo
-      };
-      simplePost(collections.notifications, notificationObj);
-    }
-    if (!apiDisabled) {
-      try {
-        const convertedURL = changeVariables(urlAPI, record, module, selectedCatalogue);
-        const validBody = JSON.parse(bodyAPI);
-        const headers = { Authorization: `Bearer ${token}` };
-        await axios.post(
-          convertedURL || urlAPI,
-          validBody,
-          { ...(tokenEnabled ? { headers } : {}) }
-        );
-      } catch (error) {
-        console.log(error);
-      }
-    }
+    send(
+      record,
+      messageDisabled,
+      notificationDisabled,
+      apiDisabled,
+      rawDate,
+      timeStamp,
+      html,
+      module,
+      selectedCatalogue,
+      messageFrom,
+      subjectMessage,
+      messageTo,
+      notificationFrom,
+      icon,
+      messageNotification,
+      subjectNotification,
+      notificationTo,
+      urlAPI,
+      bodyAPI,
+      token,
+      tokenEnabled
+    );
   })
 };
 
@@ -116,6 +90,205 @@ export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, pol
     }
   }
   return res;
+};
+
+export const executeOnFieldPolicy = (module, selectedCatalogue, policies, record = {}) => {
+  const { dateFormatted, rawDate, timeFormatted } = getCurrentDateTime();
+  const timeStamp = `${dateFormatted} ${timeFormatted}`;
+  const filteredPolicies = policies.filter(
+    (policy) => policy.selectedAction === 'OnField' && ['ruleTwo', 'ruleThree'].includes(policy.selectedRule) && policy.selectedCatalogue === selectedCatalogue && policy.module === module
+  );
+
+  if (!filteredPolicies) return;
+
+  filteredPolicies.forEach(({
+    OnFieldApiDisabled,
+    onFieldBodyAPI,
+    onFieldLayout: html,
+    onFieldSelectedIcon: icon,
+    onFieldMessageDisabled,
+    onFieldMessageFrom,
+    onFieldMessageInternal,
+    onFieldMessageMail,
+    onFieldMessageNotification,
+    onFieldMessageSubject,
+    onFieldMessageTo,
+    onFieldNotificationDisabled,
+    onFieldNotificationFrom,
+    onFieldNotificationSubject,
+    onFieldNotificationTo,
+    onFieldToken,
+    onFieldTokenEnabled,
+    onFieldUrlAPI,
+    ruleTwo,
+    ruleThree,
+    selectedRule
+  }) => {
+    if (selectedRule === 'ruleTwo') {
+      const customFieldsValues = getCustomFieldValues(record);
+      Object.entries(customFieldsValues || {}).forEach((field) => {
+        if (`%{${field[0]}}` === ruleTwo?.field && new Date(field[1]).toISOString() === ruleTwo?.value) {
+          send(
+            record,
+            onFieldMessageDisabled,
+            onFieldNotificationDisabled,
+            OnFieldApiDisabled,
+            rawDate,
+            timeStamp,
+            html,
+            module,
+            selectedCatalogue,
+            onFieldMessageFrom,
+            onFieldMessageSubject,
+            onFieldMessageTo,
+            onFieldNotificationFrom,
+            icon,
+            onFieldMessageNotification,
+            onFieldNotificationSubject,
+            onFieldNotificationTo,
+            onFieldUrlAPI,
+            onFieldBodyAPI,
+            onFieldToken,
+            onFieldTokenEnabled
+          );
+        }
+      });
+    }
+    else if (selectedRule === 'ruleThree') {
+      let flag = true;
+      Object.entries(allBaseFields[modulesCatalogues[module][selectedCatalogue]] || {}).forEach((field) => {
+        const recordField = field[1]?.validationId;
+        if (`%{${recordField}}` === ruleThree?.field && record[recordField] === ruleThree?.value) {
+          flag = false;
+          send(
+            record,
+            onFieldMessageDisabled,
+            onFieldNotificationDisabled,
+            OnFieldApiDisabled,
+            rawDate,
+            timeStamp,
+            html,
+            module,
+            selectedCatalogue,
+            onFieldMessageFrom,
+            onFieldMessageSubject,
+            onFieldMessageTo,
+            onFieldNotificationFrom,
+            icon,
+            onFieldMessageNotification,
+            onFieldNotificationSubject,
+            onFieldNotificationTo,
+            onFieldUrlAPI,
+            onFieldBodyAPI,
+            onFieldToken,
+            onFieldTokenEnabled
+          );
+        }
+      });
+      if (flag) {
+        const customFieldsValues = getCustomFieldValues(record);
+        Object.entries(customFieldsValues || {}).forEach((field) => {
+          if (`%{${field[0]}}` === ruleThree?.field && field[1] === ruleThree?.value) {
+            send(
+              record,
+              onFieldMessageDisabled,
+              onFieldNotificationDisabled,
+              OnFieldApiDisabled,
+              rawDate,
+              timeStamp,
+              html,
+              module,
+              selectedCatalogue,
+              onFieldMessageFrom,
+              onFieldMessageSubject,
+              onFieldMessageTo,
+              onFieldNotificationFrom,
+              icon,
+              onFieldMessageNotification,
+              onFieldNotificationSubject,
+              onFieldNotificationTo,
+              onFieldUrlAPI,
+              onFieldBodyAPI,
+              onFieldToken,
+              onFieldTokenEnabled
+            );
+          }
+        });
+      }
+    }
+  });
+};
+
+const send = async (
+  record,
+  messageDisabled,
+  notificationDisabled,
+  apiDisabled,
+  rawDate,
+  timeStamp,
+  html,
+  module,
+  selectedCatalogue,
+  messageFrom,
+  subjectMessage,
+  messageTo,
+  notificationFrom,
+  icon,
+  messageNotification,
+  subjectNotification,
+  notificationTo,
+  urlAPI,
+  bodyAPI,
+  token,
+  tokenEnabled
+) => {
+  if (!messageDisabled) {
+    const convertedHTML = changeVariables(html, record, module, selectedCatalogue);
+    const convertedSubject = changeVariables(subjectMessage, record, module, selectedCatalogue);
+
+    const messageObj = {
+      formatDate: rawDate,
+      from: messageFrom,
+      html: convertedHTML || html,
+      read: false,
+      status: 'new',
+      subject: convertedSubject || subjectMessage,
+      timeStamp,
+      to: messageTo
+    };
+    simplePost(collections.messages, messageObj);
+  }
+  if (!notificationDisabled) {
+    const convertedMessage = changeVariables(messageNotification, record, module, selectedCatalogue);
+    const convertedSubject = changeVariables(subjectNotification, record, module, selectedCatalogue);
+
+    const notificationObj = {
+      formatDate: rawDate,
+      from: notificationFrom,
+      icon,
+      message: convertedMessage || messageNotification,
+      read: false,
+      status: 'new',
+      subject: convertedSubject || subjectNotification,
+      timeStamp,
+      to: notificationTo
+    };
+    simplePost(collections.notifications, notificationObj);
+  }
+  if (!apiDisabled) {
+    try {
+      const convertedURL = changeVariables(urlAPI, record, module, selectedCatalogue);
+      const validBody = JSON.parse(bodyAPI);
+      const headers = { Authorization: `Bearer ${token}` };
+      await axios.post(
+        convertedURL || urlAPI,
+        validBody,
+        { ...(tokenEnabled ? { headers } : {}) }
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  }
 };
 
 const handlePathResponse = (response, onLoadFields, res = {}) => {
@@ -162,7 +335,6 @@ const changeVariables = (text, record, module, selectedCatalogue) => {
       } else if (typeof newMessage === 'string' || typeof newMessage === 'number') {
         newChars.push(newMessage.toString());
       } else if (regex.test(varName)) {
-        console.log('Es un custom field');
         customFields.push(varName);
       } else {
         newChars.push('N/A');
@@ -186,7 +358,6 @@ const changeVariables = (text, record, module, selectedCatalogue) => {
 
 const getCustomFieldValues = (record) => {
   let filteredCustomFields = {};
-  console.log('CustomFieldsFunc: ', Object.values(record.customFieldsTab || {}))
   Object.values(record.customFieldsTab || {}).forEach(tab => {
     const allCustomFields = [...tab.left, ...tab.right];
     allCustomFields.map(field => {

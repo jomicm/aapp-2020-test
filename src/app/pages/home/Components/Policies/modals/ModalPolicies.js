@@ -9,12 +9,6 @@ import {
 } from 'draft-js';
 import draftToHtml from 'draftjs-to-html';
 import htmlToDraft from 'html-to-draftjs';
-import NotificationImportantIcon from '@material-ui/icons/NotificationImportant';
-import NotificationsIcon from '@material-ui/icons/Notifications';
-import NotificationsActiveIcon from '@material-ui/icons/NotificationsActive';
-import NotificationsNoneIcon from '@material-ui/icons/NotificationsNone';
-import NotificationsOffIcon from '@material-ui/icons/NotificationsOff';
-import NotificationsPausedIcon from '@material-ui/icons/NotificationsPaused';
 import {
   Button,
   Dialog,
@@ -189,23 +183,15 @@ const ModalPolicies = ({
     { id: 'inventories', name: 'Inventories', custom: '' }
   ];
   const rules = [
-    { value: 'ruleOne', label: 'Rule 1' },
-    { value: 'ruleTwo', label: 'Rule 2' },
-    { value: 'ruleThree', label: 'Rule 3' }
+    { value: 'ruleOne', label: 'Date Cycle Rule' },
+    { value: 'ruleTwo', label: 'Date Equals Rule' },
+    { value: 'ruleThree', label: 'Text Equals Rule' }
   ];
   const classes = useStyles();
   const classes4 = useStyles4();
   const [cursorPosition, setCursorPosition] = useState([0, 0]);
   const [editor, setEditor] = useState(EditorState.createEmpty());
   const [onFieldEditor, setOnFieldEditor] = useState(EditorState.createEmpty());
-  const iconsList = {
-    notificationImportantIcon: <NotificationImportantIcon />,
-    notificationsIcon: <NotificationsIcon />,
-    notificationsActiveIcon: <NotificationsActiveIcon />,
-    notificationsNoneIcon: <NotificationsNoneIcon />,
-    notificationsOffIcon: <NotificationsOffIcon />,
-    notificationsPausedIcon: <NotificationsPausedIcon />
-  };
   const [messageFrom, setMessageFrom] = useState([]);
   const [messageTo, setMessageTo] = useState([]);
   const [notificationFrom, setNotificationFrom] = useState([]);
@@ -285,7 +271,7 @@ const ModalPolicies = ({
   };
 
   const handleRuleValue = (rule) => (event) => {
-    const text = event.target.value;
+    const text = rule === 'ruleTwo' ? new Date(event.target.value).toISOString() : event.target.value;
     setValues(prev => ({ ...prev, [rule]: { ...prev[rule], value: text } }));
   };
 
@@ -390,7 +376,7 @@ const ModalPolicies = ({
         }));
         return false;
       }
-      if (['ruleOne', 'ruleTwo'].includes(values.selectedRule)) {
+      if (['ruleThree', 'ruleTwo'].includes(values.selectedRule)) {
         if (!values[values.selectedRule].field || !values[values.selectedRule].value) {
           dispatch(showCustomAlert({
             message: 'Please fill all the fields',
@@ -400,7 +386,7 @@ const ModalPolicies = ({
           return false;
         }
       } else {
-        if (!values.ruleThree.numberOfDays || !values.ruleThree.timesRepeated) {
+        if (!values.ruleOne.numberOfDays || !values.ruleOne.timesRepeated) {
           dispatch(showCustomAlert({
             message: 'Please fill all the fields',
             open: true,
@@ -426,6 +412,7 @@ const ModalPolicies = ({
     }
 
     const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
+    const onFieldLayout = draftToHtml(convertToRaw(onFieldEditor.getCurrentContent()));
     const jsonBodyAPI = handleBodyAPI();
 
     const body = {
@@ -436,7 +423,8 @@ const ModalPolicies = ({
       layout,
       notificationFrom,
       notificationTo,
-      module
+      module,
+      onFieldLayout
     };
 
     if (!id) {
@@ -622,7 +610,8 @@ const ModalPolicies = ({
           messageFrom,
           messageTo,
           notificationFrom,
-          notificationTo
+          notificationTo,
+          onFieldLayout
         } = data.response;
         let obj = pick(data.response, [
           'apiDisabled',
@@ -634,7 +623,6 @@ const ModalPolicies = ({
           'notifiactionDisabled',
           'OnFieldApiDisabled',
           'onFieldBodyAPI',
-          'onFieldEditor',
           'onFieldSelectedIcon',
           'onFieldMessageDisabled',
           'onFieldMessageFrom',
@@ -716,16 +704,21 @@ const ModalPolicies = ({
         }
 
         if (obj.selectedAction === 'OnLoad') setTab(3);
+        if (obj.selectedAction === 'OnField') setTab(4);
 
         const contentBlock = htmlToDraft(layout);
         const contentState = ContentState.createFromBlockArray(
           contentBlock.contentBlocks
         );
+        const onFieldContentBlock = htmlToDraft(onFieldLayout || "");
+        const onFieldContentState = ContentState.createFromBlockArray(
+          onFieldContentBlock.contentBlocks
+        );
         setValues(obj);
         setMessageFrom(messageFrom);
         setMessageTo(messageTo);
         setEditor(EditorState.createWithContent(contentState));
-        setOnFieldEditor(EditorState.createWithContent(contentState));
+        setOnFieldEditor(EditorState.createWithContent(onFieldContentState));
         setNotificationFrom(notificationFrom);
         setNotificationTo(notificationTo);
       })
@@ -760,6 +753,8 @@ const ModalPolicies = ({
       })
       .catch(error => dispatch(showErrorAlert()));
   }, [module]);
+
+  console.log(values);
 
   return (
     <div style={{ width: '1000px' }}>
@@ -1108,6 +1103,7 @@ const ModalPolicies = ({
                           <FormControl style={{ margin: '15px 0px 20px 20px' }} className={classes.textField}>
                             <InputLabel htmlFor='age-simple'>Selected rule</InputLabel>
                             <Select
+                              defaultValue={values.selectedRule}
                               onChange={handleOnChangeValue('selectedRule')}
                               value={values.selectedRule}
                             >
@@ -1201,7 +1197,7 @@ const ModalPolicies = ({
                                 onChange={handleRuleValue('ruleTwo')}
                                 style={{ width: '120px', marginBottom: '0px' }}
                                 type="date"
-                                value={values.ruleTwo?.value}
+                                value={values.ruleTwo?.value?.substring(0, 10)}
                               />
                             </div>
                           )}

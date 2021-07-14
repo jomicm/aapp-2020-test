@@ -25,7 +25,7 @@ import { isEmpty } from 'lodash';
 import { useDispatch } from 'react-redux';
 import { actions } from '../../../../store/ducks/general.duck';
 import { getOneDB, postDB, updateDB } from '../../../../crud/api';
-import { executePolicies } from '../../Components/Policies/utils';
+import { executePolicies, executeOnFieldPolicy } from '../../Components/Policies/utils';
 import { usePolicies } from '../../Components/Policies/hooks';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import CustomFields from '../../Components/CustomFields/CustomFields'
@@ -197,6 +197,7 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, polic
           const { _id } = response.response[0];
           saveAndReload('locations', _id);
           executePolicies('OnAdd', 'locations', 'profiles', policies, response.response[0]);
+          executeOnFieldPolicy('locations', 'profiles', policies, response.response[0]);
           updateGeneralProfileLocations();
         })
         .catch(error => dispatch(showErrorAlert()));
@@ -209,6 +210,7 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, polic
           dispatch(showUpdatedAlert());
           saveAndReload('locations', id[0]);
           executePolicies('OnEdit', 'locations', 'profiles', policies, value);
+          executeOnFieldPolicy('locations', 'profiles', policies, value);
           updateGeneralProfileLocations();
         })
         .catch(error => dispatch(showErrorAlert()));
