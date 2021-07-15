@@ -4,7 +4,7 @@ import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import { List } from "@material-ui/core";
 import { TreeItem, TreeView } from "@material-ui/lab";
 
-const CustomFieldsAccordion = ({ data, onElementClick, customFieldKey }) => (
+const CustomFieldsAccordion = ({ data, onElementClick }) => (
   <div>
     <TreeView
       defaultCollapseIcon={<ExpandMoreIcon />}

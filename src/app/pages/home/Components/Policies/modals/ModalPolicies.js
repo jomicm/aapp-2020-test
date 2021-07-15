@@ -163,6 +163,8 @@ const ModalPolicies = ({
   const { showErrorAlert, showCustomAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
   const [alignment, setAlignment] = useState('');
   const [customFields, setCustomFields] = useState([]);
+  const [onlyDateCustomFields, setOnlyDateCustomFields] = useState([]);
+  const [onlyTextCustomFields, setOnlyTextCustomFields] = useState([]);
   const [selectedCustomFieldTab, setSelectedCustomFieldTab] = useState();
   const actionsReader = [
     { value: 'OnAdd', label: 'On Add' },
@@ -288,6 +290,18 @@ const ModalPolicies = ({
     setShowModal(false);
   };
 
+  const onlyDateCondition = () => {
+    return values.selectedRule === 'ruleTwo' && values.selectedAction === 'OnField' && tab === 4 && selectedControl === 'ruleTwo'; 
+  };
+
+  const onlyTextCondition = () => {
+    return values.selectedRule === 'ruleThree' && values.selectedAction === 'OnField' && tab === 4 && selectedControl === 'ruleThree'; 
+  };
+
+  const filterCustomFields = () => {
+    return onlyDateCondition() ? onlyDateCustomFields : onlyTextCondition() ? onlyTextCustomFields : customFields;
+  };
+
   const displayOtherTabs = ['OnLoad', 'OnField'];
 
   const handleOnChangeValue = (name) => (event) => {
@@ -385,6 +399,15 @@ const ModalPolicies = ({
           }));
           return false;
         }
+
+        if (values[values.selectedRule].field.length !== 15) {
+          dispatch(showCustomAlert({
+            message: 'Field value on rule is not valid',
+            open: true,
+            type: 'warning'
+          }));
+          return false;
+        }
       } else {
         if (!values.ruleOne.numberOfDays || !values.ruleOne.timesRepeated) {
           dispatch(showCustomAlert({
@@ -475,11 +498,10 @@ const ModalPolicies = ({
     } else if (rules.map(({ value }) => value).includes(selectedControl)) {
       if (selectedControl === 'ruleTwo') {
         let selectedCustomField;
-        customFields.forEach(({ rawCF }) => {
+        onlyDateCustomFields.forEach(({ rawCF }) => {
           Object.entries(rawCF || {}).forEach((tab) => {
             const values = [...tab[1].left, ...tab[1].right];
             const found = values.find(({ id }) => id === varId);
-            console.log(found)
             if (found) {
               selectedCustomField = found;
             }
@@ -488,6 +510,28 @@ const ModalPolicies = ({
         if (selectedCustomField?.content !== 'date') {
           dispatch(showCustomAlert({
             message: 'Please select a field of type date',
+            open: true,
+            type: 'warning'
+          }));
+          return;
+        }
+      }
+
+      if (selectedControl === 'ruleThree') {
+        let selectedCustomField;
+        
+        onlyTextCustomFields.forEach(({ rawCF }) => {
+          Object.entries(rawCF || {}).forEach((tab) => {
+            const values = [...tab[1].left, ...tab[1].right];
+            const found = values.find(({ id }) => id === varId);
+            if (found) {
+              selectedCustomField = found;
+            }
+          });
+        });
+        if (!textCustomFields.includes(selectedCustomField?.content)) {
+          dispatch(showCustomAlert({
+            message: 'Please select a field of type text',
             open: true,
             type: 'warning'
           }));
@@ -725,6 +769,8 @@ const ModalPolicies = ({
       .catch(error => dispatch(showErrorAlert));
   }, [id]);
 
+  const textCustomFields = ['singleLine', 'multiLine', 'currency', 'percentage', 'email', 'decimal', 'richText', 'url'];
+
   useEffect(() => {
     const collection = modules.filter(({ id }) => id === module)[0];
     getDBComplex({
@@ -749,12 +795,27 @@ const ModalPolicies = ({
           customFieldNames = { ...customFieldNames, filtered };
           return { name: row.name, customFields: filteredCustomFields, rawCF: row.customFieldsTab, id: row._id };
         })
+        let onlyDateCustomFields = [];
+        let onlyTextCustomFields = [];
+        rowToObjectsCustom.forEach((customField) => {
+          Object.entries(customField.rawCF).forEach((tab) => {
+            const values = [...tab[1].left, ...tab[1].right];
+            const found = values.find(({ content }) => content === 'date');
+            const foundText = values.find(({ content }) => textCustomFields.includes(content));
+            if (found) {
+              onlyDateCustomFields.push(customField);
+            }
+            if (foundText) {
+              onlyTextCustomFields.push(customField);
+            }
+          });
+        });
+        setOnlyDateCustomFields(onlyDateCustomFields);
+        setOnlyTextCustomFields(onlyTextCustomFields);
         setCustomFields(rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
       })
       .catch(error => dispatch(showErrorAlert()));
   }, [module]);
-
-  console.log(values);
 
   return (
     <div style={{ width: '1000px' }}>
@@ -840,8 +901,7 @@ const ModalPolicies = ({
                           <div className='__container-customfield'>
                             <h4>Custom Fields</h4>
                             <CustomFieldAccordion
-                              customFieldKey={['references']}
-                              data={customFields}
+                              data={filterCustomFields()}
                               onElementClick={insertVariable}
                             />
                           </div>

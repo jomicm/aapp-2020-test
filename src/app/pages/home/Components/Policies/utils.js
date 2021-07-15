@@ -342,6 +342,7 @@ const changeVariables = (text, record, module, selectedCatalogue) => {
     });
 
     const customFieldsValues = getCustomFieldValues(record);
+    console.log(customFieldsValues)
 
     Object.entries(customFieldsValues || {}).forEach((field) => {
       if (customFields.includes(field[0])) {
@@ -349,6 +350,7 @@ const changeVariables = (text, record, module, selectedCatalogue) => {
         newChars.splice(index, 0, field[1]);
       }
     });
+    console.log(newChars);
 
     convertedMessage = replaceBulk(text, variables.map(({ varName }) => `%{${varName}}`), newChars);
   }
