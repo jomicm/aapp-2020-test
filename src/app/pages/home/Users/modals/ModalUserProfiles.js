@@ -131,7 +131,7 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id, policies 
           const { _id } = response.response[0];
           saveAndReload('userProfiles', _id);
           executePolicies('OnAdd', 'user', 'references', policies, response.response[0]);
-          executeOnFieldPolicy('user', 'references', policies, response.response[0]);
+          executeOnFieldPolicy('OnAdd', 'user', 'references', policies, response.response[0]);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -142,8 +142,8 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id, policies 
 
           dispatch(showUpdatedAlert());
           saveAndReload('userProfiles', id[0]);
-          executePolicies('OnEdit', 'user', 'references', policies, value);
-          executeOnFieldPolicy('user', 'references', policies, value);
+          executePolicies('OnEdit', 'user', 'references', policies, body);
+          executeOnFieldPolicy('OnEdit', 'user', 'references', policies, value);
         })
         .catch(error => dispatch(showErrorAlert()));
     }

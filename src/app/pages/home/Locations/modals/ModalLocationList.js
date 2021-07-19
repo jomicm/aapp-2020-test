@@ -256,8 +256,8 @@ const ModalLocationList = ({
 
           dispatch(showUpdatedAlert());
           saveAndReload('locationsReal', parent);
-          executePolicies('OnEdit', 'locations', 'list', policies, value);
-          executeOnFieldPolicy('locations', 'list', policies, value);
+          executePolicies('OnEdit', 'locations', 'list', policies, body);
+          executeOnFieldPolicy('OnEdit', 'locations', 'list', policies, body, value);
         })
         .catch(error => dispatch(showErrorAlert()));
     }

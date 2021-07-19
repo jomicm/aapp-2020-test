@@ -39,12 +39,11 @@ import EmailOutlinedIcon from '@material-ui/icons/EmailOutlined';
 import LinkIcon from '@material-ui/icons/Link';
 import HelpIcon from '@material-ui/icons/Help';
 
-import { postFILE, getDB } from '../../../../../crud/api';
+import { postFILE } from '../../../../../crud/api';
 import ImageUpload from '../../../Components/ImageUpload';
 import { getFileExtension, saveImage, getImageURL } from '../../../utils';
 import './index.scss';
 import { useSettingsConstants, useSettingsList } from './hooks';
-import { id } from 'date-fns/locale';
 
 // Custom Fields Preview
 const SingleLine = (props) => {

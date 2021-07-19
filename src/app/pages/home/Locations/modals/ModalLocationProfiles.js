@@ -197,7 +197,7 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, polic
           const { _id } = response.response[0];
           saveAndReload('locations', _id);
           executePolicies('OnAdd', 'locations', 'profiles', policies, response.response[0]);
-          executeOnFieldPolicy('locations', 'profiles', policies, response.response[0]);
+          executeOnFieldPolicy('OnAdd', 'locations', 'profiles', policies, response.response[0]);
           updateGeneralProfileLocations();
         })
         .catch(error => dispatch(showErrorAlert()));
@@ -209,8 +209,8 @@ const ModalLocationProfiles = ({ showModal, setShowModal, reloadTable, id, polic
 
           dispatch(showUpdatedAlert());
           saveAndReload('locations', id[0]);
-          executePolicies('OnEdit', 'locations', 'profiles', policies, value);
-          executeOnFieldPolicy('locations', 'profiles', policies, value);
+          executePolicies('OnEdit', 'locations', 'profiles', policies, body);
+          executeOnFieldPolicy('OnEdit', 'locations', 'profiles', policies, body, value);
           updateGeneralProfileLocations();
         })
         .catch(error => dispatch(showErrorAlert()));

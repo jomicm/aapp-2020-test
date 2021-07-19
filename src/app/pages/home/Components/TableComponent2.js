@@ -592,7 +592,7 @@ const TableComponentTile = props => {
           </TableCell>
           {columnPicker.filter((column) => column.visible).map(row => (
             <TableCell
-              align={'left'}
+              align="left"
               key={row.id}
               padding={row.disablePadding ? 'none' : 'default'}
               sortDirection={orderBy === row.id ? order : false}
@@ -833,7 +833,7 @@ const TableComponentTile = props => {
                                       {columnPicker.filter((column) => column.visible).map((header, ix) => {
                                         return (
                                           <TableCell
-                                            align={header.renderCell ? 'center' : 'left'}
+                                            align="left"
                                             component={header.renderCell ? () => header.renderCell(row[header.id]) : 'th'}
                                             key={`cell-row${index}-${ix}`}
                                             padding={'default'}

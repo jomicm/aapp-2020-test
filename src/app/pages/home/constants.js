@@ -21,6 +21,12 @@ import {
   DateFormula
 } from './Components/CustomFields/CustomFieldsPreview';
 
+export const rules = [
+  { value: 'ruleOne', label: 'Date Cycle Rule' },
+  { value: 'ruleTwo', label: 'Date Equals Rule' },
+  { value: 'ruleThree', label: 'Text Equals Rule' }
+];
+
 export const modules = [
   { key: 'dashboard', name: 'Dashboard' },
   { key: 'assets', name: 'Assets' },

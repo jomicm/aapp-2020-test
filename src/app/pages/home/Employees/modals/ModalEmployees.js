@@ -446,7 +446,7 @@ const ModalEmployees = ({
           const { _id } = response.response[0];
           saveAndReload('employees', _id);
           executePolicies('OnAdd', 'employees', 'list', policies, response.response[0]);
-          executeOnFieldPolicy('employees', 'list', policies, response.response[0]);
+          executeOnFieldPolicy('OnAdd', 'employees', 'list', policies, response.response[0]);
           handleAssignmentsOnSaving(_id);
 
           if (Object.entries(responsibilityLayout.added || {}).length) {
@@ -471,8 +471,8 @@ const ModalEmployees = ({
           dispatch(showUpdatedAlert());
           saveAndReload('employees', id[0]);
           handleAssignmentsOnSaving(id[0]);
-          executePolicies('OnEdit', 'employees', 'list', policies, value);
-          executeOnFieldPolicy('employees', 'list', policies, value);
+          executePolicies('OnEdit', 'employees', 'list', policies, body);
+          executeOnFieldPolicy('OnEdit', 'employees', 'list', policies, body, value);
 
           if (Object.entries(responsibilityLayout.added || {}).length) {
             getOneDB('settingsLayoutsEmployees/', responsibilityLayout.added.value)
@@ -546,7 +546,6 @@ const ModalEmployees = ({
     getOneDB('employees/', id[0])
       .then((response) => response.json())
       .then(async (data) => {
-        console.log(data.response);
         const {
           name,
           lastName,
@@ -621,7 +620,6 @@ const ModalEmployees = ({
         }}
         onOK={() => {
           const parseReassignedRows = assetsAssigned.map(({ id, name, brand, model, assigned, EPC, serial, employeeId }) => ({ ...createAssetRow(id, name, brand, model, assigned, EPC, serial), employeeId }));
-          console.log(parseReassignedRows);
           setAssetsBeforeSaving(prev => [...prev, ...parseReassignedRows]);
           setShowAssignedConfirmation(false);
           setAssetsAssigned([]);

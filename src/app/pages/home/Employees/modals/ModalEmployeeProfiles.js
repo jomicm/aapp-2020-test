@@ -162,7 +162,7 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id, polic
           const { _id } = response.response[0];
           saveAndReload('employeeProfiles', _id);
           executePolicies('OnAdd', 'employees', 'references', policies, response.response[0]);
-          executeOnFieldPolicy('employees', 'references', policies, response.response[0]);
+          executeOnFieldPolicy('OnAdd', 'employees', 'references', policies, response.response[0]);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -172,8 +172,8 @@ const ModalEmployeeProfiles = ({ showModal, setShowModal, reloadTable, id, polic
           const { response: { value } } = data;
 
           dispatch(showUpdatedAlert());
-          executePolicies('OnEdit', 'employees', 'references', policies, value);
-          executeOnFieldPolicy('employees', 'references', policies, value);
+          executePolicies('OnEdit', 'employees', 'references', policies, body);
+          executeOnFieldPolicy('OnEdit', 'employees', 'references', policies, body, value);
           saveAndReload('employeeProfiles', id[0]);
         })
         .catch(error => dispatch(showErrorAlert()));

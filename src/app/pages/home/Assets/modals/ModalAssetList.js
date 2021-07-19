@@ -561,7 +561,7 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
           handleChildrenOnSaving(_id);
           saveAndReload('assets', _id);
           executePolicies('OnAdd', 'assets', 'list', policies, response.response[0]);
-          executeOnFieldPolicy('assets', 'list', policies, response.response[0]);
+          executeOnFieldPolicy('OnAdd', 'assets', 'list', policies, response.response[0]);
         })
         .catch(error => {
           dispatch(showErrorAlert())
@@ -576,8 +576,8 @@ const ModalAssetList = ({ assets, showModal, setShowModal, referencesSelectedId,
           
           const { response: { value, value: { assigned } } } = data;
           
-          executePolicies('OnEdit', 'assets', 'list', policies, value);
-          executeOnFieldPolicy('assets', 'list', policies, value);
+          executePolicies('OnEdit', 'assets', 'list', policies, body);
+          executeOnFieldPolicy('OnEdit', 'assets', 'list', policies, body, value);
 
           if (assigned) {
             if (assigned.length) {

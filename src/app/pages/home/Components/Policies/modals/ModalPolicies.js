@@ -44,6 +44,7 @@ import {
   updateDB,
   postDB
 } from '../../../../../crud/api';
+import { rules } from '../../../constants'
 import MessageTemplate from '../components/MessageTemplate';
 import NotificationTemplate from '../components/NotificationTemplate';
 import SendApiTemplate from '../components/SendApiTemplate';
@@ -162,10 +163,13 @@ const ModalPolicies = ({
   const dispatch = useDispatch();
   const { showErrorAlert, showCustomAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
   const [alignment, setAlignment] = useState('');
+  const [onFieldAlignment, setOnFieldAlignment] = useState('');
   const [customFields, setCustomFields] = useState([]);
   const [onlyDateCustomFields, setOnlyDateCustomFields] = useState([]);
   const [onlyTextCustomFields, setOnlyTextCustomFields] = useState([]);
   const [selectedCustomFieldTab, setSelectedCustomFieldTab] = useState();
+  const [ruleThreePath, setRuleThreePath] = useState('');
+  const [ruleTwoPath, setRuleTwoPath] = useState('');
   const actionsReader = [
     { value: 'OnAdd', label: 'On Add' },
     { value: 'OnEdit', label: 'On Edit' },
@@ -183,11 +187,6 @@ const ModalPolicies = ({
     { id: 'depreciation', name: 'Depreciation', custom: '' },
     { id: 'processes', name: 'Processes', custom: '' },
     { id: 'inventories', name: 'Inventories', custom: '' }
-  ];
-  const rules = [
-    { value: 'ruleOne', label: 'Date Cycle Rule' },
-    { value: 'ruleTwo', label: 'Date Equals Rule' },
-    { value: 'ruleThree', label: 'Text Equals Rule' }
   ];
   const classes = useStyles();
   const classes4 = useStyles4();
@@ -221,6 +220,7 @@ const ModalPolicies = ({
     selectedCatalogue: '',
     selectedIcon: '',
     selectedOnLoadCategory: {},
+    selectedRule: '',
     subjectMessage: '',
     subjectNotification: '',
     token: '',
@@ -233,6 +233,10 @@ const ModalPolicies = ({
 
   const handleAlignment = (event, newAlignment) => {
     setAlignment(newAlignment);
+  };
+
+  const handleFieldAlignment = (event, newAlignment) => {
+    setOnFieldAlignment(newAlignment);
   };
 
   const handleCustomFieldInputChange = (customField) => (event) => {
@@ -291,11 +295,11 @@ const ModalPolicies = ({
   };
 
   const onlyDateCondition = () => {
-    return values.selectedRule === 'ruleTwo' && values.selectedAction === 'OnField' && tab === 4 && selectedControl === 'ruleTwo'; 
+    return values.selectedRule === 'ruleTwo' && values.selectedAction === 'OnField' && tab === 4 && selectedControl === 'ruleTwo';
   };
 
   const onlyTextCondition = () => {
-    return values.selectedRule === 'ruleThree' && values.selectedAction === 'OnField' && tab === 4 && selectedControl === 'ruleThree'; 
+    return values.selectedRule === 'ruleThree' && values.selectedAction === 'OnField' && tab === 4 && selectedControl === 'ruleThree';
   };
 
   const filterCustomFields = () => {
@@ -382,7 +386,7 @@ const ModalPolicies = ({
 
   const verifyOnField = () => {
     if (values.selectedAction === 'OnField') {
-      if (!values.selectedRule) {
+      if (!rules.map(({ value }) => value).includes(values.selectedRule)) {
         dispatch(showCustomAlert({
           message: 'Please select a rule',
           open: true,
@@ -399,17 +403,8 @@ const ModalPolicies = ({
           }));
           return false;
         }
-
-        if (values[values.selectedRule].field.length !== 15) {
-          dispatch(showCustomAlert({
-            message: 'Field value on rule is not valid',
-            open: true,
-            type: 'warning'
-          }));
-          return false;
-        }
       } else {
-        if (!values.ruleOne.numberOfDays || !values.ruleOne.timesRepeated) {
+        if (!values.ruleOne.numberOfDays || !(values.ruleOne.isInfinite || (values.ruleOne.timesRepeated && !values.ruleOne.isInfinite))) {
           dispatch(showCustomAlert({
             message: 'Please fill all the fields',
             open: true,
@@ -496,46 +491,57 @@ const ModalPolicies = ({
       );
       setOnFieldEditor(EditorState.push(onFieldEditor, contentState, 'insert-characters'));
     } else if (rules.map(({ value }) => value).includes(selectedControl)) {
+      var regex = /^[0-9a-f]{12}/i;
+
       if (selectedControl === 'ruleTwo') {
         let selectedCustomField;
-        onlyDateCustomFields.forEach(({ rawCF }) => {
-          Object.entries(rawCF || {}).forEach((tab) => {
-            const values = [...tab[1].left, ...tab[1].right];
-            const found = values.find(({ id }) => id === varId);
-            if (found) {
-              selectedCustomField = found;
-            }
+
+        if (regex.test(varId)) {
+          onlyDateCustomFields.forEach(({ name, rawCF }) => {
+            Object.entries(rawCF || {}).forEach((tab) => {
+              const values = [...tab[1].left, ...tab[1].right];
+              const found = values.find(({ id }) => id === varId);
+              if (found) {
+                selectedCustomField = { name, found };
+              }
+            });
           });
-        });
-        if (selectedCustomField?.content !== 'date') {
-          dispatch(showCustomAlert({
-            message: 'Please select a field of type date',
-            open: true,
-            type: 'warning'
-          }));
-          return;
+          if (selectedCustomField?.found?.content !== 'date') {
+            dispatch(showCustomAlert({
+              message: 'Please select a field of type date',
+              open: true,
+              type: 'warning'
+            }));
+            return;
+          } else {
+            setRuleTwoPath(`${selectedCustomField?.name}/${selectedCustomField?.found.values?.fieldName || selectedCustomField?.found.content}`);
+          }
         }
       }
 
       if (selectedControl === 'ruleThree') {
         let selectedCustomField;
-        
-        onlyTextCustomFields.forEach(({ rawCF }) => {
-          Object.entries(rawCF || {}).forEach((tab) => {
-            const values = [...tab[1].left, ...tab[1].right];
-            const found = values.find(({ id }) => id === varId);
-            if (found) {
-              selectedCustomField = found;
-            }
+
+        if (regex.test(varId)) {
+          onlyTextCustomFields.forEach(({ name, rawCF }) => {
+            Object.entries(rawCF || {}).forEach((tab) => {
+              const values = [...tab[1].left, ...tab[1].right];
+              const found = values.find(({ id }) => id === varId);
+              if (found) {
+                selectedCustomField = { name, found };
+              }
+            });
           });
-        });
-        if (!textCustomFields.includes(selectedCustomField?.content)) {
-          dispatch(showCustomAlert({
-            message: 'Please select a field of type text',
-            open: true,
-            type: 'warning'
-          }));
-          return;
+          if (!textCustomFields.includes(selectedCustomField?.found?.content)) {
+            dispatch(showCustomAlert({
+              message: 'Please select a field of type text',
+              open: true,
+              type: 'warning'
+            }));
+            return;
+          } else {
+            setRuleThreePath(`${selectedCustomField?.name}/${selectedCustomField?.found.values?.fieldName || selectedCustomField?.found.content}`);
+          }
         }
       }
 
@@ -602,6 +608,7 @@ const ModalPolicies = ({
       selectedCatalogue: '',
       selectedIcon: '',
       selectedOnLoadCategory: {},
+      selectedRule: '',
       subjectMessage: '',
       subjectNotification: '',
       tokenOnLoad: '',
@@ -619,6 +626,8 @@ const ModalPolicies = ({
     setOnLoadTab(0);
     setOnFieldTab(0);
     setSelectedCustomFieldTab();
+    setRuleTwoPath('');
+    setRuleThreePath('');
   };
 
   const saveAndReload = (folderName, id) => {
@@ -632,6 +641,11 @@ const ModalPolicies = ({
     setSelectedControl(name);
     setCursorPosition([selectionStart, selectionEnd]);
   };
+
+  const customFieldPathText = () => {
+    const noPath = 'No Path Found';
+    return values.selectedRule === 'ruleTwo' ? ruleTwoPath || noPath : values.selectedRule === 'ruleThree' ? ruleThreePath || noPath : noPath;
+  } 
 
   useEffect(() => {
     getDB('user')
@@ -745,6 +759,27 @@ const ModalPolicies = ({
           const res = [...left, ...right];
           const onlyTextCustomFields = res.filter((e) => ['singleLine', 'multiLine'].includes(e.content));
           setSelectedCustomFieldTab(onlyTextCustomFields);
+        }
+
+        if (obj.selectedRule) {
+          onlyTextCustomFields.forEach(({ name, rawCF }) => {
+            Object.entries(rawCF || {}).forEach((tab) => {
+              const values = [...tab[1].left, ...tab[1].right];
+              const found = values.find(({ id }) => id === obj.ruleThree?.field?.substring(2, obj.ruleThree?.field?.length - 1));
+              if (found) {
+                setRuleThreePath(`${name}/${found.values?.fieldName || found.content}`);
+              }
+            });
+          });
+          onlyDateCustomFields.forEach(({ name, rawCF }) => {
+            Object.entries(rawCF || {}).forEach((tab) =>  {
+              const values = [...tab[1].left, ...tab[1].right];
+              const found = values.find(({ id }) => id === obj.ruleTwo?.field?.substring(2, obj.ruleTwo?.field?.length - 1));
+              if (found) {
+                setRuleTwoPath(`${name}/${found.values?.fieldName || found.content}`);
+              }
+            });
+          });
         }
 
         if (obj.selectedAction === 'OnLoad') setTab(3);
@@ -1174,6 +1209,17 @@ const ModalPolicies = ({
                               ))}
                             </Select>
                           </FormControl>
+                          {['ruleTwo', 'ruleThree'].includes(values.selectedRule) && (
+                            <Typography
+                              style={{
+                                margin: '15px 0px 20px 20px',
+                                fontSize: '1.1rem',
+                                fontWeight: 'bold'
+                              }}
+                            >
+                              Custom Field Path: {customFieldPathText()}
+                            </Typography>
+                          )}
                           {values.selectedRule === 'ruleOne' && (
                             <div style={{ alignItems: 'flex-end', display: 'flex', flexDirection: 'row', paddingRight: '60px' }}>
                               <div className="__rules" style={{ marginLeft: '20px' }}>
@@ -1277,8 +1323,9 @@ const ModalPolicies = ({
                                 className={classes.textField}
                                 id='standard-rule-three-value'
                                 margin='normal'
+                                multiline
                                 onChange={handleRuleValue('ruleThree')}
-                                style={{ width: '120px', marginBottom: '0px' }}
+                                style={{ width: '240px', marginBottom: '0px' }}
                                 value={values.ruleThree?.value}
                               />
                             </div>
@@ -1323,10 +1370,10 @@ const ModalPolicies = ({
                           )}
                           {onFieldTab === 1 && (
                             <NotificationTemplate
-                              alignment={alignment}
+                              alignment={onFieldAlignment}
                               disabledValue={values.onFieldNotificationDisabled || false}
                               disablesOnChange={handleChangeCheck('onFieldNotificationDisabled')}
-                              handleAlignment={handleAlignment}
+                              handleAlignment={handleFieldAlignment}
                               handleClickIcon={handleOnFieldClickIcon}
                               key="onField-notification"
                               messageOnChange={handleChangeName('onFieldMessageNotification')}

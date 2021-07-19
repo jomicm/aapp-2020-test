@@ -1,4 +1,5 @@
 import axios from 'axios';
+import sanitizeHtml from 'sanitize-html';
 import { getCurrentDateTime, simplePost, getVariables } from '../../utils';
 import { collections, allBaseFields, modulesCatalogues } from '../../constants';
 import { extractCustomFieldValues } from '../../Reports/reportsHelpers';
@@ -92,7 +93,7 @@ export const executeOnLoadPolicy = async (itemID, module, selectedCatalogue, pol
   return res;
 };
 
-export const executeOnFieldPolicy = (module, selectedCatalogue, policies, record = {}) => {
+export const executeOnFieldPolicy = (action, module, selectedCatalogue, policies, record = {}, oldRecord = {}) => {
   const { dateFormatted, rawDate, timeFormatted } = getCurrentDateTime();
   const timeStamp = `${dateFormatted} ${timeFormatted}`;
   const filteredPolicies = policies.filter(
@@ -126,69 +127,37 @@ export const executeOnFieldPolicy = (module, selectedCatalogue, policies, record
   }) => {
     if (selectedRule === 'ruleTwo') {
       const customFieldsValues = getCustomFieldValues(record);
+      const oldCustomFieldValues = action === 'OnEdit' ? getCustomFieldValues(oldRecord) : null;
+
       Object.entries(customFieldsValues || {}).forEach((field) => {
         if (`%{${field[0]}}` === ruleTwo?.field && new Date(field[1]).toISOString() === ruleTwo?.value) {
-          send(
-            record,
-            onFieldMessageDisabled,
-            onFieldNotificationDisabled,
-            OnFieldApiDisabled,
-            rawDate,
-            timeStamp,
-            html,
-            module,
-            selectedCatalogue,
-            onFieldMessageFrom,
-            onFieldMessageSubject,
-            onFieldMessageTo,
-            onFieldNotificationFrom,
-            icon,
-            onFieldMessageNotification,
-            onFieldNotificationSubject,
-            onFieldNotificationTo,
-            onFieldUrlAPI,
-            onFieldBodyAPI,
-            onFieldToken,
-            onFieldTokenEnabled
-          );
-        }
-      });
-    }
-    else if (selectedRule === 'ruleThree') {
-      let flag = true;
-      Object.entries(allBaseFields[modulesCatalogues[module][selectedCatalogue]] || {}).forEach((field) => {
-        const recordField = field[1]?.validationId;
-        if (`%{${recordField}}` === ruleThree?.field && record[recordField] === ruleThree?.value) {
-          flag = false;
-          send(
-            record,
-            onFieldMessageDisabled,
-            onFieldNotificationDisabled,
-            OnFieldApiDisabled,
-            rawDate,
-            timeStamp,
-            html,
-            module,
-            selectedCatalogue,
-            onFieldMessageFrom,
-            onFieldMessageSubject,
-            onFieldMessageTo,
-            onFieldNotificationFrom,
-            icon,
-            onFieldMessageNotification,
-            onFieldNotificationSubject,
-            onFieldNotificationTo,
-            onFieldUrlAPI,
-            onFieldBodyAPI,
-            onFieldToken,
-            onFieldTokenEnabled
-          );
-        }
-      });
-      if (flag) {
-        const customFieldsValues = getCustomFieldValues(record);
-        Object.entries(customFieldsValues || {}).forEach((field) => {
-          if (`%{${field[0]}}` === ruleThree?.field && field[1] === ruleThree?.value) {
+          if (oldCustomFieldValues) {
+            if (new Date(oldCustomFieldValues[field[0]]).toISOString() !== new Date(field[1]).toISOString()) {
+              send(
+                record,
+                onFieldMessageDisabled,
+                onFieldNotificationDisabled,
+                OnFieldApiDisabled,
+                rawDate,
+                timeStamp,
+                html,
+                module,
+                selectedCatalogue,
+                onFieldMessageFrom,
+                onFieldMessageSubject,
+                onFieldMessageTo,
+                onFieldNotificationFrom,
+                icon,
+                onFieldMessageNotification,
+                onFieldNotificationSubject,
+                onFieldNotificationTo,
+                onFieldUrlAPI,
+                onFieldBodyAPI,
+                onFieldToken,
+                onFieldTokenEnabled
+              );
+            }
+          } else {
             send(
               record,
               onFieldMessageDisabled,
@@ -212,6 +181,128 @@ export const executeOnFieldPolicy = (module, selectedCatalogue, policies, record
               onFieldToken,
               onFieldTokenEnabled
             );
+          }
+        }
+      });
+    }
+    else if (selectedRule === 'ruleThree') {
+      let flag = true;
+      Object.entries(allBaseFields[modulesCatalogues[module][selectedCatalogue]] || {}).forEach((field) => {
+        const recordField = field[1]?.validationId;
+        if (`%{${recordField}}` === ruleThree?.field && record[recordField] === ruleThree?.value) {
+          flag = false;
+          if (action === 'OnEdit') {
+            if (record[recordField] !== oldRecord[recordField]) {
+              send(
+                record,
+                onFieldMessageDisabled,
+                onFieldNotificationDisabled,
+                OnFieldApiDisabled,
+                rawDate,
+                timeStamp,
+                html,
+                module,
+                selectedCatalogue,
+                onFieldMessageFrom,
+                onFieldMessageSubject,
+                onFieldMessageTo,
+                onFieldNotificationFrom,
+                icon,
+                onFieldMessageNotification,
+                onFieldNotificationSubject,
+                onFieldNotificationTo,
+                onFieldUrlAPI,
+                onFieldBodyAPI,
+                onFieldToken,
+                onFieldTokenEnabled
+              );
+            }
+          } else {
+            send(
+              record,
+              onFieldMessageDisabled,
+              onFieldNotificationDisabled,
+              OnFieldApiDisabled,
+              rawDate,
+              timeStamp,
+              html,
+              module,
+              selectedCatalogue,
+              onFieldMessageFrom,
+              onFieldMessageSubject,
+              onFieldMessageTo,
+              onFieldNotificationFrom,
+              icon,
+              onFieldMessageNotification,
+              onFieldNotificationSubject,
+              onFieldNotificationTo,
+              onFieldUrlAPI,
+              onFieldBodyAPI,
+              onFieldToken,
+              onFieldTokenEnabled
+            );
+          }
+        }
+      });
+      if (flag) {
+        const customFieldsValues = getCustomFieldValues(record);
+        const oldCustomFieldValues = action === 'OnEdit' ? getCustomFieldValues(oldRecord) : null;
+
+        Object.entries(customFieldsValues || {}).forEach((field) => {
+          let value = sanitizeHtml(field[1], { allowedAttributes: {}, allowedTags: [] });
+          value = value.slice(0, value.length - 1);
+          if (`%{${field[0]}}` === ruleThree?.field && value === ruleThree?.value) {
+            if (oldCustomFieldValues) {
+              if (oldCustomFieldValues[field[0]] !== field[1]) {
+                send(
+                  record,
+                  onFieldMessageDisabled,
+                  onFieldNotificationDisabled,
+                  OnFieldApiDisabled,
+                  rawDate,
+                  timeStamp,
+                  html,
+                  module,
+                  selectedCatalogue,
+                  onFieldMessageFrom,
+                  onFieldMessageSubject,
+                  onFieldMessageTo,
+                  onFieldNotificationFrom,
+                  icon,
+                  onFieldMessageNotification,
+                  onFieldNotificationSubject,
+                  onFieldNotificationTo,
+                  onFieldUrlAPI,
+                  onFieldBodyAPI,
+                  onFieldToken,
+                  onFieldTokenEnabled
+                );
+              }
+            } else {
+              send(
+                record,
+                onFieldMessageDisabled,
+                onFieldNotificationDisabled,
+                OnFieldApiDisabled,
+                rawDate,
+                timeStamp,
+                html,
+                module,
+                selectedCatalogue,
+                onFieldMessageFrom,
+                onFieldMessageSubject,
+                onFieldMessageTo,
+                onFieldNotificationFrom,
+                icon,
+                onFieldMessageNotification,
+                onFieldNotificationSubject,
+                onFieldNotificationTo,
+                onFieldUrlAPI,
+                onFieldBodyAPI,
+                onFieldToken,
+                onFieldTokenEnabled
+              );
+            }
           }
         });
       }
@@ -342,7 +433,6 @@ const changeVariables = (text, record, module, selectedCatalogue) => {
     });
 
     const customFieldsValues = getCustomFieldValues(record);
-    console.log(customFieldsValues)
 
     Object.entries(customFieldsValues || {}).forEach((field) => {
       if (customFields.includes(field[0])) {
@@ -350,7 +440,6 @@ const changeVariables = (text, record, module, selectedCatalogue) => {
         newChars.splice(index, 0, field[1]);
       }
     });
-    console.log(newChars);
 
     convertedMessage = replaceBulk(text, variables.map(({ varName }) => `%{${varName}}`), newChars);
   }

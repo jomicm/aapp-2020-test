@@ -185,7 +185,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
           const { _id } = response.response[0];
           saveAndReload('references', _id);
           executePolicies('OnAdd', 'assets', 'references', policies, response.response[0]);
-          executeOnFieldPolicy('assets', 'references', policies, response.response[0]);
+          executeOnFieldPolicy('OnAdd', 'assets', 'references', policies, response.response[0]);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -196,8 +196,8 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
 
           dispatch(showUpdatedAlert());
           saveAndReload('references', id[0]);
-          executePolicies('OnEdit', 'assets', 'references', policies, value);
-          executeOnFieldPolicy('assets', 'references', policies, value);
+          executePolicies('OnEdit', 'assets', 'references', policies, body);
+          executeOnFieldPolicy('OnEdit', 'assets', 'references', policies, body, value);
         })
         .catch(error => console.log(error));
     }

@@ -155,7 +155,7 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id, polici
           const { _id } = response.response[0];
           saveAndReload('categories', _id);
           executePolicies('OnAdd', 'assets', 'categories', policies, response.response[0]);
-          executeOnFieldPolicy('assets', 'categories', policies, response.response[0]);
+          executeOnFieldPolicy('OnAdd', 'assets', 'categories', policies, response.response[0]);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -166,8 +166,8 @@ const ModalAssetCategories = ({ showModal, setShowModal, reloadTable, id, polici
 
           dispatch(showUpdatedAlert());
           saveAndReload('categories', id[0]);
-          executePolicies('OnEdit', 'assets', 'categories', policies, value);
-          executeOnFieldPolicy('assets', 'categories', policies, value);
+          executePolicies('OnEdit', 'assets', 'categories', policies, body);
+          executeOnFieldPolicy('OnEdit', 'assets', 'categories', policies, body, value);
         })
         .catch(error => dispatch(showErrorAlert()));
     }
