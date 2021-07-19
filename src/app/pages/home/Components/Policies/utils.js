@@ -253,7 +253,9 @@ export const executeOnFieldPolicy = (action, module, selectedCatalogue, policies
           value = value.slice(0, value.length - 1);
           if (`%{${field[0]}}` === ruleThree?.field && value === ruleThree?.value) {
             if (oldCustomFieldValues) {
-              if (oldCustomFieldValues[field[0]] !== field[1]) {
+              let oldValue = sanitizeHtml(oldCustomFieldValues[field[0]], { allowedAttributes: {}, allowedTags: [] });
+              oldValue = oldValue.slice(0, oldValue.length - 1);
+              if (oldValue !== value) {
                 send(
                   record,
                   onFieldMessageDisabled,
