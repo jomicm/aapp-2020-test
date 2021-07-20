@@ -1,7 +1,7 @@
 import { isEmpty, difference } from 'lodash';
 
 const _types = {
-  simpleType: ['singleLine', 'multiLine', 'date', 'dateTime', 'currency', 'percentage', 'email', 'decimal', 'url', 'formula'],
+  simpleType: ['singleLine', 'multiLine', 'date', 'dateTime', 'currency', 'percentage', 'email', 'decimal', 'url', 'formula', 'richText'],
   dropType: ['dropDown'],
   radioType: ['radioButtons'],
   checkType: ['checkboxes'],
@@ -159,7 +159,7 @@ export const extractCustomFieldId = (field) => {
       res = { [id]: fieldName || content };
     }
   });
-
+  // console.log(res);
   return res;
 };
 

@@ -28,8 +28,7 @@ import ImageUpload from '../../Components/ImageUpload';
 import { modules } from '../../constants';
 import Permission from '../components/Permission';
 import { getFileExtension, saveImage, getImageURL } from '../../utils';
-import { executePolicies } from '../../Components/Policies/utils';
-import { usePolicies } from '../../Components/Policies/hooks';
+import { executePolicies, executeOnFieldPolicy } from '../../Components/Policies/utils';
 
 // Example 5 - Modal
 const styles5 = theme => ({
@@ -132,6 +131,7 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id, policies 
           const { _id } = response.response[0];
           saveAndReload('userProfiles', _id);
           executePolicies('OnAdd', 'user', 'references', policies, response.response[0]);
+          executeOnFieldPolicy('OnAdd', 'user', 'references', policies, response.response[0]);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -142,7 +142,8 @@ const ModalUserProfiles = ({ showModal, setShowModal, reloadTable, id, policies 
 
           dispatch(showUpdatedAlert());
           saveAndReload('userProfiles', id[0]);
-          executePolicies('OnEdit', 'user', 'references', policies, value);
+          executePolicies('OnEdit', 'user', 'references', policies, body);
+          executeOnFieldPolicy('OnEdit', 'user', 'references', policies, value);
         })
         .catch(error => dispatch(showErrorAlert()));
     }

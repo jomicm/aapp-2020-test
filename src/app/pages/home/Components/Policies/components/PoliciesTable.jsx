@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { utcToZonedTime } from 'date-fns-tz';
+import { useDispatch } from 'react-redux';
 import {
   PortletBody,
 } from '../../../../../partials/content/Portlet';
+import { actions } from '../../../../../store/ducks/general.duck';
 import { deleteDB, getDBComplex, getCountDB, getDB } from '../../../../../crud/api';
+import { rules } from '../../../constants';
 import TableComponent2 from '../../TableComponent2';
 import ModalPolicies from '../modals/ModalPolicies';
 
@@ -12,6 +14,7 @@ const policiesHeadRows = [
   { id: 'target', numeric: false, disablePadding: false, label: 'Target', searchByDisabled: false },
   { id: 'action', numeric: false, disablePadding: false, label: 'Action', searchByDisabled: false },
   { id: 'type', numeric: false, disablePadding: false, label: 'Type', searchByDisabled: true },
+  { id: 'rule', numeric: false, disablePadding: false, label: 'Field Rule', searchByDisabled: true },
   { id: 'creator', numeric: false, disablePadding: false, label: 'Creator', searchByDisabled: true },
   { id: 'creationDate', numeric: false, disablePadding: false, label: 'Creation Date', searchByDisabled: true },
   { id: 'updateDate', numeric: false, disablePadding: false, label: 'Update Date', searchByDisabled: true }
@@ -31,6 +34,7 @@ const createPoliciesRow = (
   target,
   action,
   type,
+  rule,
   creator,
   creationDate,
   updateDate
@@ -41,6 +45,7 @@ const createPoliciesRow = (
     target,
     action,
     type,
+    rule: rules.find(({ value }) => value === rule)?.label || '',
     creator,
     creationDate,
     updateDate
@@ -48,6 +53,8 @@ const createPoliciesRow = (
 };
 
 const PoliciesTable = ({ module, setPolicies, baseFields }) => {
+  const dispatch = useDispatch();
+  const { showDeletedAlert } = actions;
   const [control, setControl] = useState({
     idPolicies: null,
     openPoliciesModal: false,
@@ -77,6 +84,7 @@ const PoliciesTable = ({ module, setPolicies, baseFields }) => {
         id.forEach((_id) => {
           deleteDB(`${collection.name}/`, _id)
             .then((response) => {
+              dispatch(showDeletedAlert());
               getDB('policies')
                 .then((response) => response.json())
                 .then((data) => setPolicies(data));
@@ -101,6 +109,19 @@ const PoliciesTable = ({ module, setPolicies, baseFields }) => {
       ...(!messageDisabled ? ['Message'] : []),
       ...(!notificationDisabled ? ['Notification'] : []),
       ...(!apiDisabled ? ['API'] : [])
+    ];
+    return array.join(', ');
+  };
+
+  const getOnFieldTypeString = (
+    OnFieldApiDisabled,
+    onFieldMessageDisabled,
+    onFieldNotificationDisabled
+  ) => {
+    const array = [
+      ...(!onFieldMessageDisabled ? ['Message']: []),
+      ...(!onFieldNotificationDisabled ? ['Notification'] : []),
+      ...(!OnFieldApiDisabled ? ['API'] : [])
     ];
     return array.join(', ');
   };
@@ -182,21 +203,24 @@ const PoliciesTable = ({ module, setPolicies, baseFields }) => {
                 selectedCatalogue,
                 creationUserFullName,
                 creationDate,
-                updateDate
+                OnFieldApiDisabled,
+                onFieldMessageDisabled,
+                onFieldNotificationDisabled,
+                updateDate,
+                selectedRule
               } = row;
               const date = String(new Date(creationDate)).split('GMT')[0];
               const uptDate = String(new Date(updateDate)).split('GMT')[0];
-              const typeString = getTypeString(
-                messageDisabled,
-                notificationDisabled,
-                apiDisabled
-              );
+              const typeString = selectedAction !== 'OnField'
+                ? getTypeString(messageDisabled, notificationDisabled, apiDisabled)
+                : getOnFieldTypeString(OnFieldApiDisabled, onFieldMessageDisabled, onFieldNotificationDisabled);
               return createPoliciesRow(
                 _id,
                 policyName,
                 selectedCatalogue,
                 selectedAction,
                 typeString,
+                selectedRule,
                 creationUserFullName,
                 date,
                 uptDate

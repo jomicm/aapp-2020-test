@@ -7,19 +7,8 @@ import {
   EditorState,
   Modifier
 } from 'draft-js';
-import { Editor } from 'react-draft-wysiwyg';
 import draftToHtml from 'draftjs-to-html';
 import htmlToDraft from 'html-to-draftjs';
-
-import Autocomplete from '@material-ui/lab/Autocomplete';
-import NotificationImportantIcon from '@material-ui/icons/NotificationImportant';
-import NotificationsIcon from '@material-ui/icons/Notifications';
-import NotificationsActiveIcon from '@material-ui/icons/NotificationsActive';
-import NotificationsNoneIcon from '@material-ui/icons/NotificationsNone';
-import NotificationsOffIcon from '@material-ui/icons/NotificationsOff';
-import NotificationsPausedIcon from '@material-ui/icons/NotificationsPaused';
-import ToggleButton from '@material-ui/lab/ToggleButton';
-import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import {
   Button,
   Dialog,
@@ -41,7 +30,6 @@ import {
   Typography,
   withStyles,
 } from '@material-ui/core';
-import { TabPanel } from '@material-ui/lab';
 import CloseIcon from '@material-ui/icons/Close';
 import {
   PortletBody,
@@ -56,6 +44,10 @@ import {
   updateDB,
   postDB
 } from '../../../../../crud/api';
+import { rules } from '../../../constants'
+import MessageTemplate from '../components/MessageTemplate';
+import NotificationTemplate from '../components/NotificationTemplate';
+import SendApiTemplate from '../components/SendApiTemplate';
 import BaseFieldAccordion from '../components/BaseFieldsAccordion';
 import CustomFieldAccordion from '../components/CustomFieldsAccordion';
 import { extractCustomFieldId } from '../../../Reports/reportsHelpers';
@@ -171,13 +163,19 @@ const ModalPolicies = ({
   const dispatch = useDispatch();
   const { showErrorAlert, showCustomAlert, showSavedAlert, showSelectValuesAlert, showUpdatedAlert } = actions;
   const [alignment, setAlignment] = useState('');
+  const [onFieldAlignment, setOnFieldAlignment] = useState('');
   const [customFields, setCustomFields] = useState([]);
+  const [onlyDateCustomFields, setOnlyDateCustomFields] = useState([]);
+  const [onlyTextCustomFields, setOnlyTextCustomFields] = useState([]);
   const [selectedCustomFieldTab, setSelectedCustomFieldTab] = useState();
+  const [ruleThreePath, setRuleThreePath] = useState('');
+  const [ruleTwoPath, setRuleTwoPath] = useState('');
   const actionsReader = [
     { value: 'OnAdd', label: 'On Add' },
     { value: 'OnEdit', label: 'On Edit' },
     { value: 'OnDelete', label: 'On Delete' },
-    { value: 'OnLoad', label: 'On Load' }
+    { value: 'OnLoad', label: 'On Load' },
+    { value: 'OnField', label: 'On Field' }
   ];
   const modules = [
     { id: 'user', name: 'Users', custom: 'userProfiles' },
@@ -194,14 +192,7 @@ const ModalPolicies = ({
   const classes4 = useStyles4();
   const [cursorPosition, setCursorPosition] = useState([0, 0]);
   const [editor, setEditor] = useState(EditorState.createEmpty());
-  const iconsList = {
-    notificationImportantIcon: <NotificationImportantIcon />,
-    notificationsIcon: <NotificationsIcon />,
-    notificationsActiveIcon: <NotificationsActiveIcon />,
-    notificationsNoneIcon: <NotificationsNoneIcon />,
-    notificationsOffIcon: <NotificationsOffIcon />,
-    notificationsPausedIcon: <NotificationsPausedIcon />
-  };
+  const [onFieldEditor, setOnFieldEditor] = useState(EditorState.createEmpty());
   const [messageFrom, setMessageFrom] = useState([]);
   const [messageTo, setMessageTo] = useState([]);
   const [notificationFrom, setNotificationFrom] = useState([]);
@@ -209,6 +200,7 @@ const ModalPolicies = ({
   const [selectedControl, setSelectedControl] = useState(null);
   const [tab, setTab] = useState(0);
   const [onLoadTab, setOnLoadTab] = useState(0);
+  const [onFieldTab, setOnFieldTab] = useState(0);
   const [users, setUsers] = useState([]);
   const [values, setValues] = useState({
     apiDisabled: false,
@@ -221,10 +213,14 @@ const ModalPolicies = ({
     onLoadDisabled: true,
     onLoadFields: {},
     policyName: '',
+    ruleOne: {},
+    ruleThree: {},
+    ruleTwo: {},
     selectedAction: '',
     selectedCatalogue: '',
     selectedIcon: '',
     selectedOnLoadCategory: {},
+    selectedRule: '',
     subjectMessage: '',
     subjectNotification: '',
     token: '',
@@ -237,6 +233,10 @@ const ModalPolicies = ({
 
   const handleAlignment = (event, newAlignment) => {
     setAlignment(newAlignment);
+  };
+
+  const handleFieldAlignment = (event, newAlignment) => {
+    setOnFieldAlignment(newAlignment);
   };
 
   const handleCustomFieldInputChange = (customField) => (event) => {
@@ -261,14 +261,52 @@ const ModalPolicies = ({
     setSelectedControlAndIndexes(event);
   };
 
+  const handleRuleOneChanges = (name) => (event) => {
+    const value = event.target.value;
+    setValues(prev => ({ ...prev, ruleOne: { ...prev.ruleOne, [name]: value } }));
+  };
+
+  const handleRuleOneChecks = (name) => (event) => {
+    const value = event.target.checked;
+    setValues(prev => ({ ...prev, ruleOne: { ...prev.ruleOne, [name]: value } }));
+  };
+
+  const handleRuleField = (rule) => (event) => {
+    const text = event.target.value;
+    setValues(prev => ({ ...prev, [rule]: { ...prev[rule], field: text } }));
+  };
+
+  const handleRuleValue = (rule) => (event) => {
+    const text = rule === 'ruleTwo' ? new Date(event.target.value).toISOString() : event.target.value;
+    setValues(prev => ({ ...prev, [rule]: { ...prev[rule], value: text } }));
+  };
+
   const handleClickIcon = (selectedIcon) => {
     setValues({ ...values, selectedIcon });
+  };
+
+  const handleOnFieldClickIcon = (onFieldSelectedIcon) => {
+    setValues({ ...values, onFieldSelectedIcon });
   };
 
   const handleCloseModal = () => {
     reset();
     setShowModal(false);
   };
+
+  const onlyDateCondition = () => {
+    return values.selectedRule === 'ruleTwo' && values.selectedAction === 'OnField' && tab === 4 && selectedControl === 'ruleTwo';
+  };
+
+  const onlyTextCondition = () => {
+    return values.selectedRule === 'ruleThree' && values.selectedAction === 'OnField' && tab === 4 && selectedControl === 'ruleThree';
+  };
+
+  const filterCustomFields = () => {
+    return onlyDateCondition() ? onlyDateCustomFields : onlyTextCondition() ? onlyTextCustomFields : customFields;
+  };
+
+  const displayOtherTabs = ['OnLoad', 'OnField'];
 
   const handleOnChangeValue = (name) => (event) => {
     const { target: { value } } = event;
@@ -290,9 +328,11 @@ const ModalPolicies = ({
       setSelectedCustomFieldTab(onlyTextCustomFields);
     }
 
-    if (name === 'selectedAction' && values.selectedAction === 'OnLoad' && value !== 'OnLoad') setTab(0);
+    if (name === 'selectedAction' && displayOtherTabs.includes(values.selectedAction) && !displayOtherTabs.includes(value)) {
+      setTab(0);
+    }
 
-    if ((value === 'OnLoad' && values.selectedCatalogue.length) || (name === 'selectedCatalogue' && values.selectedAction.length)) {
+    if ((value === 'OnLoad' && values.selectedCatalogue.length) || (name === 'selectedCatalogue' && values.selectedAction === 'OnLoad')) {
       getDB('policies')
         .then((res) => res.json())
         .then(({ response }) => {
@@ -319,6 +359,11 @@ const ModalPolicies = ({
       }
     };
 
+    if (value === 'OnField') {
+      setTab(4);
+      setOnFieldTab(0);
+    }
+
     setValues({ ...values, [name]: value });
   };
 
@@ -339,13 +384,53 @@ const ModalPolicies = ({
     return jsonBodyAPI
   }
 
+  const verifyOnField = () => {
+    if (values.selectedAction === 'OnField') {
+      if (!rules.map(({ value }) => value).includes(values.selectedRule)) {
+        dispatch(showCustomAlert({
+          message: 'Please select a rule',
+          open: true,
+          type: 'warning'
+        }));
+        return false;
+      }
+      if (['ruleThree', 'ruleTwo'].includes(values.selectedRule)) {
+        if (!values[values.selectedRule].field || !values[values.selectedRule].value) {
+          dispatch(showCustomAlert({
+            message: 'Please fill all the fields',
+            open: true,
+            type: 'warning'
+          }));
+          return false;
+        }
+      } else {
+        if (!values.ruleOne.numberOfDays || !(values.ruleOne.isInfinite || (values.ruleOne.timesRepeated && !values.ruleOne.isInfinite))) {
+          dispatch(showCustomAlert({
+            message: 'Please fill all the fields',
+            open: true,
+            type: 'warning'
+          }));
+          return false;
+        }
+      }
+    }
+
+    return true;
+  };
+
   const handleSave = () => {
     const { selectedAction, selectedCatalogue } = values;
     if (!selectedAction || !selectedCatalogue) {
       dispatch(showSelectValuesAlert());
       return;
     }
+
+    if (!verifyOnField()) {
+      return;
+    }
+
     const layout = draftToHtml(convertToRaw(editor.getCurrentContent()));
+    const onFieldLayout = draftToHtml(convertToRaw(onFieldEditor.getCurrentContent()));
     const jsonBodyAPI = handleBodyAPI();
 
     const body = {
@@ -356,7 +441,8 @@ const ModalPolicies = ({
       layout,
       notificationFrom,
       notificationTo,
-      module
+      module,
+      onFieldLayout
     };
 
     if (!id) {
@@ -396,6 +482,74 @@ const ModalPolicies = ({
         editor.getCurrentInlineStyle()
       );
       setEditor(EditorState.push(editor, contentState, 'insert-characters'));
+    } else if (selectedControl === 'onFieldHtmlMessage') {
+      const contentState = Modifier.replaceText(
+        onFieldEditor.getCurrentContent(),
+        onFieldEditor.getSelection(),
+        `%{${varId}}`,
+        onFieldEditor.getCurrentInlineStyle()
+      );
+      setOnFieldEditor(EditorState.push(onFieldEditor, contentState, 'insert-characters'));
+    } else if (rules.map(({ value }) => value).includes(selectedControl)) {
+      var regex = /^[0-9a-f]{12}/i;
+
+      if (selectedControl === 'ruleTwo') {
+        let selectedCustomField;
+
+        if (regex.test(varId)) {
+          onlyDateCustomFields.forEach(({ name, rawCF }) => {
+            Object.entries(rawCF || {}).forEach((tab) => {
+              const values = [...tab[1].left, ...tab[1].right];
+              const found = values.find(({ id }) => id === varId);
+              if (found) {
+                selectedCustomField = { name, found };
+              }
+            });
+          });
+          if (selectedCustomField?.found?.content !== 'date') {
+            dispatch(showCustomAlert({
+              message: 'Please select a field of type date',
+              open: true,
+              type: 'warning'
+            }));
+            return;
+          } else {
+            setRuleTwoPath(`${selectedCustomField?.name}/${selectedCustomField?.found.values?.fieldName || selectedCustomField?.found.content}`);
+          }
+        }
+      }
+
+      if (selectedControl === 'ruleThree') {
+        let selectedCustomField;
+
+        if (regex.test(varId)) {
+          onlyTextCustomFields.forEach(({ name, rawCF }) => {
+            Object.entries(rawCF || {}).forEach((tab) => {
+              const values = [...tab[1].left, ...tab[1].right];
+              const found = values.find(({ id }) => id === varId);
+              if (found) {
+                selectedCustomField = { name, found };
+              }
+            });
+          });
+          if (!textCustomFields.includes(selectedCustomField?.found?.content)) {
+            dispatch(showCustomAlert({
+              message: 'Please select a field of type text',
+              open: true,
+              type: 'warning'
+            }));
+            return;
+          } else {
+            setRuleThreePath(`${selectedCustomField?.name}/${selectedCustomField?.found.values?.fieldName || selectedCustomField?.found.content}`);
+          }
+        }
+      }
+
+      const text = values[selectedControl].field || '';
+      const left = text.substr(0, cursorPosition[0]);
+      const right = text.substr(cursorPosition[1], text.length);
+      const final = `${left}%{${varId}}${right}`;
+      setValues(prev => ({ ...prev, [selectedControl]: { ...prev[selectedControl], field: final } }));
     } else {
       try {
         const text = values[selectedControl];
@@ -425,6 +579,16 @@ const ModalPolicies = ({
     } else if (name === 'To') setNotificationTo(values);
   };
 
+  const onChangeOnFieldFromTo = (name, section) => (event, values) => {
+    if (name === 'From') {
+      if (section === 'messages') setValues(prev => ({ ...prev, onFieldMessageFrom: values }));
+      if (section === 'notifications') setValues(prev => ({ ...prev, onFieldNotificationFrom: values }));
+    } else {
+      if (section === 'messages') setValues(prev => ({ ...prev, onFieldMessageTo: values }));
+      if (section === 'notifications') setValues(prev => ({ ...prev, onFieldNotificationTo: values }));
+    }
+  };
+
   const reset = () => {
     setValues({
       apiDisabled: false,
@@ -437,10 +601,14 @@ const ModalPolicies = ({
       onLoadDisabled: true,
       onLoadFields: {},
       policyName: '',
+      ruleOne: {},
+      ruleThree: {},
+      ruleTwo: {},
       selectedAction: '',
       selectedCatalogue: '',
       selectedIcon: '',
       selectedOnLoadCategory: {},
+      selectedRule: '',
       subjectMessage: '',
       subjectNotification: '',
       tokenOnLoad: '',
@@ -453,9 +621,13 @@ const ModalPolicies = ({
     setNotificationFrom([]);
     setNotificationTo([]);
     setEditor(EditorState.createEmpty());
+    setOnFieldEditor(EditorState.createEmpty());
     setTab(0);
     setOnLoadTab(0);
+    setOnFieldTab(0);
     setSelectedCustomFieldTab();
+    setRuleTwoPath('');
+    setRuleThreePath('');
   };
 
   const saveAndReload = (folderName, id) => {
@@ -469,6 +641,11 @@ const ModalPolicies = ({
     setSelectedControl(name);
     setCursorPosition([selectionStart, selectionEnd]);
   };
+
+  const customFieldPathText = () => {
+    const noPath = 'No Path Found';
+    return values.selectedRule === 'ruleTwo' ? ruleTwoPath || noPath : values.selectedRule === 'ruleThree' ? ruleThreePath || noPath : noPath;
+  } 
 
   useEffect(() => {
     getDB('user')
@@ -491,7 +668,8 @@ const ModalPolicies = ({
           messageFrom,
           messageTo,
           notificationFrom,
-          notificationTo
+          notificationTo,
+          onFieldLayout
         } = data.response;
         let obj = pick(data.response, [
           'apiDisabled',
@@ -501,15 +679,36 @@ const ModalPolicies = ({
           'messageMail',
           'messageNotification',
           'notifiactionDisabled',
+          'OnFieldApiDisabled',
+          'onFieldBodyAPI',
+          'onFieldSelectedIcon',
+          'onFieldMessageDisabled',
+          'onFieldMessageFrom',
+          'onFieldMessageInternal',
+          'onFieldMessageMail',
+          'onFieldMessageNotification',
+          'onFieldMessageSubject',
+          'onFieldMessageTo',
+          'onFieldNotificationDisabled',
+          'onFieldNotificationFrom',
+          'onFieldNotificationSubject',
+          'onFieldNotificationTo',
+          'onFieldToken',
+          'onFieldTokenEnabled',
+          'onFieldUrlAPI',
           'onLoadDisabled',
           'onLoadFields',
           'policyName',
+          'ruleOne',
+          'ruleTwo',
+          'ruleThree',
           'selectedAction',
           'selectedCatalogue',
-          'selectedOnLoadCategory',
+          'selectedIcon',
           'subjectMessage',
           'subjectNotification',
-          'selectedIcon',
+          'selectedOnLoadCategory',
+          'selectedRule',
           'token',
           'tokenDisabled',
           'tokenEnabled',
@@ -546,6 +745,12 @@ const ModalPolicies = ({
 
         obj = !obj.tokenOnLoadEnabled && typeof obj.tokenOnLoadEnabled !== 'boolean' ? { ...obj, tokenOnLoadEnabled: false } : obj;
 
+        obj = !obj.ruleOne ? { ...obj, ruleOne: {} } : obj;
+
+        obj = !obj.ruleTwo ? { ...obj, ruleTwo: {} } : obj;
+
+        obj = !obj.ruleThree ? { ...obj, ruleThree: {} } : obj;
+
         if (Object.entries(obj.selectedOnLoadCategory).length > 0) {
           // update custom fields
           const currentCustomFields = customFields.find(({ id }) => id === obj.selectedOnLoadCategory.id);
@@ -556,21 +761,50 @@ const ModalPolicies = ({
           setSelectedCustomFieldTab(onlyTextCustomFields);
         }
 
+        if (obj.selectedRule) {
+          onlyTextCustomFields.forEach(({ name, rawCF }) => {
+            Object.entries(rawCF || {}).forEach((tab) => {
+              const values = [...tab[1].left, ...tab[1].right];
+              const found = values.find(({ id }) => id === obj.ruleThree?.field?.substring(2, obj.ruleThree?.field?.length - 1));
+              if (found) {
+                setRuleThreePath(`${name}/${found.values?.fieldName || found.content}`);
+              }
+            });
+          });
+          onlyDateCustomFields.forEach(({ name, rawCF }) => {
+            Object.entries(rawCF || {}).forEach((tab) =>  {
+              const values = [...tab[1].left, ...tab[1].right];
+              const found = values.find(({ id }) => id === obj.ruleTwo?.field?.substring(2, obj.ruleTwo?.field?.length - 1));
+              if (found) {
+                setRuleTwoPath(`${name}/${found.values?.fieldName || found.content}`);
+              }
+            });
+          });
+        }
+
         if (obj.selectedAction === 'OnLoad') setTab(3);
+        if (obj.selectedAction === 'OnField') setTab(4);
 
         const contentBlock = htmlToDraft(layout);
         const contentState = ContentState.createFromBlockArray(
           contentBlock.contentBlocks
         );
+        const onFieldContentBlock = htmlToDraft(onFieldLayout || "");
+        const onFieldContentState = ContentState.createFromBlockArray(
+          onFieldContentBlock.contentBlocks
+        );
         setValues(obj);
         setMessageFrom(messageFrom);
         setMessageTo(messageTo);
         setEditor(EditorState.createWithContent(contentState));
+        setOnFieldEditor(EditorState.createWithContent(onFieldContentState));
         setNotificationFrom(notificationFrom);
         setNotificationTo(notificationTo);
       })
       .catch(error => dispatch(showErrorAlert));
   }, [id]);
+
+  const textCustomFields = ['singleLine', 'multiLine', 'currency', 'percentage', 'email', 'decimal', 'richText', 'url'];
 
   useEffect(() => {
     const collection = modules.filter(({ id }) => id === module)[0];
@@ -596,6 +830,23 @@ const ModalPolicies = ({
           customFieldNames = { ...customFieldNames, filtered };
           return { name: row.name, customFields: filteredCustomFields, rawCF: row.customFieldsTab, id: row._id };
         })
+        let onlyDateCustomFields = [];
+        let onlyTextCustomFields = [];
+        rowToObjectsCustom.forEach((customField) => {
+          Object.entries(customField.rawCF).forEach((tab) => {
+            const values = [...tab[1].left, ...tab[1].right];
+            const found = values.find(({ content }) => content === 'date');
+            const foundText = values.find(({ content }) => textCustomFields.includes(content));
+            if (found) {
+              onlyDateCustomFields.push(customField);
+            }
+            if (foundText) {
+              onlyTextCustomFields.push(customField);
+            }
+          });
+        });
+        setOnlyDateCustomFields(onlyDateCustomFields);
+        setOnlyTextCustomFields(onlyTextCustomFields);
         setCustomFields(rowToObjectsCustom.filter(({ customFields }) => Object.keys(customFields).length));
       })
       .catch(error => dispatch(showErrorAlert()));
@@ -673,16 +924,19 @@ const ModalPolicies = ({
                         <div className='__container-baseandcustom-panel'>
                           <div className='__container-basefield'>
                             <h4>Base Fields</h4>
-                            <BaseFieldAccordion
-                              data={baseFields}
-                              onElementClick={insertVariable}
-                            />
+                            {values.selectedCatalogue ? (
+                              <BaseFieldAccordion
+                                data={{ [values.selectedCatalogue]: baseFields[values.selectedCatalogue] }}
+                                onElementClick={insertVariable}
+                              />
+                            ) : (
+                              <div className="__base-fields-accordion__no-info"> Please select a catalogue </div>
+                            )}
                           </div>
                           <div className='__container-customfield'>
                             <h4>Custom Fields</h4>
                             <CustomFieldAccordion
-                              customFieldKey={['references']}
-                              data={customFields}
+                              data={filterCustomFields()}
                               onElementClick={insertVariable}
                             />
                           </div>
@@ -703,22 +957,28 @@ const ModalPolicies = ({
                               >
                                 <Tab
                                   label='Send Message'
-                                  style={{ display: values.selectedAction === 'OnLoad' ? 'none' : null }}
+                                  style={{ display: displayOtherTabs.includes(values.selectedAction) ? 'none' : null }}
                                 />
                                 <Tab
                                   label='Send Notification'
-                                  style={{ display: values.selectedAction === 'OnLoad' ? 'none' : null }}
+                                  style={{ display: displayOtherTabs.includes(values.selectedAction) ? 'none' : null }}
                                 />
                                 <Tab
                                   label='Send API'
-                                  style={{ display: values.selectedAction === 'OnLoad' ? 'none' : null }}
+                                  style={{ display: displayOtherTabs.includes(values.selectedAction) ? 'none' : null }}
                                 />
-                                {values.selectedAction === 'OnLoad' && (
-                                  <Tab
-                                    label="On Load"
-                                    style={{ display: values.selectedAction === 'OnLoad' ? null : 'none' }}
-                                  />
-                                )}
+                                <Tab
+                                  label="On Load"
+                                  style={{ display: values.selectedAction !== 'OnLoad' ? 'none' : null }}
+                                />
+                                <Tab
+                                  label="Rules"
+                                  style={{ display: values.selectedAction !== 'OnField' ? 'none' : null }}
+                                />
+                                <Tab
+                                  label="Result"
+                                  style={{ display: values.selectedAction !== 'OnField' ? 'none' : null }}
+                                />
                               </Tabs>
                             </PortletHeaderToolbar>
                           }
@@ -726,315 +986,75 @@ const ModalPolicies = ({
                       </div>
                       {/* Send Messages */}
                       {tab === 0 && (
-                        <PortletBody>
-                          <div className='__container-sendmessage-panel'>
-                            <div className='__container-form-checkbox'>
-                              <div className='__container-form'>
-                                <Autocomplete
-                                  className={classes.textField}
-                                  defaultValue={messageFrom}
-                                  id='tags-message-from'
-                                  getOptionLabel={(option) => option.email}
-                                  multiple
-                                  onChange={onChangeMessageFromTo('From')}
-                                  options={users}
-                                  renderInput={(params) => (
-                                    <TextField
-                                      {...params}
-                                      label='From'
-                                      variant='standard'
-                                    />
-                                  )}
-                                  value={messageFrom}
-                                />
-                                <Autocomplete
-                                  className={classes.textField}
-                                  defaultValue={messageTo}
-                                  getOptionLabel={(option) => option.email}
-                                  id='tags-message-to'
-                                  multiple
-                                  onChange={onChangeMessageFromTo('To')}
-                                  options={users}
-                                  renderInput={(params) => (
-                                    <TextField
-                                      {...params}
-                                      label='To'
-                                      variant='standard'
-                                    />
-                                  )}
-                                  value={messageTo}
-                                />
-                                <TextField
-                                  className={classes.textField}
-                                  id='standard-subjectMessage'
-                                  label='Subject'
-                                  margin='normal'
-                                  name='subjectMessage'
-                                  onChange={handleChangeName('subjectMessage')}
-                                  onClick={setSelectedControlAndIndexes}
-                                  value={values.subjectMessage}
-                                />
-                              </div>
-                              <div className='__container-checkbox'>
-                                <FormControlLabel
-                                  control={
-                                    <Switch
-                                      checked={values.messageDisabled}
-                                      color='primary'
-                                      onChange={handleChangeCheck(
-                                        'messageDisabled'
-                                      )}
-                                    />
-                                  }
-                                  label='Disabled'
-                                  labelPlacement='start'
-                                  value='start'
-                                />
-                                <FormControlLabel
-                                  control={
-                                    <Switch
-                                      checked={values.messageMail}
-                                      color='primary'
-                                      onChange={handleChangeCheck(
-                                        'messageMail'
-                                      )}
-                                    />
-                                  }
-                                  label='Mail'
-                                  labelPlacement='start'
-                                  value='start'
-                                />
-                                <FormControlLabel
-                                  control={
-                                    <Switch
-                                      checked={values.messageInternal}
-                                      color='primary'
-                                      onChange={handleChangeCheck(
-                                        'messageInternal'
-                                      )}
-                                    />
-                                  }
-                                  label='Internal'
-                                  labelPlacement='start'
-                                  value='start'
-                                />
-                              </div>
-                            </div>
-                            <div
-                              className='__container-policies-message'
-                              onClick={() => setSelectedControl('htmlMessage')}
-                            >
-                              <Editor
-                                editorClassName='editorClassName'
-                                editorState={editor}
-                                onEditorStateChange={(ed) => setEditor(ed)}
-                                toolbarClassName='toolbarClassName'
-                                wrapperClassName='wrapperClassName'
-                              />
-                            </div>
-                          </div>
-                        </PortletBody>
+                        <MessageTemplate
+                          disablesOnChange={handleChangeCheck('messageDisabled')}
+                          disabledValue={values.messageDisabled}
+                          editor={editor}
+                          editorStateChange={setEditor}
+                          fromOnChange={onChangeMessageFromTo('From')}
+                          fromOptions={users}
+                          fromValue={messageFrom}
+                          internalOnChange={handleChangeCheck('messageInternal')}
+                          internalValue={values.messageInternal}
+                          key="send-message"
+                          mailOnChange={handleChangeCheck('messageMail')}
+                          mailValue={values.messageMail}
+                          setSelectedControl={() => setSelectedControl('htmlMessage')}
+                          subjectName="subjectMessage"
+                          subjectOnChange={handleChangeName('subjectMessage')}
+                          subjectOnClick={setSelectedControlAndIndexes}
+                          subjectValue={values.subjectMessage}
+                          toOnChange={onChangeMessageFromTo('To')}
+                          toOptions={users}
+                          toValue={messageTo}
+                        />
                       )}
                       {/* Send Notification */}
                       {tab === 1 && (
-                        <PortletBody>
-                          <div className='__container-sendnotification-panel'>
-                            <div className='__container-form-checkbox'>
-                              <div className='__container-form'>
-                                <Autocomplete
-                                  className={classes.textField}
-                                  defaultValue={notificationFrom}
-                                  getOptionLabel={(option) => option.email}
-                                  id='tags-notification-from'
-                                  multiple
-                                  onChange={onChangeNotificationFromTo('From')}
-                                  options={users}
-                                  renderInput={(params) => (
-                                    <TextField
-                                      {...params}
-                                      label='From'
-                                      variant='standard'
-                                    />
-                                  )}
-                                  value={notificationFrom}
-                                />
-                                <Autocomplete
-                                  className={classes.textField}
-                                  defaultValue={notificationTo}
-                                  getOptionLabel={(option) => option.email}
-                                  id='tags-notification-to'
-                                  multiple
-                                  onChange={onChangeNotificationFromTo('To')}
-                                  options={users}
-                                  renderInput={(params) => (
-                                    <TextField
-                                      {...params}
-                                      variant='standard'
-                                      label='To'
-                                    />
-                                  )}
-                                  value={notificationTo}
-                                />
-                                <TextField
-                                  className={classes.textField}
-                                  id='standard-subjectNotification'
-                                  label='Subject'
-                                  margin='normal'
-                                  name="subjectNotification"
-                                  onChange={handleChangeName('subjectNotification')}
-                                  onClick={setSelectedControlAndIndexes}
-                                  value={values.subjectNotification}
-                                />
-                              </div>
-                              <div className='__container-checkbox-notification'>
-                                <FormControlLabel
-                                  control={
-                                    <Switch
-                                      color='primary'
-                                      checked={values.notificationDisabled}
-                                      onChange={handleChangeCheck(
-                                        'notificationDisabled'
-                                      )}
-                                    />
-                                  }
-                                  label='Disabled'
-                                  labelPlacement='start'
-                                  value='start'
-                                />
-                                <div className='__container-icons'>
-                                  <h6 className='iconSelected'>
-                                    Icon selected:
-                                    {iconsList[values.selectedIcon]}
-                                  </h6>
-                                  <div className='__box-icons'>
-                                    {Object.keys(iconsList).map((key) => (
-                                      <ToggleButtonGroup
-                                        aria-label='text aligment'
-                                        exclusive
-                                        onChange={handleAlignment}
-                                        value={alignment}
-                                      >
-                                        <ToggleButton
-                                          className='notification-icons'
-                                          id={key}
-                                          key={key}
-                                          onClick={() => handleClickIcon(key)}
-                                          value={key}
-                                        >
-                                          <span
-                                            style={{ color: 'black' }}
-                                            value={key}
-                                          >
-                                            {iconsList[key]}
-                                          </span>
-                                        </ToggleButton>
-                                      </ToggleButtonGroup>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                            <div className='__container-message-multiline'>
-                              <TextField
-                                className={classes.textField}
-                                id='outlined-multiline-static'
-                                label='Message'
-                                margin='normal'
-                                multiline
-                                onChange={handleChangeName(
-                                  'messageNotification'
-                                )}
-                                onClick={() =>
-                                  setSelectedControl('messageNotification')
-                                }
-                                rows='4'
-                                style={{ width: '100%' }}
-                                value={values.messageNotification}
-                              />
-                            </div>
-                          </div>
-                        </PortletBody>
+                        <NotificationTemplate
+                          alignment={alignment}
+                          disabledValue={values.notificationDisabled}
+                          disablesOnChange={handleChangeCheck('notificationDisabled')}
+                          handleAlignment={handleAlignment}
+                          handleClickIcon={handleClickIcon}
+                          key="send-notification"
+                          messageOnChange={handleChangeName('messageNotification')}
+                          messageValue={values.messageNotification}
+                          notificationFromOnChange={onChangeNotificationFromTo('From')}
+                          notificationFromOptions={users}
+                          notificationFromValue={notificationFrom}
+                          notificationToOnChange={onChangeNotificationFromTo('To')}
+                          notificationToOptions={users}
+                          notificationToValue={notificationTo}
+                          selectedIcon={values.selectedIcon}
+                          subjectNotificationName="subjectNotification"
+                          subjectNotificationOnChange={handleChangeName('subjectNotification')}
+                          subjectNotificationOnClick={setSelectedControlAndIndexes}
+                          subjectNotificationValue={values.subjectNotification}
+                          setSelectedControl={() => setSelectedControl('messageNotification')}
+                        />
                       )}
                       {/* Send API */}
                       {tab === 2 && (
-                        <PortletBody>
-                          <div className='__container-send-api'>
-                            <div className='__container-post'>
-                              <div className='token_textField'>
-                                <TextField
-                                  className={classes.textField}
-                                  id='standard-url'
-                                  label='URL'
-                                  margin='normal'
-                                  name="urlAPI"
-                                  onChange={handleChangeName('urlAPI')}
-                                  onClick={setSelectedControlAndIndexes}
-                                  style={{ width: '90%' }}
-                                  value={values.urlAPI}
-                                />
-                                <FormControlLabel
-                                  value='start'
-                                  control={
-                                    <Switch
-                                      checked={values.apiDisabled}
-                                      color='primary'
-                                      onChange={handleChangeCheck('apiDisabled')}
-                                    />
-                                  }
-                                  label='Disabled'
-                                  labelPlacement='start'
-                                />
-                              </div>
-                            </div>
-                            <div className='__container-post'>
-                              <div className='token_textField'>
-                                <FormControlLabel
-                                  classes={{
-                                    labelPlacementStart: classes.formControlLabel
-                                  }}
-                                  control={
-                                    <Switch
-                                      checked={values.tokenEnabled}
-                                      color="primary"
-                                      onChange={handleChangeCheck('tokenEnabled')}
-                                    />
-                                  }
-                                  label='Web Token'
-                                  labelPlacement='start'
-                                  value='start'
-                                />
-                                <TextField
-                                  className={classes.textField}
-                                  id="Token-TextField"
-                                  label="Web Token"
-                                  margin="normal"
-                                  multiline
-                                  onChange={handleChangeName('token')}
-                                  style={{ width: '90%', marginLeft: '20px' }}
-                                  value={values.token}
-                                />
-                              </div>
-                            </div>
-                            <div className='__container-post'>
-                              <TextField
-                                className={classes.textField}
-                                id='outlined-multiline-static'
-                                label='Body'
-                                margin='normal'
-                                multiline
-                                name="bodyAPI"
-                                onChange={handleChangeName('bodyAPI')}
-                                onClick={setSelectedControlAndIndexes}
-                                rows='4'
-                                style={{ width: '90%' }}
-                                value={values.bodyAPI}
-                              />
-                            </div>
-                          </div>
-                        </PortletBody>
+                        <SendApiTemplate
+                          bodyFieldName="bodyAPI"
+                          bodyOnChange={handleChangeName('bodyAPI')}
+                          bodyValue={values.bodyAPI}
+                          disabled={values.apiDisabled}
+                          disabledOnChange={handleChangeCheck('apiDisabled')}
+                          key="send-api"
+                          setSelectedControlAndIndexes={setSelectedControlAndIndexes}
+                          tokenEnabled={values.tokenEnabled}
+                          tokenEnabledOnChange={handleChangeCheck('tokenEnabled')}
+                          tokenOnChange={handleChangeName('token')}
+                          tokenValue={values.token}
+                          urlFieldName="urlAPI"
+                          urlOnChange={handleChangeName('urlAPI')}
+                          urlValue={values.urlAPI}
+                        />
                       )}
                       {/* OnLoad Action */}
-                      {tab === 3 && values.selectedAction === 'OnLoad' && (
+                      {tab === 3 && (
                         <PortletBody>
                           <div className="__container-on-load">
                             <div className="__token-on-load-container">
@@ -1172,6 +1192,225 @@ const ModalPolicies = ({
                             </div>
                           </div>
                         </PortletBody>
+                      )}
+                      {tab === 4 && (
+                        <>
+                          <FormControl style={{ margin: '15px 0px 20px 20px' }} className={classes.textField}>
+                            <InputLabel htmlFor='age-simple'>Selected rule</InputLabel>
+                            <Select
+                              defaultValue={values.selectedRule}
+                              onChange={handleOnChangeValue('selectedRule')}
+                              value={values.selectedRule}
+                            >
+                              {rules.map(({ value, label }) => (
+                                <MenuItem key={value} value={value}>
+                                  {label}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                          {['ruleTwo', 'ruleThree'].includes(values.selectedRule) && (
+                            <Typography
+                              style={{
+                                margin: '15px 0px 20px 20px',
+                                fontSize: '1.1rem',
+                                fontWeight: 'bold'
+                              }}
+                            >
+                              Custom Field Path: {customFieldPathText()}
+                            </Typography>
+                          )}
+                          {values.selectedRule === 'ruleOne' && (
+                            <div style={{ alignItems: 'flex-end', display: 'flex', flexDirection: 'row', paddingRight: '60px' }}>
+                              <div className="__rules" style={{ marginLeft: '20px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end' }}>
+                                  <Typography style={{ fontSize: '1.2rem', marginRight: '8px' }}>No. of days:</Typography>
+                                  <TextField
+                                    className={classes.textField}
+                                    id='standard-rule-one-number-of-days'
+                                    InputProps={{ inputProps: { min: 1 } }}
+                                    margin='normal'
+                                    onChange={handleRuleOneChanges('numberOfDays')}
+                                    style={{ width: '60px', marginBottom: '0px' }}
+                                    type="number"
+                                    value={values.ruleOne?.numberOfDays}
+                                  />
+                                </div>
+                                <div style={{ marginBottom: '15px' }} />
+                                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-end' }}>
+                                  <Typography style={{ fontSize: '1.2rem', marginRight: '8px' }}>Repeat</Typography>
+                                  <TextField
+                                    className={classes.textField}
+                                    disabled={values.ruleOne.isInfinite}
+                                    id='standard-rule-one-times-repeated'
+                                    InputProps={{ inputProps: { min: 1 } }}
+                                    margin='normal'
+                                    onChange={handleRuleOneChanges('timesRepeated')}
+                                    style={{ width: '60px', marginBottom: '0px' }}
+                                    type="number"
+                                    value={values.ruleOne?.timesRepeated}
+                                  />
+                                  <Typography style={{ fontSize: '1.2rem', marginLeft: '8px' }}>times</Typography>
+                                </div>
+                                <div style={{ marginBottom: '15px' }} />
+                              </div>
+                              <Grid container direction="column">
+                                <FormControlLabel
+                                  control={
+                                    <Switch
+                                      color='primary'
+                                      checked={values.ruleOne.isInfinite || false}
+                                      onChange={handleRuleOneChecks('isInfinite')}
+                                    />
+                                  }
+                                  label='Infinite'
+                                  labelPlacement='start'
+                                  style={{ marginRight: '0px' }}
+                                  value='start'
+                                />
+                                <FormControlLabel
+                                  control={
+                                    <Switch
+                                      color='primary'
+                                      checked={values.ruleOne.includeOriginalDate || false}
+                                      onChange={handleRuleOneChecks('includeOriginalDate')}
+                                    />
+                                  }
+                                  label='Include Original Date'
+                                  labelPlacement='start'
+                                  style={{ marginRight: '0px' }}
+                                  value='start'
+                                />
+                              </Grid>
+                            </div>
+                          )}
+                          {values.selectedRule === 'ruleTwo' && (
+                            <div className="__rules" style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+                              <TextField
+                                className={classes.textField}
+                                id='standard-rule-two-field'
+                                margin='normal'
+                                onClick={() => setSelectedControl('ruleTwo')}
+                                onChange={handleRuleField('ruleTwo')}
+                                style={{ width: '120px', marginBottom: '0px' }}
+                                value={values.ruleTwo?.field}
+                              />
+                              <Typography style={{ fontSize: '1.2rem', marginLeft: '8px', marginRight: '8px' }}>is equal to:</Typography>
+                              <TextField
+                                className={classes.textField}
+                                id='standard-rule-two-value'
+                                margin='normal'
+                                onChange={handleRuleValue('ruleTwo')}
+                                style={{ width: '120px', marginBottom: '0px' }}
+                                type="date"
+                                value={values.ruleTwo?.value?.substring(0, 10)}
+                              />
+                            </div>
+                          )}
+                          {values.selectedRule === 'ruleThree' && (
+                            <div className="__rules" style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+                              <TextField
+                                className={classes.textField}
+                                id='standard-rule-three-field'
+                                margin='normal'
+                                onClick={() => setSelectedControl('ruleThree')}
+                                onChange={handleRuleField('ruleThree')}
+                                style={{ width: '120px', marginBottom: '0px' }}
+                                value={values.ruleThree?.field}
+                              />
+                              <Typography style={{ fontSize: '1.2rem', marginLeft: '8px', marginRight: '8px' }}>is equal to:</Typography>
+                              <TextField
+                                className={classes.textField}
+                                id='standard-rule-three-value'
+                                margin='normal'
+                                multiline
+                                onChange={handleRuleValue('ruleThree')}
+                                style={{ width: '240px', marginBottom: '0px' }}
+                                value={values.ruleThree?.value}
+                              />
+                            </div>
+                          )}
+                        </>
+                      )}
+                      {tab === 5 && (
+                        <div style={{ marginLeft: '20px', marginBottom: '10px' }}>
+                          <Tabs
+                            className='builder-tabs'
+                            component='div'
+                            onChange={(_, nextTab) => setOnFieldTab(nextTab)}
+                            value={onFieldTab}
+                          >
+                            <Tab label='Send Message' />
+                            <Tab label="Send Notification" />
+                            <Tab label="Send API" />
+                          </Tabs>
+                          {onFieldTab === 0 && (
+                            <MessageTemplate
+                              disablesOnChange={handleChangeCheck('onFieldMessageDisabled')}
+                              disabledValue={values.onFieldMessageDisabled}
+                              editor={onFieldEditor}
+                              editorStateChange={setOnFieldEditor}
+                              fromOnChange={onChangeOnFieldFromTo('From', 'messages')}
+                              fromOptions={users}
+                              fromValue={values.onFieldMessageFrom || []}
+                              internalOnChange={handleChangeCheck('onFieldMessageInternal')}
+                              internalValue={values.onFieldMessageInternal}
+                              key="onField-message"
+                              mailOnChange={handleChangeCheck('onFieldMessageMail')}
+                              mailValue={values.onFieldMessageMail}
+                              setSelectedControl={() => setSelectedControl('onFieldHtmlMessage')}
+                              subjectName="onFieldMessageSubject"
+                              subjectOnChange={handleChangeName('onFieldMessageSubject')}
+                              subjectOnClick={setSelectedControlAndIndexes}
+                              subjectValue={values.onFieldMessageSubject}
+                              toOnChange={onChangeOnFieldFromTo('To', 'messages')}
+                              toOptions={users}
+                              toValue={values.onFieldMessageTo || []}
+                            />
+                          )}
+                          {onFieldTab === 1 && (
+                            <NotificationTemplate
+                              alignment={onFieldAlignment}
+                              disabledValue={values.onFieldNotificationDisabled || false}
+                              disablesOnChange={handleChangeCheck('onFieldNotificationDisabled')}
+                              handleAlignment={handleFieldAlignment}
+                              handleClickIcon={handleOnFieldClickIcon}
+                              key="onField-notification"
+                              messageOnChange={handleChangeName('onFieldMessageNotification')}
+                              messageValue={values.onFieldMessageNotification}
+                              notificationFromOnChange={onChangeOnFieldFromTo('From', 'notifications')}
+                              notificationFromOptions={users}
+                              notificationFromValue={values.onFieldNotificationFrom || []}
+                              notificationToOnChange={onChangeOnFieldFromTo('To', 'notifications')}
+                              notificationToOptions={users}
+                              notificationToValue={values.onFieldNotificationTo || []}
+                              selectedIcon={values.onFieldSelectedIcon}
+                              subjectNotificationName="onFieldNotificationSubject"
+                              subjectNotificationOnChange={handleChangeName('onFieldNotificationSubject')}
+                              subjectNotificationOnClick={setSelectedControlAndIndexes}
+                              subjectNotificationValue={values.onFieldNotificationSubject}
+                              setSelectedControl={() => setSelectedControl('onFieldMessageNotification')}
+                            />
+                          )}
+                          {onFieldTab === 2 && (
+                            <SendApiTemplate
+                              bodyFieldName="onFieldBodyAPI"
+                              bodyOnChange={handleChangeName('onFieldBodyAPI')}
+                              bodyValue={values.onFieldBodyAPI || ''}
+                              disabled={values.OnFieldApiDisabled || false}
+                              disabledOnChange={handleChangeCheck('OnFieldApiDisabled')}
+                              key="onField-api"
+                              setSelectedControlAndIndexes={setSelectedControlAndIndexes}
+                              tokenEnabled={values.onFieldTokenEnabled || false}
+                              tokenEnabledOnChange={handleChangeCheck('onFieldTokenEnabled')}
+                              tokenOnChange={handleChangeName('onFieldToken')}
+                              tokenValue={values.onFieldToken}
+                              urlFieldName="onFieldUrlAPI"
+                              urlOnChange={handleChangeName('onFieldUrlAPI')}
+                              urlValue={values.onFieldUrlAPI}
+                            />
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

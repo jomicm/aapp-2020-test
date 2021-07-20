@@ -32,7 +32,7 @@ import { CustomFieldsPreview } from '../../constants';
 import BaseFields from '../../Components/BaseFields/BaseFields';
 import LocationAssignment from '../components/LocationAssignment';
 import Permission from '../components/Permission';
-import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
+import { executePolicies, executeOnLoadPolicy, executeOnFieldPolicy } from '../../Components/Policies/utils';
 import { usePolicies } from '../../Components/Policies/hooks';
 const { apiHost, localHost } = hosts;
 
@@ -189,6 +189,7 @@ const ModalUsers = ({ showModal, setShowModal, reloadProfiles, reloadTable, id, 
           saveAndReload('user', _id);
           updateLocationsAssignments(locationsTable, { userId: _id, email, name, lastName });
           executePolicies('OnAdd', 'user', 'list', policies, response.response[0]);
+          executeOnFieldPolicy('OnAdd', 'user', 'list', policies, response.response[0]);
           getDB('settingsGroups')
             .then((response) => response.json())
             .then((data) => {
@@ -214,7 +215,8 @@ const ModalUsers = ({ showModal, setShowModal, reloadProfiles, reloadTable, id, 
           saveAndReload('user', id[0]);
           updateCurrentUserPic(id[0], fileExt);
           updateLocationsAssignments(locationsTable, { userId: id[0], name: body.name, email: body.email, lastName: body.lastName });
-          executePolicies('OnEdit', 'user', 'list', policies, value);
+          executePolicies('OnEdit', 'user', 'list', policies, body);
+          executeOnFieldPolicy('OnEdit', 'user', 'list', policies, body, value);
           getDB('settingsGroups')
             .then((response) => response.json())
             .then((data) => {

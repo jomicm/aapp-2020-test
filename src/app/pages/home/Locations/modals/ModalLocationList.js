@@ -31,7 +31,7 @@ import {
 import { getOneDB, postDB, updateDB } from '../../../../crud/api';
 import { CustomFieldsPreview } from '../../constants';
 import { getFileExtension, getImageURL, saveImage, verifyCustomFields } from '../../utils';
-import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
+import { executePolicies, executeOnLoadPolicy, executeOnFieldPolicy } from '../../Components/Policies/utils';
 import { usePolicies } from '../../Components/Policies/hooks';
 import GoogleMaps from '../../Components/GoogleMaps';
 import ImageUpload from '../../Components/ImageUpload';
@@ -244,6 +244,7 @@ const ModalLocationList = ({
           const { _id } = data.response[0];
           saveAndReload('locationsReal', _id);
           executePolicies('OnAdd', 'locations', 'list', policies, data.response[0]);
+          executeOnFieldPolicy('locations', 'list', policies, data.response[0]);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -255,7 +256,8 @@ const ModalLocationList = ({
 
           dispatch(showUpdatedAlert());
           saveAndReload('locationsReal', parent);
-          executePolicies('OnEdit', 'locations', 'list', policies, value);
+          executePolicies('OnEdit', 'locations', 'list', policies, body);
+          executeOnFieldPolicy('OnEdit', 'locations', 'list', policies, body, value);
         })
         .catch(error => dispatch(showErrorAlert()));
     }

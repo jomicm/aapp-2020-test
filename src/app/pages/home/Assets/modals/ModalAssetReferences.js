@@ -29,7 +29,7 @@ import { postDB, getOneDB, updateDB, getDB } from '../../../../crud/api';
 import { getFileExtension, saveImage, getImageURL, verifyCustomFields } from '../../utils';
 import { CustomFieldsPreview } from '../../constants';
 import './ModalAssetReferences.scss';
-import { executePolicies, executeOnLoadPolicy } from '../../Components/Policies/utils';
+import { executePolicies, executeOnLoadPolicy, executeOnFieldPolicy } from '../../Components/Policies/utils';
 
 import BaseFields from '../../Components/BaseFields/BaseFields';
 
@@ -185,6 +185,7 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
           const { _id } = response.response[0];
           saveAndReload('references', _id);
           executePolicies('OnAdd', 'assets', 'references', policies, response.response[0]);
+          executeOnFieldPolicy('OnAdd', 'assets', 'references', policies, response.response[0]);
         })
         .catch(error => dispatch(showErrorAlert()));
     } else {
@@ -195,7 +196,8 @@ const ModalAssetReferences = ({ showModal, setShowModal, reloadTable, id, polici
 
           dispatch(showUpdatedAlert());
           saveAndReload('references', id[0]);
-          executePolicies('OnEdit', 'assets', 'references', policies, value);
+          executePolicies('OnEdit', 'assets', 'references', policies, body);
+          executeOnFieldPolicy('OnEdit', 'assets', 'references', policies, body, value);
         })
         .catch(error => console.log(error));
     }
