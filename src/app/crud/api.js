@@ -18,6 +18,7 @@ const collection = `${REACT_APP_API_COLLECTION}/`;
 const publicReq = `${REACT_APP_API_PUBLIC_REQ}/`;
 const count = `${REACT_APP_API_COUNT}/`;
 const collation = 'collation/';
+const repeatedValues = 'repeatedValues/';
 
 const getBaseInfo = () => {
   const state = store.default.getState();
@@ -44,8 +45,9 @@ const getAPIPath = (
   isEncrypt = false,
   isPublic = false,
   isCount = false,
-  isCollation = false
-) => `${host}${version}${isPublic ? publicReq : ''}${isCount ? count : ''}${isCollation ? collation : ''}${db}${_collection}${_id}${isEncrypt ? '/encrypt' : ''}`;
+  isCollation = false,
+  isRepeatedValues = false
+) => `${host}${version}${isPublic ? publicReq : ''}${isCount ? count : ''}${isCollation ? collation : ''}${isRepeatedValues ? repeatedValues : ''}${db}${_collection}${_id}${isEncrypt ? '/encrypt' : ''}`;
 
 const getAPIFilePath = (foldername) => `${host}${version}upload/${foldername}`;
 
@@ -111,6 +113,7 @@ const getDBComplex = ({
   queryLike,
   sort,
   limit,
+  repeatedValues,
   skip,
   fields,
   customQuery,
@@ -183,7 +186,12 @@ const getDBComplex = ({
   }
 
   additionalParams = additionalParams ? `?${additionalParams}` : '';
-  const reqURL = `${getAPIPath(collection, '', false, false, false, true)}${additionalParams}`;
+  let reqURL = '';
+  if (repeatedValues) {
+    reqURL = `${getAPIPath(collection, '', false, false, false, false, true)}/${repeatedValues}${additionalParams}`;
+  } else {
+    reqURL = `${getAPIPath(collection, '', false, false, false, true)}${additionalParams}`;
+  }
   return fetch(reqURL, { method: 'GET', headers: getHeaders() });
 };
 

@@ -9,7 +9,7 @@ const _types = {
   imageType: ['imageUpload']
 };
 
-const _generalFields = {
+export const _generalFields = {
   user: ['_id', 'name', 'lastName', 'email', 'boss', 'groups'],
   employees: ['_id', 'name', 'lastName', 'email'],
   locations: ['_id', 'name', 'level'],

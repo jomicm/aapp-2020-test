@@ -30,6 +30,7 @@ import {
   getGeneralFieldsHeaders,
   getUserPermittedModules,
   normalizeRows,
+  _generalFields
 } from './reportsHelpers';
 import { allBaseFields } from '../constants';
 import ChangeReportName from './modals/ChangeReportName';
@@ -467,6 +468,17 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
   }
 
   const handleClickCollectionName = () => {
+    if (values.selectedReport === 'fieldValuesRepeated') {
+      if (Array.isArray(filtersSelected.fieldValuesRepeated.baseFields) || Array.isArray(filtersSelected.fieldValuesRepeated.collection) || !filtersSelected.fieldValuesRepeated.baseFields || !filtersSelected.fieldValuesRepeated.collection) {
+        dispatch(showCustomAlert({
+          message: 'Please fill all the specific filters',
+          open: true,
+          type: 'warning'
+        }));
+        return;
+      }
+    }
+
     setTableControl({
       collection: '',
       total: 0,
@@ -545,13 +557,13 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
 
     dispatch(setGeneralLoading({ active: true }));
 
-    const condition = collectionName === 'processLive' ? await getFiltersProcess() : null;
+    const condition = collectionName === 'processLive' ? await getFiltersProcess() : collectionName === 'logBook' ? getLogbookCondition() : null;
 
     const dateFilters = getDateFilters();
 
     getDBComplex(({
       collection: collectionName,
-      condition: collectionName === 'processLive' ? condition : dateFilters
+      condition: ['processLive', 'logBook'].includes(collectionName) ? condition : dateFilters
     }))
       .then((response) => response.json())
       .then((data) => {
@@ -663,7 +675,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     let condition = null;
     let data = [];
     Object.entries(filtersSelected.logBook).forEach((field) => {
-      if (Array.isArray(field[1]) ) {
+      if (Array.isArray(field[1])) {
         if (field[1].length) {
           data.push({ [field[0]]: { "$in": field[1].map(({ id }) => id) } });
         }
@@ -704,34 +716,50 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
         )
       }
 
-      const condition = collectionName === 'processLive' ? await getFiltersProcess() : collectionName === 'logBook' ? getLogbookCondition() : null;
-      console.log(condition);
+      const condition = collectionName === 'processLive'
+        ? await getFiltersProcess()
+        : collectionName === 'logBook'
+          ? getLogbookCondition()
+          : null;
       const dateFilters = getDateFilters();
-      getCountDB({
-        collection: collectionName,
-        queryLike: tableControl.search ? queryLike : null,
-        condition: ['processLive', 'logBook'].includes(collectionName) ? condition : dateFilters
-      })
-        .then(response => response.json())
-        .then(data => {
-          setTableControl(prev => ({
-            ...prev,
-            total: data.response.count
-          }))
-        });
+
+      if (collectionName !== 'fieldValuesRepeated') {
+        getCountDB({
+          collection: collectionName,
+          condition: ['processLive', 'logBook'].includes(collectionName) ? condition : dateFilters,
+          queryLike: tableControl.search ? queryLike : null
+        })
+          .then(response => response.json())
+          .then(data => {
+            setTableControl(prev => ({
+              ...prev,
+              total: data.response.count
+            }));
+          });
+      }
 
       getDBComplex({
-        collection: collectionName,
+        collection: collectionName === 'fieldValuesRepeated' ? filtersSelected.fieldValuesRepeated.collection.id : collectionName,
+        condition: ['processLive', 'logBook'].includes(collectionName) ? condition : dateFilters,
         limit: tableControl.rowsPerPage,
-        skip: tableControl.rowsPerPage * tableControl.page,
-        sort: collectionName === 'processLive' && !tableControl.order ? [{ key: 'folio', value: 1 }] : [{ key: tableControl.orderBy, value: tableControl.order }],
         queryLike: tableControl.search ? queryLike : null,
-        condition: ['processLive', 'logBook'].includes(collectionName) ? condition : dateFilters
+        repeatedValues: collectionName === 'fieldValuesRepeated' ? filtersSelected.fieldValuesRepeated.baseFields.id : null,
+        skip: tableControl.rowsPerPage * tableControl.page,
+        sort: collectionName === 'processLive' && !tableControl.order ? [{ key: 'folio', value: 1 }] : [{ key: tableControl.orderBy, value: tableControl.order }]
       })
         .then(response => response.json())
         .then(data => {
+
+          if (collectionName === 'fieldValuesRepeated') {
+            setTableControl(prev => ({
+              ...prev,
+              total: data.request.total
+            }));
+          }
+          
           const { response } = data;
-          const baseHeaders = getGeneralFieldsHeaders(collection.id);
+          const dataCondition = collectionName === 'fieldValuesRepeated' ? filtersSelected.fieldValuesRepeated.collection.id : collection.id;
+          const baseHeaders = getGeneralFieldsHeaders(dataCondition);
           if (collectionName === 'processLive') {
             const headerIndexToChange = baseHeaders.findIndex(({ id }) => id === 'dueDate');
             baseHeaders[headerIndexToChange] = {
@@ -767,7 +795,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
             dataTable = { rows: processRows, headerObject: baseHeaders };
           }
           else {
-            dataTable = formatData(collection.id, response);
+            dataTable = formatData(dataCondition, response);
           }
           //Get just the CustomFields
           const baseFieldsHeaders = dataTable.headerObject.filter(e => !filtersSelected.customFields.all.some(custom => custom.id === e.id));
@@ -787,19 +815,19 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
   const changeFiltersSelected = (module, filter) => (event, values) => {
     const { id } = values || {};
 
-    if (filter === 'module' && module === 'fieldValuesRepeated' && id) {
+    if (filter === 'collection' && module === 'fieldValuesRepeated' && id) {
       const baseFieldId = baseFieldsPerModule[id];
       let baseFields = [];
 
       if (Array.isArray(baseFieldId)) {
         baseFieldId.forEach((key) => {
           Object.entries(allBaseFields[key] || []).forEach((field) => {
-            if (field[0] !== 'id') baseFields.push({ id: field[1].validationId, label: field[1].compLabel });
+            if (field[0] !== 'id' && _generalFields[id].includes(field[1].validationId)) baseFields.push({ id: field[1].validationId, label: field[1].compLabel });
           });
         });
       } else {
         Object.entries(allBaseFields[baseFieldId] || []).forEach((field) => {
-          if (field[0] !== 'id') baseFields.push({ id: field[1].validationId, label: field[1].compLabel });
+          if (field[0] !== 'id' && _generalFields[id].includes(field[1].validationId)) baseFields.push({ id: field[1].validationId, label: field[1].compLabel });
         });
       }
 
@@ -810,7 +838,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
           baseFields
         }
       }));
-    } else if (filter === 'module' && module === 'fieldValuesRepeated' && !id) {
+    } else if (filter === 'collection' && module === 'fieldValuesRepeated' && !id) {
       setSpecificFiltersOptions(prev => ({
         ...prev,
         [module]: {
@@ -995,7 +1023,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
                   className={classes.filters}
                   defaultValue={filtersSelected[values.selectedReport][e.id]}
                   getOptionLabel={(option) => option.label}
-                  multiple={['fieldValuesRepeated', 'logBook'].includes(values.selectedReport) && e.id === 'collection' ? false : true}
+                  multiple={['fieldValuesRepeated', 'logBook'].includes(values.selectedReport) && ['collection', 'baseFields'].includes(e.id) ? false : true}
                   onChange={changeFiltersSelected(values.selectedReport, e.id)}
                   options={specificFiltersOptions[values.selectedReport][e.id]}
                   renderInput={(params) => (
