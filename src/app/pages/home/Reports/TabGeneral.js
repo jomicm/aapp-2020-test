@@ -47,7 +47,7 @@ const modules = [
   { index: 6, id: 'depreciation', name: 'Depreciation', custom: '' },
   { index: 7, id: 'processLive', name: 'Processes', custom: '' },
   { index: 8, id: 'inventories', name: 'Inventories', custom: '' },
-  { index: 9, id: 'logbook', name: 'Logbook', custom: '' },
+  { index: 9, id: 'logBook', name: 'Logbook', custom: '' },
   { index: 10, id: 'fieldValuesRepeated', name: 'Field Values Repeated', custom: '' }
 ];
 
@@ -92,23 +92,23 @@ const specificFilters = {
       label: "ID Session"
     },
   ],
-  logbook: [
+  logBook: [
     {
-      id: 'requestUser',
-      label: 'Request User'
+      id: 'collection',
+      label: 'Module'
     },
     {
       id: 'method',
       label: 'Method'
     },
     {
-      id: 'module',
-      label: 'Module'
+      id: 'userId',
+      label: 'Request User'
     }
   ],
   fieldValuesRepeated: [
     {
-      id: 'module',
+      id: 'collection',
       label: 'Module'
     },
     {
@@ -158,13 +158,13 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
       inventoryUser: [{ label: "Joe Doe" }, { label: "John Smith" }],
       idSession: [{ label: "3345" }, { label: "123" }, { label: "25899" }],
     },
-    logbook: {
+    logBook: {
       method: [{ id: 'GET', label: 'GET' }, { id: 'POST', label: 'POST' }, { id: 'PUT', label: 'PUT' }, { id: 'UPDATE', label: 'UPDATE' }, { id: 'DELETE', label: 'DELETE' }],
-      module: permittedModules || [],
-      requestUser: []
+      collection: permittedModules || [],
+      userId: []
     },
     fieldValuesRepeated: {
-      module: permittedModules || [],
+      collection: permittedModules || [],
       baseFields: []
     }
   });
@@ -189,13 +189,13 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
       inventoryUser: [],
       idSession: [],
     },
-    logbook: {
+    logBook: {
       method: [],
-      module: [],
-      requestUser: []
+      collection: [],
+      userId: []
     },
     fieldValuesRepeated: {
-      module: [],
+      collection: [],
       baseFields: []
     }
   };
@@ -214,9 +214,9 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
         const users = data.response.map(({ _id: id, name, lastName, email }) => ({ id, label: `${name} ${lastName} <${email.length ? email : 'No email'}>` }));
         setSpecificFiltersOptions(prev => ({
           ...prev,
-          logbook: {
-            ...prev.logbook,
-            requestUser: users
+          logBook: {
+            ...prev.logBook,
+            userId: users
           }
         }));
       })
@@ -293,16 +293,17 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
   };
 
   const getDateFilters = () => {
+    const dateKey = values.selectedReport === 'logBook' ? "timestamp" : "creationDate";
     if (values.startDate && values.endDate) {
-      let condition = [{ "creationDate": { "$gte": `${new Date(values.startDate).toISOString()}`, "$lte": `${new Date(values.endDate).toISOString()}` } }];
+      let condition = [{ [dateKey]: { "$gte": `${new Date(values.startDate).toISOString()}`, "$lte": `${new Date(values.endDate).toISOString()}` } }];
       condition = getExtraCondition(condition);
       return condition;
     } else if (values.startDate && !values.endDate) {
-      let condition = [{ "creationDate": { "$gte": `${new Date(values.startDate).toISOString()}` } }];
+      let condition = [{ [dateKey]: { "$gte": `${new Date(values.startDate).toISOString()}` } }];
       condition = getExtraCondition(condition);
       return condition;
     } else if (!values.startDate && values.endDate) {
-      let condition = [{ "creationDate": { "$lte": `${new Date(values.endDate).toISOString()}` } }];
+      let condition = [{ [dateKey]: { "$lte": `${new Date(values.endDate).toISOString()}` } }];
       condition = getExtraCondition(condition);
       return condition;
     }
@@ -407,7 +408,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
       setFiltersSelected(defaultFilterSelected);
       setId('');
 
-      if (value === 'logbook') {
+      if (value === 'logBook') {
         loadAllUsers();
       }
 
@@ -658,6 +659,36 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
     return result.length > 0 ? result : null;
   };
 
+  const getLogbookCondition = () => {
+    let condition = null;
+    let data = [];
+    Object.entries(filtersSelected.logBook).forEach((field) => {
+      if (Array.isArray(field[1]) ) {
+        if (field[1].length) {
+          data.push({ [field[0]]: { "$in": field[1].map(({ id }) => id) } });
+        }
+      } else if (field[1]) {
+        data.push({ [field[0]]: field[1].id });
+      }
+    });
+
+    const dateFilters = getDateFilters();
+
+    // if (!filtersSelected.logBook.userId.length) {
+    //   data.push({ "userId": { "$in": specificFiltersOptions.logBook.userId.map(({ id }) => id) || [] } });
+    // }
+
+    if (dateFilters) {
+      data.push(...dateFilters);
+    }
+
+    if (data.length) {
+      condition = data;
+    }
+
+    return condition;
+  };
+
   const loadReportsData = async (collectionNames, customSelected) => {
     if (!collectionNames) return;
     const collection = modules.find(({ id }) => id === collectionNames);
@@ -673,12 +704,13 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
         )
       }
 
-      const condition = collectionName === 'processLive' ? await getFiltersProcess() : null;
+      const condition = collectionName === 'processLive' ? await getFiltersProcess() : collectionName === 'logBook' ? getLogbookCondition() : null;
+      console.log(condition);
       const dateFilters = getDateFilters();
       getCountDB({
         collection: collectionName,
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : dateFilters
+        condition: ['processLive', 'logBook'].includes(collectionName) ? condition : dateFilters
       })
         .then(response => response.json())
         .then(data => {
@@ -694,12 +726,11 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
         skip: tableControl.rowsPerPage * tableControl.page,
         sort: collectionName === 'processLive' && !tableControl.order ? [{ key: 'folio', value: 1 }] : [{ key: tableControl.orderBy, value: tableControl.order }],
         queryLike: tableControl.search ? queryLike : null,
-        condition: collectionName === 'processLive' ? condition : dateFilters
+        condition: ['processLive', 'logBook'].includes(collectionName) ? condition : dateFilters
       })
         .then(response => response.json())
         .then(data => {
           const { response } = data;
-          console.log(response);
           const baseHeaders = getGeneralFieldsHeaders(collection.id);
           if (collectionName === 'processLive') {
             const headerIndexToChange = baseHeaders.findIndex(({ id }) => id === 'dueDate');
@@ -964,7 +995,7 @@ const TabGeneral = ({ id, savedReports, setId, reloadData, user, userLocations }
                   className={classes.filters}
                   defaultValue={filtersSelected[values.selectedReport][e.id]}
                   getOptionLabel={(option) => option.label}
-                  multiple={['fieldValuesRepeated', 'logbook'].includes(values.selectedReport) && e.id === 'module' ? false : true}
+                  multiple={['fieldValuesRepeated', 'logBook'].includes(values.selectedReport) && e.id === 'collection' ? false : true}
                   onChange={changeFiltersSelected(values.selectedReport, e.id)}
                   options={specificFiltersOptions[values.selectedReport][e.id]}
                   renderInput={(params) => (

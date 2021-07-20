@@ -17,6 +17,7 @@ const db = `${REACT_APP_API_DB}/`;
 const collection = `${REACT_APP_API_COLLECTION}/`;
 const publicReq = `${REACT_APP_API_PUBLIC_REQ}/`;
 const count = `${REACT_APP_API_COUNT}/`;
+const collation = 'collation/';
 
 const getBaseInfo = () => {
   const state = store.default.getState();
@@ -43,7 +44,8 @@ const getAPIPath = (
   isEncrypt = false,
   isPublic = false,
   isCount = false,
-) => `${host}${version}${isPublic ? publicReq : ''}${isCount ? count : ''}${db}${_collection}${_id}${isEncrypt ? '/encrypt' : ''}`;
+  isCollation = false
+) => `${host}${version}${isPublic ? publicReq : ''}${isCount ? count : ''}${isCollation ? collation : ''}${db}${_collection}${_id}${isEncrypt ? '/encrypt' : ''}`;
 
 const getAPIFilePath = (foldername) => `${host}${version}upload/${foldername}`;
 
@@ -181,7 +183,7 @@ const getDBComplex = ({
   }
 
   additionalParams = additionalParams ? `?${additionalParams}` : '';
-  const reqURL = `${getAPIPath(collection)}${additionalParams}`;
+  const reqURL = `${getAPIPath(collection, '', false, false, false, true)}${additionalParams}`;
   return fetch(reqURL, { method: 'GET', headers: getHeaders() });
 };
 

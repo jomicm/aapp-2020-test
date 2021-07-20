@@ -13,6 +13,7 @@ const _generalFields = {
   user: ['_id', 'name', 'lastName', 'email', 'boss', 'groups'],
   employees: ['_id', 'name', 'lastName', 'email'],
   locations: ['_id', 'name', 'level'],
+  logBook: ['_id', 'collection', 'method', 'timestamp', 'userName', 'userLastName', 'userEmail'],
   categories: ['_id', 'name', 'depreciation'],
   references: ['_id', 'name', 'brand', 'model', 'price'],
   assets: ['_id', 'name', 'brand', 'model', 'category', 'status', 'serial', 'responsible', 'notes', 'quantity', 'purchase_date', 'purchase_price', 'price', 'total_price', 'EPC', 'location', 'creator', 'labeling_user', 'labeling_date', 'creationDate', 'updateDate',],
