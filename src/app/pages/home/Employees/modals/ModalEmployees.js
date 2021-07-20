@@ -461,7 +461,7 @@ const ModalEmployees = ({
               .catch((error) => console.log(error));
           }
         })
-        .catch((error) => dispatch(showErrorAlert()));
+        .catch((error) => console.log(error));
     } else {
       updateDB('employees/', body, id[0])
         .then((response) => response.json())

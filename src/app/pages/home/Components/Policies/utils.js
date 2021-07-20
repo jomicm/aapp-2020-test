@@ -125,6 +125,29 @@ export const executeOnFieldPolicy = (action, module, selectedCatalogue, policies
     ruleThree,
     selectedRule
   }) => {
+    const sendPolicy = () => send(
+      record,
+      onFieldMessageDisabled,
+      onFieldNotificationDisabled,
+      OnFieldApiDisabled,
+      rawDate,
+      timeStamp,
+      html,
+      module,
+      selectedCatalogue,
+      onFieldMessageFrom,
+      onFieldMessageSubject,
+      onFieldMessageTo,
+      onFieldNotificationFrom,
+      icon,
+      onFieldMessageNotification,
+      onFieldNotificationSubject,
+      onFieldNotificationTo,
+      onFieldUrlAPI,
+      onFieldBodyAPI,
+      onFieldToken,
+      onFieldTokenEnabled
+    );
     if (selectedRule === 'ruleTwo') {
       const customFieldsValues = getCustomFieldValues(record);
       const oldCustomFieldValues = action === 'OnEdit' ? getCustomFieldValues(oldRecord) : null;
@@ -133,54 +156,10 @@ export const executeOnFieldPolicy = (action, module, selectedCatalogue, policies
         if (`%{${field[0]}}` === ruleTwo?.field && new Date(field[1]).toISOString() === ruleTwo?.value) {
           if (oldCustomFieldValues) {
             if (new Date(oldCustomFieldValues[field[0]]).toISOString() !== new Date(field[1]).toISOString()) {
-              send(
-                record,
-                onFieldMessageDisabled,
-                onFieldNotificationDisabled,
-                OnFieldApiDisabled,
-                rawDate,
-                timeStamp,
-                html,
-                module,
-                selectedCatalogue,
-                onFieldMessageFrom,
-                onFieldMessageSubject,
-                onFieldMessageTo,
-                onFieldNotificationFrom,
-                icon,
-                onFieldMessageNotification,
-                onFieldNotificationSubject,
-                onFieldNotificationTo,
-                onFieldUrlAPI,
-                onFieldBodyAPI,
-                onFieldToken,
-                onFieldTokenEnabled
-              );
+              sendPolicy();
             }
           } else {
-            send(
-              record,
-              onFieldMessageDisabled,
-              onFieldNotificationDisabled,
-              OnFieldApiDisabled,
-              rawDate,
-              timeStamp,
-              html,
-              module,
-              selectedCatalogue,
-              onFieldMessageFrom,
-              onFieldMessageSubject,
-              onFieldMessageTo,
-              onFieldNotificationFrom,
-              icon,
-              onFieldMessageNotification,
-              onFieldNotificationSubject,
-              onFieldNotificationTo,
-              onFieldUrlAPI,
-              onFieldBodyAPI,
-              onFieldToken,
-              onFieldTokenEnabled
-            );
+            sendPolicy();
           }
         }
       });
@@ -193,54 +172,10 @@ export const executeOnFieldPolicy = (action, module, selectedCatalogue, policies
           flag = false;
           if (action === 'OnEdit') {
             if (record[recordField] !== oldRecord[recordField]) {
-              send(
-                record,
-                onFieldMessageDisabled,
-                onFieldNotificationDisabled,
-                OnFieldApiDisabled,
-                rawDate,
-                timeStamp,
-                html,
-                module,
-                selectedCatalogue,
-                onFieldMessageFrom,
-                onFieldMessageSubject,
-                onFieldMessageTo,
-                onFieldNotificationFrom,
-                icon,
-                onFieldMessageNotification,
-                onFieldNotificationSubject,
-                onFieldNotificationTo,
-                onFieldUrlAPI,
-                onFieldBodyAPI,
-                onFieldToken,
-                onFieldTokenEnabled
-              );
+              sendPolicy();
             }
           } else {
-            send(
-              record,
-              onFieldMessageDisabled,
-              onFieldNotificationDisabled,
-              OnFieldApiDisabled,
-              rawDate,
-              timeStamp,
-              html,
-              module,
-              selectedCatalogue,
-              onFieldMessageFrom,
-              onFieldMessageSubject,
-              onFieldMessageTo,
-              onFieldNotificationFrom,
-              icon,
-              onFieldMessageNotification,
-              onFieldNotificationSubject,
-              onFieldNotificationTo,
-              onFieldUrlAPI,
-              onFieldBodyAPI,
-              onFieldToken,
-              onFieldTokenEnabled
-            );
+            sendPolicy();
           }
         }
       });
@@ -250,60 +185,14 @@ export const executeOnFieldPolicy = (action, module, selectedCatalogue, policies
 
         Object.entries(customFieldsValues || {}).forEach((field) => {
           let value = sanitizeHtml(field[1], { allowedAttributes: {}, allowedTags: [] });
-          value = value.slice(0, value.length - 1);
           if (`%{${field[0]}}` === ruleThree?.field && value === ruleThree?.value) {
             if (oldCustomFieldValues) {
               let oldValue = sanitizeHtml(oldCustomFieldValues[field[0]], { allowedAttributes: {}, allowedTags: [] });
-              oldValue = oldValue.slice(0, oldValue.length - 1);
               if (oldValue !== value) {
-                send(
-                  record,
-                  onFieldMessageDisabled,
-                  onFieldNotificationDisabled,
-                  OnFieldApiDisabled,
-                  rawDate,
-                  timeStamp,
-                  html,
-                  module,
-                  selectedCatalogue,
-                  onFieldMessageFrom,
-                  onFieldMessageSubject,
-                  onFieldMessageTo,
-                  onFieldNotificationFrom,
-                  icon,
-                  onFieldMessageNotification,
-                  onFieldNotificationSubject,
-                  onFieldNotificationTo,
-                  onFieldUrlAPI,
-                  onFieldBodyAPI,
-                  onFieldToken,
-                  onFieldTokenEnabled
-                );
+                sendPolicy();
               }
             } else {
-              send(
-                record,
-                onFieldMessageDisabled,
-                onFieldNotificationDisabled,
-                OnFieldApiDisabled,
-                rawDate,
-                timeStamp,
-                html,
-                module,
-                selectedCatalogue,
-                onFieldMessageFrom,
-                onFieldMessageSubject,
-                onFieldMessageTo,
-                onFieldNotificationFrom,
-                icon,
-                onFieldMessageNotification,
-                onFieldNotificationSubject,
-                onFieldNotificationTo,
-                onFieldUrlAPI,
-                onFieldBodyAPI,
-                onFieldToken,
-                onFieldTokenEnabled
-              );
+              sendPolicy();
             }
           }
         });
